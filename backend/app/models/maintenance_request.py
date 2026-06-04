@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Column
+from sqlalchemy import Column, String
 from sqlalchemy.types import JSON
 from sqlmodel import Field, SQLModel
 
@@ -60,8 +60,20 @@ class MaintenanceRequest(SQLModel, table=True):
         sa_column=Column(JSON, nullable=True),
     )
 
-    priority: RequestPriority = Field(default=RequestPriority.MEDIUM)
-    status: RequestStatus = Field(default=RequestStatus.OPEN)
+    priority: RequestPriority = Field(
+        sa_column=Column(
+            String,
+            default=RequestPriority.MEDIUM,
+            nullable=False,
+        )
+    )
+    status: RequestStatus = Field(
+        sa_column=Column(
+            String,
+            default=RequestStatus.OPEN,
+            nullable=False,
+        )
+    )
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

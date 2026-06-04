@@ -36,7 +36,13 @@ class User(SQLModel, table=True):
     )
     email: str = Field(max_length=320)
     full_name: str = Field(default="", max_length=255)
-    role: UserRole = Field(default=UserRole.UNASSIGNED)
+    role: UserRole = Field(
+        sa_column=Column(
+            String,
+            default=UserRole.UNASSIGNED,
+            nullable=False,
+        )
+    )
 
     # For tenant_pending: which landlord they requested to join
     requested_landlord_id: Optional[uuid.UUID] = Field(

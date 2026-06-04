@@ -43,6 +43,12 @@ class Invite(SQLModel, table=True):
         sa_column=Column(String, unique=True, index=True, nullable=False),
     )
 
-    status: InviteStatus = Field(default=InviteStatus.PENDING)
+    status: InviteStatus = Field(
+        sa_column=Column(
+            String,
+            default=InviteStatus.PENDING,
+            nullable=False,
+        )
+    )
     expires_at: datetime = Field(default_factory=_default_expires_at)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
