@@ -27,7 +27,7 @@ export default function JoinPage({
     setLoading(true);
     setError("");
     try {
-      await api.post("/onboarding/accept-invite", { token });
+      await api.post("/api/v1/onboarding/accept-invite", { token });
       document.cookie = "__onboarding_complete=true; path=/";
       router.push("/tenant/dashboard");
     } catch (err: any) {
