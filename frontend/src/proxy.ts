@@ -15,6 +15,11 @@ const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
 export default clerkMiddleware(async (auth, req) => {
   // Allow public routes through
   if (isPublicRoute(req)) {
+    const authState = await auth();
+    // Redirect signed-in users away from auth/landing pages
+    if (authState.userId && (req.nextUrl.pathname === "/" || req.nextUrl.pathname.startsWith("/sign-"))) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
     return NextResponse.next();
   }
 
