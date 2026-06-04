@@ -13,7 +13,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
@@ -24,6 +24,33 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function checkUserRole() {
+      try {
+        const user: any = await api.get("/api/v1/onboarding/me");
+        if (user && user.role) {
+          if (user.role === "landlord") {
+            document.cookie = "__onboarding_complete=true; path=/";
+            router.push("/landlord/dashboard");
+            return;
+          } else if (user.role === "tenant") {
+            document.cookie = "__onboarding_complete=true; path=/";
+            router.push("/tenant/dashboard");
+            return;
+          } else if (user.role === "tenant_pending") {
+            setSuccess(true);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role on mount:", err);
+      } finally {
+        setChecking(false);
+      }
+    }
+    checkUserRole();
+  }, [router]);
 
   const handleLandlord = async () => {
     setLoading(true);
@@ -51,6 +78,17 @@ export default function OnboardingPage() {
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
+          <p className="text-[rgb(var(--ml-text-secondary))] font-medium">Checking your account status...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (success) {
     return (
