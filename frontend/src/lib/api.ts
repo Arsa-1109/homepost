@@ -24,7 +24,13 @@ export async function apiFetch<T = unknown>(
   options: RequestInit = {},
   token: string | null = null
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  // Ensure the base URL always has a protocol scheme
+  if (!baseUrl.startsWith("http")) {
+    baseUrl = `https://${baseUrl}`;
+  }
+  // Strip trailing slash to avoid double slashes
+  baseUrl = baseUrl.replace(/\/$/, "");
 
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
@@ -52,6 +58,17 @@ export async function apiFetch<T = unknown>(
     headers,
   });
 
+  // Helper: safely parse JSON, throw readable error if HTML/non-JSON returned
+  const safeJson = async () => {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      const text = await response.text().catch(() => "(unreadable body)");
+      console.error("Expected JSON but got non-JSON response:", text.slice(0, 200));
+      throw new Error("The server returned an unexpected response. Please try again later.");
+    }
+    return response.json();
+  };
+
   // Handle auth errors gracefully
   if (response.status === 401) {
     // Token expired or invalid — redirect to sign-in
@@ -71,7 +88,7 @@ export async function apiFetch<T = unknown>(
 
   // Parse error responses
   if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
+    const errorData = await safeJson().catch(() => null);
     const message =
       errorData?.detail?.message ||
       errorData?.detail ||
@@ -79,7 +96,7 @@ export async function apiFetch<T = unknown>(
     throw new Error(message);
   }
 
-  return response.json() as Promise<T>;
+  return safeJson() as Promise<T>;
 }
 
 // Alias for files expecting fetchAPI
