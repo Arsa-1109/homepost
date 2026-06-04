@@ -41,12 +41,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ---------------------------------------------------------------------------
 # CORS — allow the Next.js frontend to make cross-origin requests
+# FRONTEND_URL can be a single URL or comma-separated list of URLs
 # ---------------------------------------------------------------------------
+_raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=_raw_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
