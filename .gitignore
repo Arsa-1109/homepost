@@ -33,6 +33,15 @@ backend/.env
 # ========================
 backend/.venv/
 venv/
+backend/venv/
+
+# ========================
+# Databases (Local SQLite)
+# ========================
+*.db
+*.sqlite
+*.sqlite3
+*-journal
 
 # ========================
 # IDE / Editor
@@ -75,3 +84,9 @@ htmlcov/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# ========================
+# Documentation
+# ========================
+*.md
+!README.md
