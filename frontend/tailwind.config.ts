@@ -10,6 +10,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
         // Stepped dark slate palette
         slate: {
           850: "#1a1f2e",
@@ -17,7 +46,8 @@ const config: Config = {
         },
         // Warm amber/gold accent
         accent: {
-          DEFAULT: "#f59e0b",
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
           light: "#fbbf24",
           dark: "#d97706",
         },
