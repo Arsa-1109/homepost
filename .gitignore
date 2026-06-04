@@ -26,6 +26,7 @@ __pycache__/
 .env.test.local
 .env.production.local
 backend/.env
+.env.example
 
 # ========================
 # Python Virtual Environment
