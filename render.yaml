@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: homepost-backend
+    env: docker
+    plan: free
+    region: oregon # Render free tier default region
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    # Render overrides the start command so we can run Alembic migrations on startup
+    startCommand: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CLERK_JWKS_URL
+        sync: false
+      - key: CLERK_ISSUER
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
