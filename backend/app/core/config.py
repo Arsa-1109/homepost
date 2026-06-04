@@ -31,17 +31,17 @@ class Settings(BaseSettings):
     database_url: str
 
     # --- Clerk Auth ---
-    clerk_jwks_url: str
-    clerk_issuer: str
+    clerk_jwks_url: str = ""
+    clerk_issuer: str = ""
 
     # --- Cloudflare R2 ---
-    r2_endpoint_url: str
-    r2_access_key_id: str
-    r2_secret_access_key: str
-    r2_bucket_name: str
+    r2_endpoint_url: str = ""
+    r2_access_key_id: str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket_name: str = ""
 
     # --- Resend ---
-    resend_api_key: str
+    resend_api_key: str = ""
 
     # --- App ---
     frontend_url: str = "http://localhost:3000"
