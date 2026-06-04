@@ -34,7 +34,24 @@ export async function apiFetch<T = unknown>(
 
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
-    const clerk = (window as any).Clerk;
+    // Wait for Clerk to load/initialize (max 5 seconds)
+    const clerk = await new Promise<any>((resolve) => {
+      if ((window as any).Clerk?.loaded) {
+        resolve((window as any).Clerk);
+        return;
+      }
+      const interval = setInterval(() => {
+        if ((window as any).Clerk?.loaded) {
+          clearInterval(interval);
+          resolve((window as any).Clerk);
+        }
+      }, 50);
+      setTimeout(() => {
+        clearInterval(interval);
+        resolve((window as any).Clerk || null);
+      }, 5000);
+    });
+
     if (clerk?.session) {
       try {
         activeToken = await clerk.session.getToken();

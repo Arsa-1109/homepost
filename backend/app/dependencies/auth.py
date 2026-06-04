@@ -23,11 +23,11 @@ from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 
 # Bearer token extractor — looks for "Authorization: Bearer <token>"
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     session: AsyncSession = Depends(get_session),
 ) -> User:
     """
@@ -41,6 +41,15 @@ async def get_current_user(
     Raises:
         401: Invalid or missing JWT.
     """
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "message": "We couldn't verify your identity. Please sign in again.",
+                "suggestion": "If this keeps happening, try clearing your browser cache or signing out and back in.",
+            },
+        )
+
     try:
         payload = await verify_clerk_token(credentials.credentials)
     except Exception:
