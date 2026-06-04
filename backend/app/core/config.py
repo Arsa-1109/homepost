@@ -34,8 +34,15 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def assemble_db_url(cls, v: str) -> str:
-        if v and v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if not v:
+            raise ValueError("DATABASE_URL is required")
+        # Strip whitespace, quotes, and newlines that Railway might inject
+        v = v.strip().strip("'\"")
+        # Normalise any postgres:// or postgresql:// to asyncpg driver
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
         return v
 
     # --- Clerk Auth ---

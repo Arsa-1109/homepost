@@ -25,6 +25,15 @@ async def lifespan(application: FastAPI):
     - Shutdown: stop APScheduler, dispose database engine.
     """
     # --- Startup ---
+    masked_url = settings.database_url
+    # Mask password in URL for safe logging
+    if "@" in masked_url:
+        pre_at = masked_url.split("@")[0]
+        post_at = masked_url.split("@", 1)[1]
+        if ":" in pre_at:
+            scheme_user = pre_at.rsplit(":", 1)[0]
+            masked_url = f"{scheme_user}:****@{post_at}"
+    print(f"[STARTUP] DATABASE_URL = {masked_url}")
     start_scheduler()
     yield
     # --- Shutdown ---

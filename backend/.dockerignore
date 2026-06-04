@@ -1,0 +1,25 @@
+# Virtual environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment files (Railway injects env vars at runtime)
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Testing / caching
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+
+# Git
+.git/
+.gitignore
