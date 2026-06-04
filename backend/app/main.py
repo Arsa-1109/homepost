@@ -34,6 +34,27 @@ async def lifespan(application: FastAPI):
             scheme_user = pre_at.rsplit(":", 1)[0]
             masked_url = f"{scheme_user}:****@{post_at}"
     print(f"[STARTUP] DATABASE_URL = {masked_url}")
+    
+    # Test DB connection and log status
+    from sqlalchemy import text
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        print("[STARTUP] Database connection successful.")
+        
+        # Verify if tables exist (specifically the 'users' table)
+        try:
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1 FROM users LIMIT 1"))
+            print("[STARTUP] Database tables verified (users table exists).")
+        except Exception as table_err:
+            print(f"[STARTUP] Database tables check FAILED: {table_err}")
+            print("[STARTUP] WARNING: Tables may not be created. Ensure migrations have run.")
+    except Exception as db_err:
+        print(f"[STARTUP] Database connection FAILED: {db_err}")
+        import traceback
+        traceback.print_exc()
+
     start_scheduler()
     yield
     # --- Shutdown ---
