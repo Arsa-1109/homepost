@@ -38,6 +38,24 @@ async def get_me(user: User = Depends(get_current_user)):
     return user
 
 
+class SyncUserPayload(BaseModel):
+    email: str
+    full_name: str
+
+
+@router.post("/sync")
+async def sync_user(
+    payload: SyncUserPayload,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    user.email = payload.email
+    user.full_name = payload.full_name
+    session.add(user)
+    await session.commit()
+    return {"status": "success", "user": user}
+
+
 
 @router.post("/register-landlord")
 async def register_landlord(

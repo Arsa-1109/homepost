@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers";
+import { UserSync } from "@/components/UserSync";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -21,6 +22,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ClerkProvider>
+          <UserSync />
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
