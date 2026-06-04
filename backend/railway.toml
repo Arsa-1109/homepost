@@ -7,7 +7,7 @@ dockerfilePath = "Dockerfile"
 # Multiple replicas = duplicate scheduled emails.
 # See: Production Hardening Notes in implementation_plan.md
 numReplicas = 1
-startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "/bin/sh -c 'uvicorn app.main:app --host 0.0.0.0 --port $PORT'"
 releaseCommand = "alembic upgrade head"
 healthcheckPath = "/health"
 healthcheckTimeout = 5
