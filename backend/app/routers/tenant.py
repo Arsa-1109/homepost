@@ -1,0 +1,131 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+import uuid
+
+from app.core.database import get_session
+from app.dependencies.auth import get_current_tenant_profile, get_current_user
+from app.models.user import User
+from app.models.tenant_profile import TenantProfile
+from app.models.property import Property
+from app.models.unit import Unit
+from app.models.maintenance_request import MaintenanceRequest, RequestStatus
+from app.models.announcement import Announcement
+from app.models.document import Document
+from app.schemas.maintenance import MaintenanceRequestCreate
+from app.services.email import send_maintenance_notification
+
+router = APIRouter(prefix="/tenant", tags=["Tenant"])
+
+# ---------------------------------------------------------------------------
+# Maintenance Requests
+# ---------------------------------------------------------------------------
+@router.post("/maintenance", response_model=MaintenanceRequest)
+async def submit_maintenance_request(
+    req_in: MaintenanceRequestCreate,
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    req = MaintenanceRequest(
+        **req_in.model_dump(),
+        tenant_id=profile.id,
+        unit_id=profile.unit_id,
+        status=RequestStatus.OPEN
+    )
+    session.add(req)
+    await session.commit()
+    await session.refresh(req)
+    
+    # Send email notification to landlord
+    unit = await session.get(Unit, profile.unit_id)
+    if unit:
+        prop = await session.get(Property, unit.property_id)
+        if prop:
+            landlord = await session.get(User, prop.owner_id)
+            if landlord and landlord.email:
+                tenant_user = await session.get(User, profile.id)
+                tenant_name = f"{tenant_user.first_name} {tenant_user.last_name}" if tenant_user else "A tenant"
+                send_maintenance_notification(
+                    landlord_email=landlord.email,
+                    tenant_name=tenant_name,
+                    unit_label=unit.unit_label,
+                    request_title=req.title,
+                    priority=req.priority
+                )
+    
+    return req
+
+@router.get("/maintenance", response_model=list[MaintenanceRequest])
+async def list_my_maintenance_requests(
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    # Data isolation anchored on profile.unit_id
+    result = await session.execute(
+        select(MaintenanceRequest)
+        .where(MaintenanceRequest.unit_id == profile.unit_id)
+        .order_by(MaintenanceRequest.created_at.desc())
+    )
+    return result.scalars().all()
+
+@router.post("/maintenance/{request_id}/reopen", response_model=MaintenanceRequest)
+async def reopen_maintenance_request(
+    request_id: uuid.UUID,
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    req = await session.get(MaintenanceRequest, request_id)
+    if not req or req.unit_id != profile.unit_id:
+        raise HTTPException(status_code=404, detail="Maintenance request not found.")
+        
+    if req.status != RequestStatus.RESOLVED:
+        raise HTTPException(status_code=400, detail="Only resolved requests can be reopened.")
+        
+    req.status = RequestStatus.OPEN
+    await session.commit()
+    await session.refresh(req)
+    
+    # TODO: Send email notification to landlord about reopen
+    return req
+
+# ---------------------------------------------------------------------------
+# Announcements
+# ---------------------------------------------------------------------------
+@router.get("/announcements", response_model=list[Announcement])
+async def list_property_announcements(
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    # First, get the unit to find the property_id
+    unit = await session.get(Unit, profile.unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+        
+    result = await session.execute(
+        select(Announcement)
+        .where(Announcement.property_id == unit.property_id)
+        .order_by(Announcement.created_at.desc())
+    )
+    return result.scalars().all()
+
+# ---------------------------------------------------------------------------
+# Documents
+# ---------------------------------------------------------------------------
+@router.get("/documents", response_model=list[Document])
+async def list_shared_documents(
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    # First, get the unit to find the property_id
+    unit = await session.get(Unit, profile.unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+        
+    # Return all documents uploaded for this property
+    result = await session.execute(
+        select(Document)
+        .where(Document.property_id == unit.property_id)
+        .order_by(Document.created_at.desc())
+    )
+    return result.scalars().all()
+

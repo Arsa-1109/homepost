@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Homepost Design System — CSS Custom Properties
+   ============================================================
+   Dual theme: dark slate + warm amber / light off-white + amber
+   
+   Token naming convention:
+   --ml-bg-*     Background surfaces
+   --ml-text-*   Text colors
+   --ml-accent-* Accent/brand colors
+   --ml-border-* Border colors
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* Light Mode (default) */
+    --ml-bg-primary: 248 249 250;     /* off-white, low-glare */
+    --ml-bg-secondary: 255 255 255;   /* pure white cards */
+    --ml-bg-tertiary: 241 243 245;    /* subtle elevation */
+    --ml-text-primary: 15 18 25;      /* near-black */
+    --ml-text-secondary: 107 114 128; /* muted gray */
+    --ml-accent: 245 158 11;          /* amber-500 */
+    --ml-accent-light: 251 191 36;    /* amber-400 */
+    --ml-accent-dark: 217 119 6;      /* amber-600 */
+    --ml-border: 229 231 235;         /* gray-200 */
+  }
+
+  .dark {
+    /* Dark Mode — stepped slate palette */
+    --ml-bg-primary: 15 18 25;       /* slate-950 */
+    --ml-bg-secondary: 26 31 46;     /* slate-850 */
+    --ml-bg-tertiary: 30 41 59;      /* slate-800 */
+    --ml-text-primary: 248 250 252;  /* slate-50 */
+    --ml-text-secondary: 148 163 184;/* slate-400 */
+    --ml-accent: 245 158 11;         /* amber-500 (same) */
+    --ml-accent-light: 251 191 36;   /* amber-400 */
+    --ml-accent-dark: 217 119 6;     /* amber-600 */
+    --ml-border: 51 65 85;           /* slate-700 */
+  }
+}
+
+/* ============================================================
+   Focus Rings — amber, thick, high-contrast
+   ============================================================ */
+@layer base {
+  *:focus-visible {
+    outline: 3px solid rgb(var(--ml-accent));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Forced-colors support (Windows High Contrast Mode) */
+  @media (forced-colors: active) {
+    *:focus-visible {
+      outline: 3px solid LinkText;
+    }
+  }
+}
+
+/* ============================================================
+   Global Resets & Typography
+   ============================================================ */
+@layer base {
+  body {
+    @apply bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))];
+    @apply antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* ============================================================
+   Smooth Theme Transition
+   ============================================================ */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

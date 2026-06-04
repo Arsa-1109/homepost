@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: tenant_portal_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: landlord
+      POSTGRES_PASSWORD: landlord
+      POSTGRES_DB: tenant_portal
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
