@@ -21,4 +21,4 @@ class Document(SQLModel, table=True):
     title: str = Field(max_length=255)
     file_key: str = Field(max_length=500)  # R2 object key
     file_type: str = Field(max_length=100)  # MIME type, e.g., "application/pdf"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

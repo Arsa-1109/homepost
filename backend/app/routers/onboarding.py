@@ -116,8 +116,8 @@ async def accept_invite(
             detail="Invite token has already been used or is invalid."
         )
 
-    # Note: timezone-aware comparison
-    if invite.expires_at < datetime.now(timezone.utc):
+    # Note: timezone-naive UTC comparison
+    if invite.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
         invite.status = InviteStatus.EXPIRED
         session.add(invite)
         await session.commit()
