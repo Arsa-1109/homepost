@@ -29,7 +29,7 @@ export default function OnboardingPage() {
     setLoading(true);
     setError("");
     try {
-      await api.post("/onboarding/register-landlord");
+      await api.post("/api/v1/onboarding/register-landlord");
       document.cookie = "__onboarding_complete=true; path=/";
       router.push("/landlord/dashboard");
     } catch (err: any) {
@@ -44,7 +44,7 @@ export default function OnboardingPage() {
     setLoading(true);
     setError("");
     try {
-      await api.post("/onboarding/request-access", { landlord_email: email });
+      await api.post("/api/v1/onboarding/request-access", { landlord_email: email });
       setSuccess(true);
     } catch (err: any) {
       setError(err.message || "Failed to request access. Make sure the email is correct.");
