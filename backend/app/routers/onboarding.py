@@ -33,6 +33,12 @@ class AcceptInvitePayload(BaseModel):
     token: str
 
 
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return user
+
+
+
 @router.post("/register-landlord")
 async def register_landlord(
     user: User = Depends(get_current_user),
