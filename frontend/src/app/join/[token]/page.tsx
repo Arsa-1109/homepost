@@ -9,15 +9,16 @@
 
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
 export default function JoinPage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
+  const { token } = use(params);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +27,7 @@ export default function JoinPage({
     setLoading(true);
     setError("");
     try {
-      await api.post("/onboarding/accept-invite", { token: params.token });
+      await api.post("/onboarding/accept-invite", { token });
       document.cookie = "__onboarding_complete=true; path=/";
       router.push("/tenant/dashboard");
     } catch (err: any) {
