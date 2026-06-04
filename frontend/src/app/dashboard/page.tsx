@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 
 export default async function DashboardRedirect() {
-  const authState = auth();
+  const authState = await auth();
   const token = await authState.getToken();
 
   if (!token) {
