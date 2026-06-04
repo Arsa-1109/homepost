@@ -27,4 +27,4 @@ class TenantProfile(SQLModel, table=True):
     lease_end: Optional[date] = Field(default=None)
     is_active: bool = Field(default=True)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

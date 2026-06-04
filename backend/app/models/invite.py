@@ -28,7 +28,7 @@ class InviteStatus(str, Enum):
 
 def _default_expires_at() -> datetime:
     """Invite expires 7 days from creation."""
-    return datetime.now(timezone.utc) + timedelta(days=7)
+    return (datetime.now(timezone.utc) + timedelta(days=7)).replace(tzinfo=None)
 
 
 class Invite(SQLModel, table=True):
@@ -51,4 +51,4 @@ class Invite(SQLModel, table=True):
         )
     )
     expires_at: datetime = Field(default_factory=_default_expires_at)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
