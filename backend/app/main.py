@@ -73,11 +73,13 @@ app = FastAPI(
 
 # CORS — allow the Next.js frontend to make cross-origin requests
 # FRONTEND_URL can be a single URL or comma-separated list of URLs
+# Supports regex matching for local development and Vercel preview/branch deployments.
 # ---------------------------------------------------------------------------
 _raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_raw_origins,
+    allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1)(:\d+)?|https://homepost-.*\.vercel\.app|https://homepost\.vercel\.app)$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
