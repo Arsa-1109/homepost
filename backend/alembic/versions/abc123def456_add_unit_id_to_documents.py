@@ -17,7 +17,7 @@ depends_on = None
 
 def upgrade():
     # add column unit_id to documents
-    op.add_column('documents', sa.Column('unit_id', sqlmodel.sql.sqltypes.GUID(), nullable=True))
+    op.add_column('documents', sa.Column('unit_id', sa.Uuid(), nullable=True))
     op.create_foreign_key('fk_documents_unit_id_units', 'documents', 'units', ['unit_id'], ['id'])
 
 def downgrade():
