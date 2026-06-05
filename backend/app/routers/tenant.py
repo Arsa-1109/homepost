@@ -18,6 +18,35 @@ from app.services.email import send_maintenance_notification
 router = APIRouter(prefix="/tenant", tags=["Tenant"])
 
 # ---------------------------------------------------------------------------
+# Tenant Profile (Dashboard data)
+# ---------------------------------------------------------------------------
+@router.get("/profile")
+async def get_my_profile(
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Return the tenant's current unit, property, and lease details.
+    Used by the dashboard to compute rent-due and lease-expiry countdowns.
+    """
+    unit = await session.get(Unit, profile.unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+
+    prop = await session.get(Property, unit.property_id)
+
+    return {
+        "unit_label": unit.unit_label,
+        "property_name": prop.name if prop else "Unknown Property",
+        "property_address": prop.address if prop else "",
+        "property_city": prop.city if prop else "",
+        "lease_start": profile.lease_start.isoformat() if profile.lease_start else None,
+        "lease_end": profile.lease_end.isoformat() if profile.lease_end else None,
+        "rent_due_day": unit.rent_due_day,
+        "is_active": profile.is_active,
+    }
+
+# ---------------------------------------------------------------------------
 # Maintenance Requests
 # ---------------------------------------------------------------------------
 @router.post("/maintenance", response_model=MaintenanceRequest)
