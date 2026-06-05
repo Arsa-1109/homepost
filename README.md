@@ -1,117 +1,46 @@
 # 🏠 Homepost Tenant Portal
 
-A radically simple property management portal for individual owners managing 1–5 properties. Built for landlords who want to handle maintenance requests, share documents, and communicate with tenants — without the bloat of enterprise property management software.
+Homepost is a radically simple web-based property management portal designed for individual owners managing 1–5 properties. It is built for micro-landlords who want to handle maintenance requests, share documents, and seamlessly communicate with tenants without the bloat of enterprise property management software.
 
-## ✨ Features (MVP)
+## 🏗 Architecture Overview
 
-- **Maintenance Requests** — Tenants submit requests with up to 3 photos; landlords track and update status
-- **Announcements** — Landlords post property-wide announcements
-- **Document Sharing** — Upload and share lease PDFs, house rules, and other documents
-- **Role-Based Access** — Landlord, Tenant, and invite-gated onboarding
-- **Rent & Lease Counters** — Visual countdowns with automated email reminders
-- **Email Notifications** — Status updates, approvals, and reminders via Resend
+Homepost follows a modern decoupled Client-Server architecture:
 
-## 🛠 Tech Stack
+- **Frontend (Client):** A responsive Single Page Application (SPA) built with Next.js 14 and React. It serves as the user interface for both landlords and tenants, communicating with the backend purely via REST API calls. Authentication is handled on the edge via Clerk middleware, ensuring secure routes.
+- **Backend (API):** A high-performance, asynchronous REST API powered by FastAPI (Python). It acts as the central brain of the application, enforcing role-based access control (RBAC), executing business logic, and querying the database via SQLModel.
+- **Data Layer:** A robust PostgreSQL database serving as the single source of truth for properties, units, users, and maintenance tickets.
+- **Storage & Services:** Static assets (like lease PDFs and maintenance photos) bypass the backend entirely via presigned URLs, uploading directly from the client to Cloudflare R2 object storage. Background jobs run via an integrated APScheduler to dispatch automated email reminders via Resend.
+
+## ✨ Features
+
+- **Automated Onboarding:** Secure token-based invite system for tenants to join specific units automatically.
+- **Maintenance Ticketing:** Tenants can submit requests with multiple photo attachments. Landlords can track status (`open` → `in_progress` → `resolved`), adjust priority, and append internal notes.
+- **Document Hub:** Centralized file sharing for property-wide house rules or unit-specific lease agreements.
+- **Property Announcements:** Landlords can broadcast announcements to all tenants residing in a specific property.
+- **Automated Reminders:** A daily asynchronous job evaluates lease expirations and rent due dates, automatically dispatching proactive email reminders (5 days prior for rent, 30 days prior for leases).
+- **Aggregated Dashboards:** Real-time data aggregation feeds a comprehensive Bento-grid dashboard for landlords, visualizing occupancy, pending tenant approvals, and urgent maintenance.
+
+## 🛠 Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Next.js 14 (App Router), Tailwind CSS, shadcn/ui |
-| Backend | FastAPI (Python, Async) |
-| Database | PostgreSQL 16 |
-| ORM | SQLModel (SQLAlchemy + Pydantic) |
-| Auth | Clerk (JWT) |
-| Storage | Cloudflare R2 (presigned URLs) |
-| Email | Resend |
-| Deploy | Vercel (frontend) + Railway (backend) |
+| **Frontend Framework** | Next.js 14 (App Router), React 18 |
+| **Styling & UI** | Tailwind CSS, shadcn/ui, Radix UI |
+| **Backend API** | FastAPI (Python, Async), Uvicorn |
+| **Database** | PostgreSQL 16 |
+| **ORM & Validation** | SQLModel (SQLAlchemy + Pydantic) |
+| **Authentication** | Clerk (JWT-based) |
+| **File Storage** | Cloudflare R2 (S3-compatible) |
+| **Transactional Email** | Resend |
+| **Background Jobs** | APScheduler |
 
-## 📁 Project Structure
+## ☁️ Infrastructure & Deployment
 
-```text
-Rental/
-├── frontend/              # Next.js 14 application
-├── backend/               # FastAPI application
-├── docker-compose.yml     # Local PostgreSQL
-├── .github/workflows/     # CI/CD pipelines
-└── README.md
-```
+The application is engineered to be entirely cloud-native:
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 20+ and npm
-- Python 3.12+
-- Docker Desktop (for local PostgreSQL)
-- A [Clerk](https://clerk.com) account
-- A [Cloudflare R2](https://developers.cloudflare.com/r2/) bucket
-- A [Resend](https://resend.com) account
-
-### 1. Clone & Setup
-
-```bash
-git clone <repo-url>
-cd Rental
-```
-
-### 2. Start the Database
-
-```bash
-docker compose up -d
-```
-
-### 3. Backend Setup
-
-```bash
-cd backend
-python -m venv .venv
-
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-
-# macOS/Linux
-source .venv/bin/activate
-
-pip install -r requirements.txt
-cp .env.example .env   # Edit with your credentials
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-Backend runs at `http://localhost:8000`. API docs at `http://localhost:8000/docs`.
-
-### 4. Frontend Setup
-
-```bash
-cd frontend
-npm install
-cp .env.local.example .env.local   # Edit with your credentials
-npm run dev
-```
-
-Frontend runs at `http://localhost:3000`.
-
-## 📝 Environment Variables
-
-### Backend (`backend/.env`)
-
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `CLERK_JWKS_URL` | Clerk JWKS endpoint for JWT verification |
-| `CLERK_ISSUER` | Clerk issuer URL |
-| `R2_ENDPOINT_URL` | Cloudflare R2 endpoint |
-| `R2_ACCESS_KEY_ID` | R2 access key |
-| `R2_SECRET_ACCESS_KEY` | R2 secret key |
-| `R2_BUCKET_NAME` | R2 bucket name |
-| `RESEND_API_KEY` | Resend API key |
-
-### Frontend (`frontend/.env.local`)
-
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
-| `CLERK_SECRET_KEY` | Clerk secret key |
-| `NEXT_PUBLIC_API_URL` | Backend API URL |
+- **Frontend Deployment:** Hosted on Vercel for edge-optimized delivery and seamless Next.js integration.
+- **Backend Deployment:** Containerized via Docker and deployed on Render/Railway.
+- **File Transfers:** Direct-to-cloud uploads. The frontend requests a short-lived (1-hour) presigned URL from the FastAPI backend, allowing clients to securely upload media directly to Cloudflare R2 without bottlenecking the API server bandwidth.
 
 ## 📄 License
 
