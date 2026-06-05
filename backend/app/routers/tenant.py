@@ -212,6 +212,41 @@ async def reopen_maintenance_request(
     return resp
 
 
+@router.get("/maintenance/{request_id}", response_model=MaintenanceRequestResponse)
+async def get_maintenance_request(
+    request_id: uuid.UUID,
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Fetch details of a single maintenance request, ensuring it belongs to the tenant's unit.
+    """
+    req = await session.get(MaintenanceRequest, request_id)
+    if not req or req.unit_id != profile.unit_id:
+        raise HTTPException(status_code=404, detail="Maintenance request not found.")
+
+    urls = []
+    if req.image_keys:
+        for key in req.image_keys:
+            try:
+                urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+
+    landlord_urls = []
+    if req.landlord_image_keys:
+        for key in req.landlord_image_keys:
+            try:
+                landlord_urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+
+    resp = MaintenanceRequestResponse.model_validate(req)
+    resp.image_urls = urls
+    resp.landlord_image_urls = landlord_urls
+    return resp
+
+
 # ---------------------------------------------------------------------------
 # Announcements
 # ---------------------------------------------------------------------------
