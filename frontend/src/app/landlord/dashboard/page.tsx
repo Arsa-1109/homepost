@@ -22,6 +22,7 @@ export default function LandlordDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [selectedUnits, setSelectedUnits] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -95,15 +96,17 @@ export default function LandlordDashboard() {
         <>
           {data.pending_approvals && data.pending_approvals.length > 0 && (
             <Sheet>
-              <SheetTrigger asChild>
-                <Alert className="bg-amber-50 border-amber-200 text-amber-800 cursor-pointer hover:bg-amber-100 transition-colors">
-                  <Users className="h-4 w-4 stroke-amber-600" />
-                  <AlertTitle className="text-amber-800 font-semibold">Pending Tenants</AlertTitle>
-                  <AlertDescription className="text-amber-700">
-                    You have {data.pending_approvals.length} pending tenant requests. Click here to review and assign them to a unit.
-                  </AlertDescription>
-                </Alert>
-              </SheetTrigger>
+              <SheetTrigger
+                render={
+                  <Alert className="bg-amber-50 border-amber-200 text-amber-800 cursor-pointer hover:bg-amber-100 transition-colors">
+                    <Users className="h-4 w-4 stroke-amber-600" />
+                    <AlertTitle className="text-amber-800 font-semibold">Pending Tenants</AlertTitle>
+                    <AlertDescription className="text-amber-700">
+                      You have {data.pending_approvals.length} pending tenant requests. Click here to review and assign them to a unit.
+                    </AlertDescription>
+                  </Alert>
+                }
+              />
               <SheetContent className="overflow-y-auto sm:max-w-md">
                 <SheetHeader>
                   <SheetTitle>Pending Tenant Requests</SheetTitle>
@@ -163,6 +166,7 @@ export default function LandlordDashboard() {
               <button 
                 onClick={async () => {
                   if (!confirm("Are you sure you want to reset your role? This cannot be undone.")) return;
+                  setResetting(true);
                   try {
                     await api.post("/api/v1/onboarding/reset-role");
                     document.cookie = "__onboarding_complete=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
