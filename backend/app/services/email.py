@@ -35,6 +35,11 @@ def _send_email(to: str, subject: str, html: str) -> None:
     Internal helper — sends an email via Resend.
     Wrapped in try/except: email failures are logged, not raised.
     """
+    if not resend.api_key:
+        logger.warning(f"Resend API key is not configured. Skipping email to {to}")
+        print(f"⚠️ Resend API key is not configured. Skipping email to {to}")
+        return
+
     try:
         resend.Emails.send(
             {

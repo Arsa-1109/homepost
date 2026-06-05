@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     r2_bucket_name: str = ""
 
     # --- Resend ---
-    resend_api_key: str
+    resend_api_key: str = ""
 
     # --- App ---
     frontend_url: str = "http://localhost:3000"
