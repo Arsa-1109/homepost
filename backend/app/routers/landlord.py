@@ -187,6 +187,12 @@ async def create_document_record(
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
         
+    # Validate unit_id if provided
+    if doc_in.unit_id:
+        unit = await session.get(Unit, doc_in.unit_id)
+        if not unit or unit.property_id != doc_in.property_id:
+            raise HTTPException(status_code=400, detail="Invalid unit for this property.")
+
     doc = Document(**doc_in.model_dump(), uploaded_by=user.id)
     session.add(doc)
     await session.commit()
@@ -381,22 +387,13 @@ async def get_dashboard_summary(
     )
     pending_tenants = pending_result.scalars().all()
 
-    # For each pending tenant, find the unit they came from (via their invite token if any)
-    # We join through invites to get the unit label
-    from app.models.invite import Invite
     pending_list = []
     for t in pending_tenants:
-        # Try to find a used invite for this tenant
-        invite_result = await session.execute(
-            select(Invite).where(Invite.used_by == t.id)
-        )
-        invite = invite_result.scalars().first()
-        unit_label = unit_label_map.get(str(invite.unit_id), "—") if invite else "—"
         pending_list.append({
             "id": str(t.id),
             "name": t.full_name or t.email,
             "email": t.email,
-            "unit_label": unit_label,
+            "unit_label": "—",
         })
 
     # --- Recent Activity (last 5 maintenance requests of any status) ---
