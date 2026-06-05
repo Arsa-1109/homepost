@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle, Activity, Building, Users } from "lucide-react"
+import { AlertCircle, Activity, Building, Users, Home } from "lucide-react"
 
 export type DashboardData = {
   property_stats: {
@@ -10,6 +10,12 @@ export type DashboardData = {
     occupied_units: number;
     vacant_units: number;
   };
+  units: Array<{
+    id: string;
+    property_id: string;
+    unit_label: string;
+    is_occupied: boolean;
+  }>;
   urgent_maintenance: Array<{
     id: string;
     title: string;
@@ -77,26 +83,72 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building className="h-5 w-5 text-blue-500" />
-            Property Overview
+            Overview
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Total Properties</span>
-            <span className="text-lg font-bold">{data.property_stats.total_properties}</span>
+          <div className="grid grid-cols-2 gap-4 mb-2">
+            <div className="flex flex-col justify-center items-center p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+              <span className="text-xs font-medium text-blue-600 mb-1">Properties</span>
+              <span className="text-2xl font-bold text-blue-700">{data.property_stats.total_properties}</span>
+            </div>
+            <div className="flex flex-col justify-center items-center p-3 bg-slate-50/50 rounded-xl border border-slate-200">
+              <span className="text-xs font-medium text-slate-600 mb-1">Total Units</span>
+              <span className="text-2xl font-bold text-slate-700">{data.property_stats.total_units}</span>
+            </div>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Occupied Units</span>
-            <span className="text-lg font-bold">{data.property_stats.occupied_units}</span>
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-medium text-green-700 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>Occupied</span>
+            <span className="font-bold">{data.property_stats.occupied_units}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Vacant Units</span>
-            <span className="text-lg font-bold text-amber-600">{data.property_stats.vacant_units}</span>
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-medium text-amber-700 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div>Vacant</span>
+            <span className="font-bold">{data.property_stats.vacant_units}</span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Card 3 (Pending Approvals) - spans 1 column */}
+      {/* Card 3 (My Units) - spans 3 columns to beautifully show all units */}
+      <Card className="md:col-span-3">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Home className="h-5 w-5 text-indigo-500" />
+            My Units
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.units.length === 0 ? (
+            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
+              No units found. Add a property to get started.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {data.units.map((unit) => (
+                <div key={unit.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white border-green-100 hover:border-green-200' : 'bg-slate-50/50 border-amber-100 hover:border-amber-200'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${unit.is_occupied ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                      <Home className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-800">{unit.unit_label}</span>
+                      <span className="text-xs font-medium text-slate-500">
+                        {unit.is_occupied ? 'Occupied' : 'Vacant'}
+                      </span>
+                    </div>
+                  </div>
+                  {unit.is_occupied ? (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Card 4 (Pending Approvals) - spans 1 column */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -128,7 +180,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         </CardContent>
       </Card>
 
-      {/* Card 4 (Recent Activity) - spans 2 columns */}
+      {/* Card 5 (Recent Activity) - spans 2 columns */}
       <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -213,8 +265,24 @@ export function DashboardBentoSkeleton() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Skeleton Card 3 (My Units) */}
+      <Card className="md:col-span-3">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-6 w-32" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+           </div>
+        </CardContent>
+      </Card>
 
-      {/* Skeleton Card 3 (Pending Approvals) */}
+      {/* Skeleton Card 4 (Pending Approvals) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -233,15 +301,11 @@ export function DashboardBentoSkeleton() {
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-3 w-16" />
             </div>
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-16" />
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Skeleton Card 4 (Recent Activity) */}
+      {/* Skeleton Card 5 (Recent Activity) */}
       <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -258,10 +322,6 @@ export function DashboardBentoSkeleton() {
             <div className="space-y-2 py-1">
               <Skeleton className="h-4 w-36" />
               <Skeleton className="h-3 w-48" />
-            </div>
-            <div className="space-y-2 py-1">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-44" />
             </div>
           </div>
         </CardContent>
