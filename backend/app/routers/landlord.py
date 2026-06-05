@@ -154,6 +154,9 @@ async def update_maintenance_request(
     if req_in.priority:
         db_req.priority = req_in.priority
         
+    if req_in.landlord_notes is not None:
+        db_req.landlord_notes = req_in.landlord_notes
+        
     await session.commit()
     await session.refresh(db_req)
     
