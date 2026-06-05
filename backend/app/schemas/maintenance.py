@@ -14,6 +14,7 @@ class MaintenanceRequestUpdate(BaseModel):
     status: RequestStatus | None = None
     priority: RequestPriority | None = None
     landlord_notes: str | None = None
+    landlord_image_keys: Optional[List[str]] = Field(default=None, max_items=3)
 
 class MaintenanceRequestResponse(BaseModel):
     id: uuid.UUID
@@ -26,6 +27,8 @@ class MaintenanceRequestResponse(BaseModel):
     priority: RequestPriority
     status: RequestStatus
     landlord_notes: Optional[str] = None
+    landlord_image_keys: Optional[List[str]] = None
+    landlord_image_urls: List[str] = []
     created_at: datetime
     updated_at: datetime
 
