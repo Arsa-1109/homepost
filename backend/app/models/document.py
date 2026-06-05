@@ -17,6 +17,7 @@ class Document(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     property_id: uuid.UUID = Field(foreign_key="properties.id", nullable=False)
+    unit_id: uuid.UUID | None = Field(default=None, foreign_key="units.id", nullable=True)
     uploaded_by: uuid.UUID = Field(foreign_key="users.id", nullable=False)
     title: str = Field(max_length=255)
     file_key: str = Field(max_length=500)  # R2 object key
