@@ -1,6 +1,6 @@
 fastapi[standard]==0.115.*
 uvicorn[standard]==0.34.*
-sqlmodel==0.0.22
+sqlmodel==0.0.38
 asyncpg==0.30.*
 alembic==1.14.*
 python-jose[cryptography]==3.3.*
