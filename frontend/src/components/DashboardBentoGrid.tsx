@@ -15,6 +15,7 @@ export type DashboardData = {
     property_id: string;
     unit_label: string;
     is_occupied: boolean;
+    has_pending?: boolean;
   }>;
   urgent_maintenance: Array<{
     id: string;
@@ -124,22 +125,24 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {data.units.map((unit) => (
-                <div key={unit.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white border-green-100 hover:border-green-200' : 'bg-slate-50/50 border-amber-100 hover:border-amber-200'}`}>
+                <div key={unit.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white border-green-100 hover:border-green-200' : unit.has_pending ? 'bg-slate-50/50 border-amber-100 hover:border-amber-200' : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${unit.is_occupied ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                    <div className={`p-2 rounded-lg ${unit.is_occupied ? 'bg-green-100 text-green-600' : unit.has_pending ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}`}>
                       <Home className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-800">{unit.unit_label}</span>
                       <span className="text-xs font-medium text-slate-500">
-                        {unit.is_occupied ? 'Occupied' : 'Vacant'}
+                        {unit.is_occupied ? 'Occupied' : unit.has_pending ? 'Pending' : 'Vacant'}
                       </span>
                     </div>
                   </div>
                   {unit.is_occupied ? (
                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
-                  ) : (
+                  ) : unit.has_pending ? (
                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">Vacant</Badge>
                   )}
                 </div>
               ))}
