@@ -37,7 +37,6 @@ def _send_email(to: str, subject: str, html: str) -> None:
     """
     if not resend.api_key:
         logger.warning(f"Resend API key is not configured. Skipping email to {to}")
-        print(f"⚠️ Resend API key is not configured. Skipping email to {to}")
         return
 
     try:
@@ -50,8 +49,7 @@ def _send_email(to: str, subject: str, html: str) -> None:
             }
         )
     except Exception as e:
-        print(f"❌ RESEND API ERROR for {to}: {repr(e)}")
-        logger.error(f"Failed to send email to {to}: {e}")
+        logger.error(f"Failed to send email to {to}: {e}", exc_info=True)
 
 
 # ---------------------------------------------------------------------------

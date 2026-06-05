@@ -24,16 +24,17 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // Protect all non-public routes
-  const { userId } = await auth.protect();
+  const { userId, sessionClaims } = await auth.protect();
 
   // Skip onboarding check for the onboarding page itself
   if (isOnboardingRoute(req)) {
     return NextResponse.next();
   }
 
-  // ⚠️ Onboarding Guard: check if user has completed onboarding
-  const onboardingComplete = req.cookies.get("__onboarding_complete");
-  if (!onboardingComplete) {
+  // ⚠️ Secure Onboarding Guard: Check session claims mapping to publicMetadata
+  // Requires "metadata": "{{user.public_metadata}}" in the Clerk JWT template
+  const metadata = sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
+  if (!metadata?.onboardingComplete) {
     const onboardingUrl = new URL("/onboarding", req.url);
     return NextResponse.redirect(onboardingUrl);
   }

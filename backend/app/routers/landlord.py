@@ -16,7 +16,7 @@ from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequest
 from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate
 from app.schemas.document import DocumentCreate, DocumentResponse
 from app.services.email import send_status_update
-from app.services.storage import generate_presigned_download_url
+from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request
 
 router = APIRouter(prefix="/landlord", tags=["Landlord"])
 
@@ -84,47 +84,20 @@ async def list_maintenance_requests(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    # Get all properties for this landlord
-    prop_result = await session.execute(select(Property.id).where(Property.owner_id == user.id))
-    prop_ids = prop_result.scalars().all()
-    
-    if not prop_ids:
-        return []
-        
-    # Get all units for these properties
-    unit_result = await session.execute(select(Unit.id).where(Unit.property_id.in_(prop_ids)))
-    unit_ids = unit_result.scalars().all()
-    
-    if not unit_ids:
-        return []
-        
-    # Get all maintenance requests for these units
+    # Get all maintenance requests for landlord's properties using a single JOIN
     req_result = await session.execute(
-        select(MaintenanceRequest).where(MaintenanceRequest.unit_id.in_(unit_ids)).order_by(MaintenanceRequest.created_at.desc())
+        select(MaintenanceRequest)
+        .join(Unit, MaintenanceRequest.unit_id == Unit.id)
+        .join(Property, Unit.property_id == Property.id)
+        .where(Property.owner_id == user.id)
+        .order_by(MaintenanceRequest.created_at.desc())
     )
     requests = req_result.scalars().all()
     
     response_data = []
     for r in requests:
-        urls = []
-        if r.image_keys:
-            for key in r.image_keys:
-                try:
-                    urls.append(generate_presigned_download_url(key))
-                except Exception:
-                    pass
-                    
-        landlord_urls = []
-        if r.landlord_image_keys:
-            for key in r.landlord_image_keys:
-                try:
-                    landlord_urls.append(generate_presigned_download_url(key))
-                except Exception:
-                    pass
-                    
         resp = MaintenanceRequestResponse.model_validate(r)
-        resp.image_urls = urls
-        resp.landlord_image_urls = landlord_urls
+        hydrate_maintenance_request(r, resp)
         response_data.append(resp)
         
     return response_data
@@ -185,25 +158,8 @@ async def update_maintenance_request(
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred while updating the database: {str(e)}")
     
-    urls = []
-    if db_req.image_keys:
-        for key in db_req.image_keys:
-            try:
-                urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-                
-    landlord_urls = []
-    if db_req.landlord_image_keys:
-        for key in db_req.landlord_image_keys:
-            try:
-                landlord_urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-                
     resp = MaintenanceRequestResponse.model_validate(db_req)
-    resp.image_urls = urls
-    resp.landlord_image_urls = landlord_urls
+    hydrate_maintenance_request(db_req, resp)
     return resp
 
 # ---------------------------------------------------------------------------

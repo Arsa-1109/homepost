@@ -49,9 +49,9 @@ def generate_presigned_upload_url(
     object_key: str,
     content_type: str,
     expires: int = 3600,
-) -> str:
+) -> dict:
     """
-    Generate a presigned PUT URL for direct client upload to R2.
+    Generate a presigned POST payload for direct client upload to R2.
 
     ⚠️ Includes Content-Length-Range condition to cap uploads at 10MB.
 
@@ -61,18 +61,19 @@ def generate_presigned_upload_url(
         expires: URL validity in seconds (default: 1 hour).
 
     Returns:
-        Presigned PUT URL string.
+        Presigned POST dictionary containing 'url' and 'fields'.
     """
-    url = _s3_client.generate_presigned_url(
-        ClientMethod="put_object",
-        Params={
-            "Bucket": settings.r2_bucket_name,
-            "Key": object_key,
-            "ContentType": content_type,
-        },
+    post_data = _s3_client.generate_presigned_post(
+        Bucket=settings.r2_bucket_name,
+        Key=object_key,
+        Fields={"Content-Type": content_type},
+        Conditions=[
+            {"Content-Type": content_type},
+            ["content-length-range", 0, 10485760]  # Max 10MB
+        ],
         ExpiresIn=expires,
     )
-    return url
+    return post_data
 
 
 def generate_presigned_download_url(
@@ -106,3 +107,27 @@ def generate_presigned_download_url(
         ExpiresIn=expires,
     )
     return url
+
+
+def hydrate_maintenance_request(db_req, resp_model) -> None:
+    """
+    Populates image_urls and landlord_image_urls on the response model
+    by generating presigned download URLs for all keys.
+    """
+    urls = []
+    if db_req.image_keys:
+        for key in db_req.image_keys:
+            try:
+                urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+    resp_model.image_urls = urls
+
+    landlord_urls = []
+    if db_req.landlord_image_keys:
+        for key in db_req.landlord_image_keys:
+            try:
+                landlord_urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+    resp_model.landlord_image_urls = landlord_urls

@@ -15,7 +15,7 @@ from app.models.document import Document
 from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse
 from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
-from app.services.storage import generate_presigned_download_url
+from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request
 
 router = APIRouter(prefix="/tenant", tags=["Tenant"])
 
@@ -86,25 +86,8 @@ async def submit_maintenance_request(
                     priority=req.priority
                 )
     
-    urls = []
-    if req.image_keys:
-        for key in req.image_keys:
-            try:
-                urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-
-    landlord_urls = []
-    if req.landlord_image_keys:
-        for key in req.landlord_image_keys:
-            try:
-                landlord_urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-
     resp = MaintenanceRequestResponse.model_validate(req)
-    resp.image_urls = urls
-    resp.landlord_image_urls = landlord_urls
+    hydrate_maintenance_request(req, resp)
     return resp
 
 @router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
@@ -122,23 +105,8 @@ async def list_my_maintenance_requests(
 
     response_data = []
     for r in requests:
-        urls = []
-        if r.image_keys:
-            for key in r.image_keys:
-                try:
-                    urls.append(generate_presigned_download_url(key))
-                except Exception:
-                    pass
-        landlord_urls = []
-        if r.landlord_image_keys:
-            for key in r.landlord_image_keys:
-                try:
-                    landlord_urls.append(generate_presigned_download_url(key))
-                except Exception:
-                    pass
         resp = MaintenanceRequestResponse.model_validate(r)
-        resp.image_urls = urls
-        resp.landlord_image_urls = landlord_urls
+        hydrate_maintenance_request(r, resp)
         response_data.append(resp)
 
     return response_data
@@ -157,14 +125,17 @@ async def reopen_maintenance_request(
     if req.status != RequestStatus.RESOLVED:
         raise HTTPException(status_code=400, detail="Only resolved requests can be reopened.")
         
-    # Prevent abuse by restricting reopening to requests resolved within 14 days
+    # Prevent abuse by restricting reopening to requests resolved within configurable timeframe
     from datetime import datetime, timezone
+    from app.core.config import get_settings
+    
+    settings = get_settings()
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     time_since_resolution = now - req.updated_at
-    if time_since_resolution.days > 14:
+    if time_since_resolution.days > settings.max_reopen_days:
         raise HTTPException(
             status_code=400, 
-            detail="Requests resolved more than 14 days ago cannot be reopened. Please file a new request."
+            detail=f"Requests resolved more than {settings.max_reopen_days} days ago cannot be reopened. Please file a new request."
         )
 
     req.status = RequestStatus.OPEN
@@ -190,25 +161,8 @@ async def reopen_maintenance_request(
                     request_title=req.title
                 )
 
-    urls = []
-    if req.image_keys:
-        for key in req.image_keys:
-            try:
-                urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-
-    landlord_urls = []
-    if req.landlord_image_keys:
-        for key in req.landlord_image_keys:
-            try:
-                landlord_urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-
     resp = MaintenanceRequestResponse.model_validate(req)
-    resp.image_urls = urls
-    resp.landlord_image_urls = landlord_urls
+    hydrate_maintenance_request(req, resp)
     return resp
 
 
@@ -225,25 +179,8 @@ async def get_maintenance_request(
     if not req or req.unit_id != profile.unit_id:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
 
-    urls = []
-    if req.image_keys:
-        for key in req.image_keys:
-            try:
-                urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-
-    landlord_urls = []
-    if req.landlord_image_keys:
-        for key in req.landlord_image_keys:
-            try:
-                landlord_urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-
     resp = MaintenanceRequestResponse.model_validate(req)
-    resp.image_urls = urls
-    resp.landlord_image_urls = landlord_urls
+    hydrate_maintenance_request(req, resp)
     return resp
 
 

@@ -8,6 +8,7 @@ router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 class UploadURLResponse(BaseModel):
     upload_url: str
+    fields: dict
     file_key: str
 
 class DownloadURLResponse(BaseModel):
@@ -21,7 +22,7 @@ async def get_presigned_upload_url(
     user: User = Depends(get_current_user)
 ):
     """
-    Generate a presigned PUT URL for client-side direct upload to R2.
+    Generate a presigned POST payload for client-side direct upload to R2.
     """
     if prefix not in ["maintenance", "documents"]:
         raise HTTPException(status_code=400, detail="Invalid prefix.")
@@ -29,9 +30,9 @@ async def get_presigned_upload_url(
     object_key = generate_object_key(prefix, filename)
     
     # 1 hour expiration
-    url = generate_presigned_upload_url(object_key, content_type, expires=3600)
+    post_data = generate_presigned_upload_url(object_key, content_type, expires=3600)
     
-    return UploadURLResponse(upload_url=url, file_key=object_key)
+    return UploadURLResponse(upload_url=post_data["url"], fields=post_data["fields"], file_key=object_key)
 
 
 @router.get("/download-url", response_model=DownloadURLResponse)

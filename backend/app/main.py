@@ -7,14 +7,20 @@ This is the main application factory. It configures:
 - Lifespan events (DB, scheduler startup/shutdown)
 """
 
+import logging
 from contextlib import asynccontextmanager
+from urllib.parse import urlparse, urlunparse
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import get_settings
 from app.core.database import engine
 from app.services.scheduler import start_scheduler, stop_scheduler
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
@@ -25,35 +31,35 @@ async def lifespan(application: FastAPI):
     - Shutdown: stop APScheduler, dispose database engine.
     """
     # --- Startup ---
-    masked_url = settings.database_url
-    # Mask password in URL for safe logging
-    if "@" in masked_url:
-        pre_at = masked_url.split("@")[0]
-        post_at = masked_url.split("@", 1)[1]
-        if ":" in pre_at:
-            scheme_user = pre_at.rsplit(":", 1)[0]
-            masked_url = f"{scheme_user}:****@{post_at}"
-    print(f"[STARTUP] DATABASE_URL = {masked_url}")
+    raw_url = settings.database_url
+    try:
+        parsed = urlparse(raw_url)
+        masked_netloc = f"{parsed.username}:****@{parsed.hostname}"
+        if parsed.port:
+            masked_netloc += f":{parsed.port}"
+        masked_url = urlunparse(parsed._replace(netloc=masked_netloc))
+    except Exception:
+        masked_url = "***MASKED***"
+        
+    logger.info(f"[STARTUP] DATABASE_URL = {masked_url}")
     
     # Test DB connection and log status
     from sqlalchemy import text
     try:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-        print("[STARTUP] Database connection successful.")
+        logger.info("[STARTUP] Database connection successful.")
         
         # Verify if tables exist (specifically the 'users' table)
         try:
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1 FROM users LIMIT 1"))
-            print("[STARTUP] Database tables verified (users table exists).")
+            logger.info("[STARTUP] Database tables verified (users table exists).")
         except Exception as table_err:
-            print(f"[STARTUP] Database tables check FAILED: {table_err}")
-            print("[STARTUP] WARNING: Tables may not be created. Ensure migrations have run.")
+            logger.error(f"[STARTUP] Database tables check FAILED: {table_err}")
+            logger.warning("[STARTUP] WARNING: Tables may not be created. Ensure migrations have run.")
     except Exception as db_err:
-        print(f"[STARTUP] Database connection FAILED: {db_err}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"[STARTUP] Database connection FAILED: {db_err}", exc_info=True)
 
     start_scheduler()
     yield
@@ -75,6 +81,18 @@ app = FastAPI(
 # FRONTEND_URL can be a single URL or comma-separated list of URLs
 # Supports regex matching for local development and Vercel preview/branch deployments.
 # ---------------------------------------------------------------------------
+# Security Headers
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 _raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,

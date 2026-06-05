@@ -13,6 +13,7 @@ import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
+import { completeOnboarding } from "@/app/actions/onboarding";
 
 export default function JoinPage({
   params,
@@ -45,7 +46,7 @@ export default function JoinPage({
             return;
           } else if (user.role === "tenant") {
             // Already a tenant, set the onboarding complete cookie and go to dashboard
-            document.cookie = "__onboarding_complete=true; path=/";
+            await completeOnboarding();
             router.push("/tenant/dashboard");
             return;
           }
@@ -64,7 +65,7 @@ export default function JoinPage({
     setError("");
     try {
       await api.post("/api/v1/onboarding/accept-invite", { token });
-      document.cookie = "__onboarding_complete=true; path=/";
+      await completeOnboarding();
       router.push("/tenant/dashboard");
     } catch (err: any) {
       setError(err.message || "Failed to accept invite. It may have expired or already been used.");
