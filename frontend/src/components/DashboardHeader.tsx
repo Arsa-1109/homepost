@@ -9,7 +9,7 @@ export function DashboardHeader() {
       <h1 className="text-3xl font-bold tracking-tight">Landlord Dashboard</h1>
       <div className="flex flex-col sm:flex-row gap-3">
         <Link 
-          href="/landlord/tenants" 
+          href="/landlord/units" 
           className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto")}
         >
           <UserPlus className="mr-2 h-4 w-4" />
