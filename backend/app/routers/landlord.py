@@ -12,10 +12,11 @@ from app.models.maintenance_request import MaintenanceRequest, VALID_TRANSITIONS
 from app.models.announcement import Announcement
 from app.schemas.property import PropertyCreate, PropertyUpdate
 from app.schemas.unit import UnitCreate, UnitUpdate
-from app.schemas.maintenance import MaintenanceRequestUpdate
+from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequestResponse
 from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate
 from app.schemas.document import DocumentCreate
 from app.services.email import send_status_update
+from app.services.storage import generate_presigned_download_url
 
 router = APIRouter(prefix="/landlord", tags=["Landlord"])
 
@@ -78,7 +79,7 @@ async def list_units(
 # ---------------------------------------------------------------------------
 # Maintenance Requests
 # ---------------------------------------------------------------------------
-@router.get("/maintenance", response_model=list[MaintenanceRequest])
+@router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
 async def list_maintenance_requests(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -101,9 +102,24 @@ async def list_maintenance_requests(
     req_result = await session.execute(
         select(MaintenanceRequest).where(MaintenanceRequest.unit_id.in_(unit_ids)).order_by(MaintenanceRequest.created_at.desc())
     )
-    return req_result.scalars().all()
+    requests = req_result.scalars().all()
+    
+    response_data = []
+    for r in requests:
+        urls = []
+        if r.image_keys:
+            for key in r.image_keys:
+                try:
+                    urls.append(generate_presigned_download_url(key))
+                except Exception:
+                    pass
+        resp = MaintenanceRequestResponse.model_validate(r)
+        resp.image_urls = urls
+        response_data.append(resp)
+        
+    return response_data
 
-@router.patch("/maintenance/{request_id}", response_model=MaintenanceRequest)
+@router.patch("/maintenance/{request_id}", response_model=MaintenanceRequestResponse)
 async def update_maintenance_request(
     request_id: uuid.UUID,
     req_in: MaintenanceRequestUpdate,
@@ -140,7 +156,18 @@ async def update_maintenance_request(
         
     await session.commit()
     await session.refresh(db_req)
-    return db_req
+    
+    urls = []
+    if db_req.image_keys:
+        for key in db_req.image_keys:
+            try:
+                urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+                
+    resp = MaintenanceRequestResponse.model_validate(db_req)
+    resp.image_urls = urls
+    return resp
 
 # ---------------------------------------------------------------------------
 # Announcements

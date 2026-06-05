@@ -11,6 +11,7 @@ type MaintenanceRequest = {
   status: "open" | "in_progress" | "resolved" | "closed";
   priority: "low" | "medium" | "high" | "emergency";
   created_at: string;
+  image_urls?: string[];
 };
 
 export default function TenantRequestsPage() {
@@ -72,6 +73,42 @@ export default function TenantRequestsPage() {
                 </span>
               </div>
               <p className="text-sm text-[rgb(var(--ml-text-secondary))] line-clamp-2">{req.description}</p>
+              
+              {req.image_urls && req.image_urls.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {req.image_urls.map((url, idx) => (
+                      <a 
+                        key={idx} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="group/img block overflow-hidden rounded border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
+                        onClick={(e) => e.stopPropagation()} // Prevent card click trigger
+                      >
+                        <div className="relative w-20 h-16 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={url} 
+                            alt={`Attachment ${idx + 1}`} 
+                            className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                              const parent = (e.target as HTMLElement).parentElement;
+                              if (parent) {
+                                const placeholder = document.createElement('div');
+                                placeholder.className = 'text-[10px] text-[rgb(var(--ml-text-secondary))] p-1 text-center font-medium';
+                                placeholder.innerText = 'View';
+                                parent.appendChild(placeholder);
+                              }
+                            }}
+                          />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 text-xs text-[rgb(var(--ml-text-secondary))] flex items-center justify-between">
                 <span>Priority: {req.priority.toUpperCase()}</span>
                 <span>{new Date(req.created_at).toLocaleDateString()}</span>
