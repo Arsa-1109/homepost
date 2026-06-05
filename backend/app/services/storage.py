@@ -78,6 +78,7 @@ def generate_presigned_upload_url(
 def generate_presigned_download_url(
     object_key: str,
     expires: int = 3600,
+    filename: str = None,
 ) -> str:
     """
     Generate a presigned GET URL for downloading/viewing a file from R2.
@@ -85,16 +86,23 @@ def generate_presigned_download_url(
     Args:
         object_key: The R2 object key.
         expires: URL validity in seconds (default: 1 hour).
+        filename: Optional clean filename to set ResponseContentDisposition attachment header.
 
     Returns:
         Presigned GET URL string.
     """
+    params = {
+        "Bucket": settings.r2_bucket_name,
+        "Key": object_key,
+    }
+    if filename:
+        # Extract file extension and base name, clean it
+        clean_filename = "".join(c for c in filename if c.isalnum() or c in "._- ")
+        params["ResponseContentDisposition"] = f'attachment; filename="{clean_filename}"'
+
     url = _s3_client.generate_presigned_url(
         ClientMethod="get_object",
-        Params={
-            "Bucket": settings.r2_bucket_name,
-            "Key": object_key,
-        },
+        Params=params,
         ExpiresIn=expires,
     )
     return url

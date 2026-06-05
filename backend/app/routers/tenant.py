@@ -13,6 +13,7 @@ from app.models.maintenance_request import MaintenanceRequest, RequestStatus
 from app.models.announcement import Announcement
 from app.models.document import Document
 from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse
+from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
 from app.services.storage import generate_presigned_download_url
 
@@ -176,7 +177,7 @@ async def list_property_announcements(
 # ---------------------------------------------------------------------------
 # Documents
 # ---------------------------------------------------------------------------
-@router.get("/documents", response_model=list[Document])
+@router.get("/documents", response_model=list[DocumentResponse])
 async def list_shared_documents(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
@@ -196,5 +197,18 @@ async def list_shared_documents(
         )
         .order_by(Document.created_at.desc())
     )
-    return result.scalars().all()
+    docs = result.scalars().all()
+    
+    response_data = []
+    for d in docs:
+        url = ""
+        try:
+            url = generate_presigned_download_url(d.file_key)
+        except Exception:
+            pass
+        resp = DocumentResponse.model_validate(d)
+        resp.file_url = url
+        response_data.append(resp)
+        
+    return response_data
 

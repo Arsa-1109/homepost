@@ -37,6 +37,7 @@ async def get_presigned_upload_url(
 @router.get("/download-url", response_model=DownloadURLResponse)
 async def get_presigned_download_url(
     file_key: str = Query(..., description="The R2 object key to download"),
+    download: bool = Query(False, description="Whether to trigger download response headers"),
     user: User = Depends(get_current_user)
 ):
     """
@@ -45,7 +46,9 @@ async def get_presigned_download_url(
     if not file_key.startswith("maintenance/") and not file_key.startswith("documents/"):
         raise HTTPException(status_code=400, detail="Invalid file key.")
         
+    filename = file_key.split("/")[-1] if download else None
+    
     # 1 hour expiration
-    url = generate_presigned_download_url(file_key, expires=3600)
+    url = generate_presigned_download_url(file_key, expires=3600, filename=filename)
     
     return DownloadURLResponse(download_url=url)
