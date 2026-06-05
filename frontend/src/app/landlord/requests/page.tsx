@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
+import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon } from "lucide-react";
 
 import { uploadFile } from "@/lib/upload";
 
@@ -93,35 +94,47 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         
         {req.image_urls && req.image_urls.length > 0 && (
           <div className="pt-2 space-y-2">
-            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Tenant Attached Photo / Document:</span>
-            <div className="flex flex-wrap gap-4">
-              {req.image_urls.map((url, idx) => (
-                <a 
-                  key={idx} 
-                  href={url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group block overflow-hidden rounded-lg border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
-                >
-                  <div className="relative w-32 h-24 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={url} 
-                      alt={`Attachment ${idx + 1}`} 
-                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                        const parent = (e.target as HTMLElement).parentElement;
-                        if (parent) {
-                          const placeholder = document.createElement('div');
-                          placeholder.className = 'text-xs text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium';
-                          placeholder.innerText = 'View Document';
-                          parent.appendChild(placeholder);
-                        }
-                      }}
-                    />
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Attached Documents & Photos:</span>
+            <div className="flex flex-col gap-3">
+              {req.image_urls.map((url, idx) => {
+                const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+                const fileName = url.split('/').pop()?.split('?')[0] || `Document ${idx + 1}`;
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-[rgb(var(--ml-border))] bg-[#1a1a1a] hover:border-[rgb(var(--ml-accent))] transition-colors">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="flex-shrink-0 w-10 h-10 bg-black/20 rounded flex items-center justify-center text-[rgb(var(--ml-text-secondary))]">
+                        {isImage ? <ImageIcon className="w-5 h-5" /> : <FileIcon className="w-5 h-5" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate text-white" title={fileName}>{fileName}</p>
+                        <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Attachment</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                      <a 
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-md hover:bg-white/5 text-[rgb(var(--ml-text-secondary))] hover:text-white transition-colors"
+                        title="View"
+                      >
+                        <ExternalLinkIcon className="w-4 h-4" />
+                      </a>
+                      <a 
+                        href={url}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-md hover:bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-2"
+                        title="Download"
+                      >
+                        <DownloadIcon className="w-4 h-4" />
+                        <span className="text-xs font-medium hidden sm:inline">Download</span>
+                      </a>
+                    </div>
                   </div>
-                </a>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
