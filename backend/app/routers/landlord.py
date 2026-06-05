@@ -479,6 +479,15 @@ async def get_dashboard_summary(
             "occupied_units": occupied_count,
             "vacant_units": vacant_count,
         },
+        "units": [
+            {
+                "id": str(u.id),
+                "property_id": str(u.property_id),
+                "unit_label": u.unit_label,
+                "is_occupied": str(u.id) in occupied_unit_ids,
+            }
+            for u in all_units
+        ],
         "urgent_maintenance": [
             {
                 "id": str(r.id),

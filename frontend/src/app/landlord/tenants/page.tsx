@@ -5,8 +5,7 @@ import { fetchAPI } from "@/lib/api";
 
 type User = {
   id: string;
-  first_name: string;
-  last_name: string;
+  full_name: string;
   email: string;
 };
 
@@ -106,7 +105,7 @@ export default function PendingTenantsPage() {
           {tenants.map(t => (
             <div key={t.id} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="font-bold text-lg">{t.first_name} {t.last_name}</h3>
+                <h3 className="font-bold text-lg">{t.full_name || "Unnamed Tenant"}</h3>
                 <p className="text-[rgb(var(--ml-text-secondary))]">{t.email}</p>
               </div>
 
