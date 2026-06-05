@@ -60,6 +60,8 @@ class MaintenanceRequest(SQLModel, table=True):
         sa_column=Column(JSON, nullable=True),
     )
 
+    landlord_notes: Optional[str] = Field(default=None, max_length=2000)
+
     priority: RequestPriority = Field(
         sa_column=Column(
             String,
