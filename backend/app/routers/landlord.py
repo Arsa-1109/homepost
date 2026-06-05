@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 import uuid
@@ -133,6 +133,7 @@ async def list_maintenance_requests(
 async def update_maintenance_request(
     request_id: uuid.UUID,
     req_in: MaintenanceRequestUpdate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
@@ -146,32 +147,43 @@ async def update_maintenance_request(
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
         
-    if req_in.status:
-        if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
-            raise HTTPException(status_code=400, detail=f"Invalid status transition from {db_req.status} to {req_in.status}")
-        db_req.status = req_in.status
-        
-        # Trigger email if status is changing away from OPEN
-        if req_in.status != "open":
-            tenant_profile = await session.get(User, db_req.tenant_id)
-            if tenant_profile and tenant_profile.email:
-                send_status_update(
-                    tenant_email=tenant_profile.email,
-                    request_title=db_req.title,
-                    new_status=req_in.status
-                )
+    try:
+        if req_in.status and req_in.status != db_req.status:
+            if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
+                valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
+                raise HTTPException(status_code=400, detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. Valid transitions are: {valid_states}")
+            db_req.status = req_in.status
+            
+            # Trigger email if status is changing away from OPEN
+            if req_in.status != "open":
+                from app.models.tenant_profile import TenantProfile
+                tenant_profile = await session.get(TenantProfile, db_req.tenant_id)
+                if tenant_profile:
+                    tenant_user = await session.get(User, tenant_profile.user_id)
+                    if tenant_user and tenant_user.email:
+                        background_tasks.add_task(
+                            send_status_update,
+                            tenant_email=tenant_user.email,
+                            request_title=db_req.title,
+                            new_status=req_in.status
+                        )
 
-    if req_in.priority:
-        db_req.priority = req_in.priority
-        
-    if req_in.landlord_notes is not None:
-        db_req.landlord_notes = req_in.landlord_notes
-        
-    if req_in.landlord_image_keys is not None:
-        db_req.landlord_image_keys = req_in.landlord_image_keys
-        
-    await session.commit()
-    await session.refresh(db_req)
+        if req_in.priority:
+            db_req.priority = req_in.priority
+            
+        if req_in.landlord_notes is not None:
+            db_req.landlord_notes = req_in.landlord_notes
+            
+        if req_in.landlord_image_keys is not None:
+            db_req.landlord_image_keys = req_in.landlord_image_keys
+            
+        await session.commit()
+        await session.refresh(db_req)
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred while updating the database: {str(e)}")
     
     urls = []
     if db_req.image_keys:

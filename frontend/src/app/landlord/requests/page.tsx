@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
-import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon } from "lucide-react";
+import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon, Eye, X } from "lucide-react";
 
 import { uploadFile } from "@/lib/upload";
 
@@ -21,14 +21,212 @@ type MaintenanceRequest = {
   landlord_image_keys?: string[];
 };
 
+function getFriendlyFileName(url: string) {
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const baseName = decodedUrl.split('/').pop()?.split('?')[0] || '';
+    if (!baseName) return 'Document';
+    
+    const lastDot = baseName.lastIndexOf('.');
+    const ext = lastDot > -1 ? baseName.substring(lastDot) : '';
+    
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const match = baseName.match(uuidRegex);
+    
+    if (match) {
+      const uuidStr = match[0];
+      let nameWithoutUuid = baseName.replace(uuidStr, '');
+      
+      if (ext && nameWithoutUuid.endsWith(ext)) {
+        nameWithoutUuid = nameWithoutUuid.slice(0, -ext.length);
+      }
+      
+      nameWithoutUuid = nameWithoutUuid.replace(/^[-_.]+|[-_.]+$/g, '');
+      
+      if (!nameWithoutUuid.trim()) {
+        const isImg = ext.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+        return isImg ? `Photo${ext}` : `Document${ext}`;
+      }
+      
+      if (nameWithoutUuid.length > 12) {
+        return `${nameWithoutUuid.substring(0, 10)}...${ext}`;
+      }
+      return `${nameWithoutUuid}${ext}`;
+    }
+    
+    let namePart = lastDot > -1 ? baseName.substring(0, lastDot) : baseName;
+    if (namePart.length > 12) {
+      return `${namePart.substring(0, 10)}...${ext}`;
+    }
+    return baseName;
+  } catch (e) {
+    return 'Document';
+  }
+}
+
+function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
+  const friendlyName = getFriendlyFileName(url);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+      onClick={onClose}
+    >
+      <button 
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50 focus:outline-none border border-white/10"
+        aria-label="Close preview"
+      >
+        <X className="w-5 h-5" />
+      </button>
+
+      <div 
+        className="relative max-w-[90vw] max-h-[80vh] md:max-w-[80vw] md:max-h-[85vh] flex flex-col items-center justify-center p-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img 
+          src={url} 
+          alt="Full resolution attachment" 
+          className="object-contain max-w-full max-h-[75vh] rounded-lg shadow-2xl border border-white/10 select-none animate-scaleIn"
+        />
+        
+        <div className="mt-4 flex items-center gap-4 bg-[#1a1a1a]/95 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm shadow-lg">
+          <span className="text-xs text-white/80 font-medium truncate max-w-[200px] sm:max-w-xs" title={url.split('/').pop()?.split('?')[0]}>
+            {friendlyName}
+          </span>
+          <div className="w-[1px] h-3 bg-white/25" />
+          <a 
+            href={url}
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-white font-semibold transition-colors"
+          >
+            <DownloadIcon className="w-3.5 h-3.5" />
+            Download
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AttachmentThumbnail({ 
+  url, 
+  onViewImage 
+}: { 
+  url: string; 
+  onViewImage: (url: string) => void; 
+}) {
+  const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+  const friendlyName = getFriendlyFileName(url);
+  const rawFileName = url.split('/').pop()?.split('?')[0] || "Attachment";
+
+  const handleView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isImage) {
+      onViewImage(url);
+    } else {
+      window.open(url, "_blank");
+    }
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  if (isImage) {
+    return (
+      <div 
+        onClick={handleView}
+        className="group relative w-32 h-32 rounded-lg border border-[rgb(var(--ml-border))] overflow-hidden bg-[#121212] hover:border-[rgb(var(--ml-accent))] transition-colors cursor-pointer flex-shrink-0"
+      >
+        <img 
+          src={url} 
+          alt={friendlyName} 
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+        />
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 z-10">
+          <button 
+            onClick={handleView}
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10"
+            title="View full size"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <a 
+            href={url} 
+            download 
+            onClick={handleDownload}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10"
+            title="Download"
+          >
+            <DownloadIcon className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={handleView}
+      className="group relative w-32 h-32 rounded-lg border border-[rgb(var(--ml-border))] bg-[#1a1a1a] hover:border-[rgb(var(--ml-accent))] transition-colors flex flex-col items-center justify-between p-3 cursor-pointer flex-shrink-0 select-none"
+    >
+      <div className="flex-1 flex items-center justify-center">
+        <FileIcon className="w-10 h-10 text-[rgb(var(--ml-accent))]" />
+      </div>
+      <span className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-medium truncate w-full text-center" title={rawFileName}>
+        {friendlyName}
+      </span>
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-lg z-10">
+        <button 
+          onClick={handleView}
+          className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10"
+          title="Open file"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+        <a 
+          href={url} 
+          download 
+          onClick={handleDownload}
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10"
+          title="Download"
+        >
+          <DownloadIcon className="w-4 h-4" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () => void }) {
   const [status, setStatus] = useState(req.status);
   const [notes, setNotes] = useState(req.landlord_notes || "");
   const [files, setFiles] = useState<File[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const handleUpdate = async () => {
     setIsUpdating(true);
+    setError(null);
     try {
       let imageKeys: string[] | undefined = undefined;
       
@@ -55,8 +253,8 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
       });
       setFiles([]);
       onUpdate();
-    } catch (err) {
-      alert("Failed to update request");
+    } catch (err: any) {
+      setError(err.message || "Failed to update request");
     } finally {
       setIsUpdating(false);
     }
@@ -94,81 +292,29 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         
         {req.image_urls && req.image_urls.length > 0 && (
           <div className="pt-2 space-y-2">
-            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Attached Documents & Photos:</span>
-            <div className="flex flex-col gap-3">
-              {req.image_urls.map((url, idx) => {
-                const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
-                const fileName = url.split('/').pop()?.split('?')[0] || `Document ${idx + 1}`;
-                return (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-[rgb(var(--ml-border))] bg-[#1a1a1a] hover:border-[rgb(var(--ml-accent))] transition-colors">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="flex-shrink-0 w-10 h-10 bg-black/20 rounded flex items-center justify-center text-[rgb(var(--ml-text-secondary))]">
-                        {isImage ? <ImageIcon className="w-5 h-5" /> : <FileIcon className="w-5 h-5" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate text-white" title={fileName}>{fileName}</p>
-                        <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Attachment</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                      <a 
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-md hover:bg-white/5 text-[rgb(var(--ml-text-secondary))] hover:text-white transition-colors"
-                        title="View"
-                      >
-                        <ExternalLinkIcon className="w-4 h-4" />
-                      </a>
-                      <a 
-                        href={url}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-2 rounded-md hover:bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-2"
-                        title="Download"
-                      >
-                        <DownloadIcon className="w-4 h-4" />
-                        <span className="text-xs font-medium hidden sm:inline">Download</span>
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Attached Documents & Photos:</span>
+            <div className="flex flex-wrap gap-4 pt-1">
+              {req.image_urls.map((url, idx) => (
+                <AttachmentThumbnail 
+                  key={idx} 
+                  url={url} 
+                  onViewImage={setLightboxUrl} 
+                />
+              ))}
             </div>
           </div>
         )}
 
         {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
           <div className="pt-2 space-y-2">
-            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Your Uploaded Attachments:</span>
-            <div className="flex flex-wrap gap-4">
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Your Uploaded Attachments:</span>
+            <div className="flex flex-wrap gap-4 pt-1">
               {req.landlord_image_urls.map((url, idx) => (
-                <a 
+                <AttachmentThumbnail 
                   key={idx} 
-                  href={url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group block overflow-hidden rounded-lg border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
-                >
-                  <div className="relative w-32 h-24 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={url} 
-                      alt={`Attachment ${idx + 1}`} 
-                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                        const parent = (e.target as HTMLElement).parentElement;
-                        if (parent) {
-                          const placeholder = document.createElement('div');
-                          placeholder.className = 'text-xs text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium';
-                          placeholder.innerText = 'View Document';
-                          parent.appendChild(placeholder);
-                        }
-                      }}
-                    />
-                  </div>
-                </a>
+                  url={url} 
+                  onViewImage={setLightboxUrl} 
+                />
               ))}
             </div>
           </div>
@@ -220,6 +366,12 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
           )}
         </div>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-2 rounded-lg break-words">
+            {error}
+          </div>
+        )}
+
         <button
           onClick={handleUpdate}
           disabled={!hasChanges || isUpdating}
@@ -228,6 +380,10 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
           {isUpdating ? "Updating..." : "Update Request"}
         </button>
       </div>
+
+      {lightboxUrl && (
+        <LightboxModal url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      )}
     </div>
   );
 }

@@ -26,8 +26,8 @@ settings = get_settings()
 
 resend.api_key = settings.resend_api_key
 
-# Sender address — use your verified Resend domain
-FROM_EMAIL = "Homepost <noreply@yourdomain.com>"
+# Sender address — sandbox email since no custom domain is verified
+FROM_EMAIL = "Homepost <onboarding@resend.dev>"
 
 
 def _send_email(to: str, subject: str, html: str) -> None:
@@ -45,6 +45,7 @@ def _send_email(to: str, subject: str, html: str) -> None:
             }
         )
     except Exception as e:
+        print(f"❌ RESEND API ERROR for {to}: {repr(e)}")
         logger.error(f"Failed to send email to {to}: {e}")
 
 

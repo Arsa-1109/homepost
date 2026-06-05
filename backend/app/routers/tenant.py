@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 import uuid
@@ -54,6 +54,7 @@ async def get_my_profile(
 @router.post("/maintenance", response_model=MaintenanceRequestResponse)
 async def submit_maintenance_request(
     req_in: MaintenanceRequestCreate,
+    background_tasks: BackgroundTasks,
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
@@ -76,7 +77,8 @@ async def submit_maintenance_request(
             if landlord and landlord.email:
                 tenant_user = await session.get(User, profile.user_id)
                 tenant_name = tenant_user.full_name if (tenant_user and tenant_user.full_name) else "A tenant"
-                send_maintenance_notification(
+                background_tasks.add_task(
+                    send_maintenance_notification,
                     landlord_email=landlord.email,
                     tenant_name=tenant_name,
                     unit_label=unit.unit_label,
@@ -127,6 +129,7 @@ async def list_my_maintenance_requests(
 @router.post("/maintenance/{request_id}/reopen", response_model=MaintenanceRequestResponse)
 async def reopen_maintenance_request(
     request_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
@@ -162,7 +165,8 @@ async def reopen_maintenance_request(
                 tenant_user = await session.get(User, profile.user_id)
                 tenant_name = tenant_user.full_name if (tenant_user and tenant_user.full_name) else "A tenant"
                 from app.services.email import send_reopen_notification
-                send_reopen_notification(
+                background_tasks.add_task(
+                    send_reopen_notification,
                     landlord_email=landlord.email,
                     tenant_name=tenant_name,
                     unit_label=unit.unit_label,
