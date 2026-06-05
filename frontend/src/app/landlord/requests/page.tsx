@@ -65,6 +65,41 @@ function getFriendlyFileName(url: string) {
   }
 }
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  open: ["in_progress"],
+  in_progress: ["resolved"],
+  resolved: ["closed", "open"],
+  closed: [],
+};
+
+function getEmpatheticErrorMessage(rawError: string): string {
+  const lowercaseError = rawError.toLowerCase();
+  
+  if (lowercaseError.includes("invalid status transition")) {
+    if (lowercaseError.includes("from 'open'")) {
+      return "Please set this request's status to 'In Progress' first so the tenant knows you are working on the issue.";
+    }
+    if (lowercaseError.includes("from 'in_progress'")) {
+      return "Only requests currently 'In Progress' can be marked as 'Resolved'.";
+    }
+    return "This request status sequence is invalid. Please follow the standard workflow steps.";
+  }
+  
+  if (lowercaseError.includes("invalid prefix") || lowercaseError.includes("invalid file key")) {
+    return "One of the files you attached has an invalid format or size. Please select another file and try again.";
+  }
+  
+  if (lowercaseError.includes("access denied") || lowercaseError.includes("forbidden")) {
+    return "You do not have permission to update this maintenance request. Try logging in again.";
+  }
+  
+  if (lowercaseError.includes("not found")) {
+    return "This maintenance request could not be found. It may have been removed or updated elsewhere.";
+  }
+  
+  return "We couldn't update the request right now. Please verify your internet connection and try again.";
+}
+
 function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
   const friendlyName = getFriendlyFileName(url);
 
@@ -256,7 +291,8 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
       setFiles([]);
       onUpdate();
     } catch (err: any) {
-      setError(err.message || "Failed to update request");
+      const rawMsg = err.message || "Failed to update request";
+      setError(getEmpatheticErrorMessage(rawMsg));
     } finally {
       setIsUpdating(false);
     }
@@ -294,7 +330,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         
         {req.image_urls && req.image_urls.length > 0 && (
           <div className="pt-2 space-y-2">
-            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Attached Documents & Photos:</span>
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Tenant Photos & Context:</span>
             <div className="flex flex-wrap gap-4 pt-1">
               {req.image_urls.map((url, idx) => (
                 <AttachmentThumbnail 
@@ -309,7 +345,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
 
         {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
           <div className="pt-2 space-y-2">
-            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Your Uploaded Attachments:</span>
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Landlord Resolution Files:</span>
             <div className="flex flex-wrap gap-4 pt-1">
               {req.landlord_image_urls.map((url, idx) => (
                 <AttachmentThumbnail 
@@ -334,12 +370,22 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
           <select 
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] appearance-none w-full"
+            disabled={req.status === "closed"}
+            className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] appearance-none w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="open" className="bg-[#1e1e1e]">Open</option>
-            <option value="in_progress" className="bg-[#1e1e1e]">In Progress</option>
-            <option value="resolved" className="bg-[#1e1e1e]">Resolved</option>
-            <option value="closed" className="bg-[#1e1e1e]">Closed</option>
+            {["open", "in_progress", "resolved", "closed"].map((opt) => {
+              const isAllowed = opt === req.status || VALID_TRANSITIONS[req.status]?.includes(opt);
+              return (
+                <option 
+                  key={opt} 
+                  value={opt} 
+                  disabled={!isAllowed}
+                  className="bg-[#1e1e1e] disabled:text-gray-500"
+                >
+                  {opt === "in_progress" ? "In Progress" : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                </option>
+              );
+            })}
           </select>
         </div>
         <div>
@@ -369,8 +415,12 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-2 rounded-lg break-words">
-            {error}
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-start gap-2 break-words animate-fadeIn">
+            <span className="text-sm select-none mt-0.5">⚠️</span>
+            <div className="flex-1">
+              <p className="font-semibold text-red-300 mb-0.5">Could not update request</p>
+              <p className="leading-relaxed">{error}</p>
+            </div>
           </div>
         )}
 
