@@ -21,6 +21,8 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
+from app.models.property import Property
+from sqlalchemy import func
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
@@ -72,6 +74,42 @@ async def register_landlord(
     session.add(user)
     await session.commit()
     return {"status": "success", "message": "Registered as Landlord."}
+
+
+@router.post("/reset-role")
+async def reset_role(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    if user.role == UserRole.LANDLORD:
+        # Check if they have any properties
+        statement = select(func.count(Property.id)).where(Property.owner_id == user.id)
+        result = await session.execute(statement)
+        property_count = result.scalar_one()
+        
+        if property_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot reset role. You have active properties. Please delete them first."
+            )
+        
+        user.role = UserRole.UNASSIGNED
+        session.add(user)
+        await session.commit()
+        return {"status": "success", "message": "Role reset to unassigned."}
+    
+    elif user.role == UserRole.TENANT_PENDING:
+        user.role = UserRole.UNASSIGNED
+        user.requested_landlord_id = None
+        session.add(user)
+        await session.commit()
+        return {"status": "success", "message": "Role reset to unassigned."}
+    
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot reset role from current state."
+        )
 
 
 @router.post("/request-access")
