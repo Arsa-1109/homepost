@@ -22,7 +22,7 @@ export default function LandlordLayout({
           🏠 Homepost
         </div>
         <nav className="space-y-2">
-          {["Dashboard", "Properties", "Units", "Tenants", "Requests", "Announcements", "Documents", "Settings"].map(
+          {["Dashboard", "Properties", "Units", "Requests", "Announcements", "Documents", "Settings"].map(
             (item) => (
               <a
                 key={item}
