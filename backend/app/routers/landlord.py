@@ -425,9 +425,22 @@ async def get_dashboard_summary(
                 TenantProfile.is_active == True,
             )
         )
-        occupied_unit_ids = set(occupied_result.scalars().all())
+        occupied_unit_ids = {str(uid) for uid in occupied_result.scalars().all()}
     else:
         occupied_unit_ids = set()
+
+    # --- Pending Invites ---
+    if unit_ids:
+        from app.models.invite import Invite
+        invite_result = await session.execute(
+            select(Invite.unit_id).where(
+                Invite.unit_id.in_(unit_ids),
+                Invite.status == "pending"
+            )
+        )
+        pending_unit_ids = {str(uid) for uid in invite_result.scalars().all()}
+    else:
+        pending_unit_ids = set()
 
     total_units = len(all_units)
     occupied_count = len(occupied_unit_ids)
@@ -507,6 +520,7 @@ async def get_dashboard_summary(
                 "property_id": str(u.property_id),
                 "unit_label": u.unit_label,
                 "is_occupied": str(u.id) in occupied_unit_ids,
+                "has_pending": str(u.id) in pending_unit_ids,
             }
             for u in all_units
         ],
