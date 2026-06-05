@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 import { uploadFile } from "@/lib/upload";
+import { FileText, FileImage, Download, Eye, File } from "lucide-react";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -13,6 +14,7 @@ type Document = {
   file_type: string;
   created_at: string;
   unit_id?: string | null;
+  file_url?: string;
 };
 
 export default function LandlordDocumentsPage() {
@@ -106,10 +108,17 @@ export default function LandlordDocumentsPage() {
     }
   };
 
-  const handleDownload = async (fileKey: string) => {
+  const handleDownload = async (fileKey: string, title: string) => {
     try {
-      const { download_url } = await fetchAPI<{ download_url: string }>(`/api/v1/uploads/download-url?file_key=${encodeURIComponent(fileKey)}`);
-      window.open(download_url, "_blank");
+      const { download_url } = await fetchAPI<{ download_url: string }>(
+        `/api/v1/uploads/download-url?file_key=${encodeURIComponent(fileKey)}&download=true`
+      );
+      const link = document.createElement("a");
+      link.href = download_url;
+      link.setAttribute("download", title);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (err) {
       alert("Failed to get download link");
     }
@@ -187,33 +196,83 @@ export default function LandlordDocumentsPage() {
             </button>
           </form>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {documents.length === 0 ? (
-              <div className="text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl">
+              <div className="col-span-full text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]">
                 No documents uploaded for this property yet.
               </div>
             ) : (
-              documents.map(doc => (
-                <div key={doc.id} className="flex items-center justify-between p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))]">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-bold text-lg">{doc.title}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"}`}>
-                        {getUnitLabel(doc.unit_id)}
-                      </span>
+              documents.map(doc => {
+                const isImage = doc.file_type.startsWith("image/");
+                const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
+
+                return (
+                  <div key={doc.id} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all group shadow-sm hover:shadow-md">
+                    {/* Preview Thumbnail */}
+                    <div className="relative w-20 h-20 border border-[rgb(var(--ml-border))] rounded-lg overflow-hidden shrink-0">
+                      {isImage && doc.file_url ? (
+                        <div className="relative w-full h-full bg-slate-950 flex items-center justify-center">
+                          <img 
+                            src={doc.file_url} 
+                            alt={doc.title} 
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                      ) : isPdf ? (
+                        <div className="w-full h-full bg-red-950/20 text-red-500 flex flex-col items-center justify-center gap-1">
+                          <FileText className="h-8 w-8" />
+                          <span className="text-[10px] font-bold tracking-wider uppercase">PDF</span>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-blue-950/20 text-blue-400 flex flex-col items-center justify-center gap-1">
+                          <File className="h-8 w-8" />
+                          <span className="text-[10px] font-bold tracking-wider uppercase">DOC</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-[rgb(var(--ml-text-secondary))]">
-                      Added on {new Date(doc.created_at).toLocaleDateString()}
-                    </p>
+
+                    {/* Document Details & Actions */}
+                    <div className="flex-1 flex flex-col justify-between min-w-0">
+                      <div className="space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold text-base text-white group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
+                            {doc.title}
+                          </h3>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"} font-medium`}>
+                            {getUnitLabel(doc.unit_id)}
+                          </span>
+                          <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">
+                            {new Date(doc.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2">
+                        {doc.file_url && (
+                          <a 
+                            href={doc.file_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 border border-[rgb(var(--ml-border))] rounded-lg text-xs font-medium text-white hover:bg-slate-800 transition-colors"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View
+                          </a>
+                        )}
+                        <button 
+                          onClick={() => handleDownload(doc.file_key, doc.title)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[rgb(var(--ml-accent))] text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => handleDownload(doc.file_key)}
-                    className="bg-[rgb(var(--ml-accent))] text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-                  >
-                    Download
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </>

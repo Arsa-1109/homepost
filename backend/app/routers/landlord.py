@@ -14,7 +14,7 @@ from app.schemas.property import PropertyCreate, PropertyUpdate
 from app.schemas.unit import UnitCreate, UnitUpdate
 from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequestResponse
 from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate
-from app.schemas.document import DocumentCreate
+from app.schemas.document import DocumentCreate, DocumentResponse
 from app.services.email import send_status_update
 from app.services.storage import generate_presigned_download_url
 
@@ -203,7 +203,7 @@ async def list_announcements(
 # ---------------------------------------------------------------------------
 from app.models.document import Document
 
-@router.post("/documents", response_model=Document)
+@router.post("/documents", response_model=DocumentResponse)
 async def create_document_record(
     doc_in: DocumentCreate,
     user: User = Depends(get_current_landlord),
@@ -224,9 +224,18 @@ async def create_document_record(
     session.add(doc)
     await session.commit()
     await session.refresh(doc)
-    return doc
+    
+    url = ""
+    try:
+        url = generate_presigned_download_url(doc.file_key)
+    except Exception:
+        pass
+        
+    resp = DocumentResponse.model_validate(doc)
+    resp.file_url = url
+    return resp
 
-@router.get("/properties/{property_id}/documents", response_model=list[Document])
+@router.get("/properties/{property_id}/documents", response_model=list[DocumentResponse])
 async def list_documents(
     property_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
@@ -242,7 +251,20 @@ async def list_documents(
         .where(Document.property_id == property_id)
         .order_by(Document.created_at.desc())
     )
-    return result.scalars().all()
+    docs = result.scalars().all()
+    
+    response_data = []
+    for d in docs:
+        url = ""
+        try:
+            url = generate_presigned_download_url(d.file_key)
+        except Exception:
+            pass
+        resp = DocumentResponse.model_validate(d)
+        resp.file_url = url
+        response_data.append(resp)
+        
+    return response_data
 
 # ---------------------------------------------------------------------------
 # Onboarding & Invites (Phase 4)
