@@ -16,6 +16,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { completeOnboarding } from "@/app/actions/onboarding";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -32,11 +33,11 @@ export default function OnboardingPage() {
         const user: any = await api.get("/api/v1/onboarding/me");
         if (user && user.role) {
           if (user.role === "landlord") {
-            document.cookie = "__onboarding_complete=true; path=/";
+            await completeOnboarding();
             router.push("/landlord/dashboard");
             return;
           } else if (user.role === "tenant") {
-            document.cookie = "__onboarding_complete=true; path=/";
+            await completeOnboarding();
             router.push("/tenant/dashboard");
             return;
           } else if (user.role === "tenant_pending") {
@@ -57,7 +58,7 @@ export default function OnboardingPage() {
     setError("");
     try {
       await api.post("/api/v1/onboarding/register-landlord");
-      document.cookie = "__onboarding_complete=true; path=/";
+      await completeOnboarding();
       router.push("/landlord/dashboard");
     } catch (err: any) {
       setError(err.message || "Something went wrong.");

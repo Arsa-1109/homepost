@@ -32,9 +32,9 @@ export async function uploadFile(
   const contentType = encodeURIComponent(file.type);
   const path = `/api/v1/uploads/presigned-url?filename=${filename}&content_type=${contentType}&prefix=${prefix}`;
 
-  // Step 1: Get presigned URL from backend (GET endpoint with query params)
-  const { upload_url, file_key } =
-    await apiFetch<{ upload_url: string; file_key: string }>(
+  // Step 1: Get presigned POST payload from backend (GET endpoint with query params)
+  const { upload_url, fields, file_key } =
+    await apiFetch<{ upload_url: string; fields: Record<string, string>; file_key: string }>(
       path,
       {
         method: "GET",
@@ -42,13 +42,16 @@ export async function uploadFile(
       token
     );
 
-  // Step 2: Upload directly to R2
+  // Step 2: Upload directly to R2 using FormData (must use POST)
+  const formData = new FormData();
+  Object.entries(fields).forEach(([key, value]) => {
+    formData.append(key, value);
+  });
+  formData.append("file", file); // Must be the last field appended
+
   const uploadResponse = await fetch(upload_url, {
-    method: "PUT",
-    body: file,
-    headers: {
-      "Content-Type": file.type,
-    },
+    method: "POST",
+    body: formData,
   });
 
   if (!uploadResponse.ok) {

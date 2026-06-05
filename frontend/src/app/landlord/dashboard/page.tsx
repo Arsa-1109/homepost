@@ -169,7 +169,8 @@ export default function LandlordDashboard() {
                   setResetting(true);
                   try {
                     await api.post("/api/v1/onboarding/reset-role");
-                    document.cookie = "__onboarding_complete=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                    const { resetOnboarding } = await import("@/app/actions/onboarding");
+                    await resetOnboarding();
                     router.push("/onboarding");
                   } catch (err) {
                     console.error("Failed to reset role:", err);
