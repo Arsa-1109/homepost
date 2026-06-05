@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 
+import { uploadFile } from "@/lib/upload";
+
 type MaintenanceRequest = {
   id: string;
   tenant_id: string;
@@ -14,20 +16,43 @@ type MaintenanceRequest = {
   created_at: string;
   image_urls?: string[];
   landlord_notes?: string;
+  landlord_image_urls?: string[];
+  landlord_image_keys?: string[];
 };
 
 function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () => void }) {
   const [status, setStatus] = useState(req.status);
   const [notes, setNotes] = useState(req.landlord_notes || "");
+  const [files, setFiles] = useState<File[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdate = async () => {
     setIsUpdating(true);
     try {
+      let imageKeys: string[] | undefined = undefined;
+      
+      if (files.length > 0) {
+        imageKeys = [];
+        for (const file of files) {
+          const key = await uploadFile(file, "maintenance-resolution");
+          imageKeys.push(key);
+        }
+        // If there were existing keys and we want to append, we would do:
+        // imageKeys = [...(req.landlord_image_keys || []), ...imageKeys];
+        // But for simplicity, we'll replace or just use the new ones if provided.
+        // Wait, if they upload new files, let's append to existing (up to 3 max in backend).
+        // Actually, replacing is safer to avoid exceeding 3 without delete UI.
+      }
+
       await fetchAPI(`/api/v1/landlord/maintenance/${req.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ status, landlord_notes: notes || null }),
+        body: JSON.stringify({ 
+          status, 
+          landlord_notes: notes || null,
+          ...(imageKeys ? { landlord_image_keys: imageKeys } : {})
+        }),
       });
+      setFiles([]);
       onUpdate();
     } catch (err) {
       alert("Failed to update request");
@@ -36,7 +61,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
     }
   };
 
-  const hasChanges = status !== req.status || notes !== (req.landlord_notes || "");
+  const hasChanges = status !== req.status || notes !== (req.landlord_notes || "") || files.length > 0;
 
   const getStatusColor = (s: string) => {
     switch (s) {
@@ -45,6 +70,13 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
       case "resolved": return "bg-green-500/20 text-green-500 border-green-500/30";
       case "closed": return "bg-gray-500/20 text-gray-500 border-gray-500/30";
       default: return "bg-gray-500/20 text-gray-500 border-gray-500/30";
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files).slice(0, 3);
+      setFiles(selectedFiles);
     }
   };
 
@@ -61,9 +93,44 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         
         {req.image_urls && req.image_urls.length > 0 && (
           <div className="pt-2 space-y-2">
-            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Attached Photo / Document:</span>
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Tenant Attached Photo / Document:</span>
             <div className="flex flex-wrap gap-4">
               {req.image_urls.map((url, idx) => (
+                <a 
+                  key={idx} 
+                  href={url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group block overflow-hidden rounded-lg border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
+                >
+                  <div className="relative w-32 h-24 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={url} 
+                      alt={`Attachment ${idx + 1}`} 
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                        const parent = (e.target as HTMLElement).parentElement;
+                        if (parent) {
+                          const placeholder = document.createElement('div');
+                          placeholder.className = 'text-xs text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium';
+                          placeholder.innerText = 'View Document';
+                          parent.appendChild(placeholder);
+                        }
+                      }}
+                    />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
+          <div className="pt-2 space-y-2">
+            <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Your Uploaded Attachments:</span>
+            <div className="flex flex-wrap gap-4">
+              {req.landlord_image_urls.map((url, idx) => (
                 <a 
                   key={idx} 
                   href={url} 
@@ -123,10 +190,27 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
             className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] min-h-[80px] resize-y"
           />
         </div>
+        
+        <div>
+          <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mb-1 block uppercase tracking-wide">Attach Photos/Docs (Max 3)</span>
+          <input 
+            type="file" 
+            multiple
+            accept="image/*,application/pdf"
+            onChange={handleFileChange}
+            className="w-full text-xs text-[rgb(var(--ml-text-secondary))] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer"
+          />
+          {files.length > 0 && (
+            <p className="text-[10px] text-[rgb(var(--ml-text-secondary))] mt-1">
+              {files.length} file(s) selected
+            </p>
+          )}
+        </div>
+
         <button
           onClick={handleUpdate}
           disabled={!hasChanges || isUpdating}
-          className="w-full bg-[rgb(var(--ml-accent))] text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="w-full bg-[rgb(var(--ml-accent))] text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-auto"
         >
           {isUpdating ? "Updating..." : "Update Request"}
         </button>

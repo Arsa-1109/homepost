@@ -14,6 +14,7 @@ type MaintenanceRequest = {
   updated_at: string;
   image_urls?: string[];
   landlord_notes?: string;
+  landlord_image_urls?: string[];
 };
 
 export default function TenantRequestsPage() {
@@ -109,6 +110,7 @@ export default function TenantRequestsPage() {
               
               {req.image_urls && req.image_urls.length > 0 && (
                 <div className="mt-3 space-y-2">
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Your Attachments:</span>
                   <div className="flex flex-wrap gap-2">
                     {req.image_urls.map((url, idx) => (
                       <a 
@@ -123,6 +125,42 @@ export default function TenantRequestsPage() {
                           <img 
                             src={url} 
                             alt={`Attachment ${idx + 1}`} 
+                            className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-200"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                              const parent = (e.target as HTMLElement).parentElement;
+                              if (parent) {
+                                const placeholder = document.createElement('div');
+                                placeholder.className = 'text-[10px] text-[rgb(var(--ml-text-secondary))] p-1 text-center font-medium';
+                                placeholder.innerText = 'View';
+                                parent.appendChild(placeholder);
+                              }
+                            }}
+                          />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
+                <div className="mt-3 space-y-2 p-3 bg-[rgb(var(--ml-bg-primary))] rounded-lg border border-[rgb(var(--ml-border))]">
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Landlord Attachments:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {req.landlord_image_urls.map((url, idx) => (
+                      <a 
+                        key={idx} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="group/img block overflow-hidden rounded border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
+                        onClick={(e) => e.stopPropagation()} // Prevent card click trigger
+                      >
+                        <div className="relative w-20 h-16 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={url} 
+                            alt={`Landlord Attachment ${idx + 1}`} 
                             className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-200"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = 'none';

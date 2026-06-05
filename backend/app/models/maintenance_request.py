@@ -61,6 +61,11 @@ class MaintenanceRequest(SQLModel, table=True):
     )
 
     landlord_notes: Optional[str] = Field(default=None, max_length=2000)
+    
+    landlord_image_keys: Optional[list[str]] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True),
+    )
 
     priority: RequestPriority = Field(
         sa_column=Column(
