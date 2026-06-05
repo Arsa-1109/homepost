@@ -245,9 +245,10 @@ export default function TenantDashboard() {
         ) : (
           <div className="space-y-2">
             {requests.map((req) => (
-              <div
+              <Link
                 key={req.id}
-                className="flex items-center justify-between p-4 rounded-xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors"
+                href={`/tenant/requests?requestId=${req.id}`}
+                className="flex items-center justify-between p-4 rounded-xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors cursor-pointer block"
               >
                 <div className="min-w-0">
                   <p className="font-medium truncate">{req.title}</p>
@@ -263,7 +264,7 @@ export default function TenantDashboard() {
                 >
                   {req.status.replace("_", " ")}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         )}

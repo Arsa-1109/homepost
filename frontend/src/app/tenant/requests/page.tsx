@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 type MaintenanceRequest = {
   id: string;
@@ -17,9 +25,44 @@ type MaintenanceRequest = {
   landlord_image_urls?: string[];
 };
 
-export default function TenantRequestsPage() {
+function TenantRequestsContent() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestIdParam = searchParams.get("requestId");
+
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  useEffect(() => {
+    if (requestIdParam) {
+      async function loadRequestDetail() {
+        setLoadingDetail(true);
+        setIsDetailOpen(true);
+        try {
+          const data = await fetchAPI<MaintenanceRequest>(`/api/v1/tenant/maintenance/${requestIdParam}`);
+          setSelectedRequest(data);
+        } catch (err) {
+          console.error("Failed to load request details", err);
+        } finally {
+          setLoadingDetail(false);
+        }
+      }
+      loadRequestDetail();
+    } else {
+      setIsDetailOpen(false);
+      setSelectedRequest(null);
+    }
+  }, [requestIdParam]);
+
+  const handleCloseDetail = () => {
+    setIsDetailOpen(false);
+    setSelectedRequest(null);
+    window.history.replaceState(null, "", "/tenant/requests");
+  };
 
   useEffect(() => {
     async function loadRequests() {
@@ -92,7 +135,11 @@ export default function TenantRequestsPage() {
       ) : (
         <div className="space-y-4">
           {requests.map(req => (
-            <div key={req.id} className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-colors cursor-pointer group">
+            <div
+              key={req.id}
+              onClick={() => router.push(`/tenant/requests?requestId=${req.id}`, { scroll: false })}
+              className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-colors cursor-pointer group"
+            >
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-semibold text-lg group-hover:text-[rgb(var(--ml-accent))] transition-colors">{req.title}</h3>
                 <span className={`text-xs px-2 py-1 rounded-full border uppercase tracking-wider font-bold ${getStatusColor(req.status)}`}>
@@ -203,6 +250,109 @@ export default function TenantRequestsPage() {
           ))}
         </div>
       )}
+
+      {/* Detail Sheet */}
+      <Sheet open={isDetailOpen} onOpenChange={(open) => { if (!open) handleCloseDetail(); }}>
+        <SheetContent className="overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Request Details</SheetTitle>
+            <SheetDescription>
+              View full details of the maintenance request.
+            </SheetDescription>
+          </SheetHeader>
+          {loadingDetail ? (
+            <div className="py-8 text-center animate-pulse text-[rgb(var(--ml-text-secondary))]">
+              Loading details...
+            </div>
+          ) : selectedRequest ? (
+            <div className="space-y-6 mt-6">
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-lg">{selectedRequest.title}</h3>
+                  <span className={`text-xs px-2 py-1 rounded-full border uppercase tracking-wider font-bold ${getStatusColor(selectedRequest.status)}`}>
+                    {selectedRequest.status.replace("_", " ")}
+                  </span>
+                </div>
+                <p className="text-sm text-[rgb(var(--ml-text-primary))] whitespace-pre-wrap">{selectedRequest.description}</p>
+              </div>
+
+              {selectedRequest.landlord_notes && (
+                <div className="p-3 bg-[rgb(var(--ml-bg-primary))] rounded-lg border border-[rgb(var(--ml-border))]">
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block mb-1">Landlord Note:</span>
+                  <p className="text-sm text-[rgb(var(--ml-text-primary))] whitespace-pre-wrap">{selectedRequest.landlord_notes}</p>
+                </div>
+              )}
+
+              {selectedRequest.image_urls && selectedRequest.image_urls.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Your Attachments:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRequest.image_urls.map((url, idx) => (
+                      <a 
+                        key={idx} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="group/img block overflow-hidden rounded border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
+                      >
+                        <div className="relative w-24 h-20 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={url} 
+                            alt={`Attachment ${idx + 1}`} 
+                            className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedRequest.landlord_image_urls && selectedRequest.landlord_image_urls.length > 0 && (
+                <div className="space-y-2 p-3 bg-[rgb(var(--ml-bg-primary))] rounded-lg border border-[rgb(var(--ml-border))]">
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block">Landlord Attachments:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRequest.landlord_image_urls.map((url, idx) => (
+                      <a 
+                        key={idx} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="group/img block overflow-hidden rounded border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
+                      >
+                        <div className="relative w-24 h-20 flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={url} 
+                            alt={`Landlord Attachment ${idx + 1}`} 
+                            className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-xs text-[rgb(var(--ml-text-secondary))]">
+                <span>Priority: {selectedRequest.priority.toUpperCase()}</span>
+                <span>Created: {new Date(selectedRequest.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-[rgb(var(--ml-text-secondary))]">
+              Failed to load request.
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
+  );
+}
+
+export default function TenantRequestsPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-12 text-[rgb(var(--ml-text-secondary))] animate-pulse">Loading requests...</div>}>
+      <TenantRequestsContent />
+    </Suspense>
   );
 }
