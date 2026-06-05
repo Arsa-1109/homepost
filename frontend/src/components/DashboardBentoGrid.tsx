@@ -64,14 +64,14 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
           ) : (
             <ul className="space-y-4">
               {data.urgent_maintenance.map((req) => (
-                <li key={req.id} className="flex items-start justify-between border-b border-[rgb(var(--ml-border))] pb-4 last:border-0 last:pb-0">
-                  <div>
-                    <p className="font-medium text-sm">{req.title}</p>
-                    <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                      Unit {req.unit_label} &bull; Reported {new Date(req.created_at).toLocaleDateString()}
-                    </p>
+                <li key={req.id} className="flex flex-col border-b border-[rgb(var(--ml-border))] pb-4 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-sm capitalize">{req.title}</p>
+                    <Badge variant="destructive" className="capitalize">{req.priority}</Badge>
                   </div>
-                  <Badge variant="destructive" className="capitalize">{req.priority}</Badge>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-1">
+                    Unit {req.unit_label} &bull; Reported {new Date(req.created_at).toLocaleDateString()}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -89,13 +89,13 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4 mb-2">
-            <div className="flex flex-col justify-center items-center p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-              <span className="text-xs font-medium text-blue-600 mb-1">Properties</span>
-              <span className="text-2xl font-bold text-blue-700">{data.property_stats.total_properties}</span>
+            <div className="flex flex-col justify-center items-center p-3 bg-blue-50/50 rounded-xl border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
+              <span className="text-xs font-medium text-blue-600 dark:text-slate-200 mb-1">Properties</span>
+              <span className="text-2xl font-bold text-blue-700 dark:text-white">{data.property_stats.total_properties}</span>
             </div>
-            <div className="flex flex-col justify-center items-center p-3 bg-slate-50/50 rounded-xl border border-slate-200">
-              <span className="text-xs font-medium text-slate-600 mb-1">Total Units</span>
-              <span className="text-2xl font-bold text-slate-700">{data.property_stats.total_units}</span>
+            <div className="flex flex-col justify-center items-center p-3 bg-slate-50/50 rounded-xl border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-200 mb-1">Total Units</span>
+              <span className="text-2xl font-bold text-slate-700 dark:text-white">{data.property_stats.total_units}</span>
             </div>
           </div>
           <div className="flex justify-between items-center text-sm">
@@ -125,14 +125,14 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {data.units.map((unit) => (
-                <div key={unit.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white border-green-100 hover:border-green-200' : unit.has_pending ? 'bg-slate-50/50 border-amber-100 hover:border-amber-200' : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'}`}>
+                <div key={unit.id} className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white dark:bg-slate-800/50 border-green-100 dark:border-green-900/30 hover:border-green-200' : unit.has_pending ? 'bg-slate-50/50 dark:bg-slate-800/50 border-amber-100 dark:border-amber-900/30 hover:border-amber-200' : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${unit.is_occupied ? 'bg-green-100 text-green-600' : unit.has_pending ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className={`flex items-center justify-center p-2 rounded-lg ${unit.is_occupied ? 'bg-green-100 text-green-600' : unit.has_pending ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600'}`}>
                       <Home className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-800">{unit.unit_label}</span>
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{unit.unit_label}</span>
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-300">
                         {unit.is_occupied ? 'Occupied' : unit.has_pending ? 'Pending' : 'Vacant'}
                       </span>
                     </div>
@@ -152,7 +152,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
       </Card>
 
       {/* Card 4 (Pending Approvals) - spans 1 column */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-amber-500" />
@@ -162,11 +162,13 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex flex-col">
           {data.pending_approvals.length === 0 ? (
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
-              No pending tenant approvals.
-            </p>
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
+                No pending tenant approvals.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-4">
               {data.pending_approvals.map((tenant) => (
@@ -184,23 +186,25 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
       </Card>
 
       {/* Card 5 (Recent Activity) - spans 2 columns */}
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-2 flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-green-500" />
             Recent Activity
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex flex-col">
           {data.recent_activity.length === 0 ? (
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
-              No recent activity.
-            </p>
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
+                No recent activity.
+              </p>
+            </div>
           ) : (
             <ul className="space-y-4">
               {data.recent_activity.map((act) => (
                 <li key={act.id} className="flex flex-col border-l-2 border-[rgb(var(--ml-border))] pl-4 py-1">
-                  <span className="text-sm font-medium">{act.title}</span>
+                  <span className="text-sm font-medium capitalize">{act.title}</span>
                   <span className="text-xs text-[rgb(var(--ml-text-secondary))]">
                     Unit {act.unit_label} &bull; Status: <span className="capitalize font-medium text-[rgb(var(--ml-accent))]">{act.status}</span> &bull; {new Date(act.updated_at).toLocaleDateString()}
                   </span>
