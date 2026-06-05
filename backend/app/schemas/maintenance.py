@@ -13,6 +13,7 @@ class MaintenanceRequestCreate(BaseModel):
 class MaintenanceRequestUpdate(BaseModel):
     status: RequestStatus | None = None
     priority: RequestPriority | None = None
+    landlord_notes: str | None = None
 
 class MaintenanceRequestResponse(BaseModel):
     id: uuid.UUID
@@ -24,6 +25,7 @@ class MaintenanceRequestResponse(BaseModel):
     image_urls: List[str] = []
     priority: RequestPriority
     status: RequestStatus
+    landlord_notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

@@ -11,6 +11,7 @@ type MaintenanceRequest = {
   status: "open" | "in_progress" | "resolved" | "closed";
   priority: "low" | "medium" | "high" | "emergency";
   created_at: string;
+  updated_at: string;
   image_urls?: string[];
 };
 
@@ -31,6 +32,30 @@ export default function TenantRequestsPage() {
     }
     loadRequests();
   }, []);
+
+  const handleReopen = async (requestId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!confirm("Are you sure you want to reopen this maintenance request?")) {
+      return;
+    }
+    try {
+      const updatedReq = await fetchAPI<MaintenanceRequest>(`/api/v1/tenant/maintenance/${requestId}/reopen`, {
+        method: "POST"
+      });
+      setRequests(prev => prev.map(r => r.id === requestId ? updatedReq : r));
+    } catch (err: any) {
+      alert(err.message || "Failed to reopen request.");
+    }
+  };
+
+  const canReopen = (req: MaintenanceRequest) => {
+    if (req.status !== "resolved") return false;
+    const resolvedDate = new Date(req.updated_at || req.created_at);
+    const today = new Date();
+    const diffTime = today.getTime() - resolvedDate.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays <= 14;
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -109,9 +134,24 @@ export default function TenantRequestsPage() {
                 </div>
               )}
 
-              <div className="mt-4 text-xs text-[rgb(var(--ml-text-secondary))] flex items-center justify-between">
-                <span>Priority: {req.priority.toUpperCase()}</span>
-                <span>{new Date(req.created_at).toLocaleDateString()}</span>
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-xs text-[rgb(var(--ml-text-secondary))] space-x-4">
+                  <span>Priority: {req.priority.toUpperCase()}</span>
+                  <span>{new Date(req.created_at).toLocaleDateString()}</span>
+                </div>
+                {canReopen(req) && (
+                  <button
+                    onClick={(e) => handleReopen(req.id, e)}
+                    className="px-3 py-1.5 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors"
+                  >
+                    Reopen Request
+                  </button>
+                )}
+                {req.status === "resolved" && !canReopen(req) && (
+                  <span className="text-xs text-[rgb(var(--ml-text-secondary))] italic">
+                    Resolved &gt; 14 days ago (Cannot reopen)
+                  </span>
+                )}
               </div>
             </div>
           ))}

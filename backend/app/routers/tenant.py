@@ -74,8 +74,8 @@ async def submit_maintenance_request(
         if prop:
             landlord = await session.get(User, prop.owner_id)
             if landlord and landlord.email:
-                tenant_user = await session.get(User, profile.id)
-                tenant_name = f"{tenant_user.first_name} {tenant_user.last_name}" if tenant_user else "A tenant"
+                tenant_user = await session.get(User, profile.user_id)
+                tenant_name = tenant_user.full_name if (tenant_user and tenant_user.full_name) else "A tenant"
                 send_maintenance_notification(
                     landlord_email=landlord.email,
                     tenant_name=tenant_name,
@@ -137,11 +137,38 @@ async def reopen_maintenance_request(
     if req.status != RequestStatus.RESOLVED:
         raise HTTPException(status_code=400, detail="Only resolved requests can be reopened.")
         
+    # Prevent abuse by restricting reopening to requests resolved within 14 days
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    time_since_resolution = now - req.updated_at
+    if time_since_resolution.days > 14:
+        raise HTTPException(
+            status_code=400, 
+            detail="Requests resolved more than 14 days ago cannot be reopened. Please file a new request."
+        )
+
     req.status = RequestStatus.OPEN
+    req.updated_at = now
     await session.commit()
     await session.refresh(req)
     
-    # TODO: Send email notification to landlord about reopen
+    # Send email notification to landlord about reopen
+    unit = await session.get(Unit, profile.unit_id)
+    if unit:
+        prop = await session.get(Property, unit.property_id)
+        if prop:
+            landlord = await session.get(User, prop.owner_id)
+            if landlord and landlord.email:
+                tenant_user = await session.get(User, profile.user_id)
+                tenant_name = tenant_user.full_name if (tenant_user and tenant_user.full_name) else "A tenant"
+                from app.services.email import send_reopen_notification
+                send_reopen_notification(
+                    landlord_email=landlord.email,
+                    tenant_name=tenant_name,
+                    unit_label=unit.unit_label,
+                    request_title=req.title
+                )
+
     urls = []
     if req.image_keys:
         for key in req.image_keys:
@@ -153,6 +180,7 @@ async def reopen_maintenance_request(
     resp = MaintenanceRequestResponse.model_validate(req)
     resp.image_urls = urls
     return resp
+
 
 # ---------------------------------------------------------------------------
 # Announcements

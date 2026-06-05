@@ -76,6 +76,27 @@ def send_maintenance_notification(
     _send_email(landlord_email, subject, html)
 
 
+def send_reopen_notification(
+    landlord_email: str,
+    tenant_name: str,
+    unit_label: str,
+    request_title: str,
+) -> None:
+    """Notify landlord when a tenant reopens a resolved maintenance request."""
+    subject = f"⚠️ Maintenance Request Reopened — {unit_label}"
+    html = f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #ef4444;">Maintenance Request Reopened</h2>
+        <p><strong>{tenant_name}</strong> has reopened a request for <strong>{unit_label}</strong> that was previously resolved.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; color: #6b7280;">Title</td><td style="padding: 8px;">{request_title}</td></tr>
+        </table>
+        <p>Log in to your dashboard to review and address the issue.</p>
+    </div>
+    """
+    _send_email(landlord_email, subject, html)
+
+
 def send_status_update(
     tenant_email: str,
     request_title: str,
