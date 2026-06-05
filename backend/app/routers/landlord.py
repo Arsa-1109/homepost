@@ -304,3 +304,143 @@ async def deny_tenant(
     session.add(tenant)
     await session.commit()
     return {"status": "success", "message": "Tenant request denied."}
+
+
+# ---------------------------------------------------------------------------
+# Dashboard Summary (all data in one call)
+# ---------------------------------------------------------------------------
+from app.models.tenant_profile import TenantProfile
+
+@router.get("/dashboard")
+async def get_dashboard_summary(
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Returns all data needed to render the landlord dashboard bento grid:
+    - Property & unit stats (total, occupied, vacant)
+    - Urgent/high-priority open maintenance requests
+    - Pending tenant approvals
+    - Recent maintenance activity (last 5 events)
+    """
+    # --- Properties ---
+    prop_result = await session.execute(select(Property).where(Property.owner_id == user.id))
+    properties = prop_result.scalars().all()
+    prop_ids = [p.id for p in properties]
+
+    # --- Units ---
+    if prop_ids:
+        unit_result = await session.execute(select(Unit).where(Unit.property_id.in_(prop_ids)))
+        all_units = unit_result.scalars().all()
+    else:
+        all_units = []
+
+    unit_ids = [u.id for u in all_units]
+
+    # Occupied = units that have an active tenant profile
+    if unit_ids:
+        occupied_result = await session.execute(
+            select(TenantProfile.unit_id).where(
+                TenantProfile.unit_id.in_(unit_ids),
+                TenantProfile.is_active == True,
+            )
+        )
+        occupied_unit_ids = set(occupied_result.scalars().all())
+    else:
+        occupied_unit_ids = set()
+
+    total_units = len(all_units)
+    occupied_count = len(occupied_unit_ids)
+    vacant_count = total_units - occupied_count
+
+    # --- Urgent Maintenance (open or in_progress, priority high/urgent) ---
+    if unit_ids:
+        urgent_result = await session.execute(
+            select(MaintenanceRequest)
+            .where(
+                MaintenanceRequest.unit_id.in_(unit_ids),
+                MaintenanceRequest.status.in_(["open", "in_progress"]),
+                MaintenanceRequest.priority.in_(["high", "urgent"]),
+            )
+            .order_by(MaintenanceRequest.created_at.desc())
+            .limit(5)
+        )
+        urgent_requests = urgent_result.scalars().all()
+    else:
+        urgent_requests = []
+
+    # Build unit_label lookup for maintenance display
+    unit_label_map = {str(u.id): u.unit_label for u in all_units}
+
+    # --- Pending Tenants ---
+    pending_result = await session.execute(
+        select(User).where(
+            User.requested_landlord_id == user.id,
+            User.role == UserRole.TENANT_PENDING,
+        )
+    )
+    pending_tenants = pending_result.scalars().all()
+
+    # For each pending tenant, find the unit they came from (via their invite token if any)
+    # We join through invites to get the unit label
+    from app.models.invite import Invite
+    pending_list = []
+    for t in pending_tenants:
+        # Try to find a used invite for this tenant
+        invite_result = await session.execute(
+            select(Invite).where(Invite.used_by == t.id)
+        )
+        invite = invite_result.scalars().first()
+        unit_label = unit_label_map.get(str(invite.unit_id), "—") if invite else "—"
+        pending_list.append({
+            "id": str(t.id),
+            "name": t.full_name or t.email,
+            "email": t.email,
+            "unit_label": unit_label,
+        })
+
+    # --- Recent Activity (last 5 maintenance requests of any status) ---
+    if unit_ids:
+        recent_result = await session.execute(
+            select(MaintenanceRequest)
+            .where(MaintenanceRequest.unit_id.in_(unit_ids))
+            .order_by(MaintenanceRequest.updated_at.desc())
+            .limit(5)
+        )
+        recent_requests = recent_result.scalars().all()
+    else:
+        recent_requests = []
+
+    activity_list = [
+        {
+            "id": str(r.id),
+            "title": r.title,
+            "status": r.status,
+            "priority": r.priority,
+            "unit_label": unit_label_map.get(str(r.unit_id), "—"),
+            "updated_at": r.updated_at.isoformat(),
+        }
+        for r in recent_requests
+    ]
+
+    return {
+        "property_stats": {
+            "total_properties": len(properties),
+            "total_units": total_units,
+            "occupied_units": occupied_count,
+            "vacant_units": vacant_count,
+        },
+        "urgent_maintenance": [
+            {
+                "id": str(r.id),
+                "title": r.title,
+                "priority": r.priority,
+                "status": r.status,
+                "unit_label": unit_label_map.get(str(r.unit_id), "—"),
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in urgent_requests
+        ],
+        "pending_approvals": pending_list,
+        "recent_activity": activity_list,
+    }

@@ -19,29 +19,31 @@ interface PresignedUrlResponse {
  * Upload a single file to R2 via presigned URL.
  *
  * @param file - The File object to upload
+ * @param prefix - Folder prefix (e.g., 'maintenance' or 'documents')
  * @param token - Clerk session token
  * @returns The R2 object key (used to reference the file later)
  */
 export async function uploadFile(
   file: File,
-  token: string
+  prefix: string = "maintenance",
+  token: string | null = null
 ): Promise<string> {
-  // Step 1: Get presigned URL from backend
-  const { presigned_url, object_key } =
-    await apiFetch<PresignedUrlResponse>(
-      "/api/v1/uploads/presigned-url",
+  const filename = encodeURIComponent(file.name);
+  const contentType = encodeURIComponent(file.type);
+  const path = `/api/v1/uploads/presigned-url?filename=${filename}&content_type=${contentType}&prefix=${prefix}`;
+
+  // Step 1: Get presigned URL from backend (GET endpoint with query params)
+  const { upload_url, file_key } =
+    await apiFetch<{ upload_url: string; file_key: string }>(
+      path,
       {
-        method: "POST",
-        body: JSON.stringify({
-          filename: file.name,
-          content_type: file.type,
-        }),
+        method: "GET",
       },
       token
     );
 
   // Step 2: Upload directly to R2
-  const uploadResponse = await fetch(presigned_url, {
+  const uploadResponse = await fetch(upload_url, {
     method: "PUT",
     body: file,
     headers: {
@@ -55,27 +57,30 @@ export async function uploadFile(
     );
   }
 
-  return object_key;
+  return file_key;
 }
 
 /**
  * Upload multiple files (up to 3) in parallel.
  *
  * @param files - Array of File objects (max 3)
+ * @param prefix - Folder prefix (e.g., 'maintenance' or 'documents')
  * @param token - Clerk session token
  * @returns Array of R2 object keys
  */
 export async function uploadFiles(
   files: File[],
-  token: string
+  prefix: string = "maintenance",
+  token: string | null = null
 ): Promise<string[]> {
   if (files.length > 3) {
     throw new Error("You can upload a maximum of 3 images per request.");
   }
 
   const results = await Promise.all(
-    files.map((file) => uploadFile(file, token))
+    files.map((file) => uploadFile(file, prefix, token))
   );
 
   return results;
 }
+
