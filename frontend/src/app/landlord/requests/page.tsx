@@ -23,8 +23,9 @@ type MaintenanceRequest = {
 
 function getFriendlyFileName(url: string) {
   try {
-    const decodedUrl = decodeURIComponent(url);
-    const baseName = decodedUrl.split('/').pop()?.split('?')[0] || '';
+    const pathPart = url.split('?')[0];
+    const decodedPath = decodeURIComponent(pathPart);
+    const baseName = decodedPath.split('/').pop() || '';
     if (!baseName) return 'Document';
     
     const lastDot = baseName.lastIndexOf('.');
@@ -101,7 +102,7 @@ function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
         />
         
         <div className="mt-4 flex items-center gap-4 bg-[#1a1a1a]/95 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm shadow-lg">
-          <span className="text-xs text-white/80 font-medium truncate max-w-[200px] sm:max-w-xs" title={url.split('/').pop()?.split('?')[0]}>
+          <span className="text-xs text-white/80 font-medium truncate max-w-[200px] sm:max-w-xs" title={url.split('?')[0].split('/').pop() || "Attachment"}>
             {friendlyName}
           </span>
           <div className="w-[1px] h-3 bg-white/25" />
@@ -128,9 +129,10 @@ function AttachmentThumbnail({
   url: string; 
   onViewImage: (url: string) => void; 
 }) {
-  const isImage = url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+  const pathOnly = url.split('?')[0];
+  const isImage = pathOnly.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
   const friendlyName = getFriendlyFileName(url);
-  const rawFileName = url.split('/').pop()?.split('?')[0] || "Attachment";
+  const rawFileName = pathOnly.split('/').pop() || "Attachment";
 
   const handleView = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -233,7 +235,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
       if (files.length > 0) {
         imageKeys = [];
         for (const file of files) {
-          const key = await uploadFile(file, "maintenance-resolution");
+          const key = await uploadFile(file, "maintenance");
           imageKeys.push(key);
         }
         // If there were existing keys and we want to append, we would do:
