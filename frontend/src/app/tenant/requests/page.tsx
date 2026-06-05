@@ -13,6 +13,7 @@ type MaintenanceRequest = {
   created_at: string;
   updated_at: string;
   image_urls?: string[];
+  landlord_notes?: string;
 };
 
 export default function TenantRequestsPage() {
@@ -98,6 +99,13 @@ export default function TenantRequestsPage() {
                 </span>
               </div>
               <p className="text-sm text-[rgb(var(--ml-text-secondary))] line-clamp-2">{req.description}</p>
+              
+              {req.landlord_notes && (
+                <div className="mt-3 p-3 bg-[rgb(var(--ml-bg-primary))] rounded-lg border border-[rgb(var(--ml-border))]">
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide block mb-1">Landlord Note:</span>
+                  <p className="text-sm text-[rgb(var(--ml-text-primary))] whitespace-pre-wrap">{req.landlord_notes}</p>
+                </div>
+              )}
               
               {req.image_urls && req.image_urls.length > 0 && (
                 <div className="mt-3 space-y-2">
