@@ -12,8 +12,9 @@ from app.models.unit import Unit
 from app.models.maintenance_request import MaintenanceRequest, RequestStatus
 from app.models.announcement import Announcement
 from app.models.document import Document
-from app.schemas.maintenance import MaintenanceRequestCreate
+from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse
 from app.services.email import send_maintenance_notification
+from app.services.storage import generate_presigned_download_url
 
 router = APIRouter(prefix="/tenant", tags=["Tenant"])
 
@@ -49,7 +50,7 @@ async def get_my_profile(
 # ---------------------------------------------------------------------------
 # Maintenance Requests
 # ---------------------------------------------------------------------------
-@router.post("/maintenance", response_model=MaintenanceRequest)
+@router.post("/maintenance", response_model=MaintenanceRequestResponse)
 async def submit_maintenance_request(
     req_in: MaintenanceRequestCreate,
     profile: TenantProfile = Depends(get_current_tenant_profile),
@@ -82,9 +83,19 @@ async def submit_maintenance_request(
                     priority=req.priority
                 )
     
-    return req
+    urls = []
+    if req.image_keys:
+        for key in req.image_keys:
+            try:
+                urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
 
-@router.get("/maintenance", response_model=list[MaintenanceRequest])
+    resp = MaintenanceRequestResponse.model_validate(req)
+    resp.image_urls = urls
+    return resp
+
+@router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
 async def list_my_maintenance_requests(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
@@ -95,9 +106,24 @@ async def list_my_maintenance_requests(
         .where(MaintenanceRequest.unit_id == profile.unit_id)
         .order_by(MaintenanceRequest.created_at.desc())
     )
-    return result.scalars().all()
+    requests = result.scalars().all()
 
-@router.post("/maintenance/{request_id}/reopen", response_model=MaintenanceRequest)
+    response_data = []
+    for r in requests:
+        urls = []
+        if r.image_keys:
+            for key in r.image_keys:
+                try:
+                    urls.append(generate_presigned_download_url(key))
+                except Exception:
+                    pass
+        resp = MaintenanceRequestResponse.model_validate(r)
+        resp.image_urls = urls
+        response_data.append(resp)
+
+    return response_data
+
+@router.post("/maintenance/{request_id}/reopen", response_model=MaintenanceRequestResponse)
 async def reopen_maintenance_request(
     request_id: uuid.UUID,
     profile: TenantProfile = Depends(get_current_tenant_profile),
@@ -115,7 +141,17 @@ async def reopen_maintenance_request(
     await session.refresh(req)
     
     # TODO: Send email notification to landlord about reopen
-    return req
+    urls = []
+    if req.image_keys:
+        for key in req.image_keys:
+            try:
+                urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+
+    resp = MaintenanceRequestResponse.model_validate(req)
+    resp.image_urls = urls
+    return resp
 
 # ---------------------------------------------------------------------------
 # Announcements
@@ -150,10 +186,14 @@ async def list_shared_documents(
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
         
-    # Return all documents uploaded for this property
+    # Return documents for this property that are either property-wide (unit_id IS NULL) 
+    # or specific to this tenant's unit (unit_id == unit.id)
     result = await session.execute(
         select(Document)
-        .where(Document.property_id == unit.property_id)
+        .where(
+            Document.property_id == unit.property_id,
+            (Document.unit_id == None) | (Document.unit_id == unit.id)
+        )
         .order_by(Document.created_at.desc())
     )
     return result.scalars().all()

@@ -12,6 +12,7 @@ type MaintenanceRequest = {
   status: "open" | "in_progress" | "resolved" | "closed";
   priority: "low" | "medium" | "high" | "emergency";
   created_at: string;
+  image_urls?: string[];
 };
 
 export default function LandlordMaintenancePage() {
@@ -77,6 +78,42 @@ export default function LandlordMaintenancePage() {
                   </span>
                 </div>
                 <p className="text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap">{req.description}</p>
+                
+                {req.image_urls && req.image_urls.length > 0 && (
+                  <div className="pt-2 space-y-2">
+                    <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wide">Attached Photo / Document:</span>
+                    <div className="flex flex-wrap gap-4">
+                      {req.image_urls.map((url, idx) => (
+                        <a 
+                          key={idx} 
+                          href={url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="group block overflow-hidden rounded-lg border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-colors bg-slate-900"
+                        >
+                          <div className="relative w-32 h-24 flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={url} 
+                              alt={`Attachment ${idx + 1}`} 
+                              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                                const parent = (e.target as HTMLElement).parentElement;
+                                if (parent) {
+                                  const placeholder = document.createElement('div');
+                                  placeholder.className = 'text-xs text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium';
+                                  placeholder.innerText = 'View Document';
+                                  parent.appendChild(placeholder);
+                                }
+                              }}
+                            />
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="text-xs text-[rgb(var(--ml-text-secondary))] flex gap-4 pt-2">
                   <span>Priority: {req.priority.toUpperCase()}</span>
                   <span>Submitted: {new Date(req.created_at).toLocaleDateString()}</span>
