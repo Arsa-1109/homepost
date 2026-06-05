@@ -94,8 +94,17 @@ async def submit_maintenance_request(
             except Exception:
                 pass
 
+    landlord_urls = []
+    if req.landlord_image_keys:
+        for key in req.landlord_image_keys:
+            try:
+                landlord_urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+
     resp = MaintenanceRequestResponse.model_validate(req)
     resp.image_urls = urls
+    resp.landlord_image_urls = landlord_urls
     return resp
 
 @router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
@@ -120,8 +129,16 @@ async def list_my_maintenance_requests(
                     urls.append(generate_presigned_download_url(key))
                 except Exception:
                     pass
+        landlord_urls = []
+        if r.landlord_image_keys:
+            for key in r.landlord_image_keys:
+                try:
+                    landlord_urls.append(generate_presigned_download_url(key))
+                except Exception:
+                    pass
         resp = MaintenanceRequestResponse.model_validate(r)
         resp.image_urls = urls
+        resp.landlord_image_urls = landlord_urls
         response_data.append(resp)
 
     return response_data
@@ -181,8 +198,17 @@ async def reopen_maintenance_request(
             except Exception:
                 pass
 
+    landlord_urls = []
+    if req.landlord_image_keys:
+        for key in req.landlord_image_keys:
+            try:
+                landlord_urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+
     resp = MaintenanceRequestResponse.model_validate(req)
     resp.image_urls = urls
+    resp.landlord_image_urls = landlord_urls
     return resp
 
 
