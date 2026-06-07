@@ -231,20 +231,24 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
 }
 
 export function DashboardBentoSkeleton() {
-  const [sizes, setSizes] = useState<{ [key: string]: number } | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('dashboard_bento_sizes');
-        if (saved) return JSON.parse(saved);
-      } catch (e) {}
-    }
-    return null;
-  });
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Skeleton Card 1 (Urgent Maintenance) */}
-      <Card className="md:col-span-2 self-start" suppressHydrationWarning style={{ minHeight: sizes?.urgent }}>
+    <>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            try {
+              const sizes = JSON.parse(localStorage.getItem('dashboard_bento_sizes') || '{}');
+              if (sizes.urgent) document.documentElement.style.setProperty('--sk-urgent', sizes.urgent + 'px');
+              if (sizes.overview) document.documentElement.style.setProperty('--sk-overview', sizes.overview + 'px');
+              if (sizes.units) document.documentElement.style.setProperty('--sk-units', sizes.units + 'px');
+              if (sizes.activity) document.documentElement.style.setProperty('--sk-activity', sizes.activity + 'px');
+            } catch(e) {}
+          `,
+        }}
+      />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Skeleton Card 1 (Urgent Maintenance) */}
+        <Card className="md:col-span-2 self-start" style={{ minHeight: 'var(--sk-urgent, auto)' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded-full" />
@@ -272,7 +276,7 @@ export function DashboardBentoSkeleton() {
       </Card>
 
       {/* Skeleton Card 2 (Property Overview) */}
-      <Card suppressHydrationWarning style={{ minHeight: sizes?.overview }}>
+      <Card style={{ minHeight: 'var(--sk-overview, auto)' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded-full" />
@@ -296,7 +300,7 @@ export function DashboardBentoSkeleton() {
       </Card>
       
       {/* Skeleton Card 3 (My Units) */}
-      <Card className="md:col-span-3" suppressHydrationWarning style={{ minHeight: sizes?.units }}>
+      <Card className="md:col-span-3" style={{ minHeight: 'var(--sk-units, auto)' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded-full" />
@@ -313,7 +317,7 @@ export function DashboardBentoSkeleton() {
 
 
       {/* Skeleton Card 5 (Recent Activity) */}
-      <Card className="md:col-span-3" suppressHydrationWarning style={{ minHeight: sizes?.activity }}>
+      <Card className="md:col-span-3" style={{ minHeight: 'var(--sk-activity, auto)' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded-full" />
@@ -334,5 +338,6 @@ export function DashboardBentoSkeleton() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }
