@@ -480,7 +480,33 @@ export default function LandlordMaintenancePage() {
       )}
 
       {loading ? (
-        <div className="animate-pulse">Loading requests...</div>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col md:flex-row gap-6 animate-pulse">
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                </div>
+                <div className="h-4 w-1/4 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="space-y-2 pt-2">
+                  <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-4 w-2/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <div className="h-3 w-20 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-3 w-24 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                </div>
+              </div>
+              <div className="md:w-64 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
+                <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="h-20 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : requests.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]">
           No maintenance requests across your properties.

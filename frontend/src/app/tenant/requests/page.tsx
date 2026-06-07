@@ -132,8 +132,23 @@ function TenantRequestsContent() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-[rgb(var(--ml-text-secondary))] animate-pulse">
-          Loading requests...
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
+              <div className="flex justify-between items-start mb-3">
+                <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded-full"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="h-4 w-2/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+              </div>
+              <div className="mt-6 flex gap-4">
+                <div className="h-3 w-20 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="h-3 w-20 bg-[rgb(var(--ml-border))] rounded-md"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : requests.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))]">
