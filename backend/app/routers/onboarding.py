@@ -163,23 +163,30 @@ async def accept_invite(
     if not invite:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Invite token not found."
+            detail="invite_not_found"
+        )
+
+    if invite.status == InviteStatus.ACCEPTED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="invite_already_used"
+        )
+
+    # Note: timezone-naive UTC comparison
+    if invite.status == InviteStatus.EXPIRED or invite.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        if invite.status != InviteStatus.EXPIRED:
+            invite.status = InviteStatus.EXPIRED
+            session.add(invite)
+            await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="invite_expired"
         )
 
     if invite.status != InviteStatus.PENDING:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invite token has already been used or is invalid."
-        )
-
-    # Note: timezone-naive UTC comparison
-    if invite.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
-        invite.status = InviteStatus.EXPIRED
-        session.add(invite)
-        await session.commit()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invite token has expired."
+            detail="invite_inactive"
         )
 
     # Valid invite. Accept it!

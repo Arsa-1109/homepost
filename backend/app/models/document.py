@@ -23,3 +23,4 @@ class Document(SQLModel, table=True):
     file_key: str = Field(max_length=500)  # R2 object key
     file_type: str = Field(max_length=100)  # MIME type, e.g., "application/pdf"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    is_archived: bool = Field(default=False)

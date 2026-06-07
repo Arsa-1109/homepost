@@ -30,7 +30,10 @@ _s3_client = boto3.client(
     endpoint_url=settings.r2_endpoint_url,
     aws_access_key_id=settings.r2_access_key_id,
     aws_secret_access_key=settings.r2_secret_access_key,
-    config=BotoConfig(signature_version="s3v4"),
+    config=BotoConfig(
+        signature_version="s3v4",
+        s3={'addressing_style': 'path'}
+    ),
     region_name="auto",  # R2 uses "auto" for region
 )
 
@@ -51,29 +54,20 @@ def generate_presigned_upload_url(
     expires: int = 3600,
 ) -> dict:
     """
-    Generate a presigned POST payload for direct client upload to R2.
-
-    ⚠️ Includes Content-Length-Range condition to cap uploads at 10MB.
-
-    Args:
-        object_key: The R2 object key (path within the bucket).
-        content_type: MIME type (e.g., "image/jpeg").
-        expires: URL validity in seconds (default: 1 hour).
-
-    Returns:
-        Presigned POST dictionary containing 'url' and 'fields'.
+    Generate a presigned PUT URL for direct client upload to R2.
+    Cloudflare R2 does not support Presigned POST.
     """
-    post_data = _s3_client.generate_presigned_post(
-        Bucket=settings.r2_bucket_name,
-        Key=object_key,
-        Fields={"Content-Type": content_type},
-        Conditions=[
-            {"Content-Type": content_type},
-            ["content-length-range", 0, 10485760]  # Max 10MB
-        ],
+    url = _s3_client.generate_presigned_url(
+        ClientMethod="put_object",
+        Params={
+            "Bucket": settings.r2_bucket_name,
+            "Key": object_key,
+            "ContentType": content_type
+        },
         ExpiresIn=expires,
     )
-    return post_data
+    # Returning in same dictionary format so the router signature doesn't break
+    return {"url": url, "fields": {}}
 
 
 def generate_presigned_download_url(

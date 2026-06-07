@@ -86,17 +86,19 @@ async def list_maintenance_requests(
 ):
     # Get all maintenance requests for landlord's properties using a single JOIN
     req_result = await session.execute(
-        select(MaintenanceRequest)
+        select(MaintenanceRequest, Property.name, Unit.label)
         .join(Unit, MaintenanceRequest.unit_id == Unit.id)
         .join(Property, Unit.property_id == Property.id)
         .where(Property.owner_id == user.id)
         .order_by(MaintenanceRequest.created_at.desc())
     )
-    requests = req_result.scalars().all()
+    requests = req_result.all()
     
     response_data = []
-    for r in requests:
+    for r, prop_name, unit_label in requests:
         resp = MaintenanceRequestResponse.model_validate(r)
+        resp.property_name = prop_name
+        resp.unit_label = unit_label
         hydrate_maintenance_request(r, resp)
         response_data.append(resp)
         
@@ -451,29 +453,56 @@ async def get_dashboard_summary(
             "unit_label": "—",
         })
 
-    # --- Recent Activity (last 5 maintenance requests of any status) ---
-    if unit_ids:
-        recent_result = await session.execute(
+    # --- Recent Activity ---
+    activity_list = []
+    if unit_ids and prop_ids:
+        from datetime import datetime, timedelta, timezone
+        from app.models.document import Document
+        from app.schemas.activity import ActivityItem
+        
+        thirty_days_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
+        
+        recent_maint_result = await session.execute(
             select(MaintenanceRequest)
-            .where(MaintenanceRequest.unit_id.in_(unit_ids))
+            .where(
+                MaintenanceRequest.unit_id.in_(unit_ids),
+                MaintenanceRequest.updated_at >= thirty_days_ago
+            )
             .order_by(MaintenanceRequest.updated_at.desc())
-            .limit(5)
+            .limit(10)
         )
-        recent_requests = recent_result.scalars().all()
-    else:
-        recent_requests = []
+        recent_maint = recent_maint_result.scalars().all()
+        
+        for r in recent_maint:
+            activity_list.append(ActivityItem(
+                type="maintenance_update",
+                id=r.id,
+                title=r.title,
+                timestamp=r.updated_at,
+                meta=r.status.value if hasattr(r.status, 'value') else str(r.status)
+            ))
+            
+        recent_docs_result = await session.execute(
+            select(Document)
+            .where(Document.property_id.in_(prop_ids))
+            .order_by(Document.created_at.desc())
+            .limit(10)
+        )
+        recent_docs = recent_docs_result.scalars().all()
+        
+        for d in recent_docs:
+            activity_list.append(ActivityItem(
+                type="document_upload",
+                id=d.id,
+                title=d.title,
+                timestamp=d.created_at,
+                meta=d.file_type
+            ))
+            
+        activity_list.sort(key=lambda x: x.timestamp, reverse=True)
+        activity_list = activity_list[:5]
 
-    activity_list = [
-        {
-            "id": str(r.id),
-            "title": r.title,
-            "status": r.status,
-            "priority": r.priority,
-            "unit_label": unit_label_map.get(str(r.unit_id), "—"),
-            "updated_at": r.updated_at.isoformat(),
-        }
-        for r in recent_requests
-    ]
+    prop_name_map = {str(p.id): p.name for p in properties}
 
     return {
         "property_stats": {
@@ -486,6 +515,7 @@ async def get_dashboard_summary(
             {
                 "id": str(u.id),
                 "property_id": str(u.property_id),
+                "property_name": prop_name_map.get(str(u.property_id), "Unknown Property"),
                 "unit_label": u.unit_label,
                 "is_occupied": str(u.id) in occupied_unit_ids,
                 "has_pending": str(u.id) in pending_unit_ids,
@@ -506,3 +536,54 @@ async def get_dashboard_summary(
         "pending_approvals": pending_list,
         "recent_activity": activity_list,
     }
+
+
+# ---------------------------------------------------------------------------
+# Tenant Management
+# ---------------------------------------------------------------------------
+@router.delete("/units/{unit_id}/tenant", status_code=status.HTTP_200_OK)
+async def remove_tenant(
+    unit_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Remove an active tenant from a unit.
+    Sets is_active=False and removed_at=now() on the TenantProfile.
+    Sets unit.status = 'Vacant'.
+    """
+    from app.models.tenant_profile import TenantProfile
+    from datetime import datetime, timezone
+
+    # 1. Verify landlord owns the property this unit belongs to
+    unit = await session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+
+    prop = await session.get(Property, unit.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Property not found or access denied.")
+
+    # 2. Find the active tenant profile for this unit
+    statement = select(TenantProfile).where(
+        TenantProfile.unit_id == unit_id,
+        TenantProfile.is_active == True
+    )
+    result = await session.execute(statement)
+    profile = result.scalar_one_or_none()
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
+
+    # 3. Soft-delete the tenant profile
+    profile.is_active = False
+    profile.removed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    # 4. Reset unit status
+    unit.status = "Vacant"
+
+    # We do NOT delete or modify historical maintenance requests or documents.
+    
+    await session.commit()
+    
+    return {"message": "Tenant successfully removed from unit."}

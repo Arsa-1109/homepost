@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
-import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon, Eye, X } from "lucide-react";
+import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon, Eye, X, InfoIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { uploadFile } from "@/lib/upload";
 
@@ -146,7 +147,7 @@ function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
             download
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-white font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-foreground font-semibold transition-colors"
           >
             <DownloadIcon className="w-3.5 h-3.5" />
             Download
@@ -380,7 +381,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
                   key={opt} 
                   value={opt} 
                   disabled={!isAllowed}
-                  className="bg-[#1e1e1e] disabled:text-gray-500"
+                  className="bg-background disabled:text-gray-500"
                 >
                   {opt === "in_progress" ? "In Progress" : opt.charAt(0).toUpperCase() + opt.slice(1)}
                 </option>
@@ -462,6 +463,16 @@ export default function LandlordMaintenancePage() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold">Maintenance Requests 🔧</h1>
+
+      {!loading && requests.length >= 50 && (
+        <Alert className="bg-orange-500/10 text-orange-600 border-orange-500/20">
+          <InfoIcon className="h-4 w-4" color="currentColor" />
+          <AlertTitle>Notice</AlertTitle>
+          <AlertDescription>
+            Showing the first 50 requests. Pagination coming soon.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {loading ? (
         <div className="animate-pulse">Loading requests...</div>

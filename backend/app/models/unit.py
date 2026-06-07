@@ -21,5 +21,6 @@ class Unit(SQLModel, table=True):
 
     # Day of month rent is due (1–31). Used by APScheduler for reminders.
     rent_due_day: int = Field(default=1, ge=1, le=31)
+    status: str = Field(default="Vacant")
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

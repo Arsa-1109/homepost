@@ -81,7 +81,7 @@ export default function LandlordAnnouncementsPage() {
                 className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
               >
                 {properties.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[#1e1e1e]">{p.name}</option>
+                  <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
                 ))}
               </select>
             </div>

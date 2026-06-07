@@ -49,7 +49,7 @@ export default function NewRequestPage() {
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/tenant/requests" className="text-[rgb(var(--ml-text-secondary))] hover:text-white transition-colors">
+        <Link href="/tenant/requests" className="text-[rgb(var(--ml-text-secondary))] hover:text-foreground transition-colors">
           ← Back
         </Link>
         <h1 className="text-2xl font-bold">New Maintenance Request</h1>
@@ -95,10 +95,10 @@ export default function NewRequestPage() {
             onChange={e => setPriority(e.target.value)}
             className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors appearance-none"
           >
-            <option value="low" className="bg-[#1e1e1e]">Low (Cosmetic, non-urgent)</option>
-            <option value="medium" className="bg-[#1e1e1e]">Medium (Standard issue)</option>
-            <option value="high" className="bg-[#1e1e1e]">High (Needs attention soon)</option>
-            <option value="emergency" className="bg-[#1e1e1e]">Emergency (Immediate threat)</option>
+            <option value="low" className="bg-background">Low (Cosmetic, non-urgent)</option>
+            <option value="medium" className="bg-background">Medium (Standard issue)</option>
+            <option value="high" className="bg-background">High (Needs attention soon)</option>
+            <option value="emergency" className="bg-background">Emergency (Immediate threat)</option>
           </select>
         </div>
 
