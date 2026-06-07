@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AnimatedList } from "@/components/ui/animated-list"
+
 import { AlertCircle, Activity, Building, Users, Home } from "lucide-react"
 
 export type DashboardData = {
