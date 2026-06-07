@@ -86,7 +86,7 @@ async def list_maintenance_requests(
 ):
     # Get all maintenance requests for landlord's properties using a single JOIN
     req_result = await session.execute(
-        select(MaintenanceRequest, Property.name, Unit.label)
+        select(MaintenanceRequest, Property.name, Unit.unit_label)
         .join(Unit, MaintenanceRequest.unit_id == Unit.id)
         .join(Property, Unit.property_id == Property.id)
         .where(Property.owner_id == user.id)
