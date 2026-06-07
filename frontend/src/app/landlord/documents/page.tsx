@@ -131,7 +131,21 @@ export default function LandlordDocumentsPage() {
     return unit ? unit.unit_label : "Unknown Unit";
   };
 
-  if (loading) return <div className="animate-pulse">Loading...</div>;
+  if (loading) return (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold">Documents 📄</h1>
+      <div className="animate-pulse space-y-4">
+        <div className="h-10 w-48 bg-[rgb(var(--ml-border))] rounded-md"></div>
+        <div className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
+        <div className="h-8 w-32 bg-[rgb(var(--ml-border))] rounded-md mt-8"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-32 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">

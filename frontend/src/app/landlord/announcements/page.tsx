@@ -150,7 +150,23 @@ export default function LandlordAnnouncementsPage() {
       <div className="space-y-4">
         <h2 className="text-xl font-bold border-b border-[rgb(var(--ml-border))] pb-2">Recent Announcements</h2>
         {loading ? (
-          <div className="animate-pulse">Loading...</div>
+          <div className="space-y-4">
+            {[1, 2].map(i => (
+              <div key={i} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-4 w-20 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-4 w-5/6 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-[rgb(var(--ml-border))]">
+                  <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : announcements.length === 0 ? (
           <div className="text-[rgb(var(--ml-text-secondary))] py-4">No announcements posted yet.</div>
         ) : (

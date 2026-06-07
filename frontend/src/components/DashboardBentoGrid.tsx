@@ -221,17 +221,17 @@ export function DashboardBentoSkeleton() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-6 w-8" />
+          <div className="grid grid-cols-2 gap-4 mb-2">
+            <Skeleton className="h-20 w-full rounded-xl" />
+            <Skeleton className="h-20 w-full rounded-xl" />
           </div>
           <div className="flex justify-between items-center">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-6 w-8" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-6" />
           </div>
           <div className="flex justify-between items-center">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-6 w-8" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-6" />
           </div>
         </CardContent>
       </Card>
