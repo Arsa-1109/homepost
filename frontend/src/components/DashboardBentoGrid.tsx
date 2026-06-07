@@ -87,6 +87,14 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const counts = {
+      units: data.units.length,
+      activity: data.recent_activity.length,
+    };
+    localStorage.setItem('dashboard_bento_counts', JSON.stringify(counts));
+  }, [data]);
+
   return (
     <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1 (Urgent Maintenance) - spans 2 columns */}
@@ -242,6 +250,12 @@ export function DashboardBentoSkeleton() {
               if (sizes.overview) document.documentElement.style.setProperty('--sk-overview', sizes.overview + 'px');
               if (sizes.units) document.documentElement.style.setProperty('--sk-units', sizes.units + 'px');
               if (sizes.activity) document.documentElement.style.setProperty('--sk-activity', sizes.activity + 'px');
+              
+              const counts = JSON.parse(localStorage.getItem('dashboard_bento_counts') || '{"units":8,"activity":5}');
+              for(let i=0; i<40; i++) {
+                document.documentElement.style.setProperty('--sk-u-' + i, i < counts.units ? 'block' : 'none');
+                document.documentElement.style.setProperty('--sk-a-' + i, i < counts.activity ? 'block' : 'none');
+              }
             } catch(e) {}
           `,
         }}
@@ -309,8 +323,8 @@ export function DashboardBentoSkeleton() {
         </CardHeader>
         <CardContent>
            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+              {Array.from({ length: 40 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-xl" style={{ display: `var(--sk-u-${i}, ${i < 8 ? 'block' : 'none'})` }} />
               ))}
            </div>
         </CardContent>
@@ -327,8 +341,8 @@ export function DashboardBentoSkeleton() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4 pl-4 border-l-2 border-slate-100">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="space-y-2 py-1">
+            {Array.from({ length: 40 }).map((_, i) => (
+              <div key={i} className="space-y-2 py-1" style={{ display: `var(--sk-a-${i}, ${i < 5 ? 'block' : 'none'})` }}>
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-3 w-40" />
               </div>
