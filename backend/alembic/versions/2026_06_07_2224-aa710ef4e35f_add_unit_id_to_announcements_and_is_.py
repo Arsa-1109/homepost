@@ -21,7 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('announcements', sa.Column('unit_id', sqlmodel.sql.sqltypes.GUID(), nullable=True))
+    op.add_column('announcements', sa.Column('unit_id', sa.Uuid(), nullable=True))
     op.create_foreign_key('fk_announcements_units', 'announcements', 'units', ['unit_id'], ['id'])
     op.add_column('documents', sa.Column('is_archived', sa.Boolean(), server_default=sa.text('false'), nullable=False))
 
