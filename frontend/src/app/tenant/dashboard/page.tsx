@@ -65,7 +65,7 @@ function CountdownCard({
 }) {
   return (
     <div
-      className={`p-5 rounded-2xl border flex flex-col gap-1 transition-all ${
+      className={`p-6 rounded-2xl border flex flex-col items-center text-center justify-center gap-1 transition-all ${
         urgent
           ? "bg-red-500/10 border-red-500/40"
           : "bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))]"
@@ -75,14 +75,14 @@ function CountdownCard({
         {label}
       </span>
       <span
-        className={`text-4xl font-extrabold ${
+        className={`text-5xl font-extrabold my-2 ${
           urgent ? "text-red-400" : "text-[rgb(var(--ml-accent))]"
         }`}
       >
         {value}
       </span>
       {sublabel && (
-        <span className="text-xs text-[rgb(var(--ml-text-secondary))]">{sublabel}</span>
+        <span className="text-sm text-[rgb(var(--ml-text-secondary))]">{sublabel}</span>
       )}
     </div>
   );
@@ -115,13 +115,13 @@ export default function TenantDashboard() {
   if (loading) {
     return (
       <div className="space-y-6 max-w-2xl mx-auto animate-pulse">
-        <div className="h-8 w-48 bg-[rgb(var(--ml-bg-secondary))] rounded-xl" />
-        <div className="grid grid-cols-2 gap-4">
-          <div className="h-28 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl" />
-          <div className="h-28 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl" />
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-[rgb(var(--ml-bg-secondary))] rounded-xl border border-[rgb(var(--ml-border))]" />
+          <div className="h-4 w-32 bg-[rgb(var(--ml-bg-secondary))] rounded-md border border-[rgb(var(--ml-border))]" />
         </div>
-        <div className="h-32 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl" />
-        <div className="h-48 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl" />
+        <div className="h-40 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
+        <div className="h-32 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
+        <div className="h-48 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
       </div>
     );
   }
