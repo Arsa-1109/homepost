@@ -2,7 +2,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { AlertCircle, Activity, Building, Users, Home } from "lucide-react"
+import { AlertCircle, Activity, Building, Users, Home, FileText, Image as ImageIcon } from "lucide-react"
+
+function formatStatusText(str: string) {
+  if (!str) return "Unknown";
+  return str.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+function getStatusColor(str: string) {
+  const s = (str || "").toLowerCase();
+  if (s === 'closed' || s === 'resolved') return 'text-slate-400 dark:text-slate-500';
+  return 'text-teal-600 dark:text-teal-400';
+}
+
+function getFileIcon(meta: string) {
+  if ((meta || "").toLowerCase().includes('image')) return <ImageIcon className="inline-block w-3 h-3 mr-1 align-text-bottom" />;
+  return <FileText className="inline-block w-3 h-3 mr-1 align-text-bottom" />;
+}
+
+function formatFileText(meta: string) {
+  const m = (meta || "").toLowerCase();
+  if (m.includes('png') || m.includes('jpeg') || m.includes('jpg') || m.includes('image')) return 'Image';
+  if (m.includes('pdf')) return 'PDF Document';
+  return 'Document';
+}
 
 export type DashboardData = {
   property_stats: {
@@ -44,7 +67,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Card 1 (Urgent Maintenance) - spans 2 columns */}
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-2 self-start">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-red-500" />
@@ -53,7 +76,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         </CardHeader>
         <CardContent>
           {data.urgent_maintenance.length === 0 ? (
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
+            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-4 text-center">
               No urgent maintenance requests.
             </p>
           ) : (
@@ -127,17 +150,17 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{unit.unit_label}</span>
-                      <span className="text-xs font-medium text-slate-500 dark:text-slate-300">
-                        {unit.is_occupied ? 'Occupied' : unit.has_pending ? 'Pending' : 'Vacant'}
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {unit.property_name}
                       </span>
                     </div>
                   </div>
                   {unit.is_occupied ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
+                    <span className="text-sm font-medium text-green-700 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>Occupied</span>
                   ) : unit.has_pending ? (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
+                    <span className="text-sm font-medium text-amber-700 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div>Pending</span>
                   ) : (
-                    <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">Vacant</Badge>
+                    <span className="text-sm font-medium text-slate-700 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-500"></div>Vacant</span>
                   )}
                 </div>
               ))}
@@ -147,8 +170,8 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
       </Card>
 
 
-      {/* Card 5 (Recent Activity) - spans 2 columns */}
-      <Card className="md:col-span-2 flex flex-col">
+      {/* Card 5 (Recent Activity) - spans 3 columns */}
+      <Card className="md:col-span-3 flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-green-500" />
@@ -167,9 +190,12 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
               {data.recent_activity.map((act) => (
                 <li key={act.id} className="flex flex-col border-l-2 border-[rgb(var(--ml-border))] pl-4 py-1">
                   <span className="text-sm font-medium capitalize">{act.title}</span>
-                  <span className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                    {act.type === "maintenance_update" ? "Status: " : "File: "}
-                    <span className="capitalize font-medium text-[rgb(var(--ml-accent))]">{act.meta}</span> &bull; {new Date(act.timestamp).toLocaleDateString()}
+                  <span className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">
+                    {act.type === "maintenance_update" ? (
+                      <>Status: <span className={`font-medium ${getStatusColor(act.meta || "")}`}>{formatStatusText(act.meta || "")}</span></>
+                    ) : (
+                      <>{getFileIcon(act.meta || "")}<span className="font-medium text-[rgb(var(--ml-accent))]">{formatFileText(act.meta || "")}</span></>
+                    )} &bull; {new Date(act.timestamp).toLocaleDateString()}
                   </span>
                 </li>
               ))}
@@ -185,7 +211,7 @@ export function DashboardBentoSkeleton() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Skeleton Card 1 (Urgent Maintenance) */}
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-2 self-start">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded-full" />
@@ -254,7 +280,7 @@ export function DashboardBentoSkeleton() {
 
 
       {/* Skeleton Card 5 (Recent Activity) */}
-      <Card className="md:col-span-2">
+      <Card className="md:col-span-3">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Skeleton className="h-5 w-5 rounded-full" />
