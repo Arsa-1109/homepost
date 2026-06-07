@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 
@@ -112,17 +112,53 @@ export default function TenantDashboard() {
     loadAll();
   }, []);
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!gridRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (!gridRef.current) return;
+      const children = gridRef.current.children;
+      if (children.length >= 4) {
+        const sizes = {
+          welcome: children[0].getBoundingClientRect().height,
+          countdown: children[1].getBoundingClientRect().height,
+          actions: children[2].getBoundingClientRect().height,
+          requests: children[3].getBoundingClientRect().height,
+        };
+        localStorage.setItem('tenant_dashboard_sizes', JSON.stringify(sizes));
+      }
+    });
+    Array.from(gridRef.current.children).forEach(child => observer.observe(child));
+    return () => observer.disconnect();
+  }, [loading]);
+
   if (loading) {
     return (
-      <div className="space-y-6 max-w-2xl mx-auto animate-pulse">
-        <div className="space-y-2">
-          <div className="h-8 w-48 bg-[rgb(var(--ml-bg-secondary))] rounded-xl border border-[rgb(var(--ml-border))]" />
-          <div className="h-4 w-32 bg-[rgb(var(--ml-bg-secondary))] rounded-md border border-[rgb(var(--ml-border))]" />
+      <>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const sizes = JSON.parse(localStorage.getItem('tenant_dashboard_sizes') || '{}');
+                if (sizes.welcome) document.documentElement.style.setProperty('--ts-welcome', sizes.welcome + 'px');
+                if (sizes.countdown) document.documentElement.style.setProperty('--ts-countdown', sizes.countdown + 'px');
+                if (sizes.actions) document.documentElement.style.setProperty('--ts-actions', sizes.actions + 'px');
+                if (sizes.requests) document.documentElement.style.setProperty('--ts-requests', sizes.requests + 'px');
+              } catch(e) {}
+            `,
+          }}
+        />
+        <div className="space-y-6 max-w-2xl mx-auto animate-pulse">
+          <div style={{ height: 'var(--ts-welcome, 56px)' }} className="flex flex-col justify-center space-y-2">
+            <div className="h-8 w-48 bg-[rgb(var(--ml-bg-secondary))] rounded-xl border border-[rgb(var(--ml-border))]" />
+            <div className="h-4 w-32 bg-[rgb(var(--ml-bg-secondary))] rounded-md border border-[rgb(var(--ml-border))]" />
+          </div>
+          <div style={{ height: 'var(--ts-countdown, 160px)' }} className="w-full bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
+          <div style={{ height: 'var(--ts-actions, 128px)' }} className="w-full bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
+          <div style={{ height: 'var(--ts-requests, 192px)' }} className="w-full bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
         </div>
-        <div className="h-40 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
-        <div className="h-32 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
-        <div className="h-48 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
-      </div>
+      </>
     );
   }
 
@@ -143,7 +179,7 @@ export default function TenantDashboard() {
   const rentUrgent = rentDays !== null && rentDays <= 3;
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div ref={gridRef} className="space-y-6 max-w-2xl mx-auto">
 
       {/* Welcome header */}
       <div>
