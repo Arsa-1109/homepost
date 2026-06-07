@@ -27,19 +27,12 @@ export type DashboardData = {
     unit_label: string;
     created_at: string;
   }>;
-  pending_approvals: Array<{
-    id: string;
-    name: string;
-    email: string;
-    unit_label: string;
-  }>;
   recent_activity: Array<{
+    type: "maintenance_update" | "document_upload";
     id: string;
     title: string;
-    status: string;
-    priority: string;
-    unit_label: string;
-    updated_at: string;
+    timestamp: string;
+    meta?: string;
   }>;
 };
 
@@ -153,39 +146,6 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         </CardContent>
       </Card>
 
-      {/* Card 4 (Pending Approvals) - spans 1 column */}
-      <Card className="flex flex-col">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-amber-500" />
-            Pending Approvals
-            {data.pending_approvals.length > 0 && (
-              <Badge className="ml-2 bg-amber-500 hover:bg-amber-600">{data.pending_approvals.length}</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col">
-          {data.pending_approvals.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
-                No pending tenant approvals.
-              </p>
-            </div>
-          ) : (
-            <ul className="space-y-4">
-              {data.pending_approvals.map((tenant) => (
-                <li key={tenant.id} className="flex flex-col gap-1 border-b border-[rgb(var(--ml-border))] pb-2 last:border-0 last:pb-0">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{tenant.name}</span>
-                    <span className="text-xs text-[rgb(var(--ml-text-secondary))]">{tenant.unit_label}</span>
-                  </div>
-                  <span className="text-xs text-[rgb(var(--ml-text-secondary))]">{tenant.email}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Card 5 (Recent Activity) - spans 2 columns */}
       <Card className="md:col-span-2 flex flex-col">
@@ -208,7 +168,8 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                 <li key={act.id} className="flex flex-col border-l-2 border-[rgb(var(--ml-border))] pl-4 py-1">
                   <span className="text-sm font-medium capitalize">{act.title}</span>
                   <span className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                    Unit {act.unit_label} &bull; Status: <span className="capitalize font-medium text-[rgb(var(--ml-accent))]">{act.status}</span> &bull; {new Date(act.updated_at).toLocaleDateString()}
+                    {act.type === "maintenance_update" ? "Status: " : "File: "}
+                    <span className="capitalize font-medium text-[rgb(var(--ml-accent))]">{act.meta}</span> &bull; {new Date(act.timestamp).toLocaleDateString()}
                   </span>
                 </li>
               ))}
@@ -291,28 +252,6 @@ export function DashboardBentoSkeleton() {
         </CardContent>
       </Card>
 
-      {/* Skeleton Card 4 (Pending Approvals) */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded-full" />
-            <Skeleton className="h-6 w-36" />
-            <Skeleton className="h-5 w-6 rounded-full ml-2" />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Skeleton Card 5 (Recent Activity) */}
       <Card className="md:col-span-2">
