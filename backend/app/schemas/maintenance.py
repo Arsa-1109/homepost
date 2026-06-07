@@ -20,6 +20,8 @@ class MaintenanceRequestResponse(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID
     unit_id: uuid.UUID
+    property_name: Optional[str] = None
+    unit_label: Optional[str] = None
     title: str
     description: str
     image_keys: Optional[List[str]] = None

@@ -53,7 +53,7 @@ export default function TenantDocumentsPage() {
 
     if (isImage && doc.file_url) {
       return (
-        <div className="relative w-full h-full bg-slate-950 flex items-center justify-center">
+        <div className="relative w-full h-full bg-muted flex items-center justify-center">
           <img 
             src={doc.file_url} 
             alt={doc.title} 
@@ -65,7 +65,7 @@ export default function TenantDocumentsPage() {
 
     if (isPdf) {
       return (
-        <div className="w-full h-full bg-red-950/20 text-red-500 flex flex-col items-center justify-center gap-1">
+        <div className="w-full h-full bg-red-500/10 text-red-600 dark:text-red-400 flex flex-col items-center justify-center gap-1">
           <FileText className="h-8 w-8" />
           <span className="text-[10px] font-bold tracking-wider uppercase">PDF</span>
         </div>
@@ -73,7 +73,7 @@ export default function TenantDocumentsPage() {
     }
 
     return (
-      <div className="w-full h-full bg-blue-950/20 text-blue-400 flex flex-col items-center justify-center gap-1">
+      <div className="w-full h-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex flex-col items-center justify-center gap-1">
         <File className="h-8 w-8" />
         <span className="text-[10px] font-bold tracking-wider uppercase">DOC</span>
       </div>
@@ -129,7 +129,7 @@ export default function TenantDocumentsPage() {
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div className="space-y-1">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-base text-white group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
+                    <h3 className="font-semibold text-base text-foreground group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
                       {doc.title}
                     </h3>
                   </div>

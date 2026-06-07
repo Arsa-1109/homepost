@@ -152,7 +152,7 @@ export default function LandlordDocumentsPage() {
                 className="bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
               >
                 {properties.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[#1e1e1e]">{p.name}</option>
+                  <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
                 ))}
               </select>
             </div>
@@ -173,9 +173,9 @@ export default function LandlordDocumentsPage() {
                 onChange={e => setSelectedUnit(e.target.value)}
                 className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
               >
-                <option value="" className="bg-[#1e1e1e]">Assign to: All Units (Property-wide)</option>
+                <option value="" className="bg-background">Assign to: All Units (Property-wide)</option>
                 {units.map(u => (
-                  <option key={u.id} value={u.id} className="bg-[#1e1e1e]">Assign to: {u.unit_label}</option>
+                  <option key={u.id} value={u.id} className="bg-background">Assign to: {u.unit_label}</option>
                 ))}
               </select>
             </div>
@@ -211,7 +211,7 @@ export default function LandlordDocumentsPage() {
                     {/* Preview Thumbnail */}
                     <div className="relative w-20 h-20 border border-[rgb(var(--ml-border))] rounded-lg overflow-hidden shrink-0">
                       {isImage && doc.file_url ? (
-                        <div className="relative w-full h-full bg-slate-950 flex items-center justify-center">
+                        <div className="relative w-full h-full bg-muted flex items-center justify-center">
                           <img 
                             src={doc.file_url} 
                             alt={doc.title} 
@@ -219,12 +219,12 @@ export default function LandlordDocumentsPage() {
                           />
                         </div>
                       ) : isPdf ? (
-                        <div className="w-full h-full bg-red-950/20 text-red-500 flex flex-col items-center justify-center gap-1">
+                        <div className="w-full h-full bg-red-500/10 text-red-600 dark:text-red-400 flex flex-col items-center justify-center gap-1">
                           <FileText className="h-8 w-8" />
                           <span className="text-[10px] font-bold tracking-wider uppercase">PDF</span>
                         </div>
                       ) : (
-                        <div className="w-full h-full bg-blue-950/20 text-blue-400 flex flex-col items-center justify-center gap-1">
+                        <div className="w-full h-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex flex-col items-center justify-center gap-1">
                           <File className="h-8 w-8" />
                           <span className="text-[10px] font-bold tracking-wider uppercase">DOC</span>
                         </div>
@@ -235,7 +235,7 @@ export default function LandlordDocumentsPage() {
                     <div className="flex-1 flex flex-col justify-between min-w-0">
                       <div className="space-y-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-base text-white group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
+                          <h3 className="font-semibold text-base text-foreground group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
                             {doc.title}
                           </h3>
                         </div>

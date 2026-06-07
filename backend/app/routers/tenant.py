@@ -4,7 +4,7 @@ from sqlmodel import select
 import uuid
 
 from app.core.database import get_session
-from app.dependencies.auth import get_current_tenant_profile, get_current_user
+from app.dependencies.auth import get_current_tenant_profile, get_active_tenant_profile, get_current_user
 from app.models.user import User
 from app.models.tenant_profile import TenantProfile
 from app.models.property import Property
@@ -55,7 +55,7 @@ async def get_my_profile(
 async def submit_maintenance_request(
     req_in: MaintenanceRequestCreate,
     background_tasks: BackgroundTasks,
-    profile: TenantProfile = Depends(get_current_tenant_profile),
+    profile: TenantProfile = Depends(get_active_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
     req = MaintenanceRequest(
@@ -95,10 +95,10 @@ async def list_my_maintenance_requests(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
-    # Data isolation anchored on profile.unit_id
+    # Data isolation anchored on profile.id (tenant_id) so they don't see previous tenant requests
     result = await session.execute(
         select(MaintenanceRequest)
-        .where(MaintenanceRequest.unit_id == profile.unit_id)
+        .where(MaintenanceRequest.tenant_id == profile.id)
         .order_by(MaintenanceRequest.created_at.desc())
     )
     requests = result.scalars().all()
@@ -115,7 +115,7 @@ async def list_my_maintenance_requests(
 async def reopen_maintenance_request(
     request_id: uuid.UUID,
     background_tasks: BackgroundTasks,
-    profile: TenantProfile = Depends(get_current_tenant_profile),
+    profile: TenantProfile = Depends(get_active_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
     req = await session.get(MaintenanceRequest, request_id)
@@ -192,6 +192,7 @@ async def list_property_announcements(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlmodel import or_
     # First, get the unit to find the property_id
     unit = await session.get(Unit, profile.unit_id)
     if not unit:
@@ -199,7 +200,10 @@ async def list_property_announcements(
         
     result = await session.execute(
         select(Announcement)
-        .where(Announcement.property_id == unit.property_id)
+        .where(
+            Announcement.property_id == unit.property_id,
+            or_(Announcement.unit_id == None, Announcement.unit_id == profile.unit_id)
+        )
         .order_by(Announcement.created_at.desc())
     )
     return result.scalars().all()

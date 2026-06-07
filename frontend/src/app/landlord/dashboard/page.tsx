@@ -130,7 +130,7 @@ export default function LandlordDashboard() {
                           <option value="" disabled>Select a unit to assign...</option>
                           {data.units.map(u => (
                             <option key={u.id} value={u.id}>
-                              Unit: {u.unit_label} {u.is_occupied ? "(Occupied)" : "(Vacant)"}
+                              {u.property_name} - Unit: {u.unit_label} {u.is_occupied ? "(Occupied)" : "(Vacant)"}
                             </option>
                           ))}
                         </select>

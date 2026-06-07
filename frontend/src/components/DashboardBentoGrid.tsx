@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AnimatedList } from "@/components/ui/animated-list"
 import { AlertCircle, Activity, Building, Users, Home } from "lucide-react"
 
 export type DashboardData = {
@@ -13,6 +14,7 @@ export type DashboardData = {
   units: Array<{
     id: string;
     property_id: string;
+    property_name: string;
     unit_label: string;
     is_occupied: boolean;
     has_pending?: boolean;

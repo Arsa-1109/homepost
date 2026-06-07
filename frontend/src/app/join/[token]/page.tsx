@@ -68,7 +68,18 @@ export default function JoinPage({
       await completeOnboarding();
       router.push("/tenant/dashboard");
     } catch (err: any) {
-      setError(err.message || "Failed to accept invite. It may have expired or already been used.");
+      const msg = err.message || "";
+      if (msg === "invite_not_found") {
+        setError("This invite link is invalid or doesn't exist.");
+      } else if (msg === "invite_expired") {
+        setError("This invite link has expired. Please ask your landlord for a new one.");
+      } else if (msg === "invite_already_used") {
+        setError("This invite link has already been used.");
+      } else if (msg === "invite_inactive") {
+        setError("This invite link is no longer active.");
+      } else {
+        setError(msg || "Failed to accept invite. Please try again.");
+      }
       setLoading(false);
     }
   };

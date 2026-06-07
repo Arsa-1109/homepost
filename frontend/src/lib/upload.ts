@@ -42,16 +42,13 @@ export async function uploadFile(
       token
     );
 
-  // Step 2: Upload directly to R2 using FormData (must use POST)
-  const formData = new FormData();
-  Object.entries(fields).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
-  formData.append("file", file); // Must be the last field appended
-
+  // Step 2: Upload directly to R2 using PUT (R2 doesn't support presigned POST)
   const uploadResponse = await fetch(upload_url, {
-    method: "POST",
-    body: formData,
+    method: "PUT",
+    body: file,
+    headers: {
+      "Content-Type": file.type,
+    },
   });
 
   if (!uploadResponse.ok) {

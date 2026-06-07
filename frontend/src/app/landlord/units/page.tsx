@@ -99,7 +99,7 @@ export default function LandlordUnitsPage() {
               className="bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
             >
               {properties.map(p => (
-                <option key={p.id} value={p.id} className="bg-[#1e1e1e]">{p.name}</option>
+                <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
               ))}
             </select>
           </div>

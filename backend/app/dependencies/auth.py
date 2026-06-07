@@ -133,19 +133,37 @@ async def get_current_tenant_profile(
         )
 
     statement = select(TenantProfile).where(
-        TenantProfile.user_id == user.id,
-        TenantProfile.is_active == True,  # noqa: E712
-    )
+        TenantProfile.user_id == user.id
+    ).order_by(TenantProfile.created_at.desc())
     result = await session.execute(statement)
-    profile = result.scalar_one_or_none()
+    profile = result.scalars().first()
 
     if profile is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
-                "message": "We couldn't find an active tenancy linked to your account.",
-                "suggestion": "If you've just been approved, try refreshing the page. Otherwise, please contact your landlord.",
+                "message": "We couldn't find a tenancy linked to your account.",
+                "suggestion": "If you've just been invited, try refreshing the page. Otherwise, please contact your landlord.",
             },
         )
 
     return profile
+
+async def get_active_tenant_profile(
+    profile: TenantProfile = Depends(get_current_tenant_profile)
+) -> TenantProfile:
+    """
+    Ensure the tenant is currently active (not removed by landlord).
+    Used for endpoints that create or modify data.
+    """
+    if not profile.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": "You are no longer an active tenant for this property.",
+                "suggestion": "You have read-only access to your historical records.",
+            },
+        )
+    return profile
+
+

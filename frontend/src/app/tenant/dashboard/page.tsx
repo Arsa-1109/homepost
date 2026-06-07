@@ -157,7 +157,8 @@ export default function TenantDashboard() {
       </div>
 
       {/* Countdown cards */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Parent grid class was `grid grid-cols-2 gap-4`. I removed the grid wrapper and switched to a single full-width block since only one card remains. */}
+      <div>
         <CountdownCard
           label="Rent Due In"
           value={rentDays !== null ? `${rentDays}d` : "—"}
@@ -169,22 +170,6 @@ export default function TenantDashboard() {
               : undefined
           }
           urgent={rentUrgent}
-        />
-        <CountdownCard
-          label="Lease Expires In"
-          value={
-            leaseDays !== null
-              ? leaseDays < 0
-                ? "Expired"
-                : `${leaseDays}d`
-              : "—"
-          }
-          sublabel={
-            profile?.lease_end
-              ? `Ends ${new Date(profile.lease_end).toLocaleDateString()}`
-              : "No end date set"
-          }
-          urgent={leaseUrgent}
         />
       </div>
 
