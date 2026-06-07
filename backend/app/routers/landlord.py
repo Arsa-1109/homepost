@@ -271,6 +271,7 @@ from app.models.user import UserRole
 
 class GenerateInvitePayload(BaseModel):
     unit_id: uuid.UUID
+    clear_data: bool = False
 
 class ApproveTenantPayload(BaseModel):
     user_id: uuid.UUID
@@ -292,6 +293,17 @@ async def generate_invite(
     prop = await session.get(Property, unit.property_id)
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
+
+    if payload.clear_data:
+        from app.models.document import Document
+        from sqlmodel import select
+        # Archive all documents associated with this unit
+        docs_result = await session.execute(
+            select(Document).where(Document.unit_id == unit.id)
+        )
+        docs = docs_result.scalars().all()
+        for d in docs:
+            d.is_archived = True
 
     invite = Invite(unit_id=unit.id, created_by=user.id)
     session.add(invite)

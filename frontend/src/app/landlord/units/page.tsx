@@ -15,6 +15,50 @@ type Unit = {
   rent_due_day: number;
 };
 
+function UnitCard({ u }: { u: Unit }) {
+  const [keepData, setKeepData] = useState(true);
+
+  return (
+    <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between">
+      <div>
+        <h3 className="font-bold text-lg">{u.unit_label}</h3>
+        <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
+      </div>
+      
+      <div className="mt-auto flex flex-col gap-3">
+        <label className="flex items-center gap-2 text-sm text-[rgb(var(--ml-text-secondary))] cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={keepData}
+            onChange={(e) => setKeepData(e.target.checked)}
+            className="rounded border-[rgb(var(--ml-border))] accent-[rgb(var(--ml-accent))]"
+          />
+          Keep previous tenant documents?
+        </label>
+
+        <button
+          onClick={async () => {
+            try {
+              const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
+                method: "POST",
+                body: JSON.stringify({ unit_id: u.id, clear_data: !keepData })
+              });
+              const link = `${window.location.origin}/join/${res.token}`;
+              navigator.clipboard.writeText(link);
+              alert("Invite link copied to clipboard!\n\n" + link);
+            } catch (err) {
+              alert("Failed to generate invite.");
+            }
+          }}
+          className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full"
+        >
+          Copy Invite Link
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function LandlordUnitsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
@@ -142,30 +186,7 @@ export default function LandlordUnitsPage() {
               </div>
             ) : (
               units.map(u => (
-                <div key={u.id} className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-lg">{u.unit_label}</h3>
-                    <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
-                          method: "POST",
-                          body: JSON.stringify({ unit_id: u.id })
-                        });
-                        const link = `${window.location.origin}/join/${res.token}`;
-                        navigator.clipboard.writeText(link);
-                        alert("Invite link copied to clipboard!\n\n" + link);
-                      } catch (err) {
-                        alert("Failed to generate invite.");
-                      }
-                    }}
-                    className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full mt-auto"
-                  >
-                    Copy Invite Link
-                  </button>
-                </div>
+                <UnitCard key={u.id} u={u} />
               ))
             )}
           </div>

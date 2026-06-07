@@ -240,6 +240,9 @@ export default function LandlordDocumentsPage() {
                           </h3>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-slate-500/10 text-slate-400 border-slate-500/20 font-medium">
+                            {properties.find(p => p.id === selectedProperty)?.name || "Property"}
+                          </span>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"} font-medium`}>
                             {getUnitLabel(doc.unit_id)}
                           </span>

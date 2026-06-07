@@ -20,6 +20,8 @@ type MaintenanceRequest = {
   landlord_notes?: string;
   landlord_image_urls?: string[];
   landlord_image_keys?: string[];
+  property_name?: string;
+  unit_label?: string;
 };
 
 function getFriendlyFileName(url: string) {
@@ -327,6 +329,9 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
             {req.status.replace("_", " ")}
           </span>
         </div>
+        <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] mb-2">
+          {req.property_name && req.unit_label ? `${req.property_name} • ${req.unit_label}` : `Unit: ${req.unit_id}`}
+        </p>
         <p className="text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap">{req.description}</p>
         
         {req.image_urls && req.image_urls.length > 0 && (
