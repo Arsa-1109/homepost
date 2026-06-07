@@ -62,10 +62,8 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
           </button>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <button className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full">
-                Invite Tenant
-              </button>
+            <DialogTrigger className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full">
+              Invite Tenant
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
