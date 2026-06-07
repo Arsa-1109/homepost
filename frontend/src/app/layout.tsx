@@ -3,7 +3,7 @@ import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@cl
 import { ThemeProvider } from "@/components/providers";
 import { UserSync } from "@/components/UserSync";
 import { Geist } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
