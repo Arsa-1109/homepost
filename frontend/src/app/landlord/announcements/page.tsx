@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 
 type Property = { id: string; name: string };
+type Unit = { id: string; unit_label: string };
 type Announcement = {
   id: string;
   property_id: string;
+  unit_id?: string | null;
   title: string;
   body: string;
   created_at: string;
@@ -18,6 +20,8 @@ export default function LandlordAnnouncementsPage() {
   const [loading, setLoading] = useState(true);
   
   const [selectedProperty, setSelectedProperty] = useState<string>("");
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [selectedUnit, setSelectedUnit] = useState<string>("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,15 +46,32 @@ export default function LandlordAnnouncementsPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (!selectedProperty) return;
+    async function loadUnits() {
+      try {
+        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
+        setUnits(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setSelectedUnit("");
+    loadUnits();
+  }, [selectedProperty]);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProperty) return;
     
     setIsSubmitting(true);
     try {
+      const payload: any = { property_id: selectedProperty, title, body };
+      if (selectedUnit) payload.unit_id = selectedUnit;
+      
       await fetchAPI("/api/v1/landlord/announcements", {
         method: "POST",
-        body: JSON.stringify({ property_id: selectedProperty, title, body }),
+        body: JSON.stringify(payload),
       });
       setTitle("");
       setBody("");
@@ -82,6 +103,20 @@ export default function LandlordAnnouncementsPage() {
               >
                 {properties.map(p => (
                   <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm text-[rgb(var(--ml-text-secondary))]">Select Unit (Optional)</label>
+              <select 
+                value={selectedUnit} 
+                onChange={e => setSelectedUnit(e.target.value)}
+                className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
+              >
+                <option value="" className="bg-background">All Units (Property-wide)</option>
+                {units.map(u => (
+                  <option key={u.id} value={u.id} className="bg-background">{u.unit_label}</option>
                 ))}
               </select>
             </div>

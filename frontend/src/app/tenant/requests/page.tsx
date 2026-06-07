@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type MaintenanceRequest = {
   id: string;
@@ -27,6 +27,7 @@ type MaintenanceRequest = {
 
 function TenantRequestsContent() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
@@ -65,17 +66,21 @@ function TenantRequestsContent() {
   };
 
   useEffect(() => {
-    async function loadRequests() {
+    async function loadAll() {
       try {
-        const data = await fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance");
-        setRequests(data);
+        const [reqs, prof] = await Promise.all([
+          fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance"),
+          fetchAPI<any>("/api/v1/tenant/profile")
+        ]);
+        setRequests(reqs);
+        setProfile(prof);
       } catch (err) {
         console.error("Failed to load requests", err);
       } finally {
         setLoading(false);
       }
     }
-    loadRequests();
+    loadAll();
   }, []);
 
   const handleReopen = async (requestId: string, event: React.MouseEvent) => {
@@ -116,12 +121,14 @@ function TenantRequestsContent() {
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Maintenance Requests</h1>
-        <Link 
-          href="/tenant/requests/new" 
-          className="bg-[rgb(var(--ml-accent))] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          + New Request
-        </Link>
+        {profile?.is_active && (
+          <Link 
+            href="/tenant/requests/new" 
+            className="bg-[rgb(var(--ml-accent))] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            + New Request
+          </Link>
+        )}
       </div>
 
       {loading ? (
@@ -251,15 +258,15 @@ function TenantRequestsContent() {
         </div>
       )}
 
-      {/* Detail Sheet */}
-      <Sheet open={isDetailOpen} onOpenChange={(open) => { if (!open) handleCloseDetail(); }}>
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>Request Details</SheetTitle>
-            <SheetDescription>
+      {/* Detail Dialog */}
+      <Dialog open={isDetailOpen} onOpenChange={(open) => { if (!open) handleCloseDetail(); }}>
+        <DialogContent className="overflow-y-auto max-h-[90vh] sm:max-w-md bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))]">
+          <DialogHeader>
+            <DialogTitle>Request Details</DialogTitle>
+            <DialogDescription>
               View full details of the maintenance request.
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
           {loadingDetail ? (
             <div className="py-8 text-center animate-pulse text-[rgb(var(--ml-text-secondary))]">
               Loading details...
@@ -343,8 +350,8 @@ function TenantRequestsContent() {
               Failed to load request.
             </div>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
