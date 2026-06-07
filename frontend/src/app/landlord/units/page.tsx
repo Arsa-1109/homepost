@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type Property = {
   id: string;
@@ -13,47 +21,93 @@ type Unit = {
   property_id: string;
   unit_label: string;
   rent_due_day: number;
+  is_occupied: boolean;
+  has_pending: boolean;
 };
 
-function UnitCard({ u }: { u: Unit }) {
+function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   const [keepData, setKeepData] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleRemoveTenant = async () => {
+    if (!window.confirm(`Are you sure you want to remove the tenant from ${u.unit_label}?`)) return;
+    try {
+      await fetchAPI(`/api/v1/landlord/units/${u.id}/tenant`, { method: "DELETE" });
+      alert("Tenant removed successfully.");
+      onRefresh();
+    } catch (err) {
+      alert("Failed to remove tenant.");
+    }
+  };
 
   return (
     <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between">
       <div>
-        <h3 className="font-bold text-lg">{u.unit_label}</h3>
+        <div className="flex justify-between items-start">
+          <h3 className="font-bold text-lg">{u.unit_label}</h3>
+          <span className={`text-xs px-2 py-1 rounded-full ${u.is_occupied ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
+            {u.is_occupied ? "Occupied" : "Vacant"}
+          </span>
+        </div>
         <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
       </div>
       
       <div className="mt-auto flex flex-col gap-3">
-        <label className="flex items-center gap-2 text-sm text-[rgb(var(--ml-text-secondary))] cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={keepData}
-            onChange={(e) => setKeepData(e.target.checked)}
-            className="rounded border-[rgb(var(--ml-border))] accent-[rgb(var(--ml-accent))]"
-          />
-          Keep previous tenant documents?
-        </label>
-
-        <button
-          onClick={async () => {
-            try {
-              const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
-                method: "POST",
-                body: JSON.stringify({ unit_id: u.id, clear_data: !keepData })
-              });
-              const link = `${window.location.origin}/join/${res.token}`;
-              navigator.clipboard.writeText(link);
-              alert("Invite link copied to clipboard!\n\n" + link);
-            } catch (err) {
-              alert("Failed to generate invite.");
-            }
-          }}
-          className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full"
-        >
-          Copy Invite Link
-        </button>
+        {u.is_occupied ? (
+          <button
+            onClick={handleRemoveTenant}
+            className="text-xs font-medium text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors w-full"
+          >
+            Remove Tenant
+          </button>
+        ) : (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <button className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full">
+                Invite Tenant
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Invite Tenant to {u.unit_label}</DialogTitle>
+                <DialogDescription>
+                  Generate a unique invite link for your new tenant.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <label className="flex items-center gap-2 text-sm text-[rgb(var(--ml-text-secondary))] cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={keepData}
+                    onChange={(e) => setKeepData(e.target.checked)}
+                    className="rounded border-[rgb(var(--ml-border))] accent-[rgb(var(--ml-accent))]"
+                  />
+                  Keep previous tenant documents?
+                </label>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
+                      method: "POST",
+                      body: JSON.stringify({ unit_id: u.id, clear_data: !keepData })
+                    });
+                    const link = `${window.location.origin}/join/${res.token}`;
+                    navigator.clipboard.writeText(link);
+                    alert("Invite link copied to clipboard!\n\n" + link);
+                    setIsDialogOpen(false);
+                    onRefresh();
+                  } catch (err) {
+                    alert("Failed to generate invite.");
+                  }
+                }}
+                className="text-sm bg-[rgb(var(--ml-accent))] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity w-full"
+              >
+                Generate & Copy Link
+              </button>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );
@@ -86,16 +140,17 @@ export default function LandlordUnitsPage() {
     loadProps();
   }, []);
 
-  useEffect(() => {
+  const loadUnits = async () => {
     if (!selectedProperty) return;
-    async function loadUnits() {
-      try {
-        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
-        setUnits(data);
-      } catch (err) {
-        console.error(err);
-      }
+    try {
+      const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
+      setUnits(data);
+    } catch (err) {
+      console.error(err);
     }
+  };
+
+  useEffect(() => {
     loadUnits();
   }, [selectedProperty]);
 
@@ -199,7 +254,7 @@ export default function LandlordUnitsPage() {
               </div>
             ) : (
               units.map(u => (
-                <UnitCard key={u.id} u={u} />
+                <UnitCard key={u.id} u={u} onRefresh={loadUnits} />
               ))
             )}
           </div>

@@ -11,7 +11,7 @@ from app.models.unit import Unit
 from app.models.maintenance_request import MaintenanceRequest, VALID_TRANSITIONS
 from app.models.announcement import Announcement
 from app.schemas.property import PropertyCreate, PropertyUpdate
-from app.schemas.unit import UnitCreate, UnitUpdate
+from app.schemas.unit import UnitCreate, UnitUpdate, UnitResponse
 from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequestResponse
 from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate
 from app.schemas.document import DocumentCreate, DocumentResponse
@@ -63,18 +63,53 @@ async def create_unit(
     await session.refresh(unit)
     return unit
 
-@router.get("/properties/{property_id}/units", response_model=list[Unit])
+@router.get("/properties/{property_id}/units", response_model=list[UnitResponse])
 async def list_units(
     property_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    from app.models.tenant_profile import TenantProfile
+    from app.models.invite import Invite
+
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
     
     result = await session.execute(select(Unit).where(Unit.property_id == property_id))
-    return result.scalars().all()
+    units = result.scalars().all()
+
+    unit_ids = [u.id for u in units]
+    occupied_unit_ids = set()
+    pending_unit_ids = set()
+
+    if unit_ids:
+        # Occupied
+        occ_res = await session.execute(
+            select(TenantProfile.unit_id).where(
+                TenantProfile.unit_id.in_(unit_ids),
+                TenantProfile.is_active == True,
+            )
+        )
+        occupied_unit_ids = {uid for uid in occ_res.scalars().all()}
+
+        # Pending
+        inv_res = await session.execute(
+            select(Invite.unit_id).where(
+                Invite.unit_id.in_(unit_ids),
+                Invite.status == "pending"
+            )
+        )
+        pending_unit_ids = {uid for uid in inv_res.scalars().all()}
+
+    response_data = []
+    for u in units:
+        resp = UnitResponse.model_validate(u)
+        resp.is_occupied = u.id in occupied_unit_ids
+        resp.has_pending = u.id in pending_unit_ids
+        response_data.append(resp)
+
+    return response_data
 
 # ---------------------------------------------------------------------------
 # Maintenance Requests
