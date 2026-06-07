@@ -309,8 +309,9 @@ export function DashboardBentoSkeleton() {
         </CardHeader>
         <CardContent>
            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <Skeleton className="h-16 w-full rounded-xl" />
-              <Skeleton className="h-16 w-full rounded-xl" />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-xl" />
+              ))}
            </div>
         </CardContent>
       </Card>
@@ -326,14 +327,12 @@ export function DashboardBentoSkeleton() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4 pl-4 border-l-2 border-slate-100">
-            <div className="space-y-2 py-1">
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-3 w-40" />
-            </div>
-            <div className="space-y-2 py-1">
-              <Skeleton className="h-4 w-36" />
-              <Skeleton className="h-3 w-48" />
-            </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="space-y-2 py-1">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-40" />
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
