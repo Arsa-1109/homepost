@@ -47,6 +47,7 @@ backend/venv/
 # IDE / Editor
 # ========================
 .vscode/
+.agents
 .idea/
 *.swp
 *.swo
