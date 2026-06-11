@@ -16,6 +16,7 @@ from app.models.maintenance_request import (
     RequestPriority,
     VALID_TRANSITIONS,
 )
+from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
 from app.models.document import Document
 from app.models.invite import Invite, InviteStatus
@@ -34,4 +35,5 @@ __all__ = [
     "Document",
     "Invite",
     "InviteStatus",
+    "MaintenanceEvent",
 ]

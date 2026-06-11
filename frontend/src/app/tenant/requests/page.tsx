@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
 
 type MaintenanceRequest = {
   id: string;
@@ -359,6 +360,8 @@ function TenantRequestsContent() {
                 <span>Priority: {selectedRequest.priority.toUpperCase()}</span>
                 <span>Created: {new Date(selectedRequest.created_at).toLocaleDateString()}</span>
               </div>
+              
+              <MaintenanceTimeline requestId={selectedRequest.id} userType="tenant" />
             </div>
           ) : (
             <div className="py-8 text-center text-[rgb(var(--ml-text-secondary))]">

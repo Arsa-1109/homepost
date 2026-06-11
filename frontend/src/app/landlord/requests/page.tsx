@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 
 import { uploadFile } from "@/lib/upload";
+import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
 
 type MaintenanceRequest = {
   id: string;
@@ -332,8 +333,9 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
   };
 
   return (
-    <div className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col md:flex-row gap-6">
-      <div className="flex-1 space-y-2">
+    <div className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex-1 space-y-2">
         <div className="flex items-center gap-3">
           <h3 className="font-bold text-xl">{req.title}</h3>
           <span className={`text-xs px-2 py-1 rounded-full border uppercase tracking-wider font-bold ${getStatusColor(req.status)}`}>
@@ -451,8 +453,11 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
           {isUpdating ? "Updating..." : "Update Request"}
         </button>
       </div>
+    </div>
 
-      <AnimatePresence>
+    <MaintenanceTimeline requestId={req.id} userType="landlord" />
+
+    <AnimatePresence>
         {lightboxUrl && (
           <LightboxModal url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
         )}
