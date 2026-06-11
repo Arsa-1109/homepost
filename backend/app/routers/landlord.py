@@ -158,6 +158,9 @@ async def update_maintenance_request(
         raise HTTPException(status_code=403, detail="Access denied.")
         
     try:
+        if db_req.status == "closed":
+            raise HTTPException(status_code=400, detail="Cannot modify a closed maintenance request.")
+
         if req_in.status and req_in.status != db_req.status:
             if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
                 valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
