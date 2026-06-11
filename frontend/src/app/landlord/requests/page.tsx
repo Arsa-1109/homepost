@@ -6,6 +6,7 @@ import { fetchAPI } from "@/lib/api";
 import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon, Eye, X, InfoIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "sonner";
 
 import { uploadFile } from "@/lib/upload";
 
@@ -294,6 +295,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         }),
       });
       setFiles([]);
+      toast.success("Maintenance request updated successfully!");
       onUpdate();
     } catch (err: any) {
       const rawMsg = err.message || "Failed to update request";
@@ -379,7 +381,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
             disabled={req.status === "closed"}
-            className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] hover:bg-background transition-colors appearance-none w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] hover:bg-background transition-all appearance-none w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {["open", "in_progress", "resolved", "closed"].map((opt) => {
               const isAllowed = opt === req.status || VALID_TRANSITIONS[req.status]?.includes(opt);
@@ -402,7 +404,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add a comment or internal note..."
-            className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] hover:bg-background transition-colors min-h-[80px] resize-y"
+            className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] hover:bg-background transition-all min-h-[80px] resize-y"
           />
         </div>
         

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
+import { toast } from "sonner";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -75,9 +76,10 @@ export default function LandlordAnnouncementsPage() {
       });
       setTitle("");
       setBody("");
+      toast.success("Announcement posted successfully!");
       loadData();
     } catch (err) {
-      alert("Failed to post announcement");
+      toast.error("Failed to post announcement. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -85,21 +87,21 @@ export default function LandlordAnnouncementsPage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Announcements 📢</h1>
+      <h1 className="text-3xl font-bold text-balance">Announcements 📢</h1>
 
-      <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">Post New Announcement</h2>
+      <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+        <h2 className="text-xl font-semibold mb-4 text-balance">Post New Announcement</h2>
         
         {properties.length === 0 ? (
-          <p className="text-[rgb(var(--ml-text-secondary))]">You need to add a property before posting an announcement.</p>
+          <p className="text-[rgb(var(--ml-text-secondary))] text-pretty">You need to add a property before posting an announcement.</p>
         ) : (
           <>
             <div className="space-y-2">
-              <label className="text-sm text-[rgb(var(--ml-text-secondary))]">Select Property</label>
+              <label className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Select Property</label>
               <select 
                 value={selectedProperty} 
                 onChange={e => setSelectedProperty(e.target.value)}
-                className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
+                className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
               >
                 {properties.map(p => (
                   <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
@@ -108,11 +110,11 @@ export default function LandlordAnnouncementsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-[rgb(var(--ml-text-secondary))]">Select Unit (Optional)</label>
+              <label className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Select Unit (Optional)</label>
               <select 
                 value={selectedUnit} 
                 onChange={e => setSelectedUnit(e.target.value)}
-                className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
+                className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
               >
                 <option value="" className="bg-background">All Units (Property-wide)</option>
                 {units.map(u => (
@@ -126,7 +128,7 @@ export default function LandlordAnnouncementsPage() {
               value={title} 
               onChange={e => setTitle(e.target.value)} 
               placeholder="Announcement Title" 
-              className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
+              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
             />
             <textarea 
               required 
@@ -134,12 +136,12 @@ export default function LandlordAnnouncementsPage() {
               value={body} 
               onChange={e => setBody(e.target.value)} 
               placeholder="What do you want to tell your tenants?" 
-              className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors resize-none"
+              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all resize-none"
             />
             <button 
               disabled={isSubmitting}
               type="submit" 
-              className="w-full bg-[rgb(var(--ml-accent))] text-white font-medium p-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="w-full bg-[rgb(var(--ml-accent))] text-white font-medium p-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? "Posting..." : "Post Announcement"}
             </button>
@@ -148,7 +150,7 @@ export default function LandlordAnnouncementsPage() {
       </form>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold border-b border-[rgb(var(--ml-border))] pb-2">Recent Announcements</h2>
+        <h2 className="text-xl font-bold border-b border-[rgb(var(--ml-border))] pb-2 text-balance">Recent Announcements</h2>
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
@@ -168,17 +170,17 @@ export default function LandlordAnnouncementsPage() {
             ))}
           </div>
         ) : announcements.length === 0 ? (
-          <div className="text-[rgb(var(--ml-text-secondary))] py-4">No announcements posted yet.</div>
+          <div className="text-[rgb(var(--ml-text-secondary))] py-4 text-pretty">No announcements posted yet.</div>
         ) : (
           announcements.map(ann => (
-            <div key={ann.id} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))]">
+            <div key={ann.id} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg">{ann.title}</h3>
-                <span className="text-xs text-[rgb(var(--ml-text-secondary))]">
+                <h3 className="font-bold text-lg text-balance">{ann.title}</h3>
+                <span className="text-xs text-[rgb(var(--ml-text-secondary))] tabular-nums">
                   {new Date(ann.created_at).toLocaleDateString()}
                 </span>
               </div>
-              <p className="text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap">{ann.body}</p>
+              <p className="text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap text-pretty">{ann.body}</p>
               <div className="mt-4 pt-4 border-t border-[rgb(var(--ml-border))] text-xs text-[rgb(var(--ml-text-secondary))]">
                 Property: {properties.find(p => p.id === ann.property_id)?.name || "Unknown"}
               </div>

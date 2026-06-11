@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 import { uploadFile } from "@/lib/upload";
 import { FileText, FileImage, Download, Eye, File } from "lucide-react";
+import { toast } from "sonner";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -107,8 +108,9 @@ export default function LandlordDocumentsPage() {
       setTitle("");
       setFile(null);
       setSelectedUnit("");
+      toast.success("Document uploaded successfully!");
     } catch (err) {
-      alert("Failed to upload document");
+      toast.error("Failed to upload document. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -126,7 +128,7 @@ export default function LandlordDocumentsPage() {
       link.click();
       document.body.removeChild(link);
     } catch (err) {
-      alert("Failed to get download link");
+      toast.error("Failed to get download link");
     }
   };
 
@@ -165,11 +167,11 @@ export default function LandlordDocumentsPage() {
         <>
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2 items-center">
-              <span className="font-medium text-[rgb(var(--ml-text-secondary))]">Select Property:</span>
+              <span className="font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
               <select 
                 value={selectedProperty} 
                 onChange={e => setSelectedProperty(e.target.value)}
-                className="bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
+                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 px-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
               >
                 {properties.map(p => (
                   <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
@@ -178,20 +180,20 @@ export default function LandlordDocumentsPage() {
             </div>
           </div>
 
-          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Upload New Document</h2>
+          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+            <h2 className="text-xl font-semibold mb-4 text-balance">Upload New Document</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input 
                 required 
                 value={title} 
                 onChange={e => setTitle(e.target.value)} 
                 placeholder="Document Title (e.g. Lease Agreement 2026)" 
-                className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
+                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
               />
               <select 
                 value={selectedUnit} 
                 onChange={e => setSelectedUnit(e.target.value)}
-                className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
+                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
               >
                 <option value="" className="bg-background">Assign to: All Units (Property-wide)</option>
                 {units.map(u => (
@@ -204,7 +206,7 @@ export default function LandlordDocumentsPage() {
                 required
                 type="file" 
                 onChange={e => setFile(e.target.files?.[0] || null)}
-                className="w-full text-sm text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer pt-1"
+                className="w-full text-sm text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer pt-1"
               />
             </div>
             <button 
