@@ -85,7 +85,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
   const activeRequests = [...data.urgent_maintenance]
     .filter(req => {
       const s = (req.status || "").toLowerCase();
-      return s === 'open' || s === 'in_progress' || s === 'pending';
+      return s === 'open' || s === 'in_progress' || s === 'pending' || s === 'in progress';
     })
     .sort((a, b) => {
       const weightA = priorityWeight[a.priority.toLowerCase()] || 99;
