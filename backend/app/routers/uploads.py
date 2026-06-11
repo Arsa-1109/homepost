@@ -1,42 +1,46 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.services.storage import generate_object_key, generate_presigned_upload_url, generate_presigned_download_url
+from app.services.storage import generate_object_key, upload_file_to_r2, generate_presigned_download_url
 from pydantic import BaseModel
+from app.core.limiter import limiter
+from app.core.config import get_settings
+import io
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
-class UploadURLResponse(BaseModel):
-    upload_url: str
-    fields: dict
+class DirectUploadResponse(BaseModel):
     file_key: str
 
 class DownloadURLResponse(BaseModel):
     download_url: str
 
-@router.get("/presigned-url", response_model=UploadURLResponse)
-async def get_presigned_upload_url(
-    filename: str = Query(..., description="Original name of the file to upload"),
-    content_type: str = Query(..., description="MIME type of the file"),
-    prefix: str = Query("maintenance", description="Folder prefix (e.g., 'maintenance' or 'documents')"),
+@router.post("/", response_model=DirectUploadResponse)
+@limiter.limit("10/minute")
+async def upload_file_direct(
+    request: Request,
+    prefix: str = Form("maintenance", description="Folder prefix (e.g., 'maintenance' or 'documents')"),
+    file: UploadFile = File(..., description="The file to upload"),
     user: User = Depends(get_current_user)
 ):
-    """
-    Generate a presigned POST payload for client-side direct upload to R2.
-    """
-    if prefix not in ["maintenance", "documents"]:
-        raise HTTPException(status_code=400, detail="Invalid prefix.")
+    settings = get_settings()
+    
+    file_bytes = await file.read()
+    if len(file_bytes) > settings.max_upload_size_bytes:
+        raise HTTPException(status_code=413, detail="File too large (exceeds 10MB limit).")
         
-    object_key = generate_object_key(prefix, filename)
+    object_key = generate_object_key(prefix, file.filename)
     
-    # 1 hour expiration
-    post_data = generate_presigned_upload_url(object_key, content_type, expires=3600)
+    # Upload to R2 synchronously
+    upload_file_to_r2(io.BytesIO(file_bytes), object_key, file.content_type)
     
-    return UploadURLResponse(upload_url=post_data["url"], fields=post_data["fields"], file_key=object_key)
+    return DirectUploadResponse(file_key=object_key)
 
 
 @router.get("/download-url", response_model=DownloadURLResponse)
+@limiter.limit("30/minute")
 async def get_presigned_download_url(
+    request: Request,
     file_key: str = Query(..., description="The R2 object key to download"),
     download: bool = Query(False, description="Whether to trigger download response headers"),
     user: User = Depends(get_current_user)

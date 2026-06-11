@@ -62,18 +62,28 @@ export async function apiFetch<T = unknown>(
   }
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...((options.headers as Record<string, string>) || {}),
   };
+
+  // Only default to JSON if we aren't sending FormData
+  if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (activeToken) {
     headers["Authorization"] = `Bearer ${activeToken}`;
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (err) {
+    console.error("Network or CORS error:", err);
+    throw new Error("Unable to connect to the server. Please ensure the backend is running and try again.");
+  }
 
   // Helper: safely parse JSON, throw readable error if HTML/non-JSON returned
   const safeJson = async () => {

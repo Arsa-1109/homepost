@@ -13,3 +13,4 @@ apscheduler==3.10.*
 pydantic-settings==2.7.*
 pytest==8.3.*
 pytest-asyncio==0.24.*
+slowapi==0.1.9
