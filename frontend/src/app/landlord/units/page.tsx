@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { AlertTriangle, DoorOpen } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import {
   Dialog,
@@ -66,26 +67,31 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
             <DialogTrigger className="text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
               Remove Tenant
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-balance">Remove Tenant</DialogTitle>
-                <DialogDescription className="text-pretty">
-                  Are you sure you want to remove the tenant from <span className="font-semibold text-[rgb(var(--ml-text-primary))]">{u.unit_label}</span>? This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex gap-3 justify-end mt-4">
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))]">
+              <div className="bg-red-50/50 dark:bg-red-950/20 px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 mb-4 ring-8 ring-red-50 dark:ring-red-950/30">
+                  <AlertTriangle className="h-7 w-7 text-red-600 dark:text-red-400" />
+                </div>
+                <DialogHeader>
+                  <DialogTitle className="text-center text-xl font-bold text-[rgb(var(--ml-text-primary))]">Remove Tenant</DialogTitle>
+                  <DialogDescription className="text-center mt-3 text-pretty text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
+                    Are you sure you want to remove the tenant from <span className="font-semibold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>? This action is permanent and cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              <div className="bg-[rgb(var(--ml-bg-tertiary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
                 <button 
                   onClick={() => setIsRemoveDialogOpen(false)}
-                  className="px-4 py-2 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] rounded-lg transition-colors cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                 >
                   Cancel
                 </button>
                 <button 
                   disabled={isRemoving}
                   onClick={handleRemoveTenant}
-                  className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-sm shadow-red-600/20 active:scale-[0.98]"
                 >
-                  {isRemoving ? "Removing..." : "Remove"}
+                  {isRemoving ? "Removing..." : "Yes, remove tenant"}
                 </button>
               </div>
             </DialogContent>
@@ -95,44 +101,66 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
             <DialogTrigger className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full cursor-pointer">
               Invite Tenant
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-balance">Invite Tenant to {u.unit_label}</DialogTitle>
-                <DialogDescription className="text-pretty">
-                  Generate a unique invite link for your new tenant.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <label className="flex items-center gap-2 text-sm text-[rgb(var(--ml-text-secondary))] cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={keepData}
-                    onChange={(e) => setKeepData(e.target.checked)}
-                    className="rounded border-[rgb(var(--ml-border))] accent-[rgb(var(--ml-accent))]"
-                  />
-                  Keep previous tenant documents?
-                </label>
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))]">
+              <div className="bg-[rgba(var(--ml-accent),0.05)] dark:bg-[rgba(var(--ml-accent),0.1)] px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(var(--ml-accent),0.15)] dark:bg-[rgba(var(--ml-accent),0.2)] mb-4 ring-8 ring-[rgba(var(--ml-accent),0.05)] dark:ring-[rgba(var(--ml-accent),0.1)]">
+                  <DoorOpen className="h-7 w-7 text-[rgb(var(--ml-accent))]" />
+                </div>
+                <DialogHeader>
+                  <DialogTitle className="text-center text-xl font-bold text-[rgb(var(--ml-text-primary))]">Invite Tenant</DialogTitle>
+                  <DialogDescription className="text-center mt-2 text-pretty text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
+                    Generate a unique, secure invite link for your new tenant moving into <span className="font-semibold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>.
+                  </DialogDescription>
+                </DialogHeader>
               </div>
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
-                      method: "POST",
-                      body: JSON.stringify({ unit_id: u.id, clear_data: !keepData })
-                    });
-                    const link = `${window.location.origin}/join/${res.token}`;
-                    navigator.clipboard.writeText(link);
-                    toast.success("Invite link copied to clipboard!");
-                    setIsDialogOpen(false);
-                    onRefresh();
-                  } catch (err) {
-                    toast.error("Failed to generate invite.");
-                  }
-                }}
-                className="text-sm bg-[rgb(var(--ml-accent))] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity w-full cursor-pointer"
-              >
-                Generate & Copy Link
-              </button>
+              
+              <div className="bg-[rgb(var(--ml-bg-tertiary))]">
+                <div className="px-6 py-5 border-b border-[rgb(var(--ml-border))]">
+                  <label className="flex items-start gap-3 p-3 rounded-lg border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] cursor-pointer hover:border-[rgb(var(--ml-accent))] transition-colors group">
+                    <div className="mt-0.5">
+                      <input 
+                        type="checkbox" 
+                        checked={keepData}
+                        onChange={(e) => setKeepData(e.target.checked)}
+                        className="w-4 h-4 rounded border-[rgb(var(--ml-border))] text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[rgb(var(--ml-text-primary))]">Retain Previous Data</p>
+                      <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">Keep the previous tenant's documents and history attached to this unit.</p>
+                    </div>
+                  </label>
+                </div>
+                
+                <div className="px-6 py-4 flex gap-3 justify-end items-center">
+                  <button 
+                    onClick={() => setIsDialogOpen(false)}
+                    className="px-5 py-2.5 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
+                          method: "POST",
+                          body: JSON.stringify({ unit_id: u.id, clear_data: !keepData })
+                        });
+                        const link = `${window.location.origin}/join/${res.token}`;
+                        navigator.clipboard.writeText(link);
+                        toast.success("Invite link copied to clipboard!");
+                        setIsDialogOpen(false);
+                        onRefresh();
+                      } catch (err) {
+                        toast.error("Failed to generate invite.");
+                      }
+                    }}
+                    className="px-5 py-2.5 text-sm font-semibold bg-[rgb(var(--ml-accent))] hover:brightness-110 text-white rounded-lg transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.2)] active:scale-[0.98] cursor-pointer"
+                  >
+                    Generate Link
+                  </button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         )}

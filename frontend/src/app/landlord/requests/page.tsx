@@ -410,8 +410,9 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            disabled={req.status === "closed"}
             placeholder="Add a comment or internal note..."
-            className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] hover:bg-background transition-all min-h-[80px] resize-y"
+            className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] hover:bg-background transition-all min-h-[80px] resize-y disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
         
@@ -422,7 +423,8 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
             multiple
             accept="image/*,application/pdf"
             onChange={handleFileChange}
-            className="w-full text-xs text-[rgb(var(--ml-text-secondary))] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer"
+            disabled={req.status === "closed"}
+            className="w-full text-xs text-[rgb(var(--ml-text-secondary))] file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed file:disabled:opacity-50 file:disabled:cursor-not-allowed"
           />
           {files.length > 0 && (
             <p className="text-[10px] text-[rgb(var(--ml-text-secondary))] mt-1">
@@ -443,8 +445,8 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
 
         <button
           onClick={handleUpdate}
-          disabled={!hasChanges || isUpdating}
-          className="w-full bg-[rgb(var(--ml-accent))] text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-auto"
+          disabled={!hasChanges || isUpdating || req.status === "closed"}
+          className="w-full bg-[rgb(var(--ml-accent))] text-white text-sm font-medium px-4 py-2 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 mt-auto cursor-pointer disabled:cursor-not-allowed"
         >
           {isUpdating ? "Updating..." : "Update Request"}
         </button>
