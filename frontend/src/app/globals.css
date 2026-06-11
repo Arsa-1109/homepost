@@ -175,3 +175,32 @@ html {
 .animate-scaleIn {
   animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ============================================================
+   Custom Sleek Scrollbars
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--ml-border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--ml-text-secondary));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(var(--ml-border), 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--ml-text-secondary), 0.8);
+}

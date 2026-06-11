@@ -3,7 +3,9 @@ import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@cl
 import { ThemeProvider } from "@/components/providers";
 import { UserSync } from "@/components/UserSync";
 import { Geist } from "next/font/google";
-
+import { CommandPalette } from "@/components/CommandPalette";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -41,9 +43,12 @@ export default function RootLayout({
                 <Show when="signed-in">
                   <UserButton />
                 </Show>
+                <ThemeToggle />
               </div>
             </header>
             {children}
+            <CommandPalette />
+            <Toaster />
           </ThemeProvider>
         </ClerkProvider>
       </body>

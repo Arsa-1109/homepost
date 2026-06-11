@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { fetchAPI } from "@/lib/api";
 import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon, Eye, X, InfoIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import { uploadFile } from "@/lib/upload";
 
@@ -370,14 +372,14 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         </div>
       </div>
       
-      <div className="md:w-64 flex flex-col space-y-3 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
+      <div className="md:w-80 flex flex-col space-y-3 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
         <div>
           <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mb-1 block uppercase tracking-wide">Status</span>
           <select 
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
             disabled={req.status === "closed"}
-            className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] appearance-none w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] hover:bg-background transition-colors appearance-none w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {["open", "in_progress", "resolved", "closed"].map((opt) => {
               const isAllowed = opt === req.status || VALID_TRANSITIONS[req.status]?.includes(opt);
@@ -400,7 +402,7 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add a comment or internal note..."
-            className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] min-h-[80px] resize-y"
+            className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 text-sm outline-none focus:border-[rgb(var(--ml-accent))] hover:bg-background transition-colors min-h-[80px] resize-y"
           />
         </div>
         
@@ -499,7 +501,7 @@ export default function LandlordMaintenancePage() {
                   <div className="h-3 w-24 bg-[rgb(var(--ml-border))] rounded-md"></div>
                 </div>
               </div>
-              <div className="md:w-64 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
+              <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
                 <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
                 <div className="h-20 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
                 <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
@@ -508,15 +510,36 @@ export default function LandlordMaintenancePage() {
           ))}
         </div>
       ) : requests.length === 0 ? (
-        <div className="text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]">
-          No maintenance requests across your properties.
-        </div>
+        <EmptyState
+          icon={FileIcon}
+          title="No Requests"
+          description="There are no maintenance requests across your properties."
+        />
       ) : (
-        <div className="space-y-4">
+        <motion.div 
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+          className="space-y-4"
+        >
           {requests.map(req => (
-            <RequestCard key={req.id} req={req} onUpdate={loadData} />
+            <motion.div 
+              key={req.id}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                show: { opacity: 1, y: 0 }
+              }}
+            >
+              <RequestCard req={req} onUpdate={loadData} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   );
