@@ -25,6 +25,7 @@ export default function LandlordDocumentsPage() {
   
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [docsLoading, setDocsLoading] = useState(false);
   
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -35,7 +36,9 @@ export default function LandlordDocumentsPage() {
       try {
         const data = await fetchAPI<Property[]>("/api/v1/landlord/properties");
         setProperties(data);
-        if (data.length > 0) setSelectedProperty(data[0].id);
+        if (data.length > 0) {
+          setSelectedProperty(data[0].id);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -60,11 +63,14 @@ export default function LandlordDocumentsPage() {
 
     // Load documents for the selected property
     async function loadDocs() {
+      setDocsLoading(true);
       try {
         const data = await fetchAPI<Document[]>(`/api/v1/landlord/properties/${selectedProperty}/documents`);
         setDocuments(data);
       } catch (err) {
         console.error(err);
+      } finally {
+        setDocsLoading(false);
       }
     }
     
@@ -211,7 +217,18 @@ export default function LandlordDocumentsPage() {
           </form>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {documents.length === 0 ? (
+            {docsLoading ? (
+              [1, 2].map((i) => (
+                <div key={i} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
+                  <div className="w-20 h-20 bg-[rgb(var(--ml-border))] rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 bg-[rgb(var(--ml-border))] rounded w-3/4" />
+                    <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/4" />
+                    <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : documents.length === 0 ? (
               <div className="col-span-full text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]">
                 No documents uploaded for this property yet.
               </div>

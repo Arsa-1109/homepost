@@ -1,14 +1,9 @@
-/**
- * Tenant Route Group Layout
- *
- * Bottom tab bar navigation — always visible.
- * Active tab is highlighted with the accent colour.
- */
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const TABS = [
   { label: "Home",     icon: "🏠", href: "/tenant/dashboard" },
@@ -26,6 +21,15 @@ export default function TenantLayout({
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Tenant Portal Top Header */}
+      <header className="p-4 flex justify-between items-center border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-80">
+        <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))]">🏠 Homepost</div>
+        <div className="flex gap-4 items-center">
+          <UserButton />
+          <ThemeToggle />
+        </div>
+      </header>
+
       {/* Main content — extra bottom padding so content never hides behind tab bar */}
       <main className="flex-1 p-4 pb-24">{children}</main>
 

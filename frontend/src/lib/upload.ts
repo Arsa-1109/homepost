@@ -28,34 +28,18 @@ export async function uploadFile(
   prefix: string = "maintenance",
   token: string | null = null
 ): Promise<string> {
-  const filename = encodeURIComponent(file.name);
-  const contentType = encodeURIComponent(file.type);
-  const path = `/api/v1/uploads/presigned-url?filename=${filename}&content_type=${contentType}&prefix=${prefix}`;
+  const formData = new FormData();
+  formData.append("prefix", prefix);
+  formData.append("file", file);
 
-  // Step 1: Get presigned POST payload from backend (GET endpoint with query params)
-  const { upload_url, fields, file_key } =
-    await apiFetch<{ upload_url: string; fields: Record<string, string>; file_key: string }>(
-      path,
-      {
-        method: "GET",
-      },
-      token
-    );
-
-  // Step 2: Upload directly to R2 using PUT (R2 doesn't support presigned POST)
-  const uploadResponse = await fetch(upload_url, {
-    method: "PUT",
-    body: file,
-    headers: {
-      "Content-Type": file.type,
+  const { file_key } = await apiFetch<{ file_key: string }>(
+    `/api/v1/uploads/`,
+    {
+      method: "POST",
+      body: formData,
     },
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error(
-      "We had trouble uploading your file. Please check your internet connection and try again."
-    );
-  }
+    token
+  );
 
   return file_key;
 }
