@@ -10,6 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 type Property = {
   id: string;
@@ -33,21 +35,21 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
     if (!window.confirm(`Are you sure you want to remove the tenant from ${u.unit_label}?`)) return;
     try {
       await fetchAPI(`/api/v1/landlord/units/${u.id}/tenant`, { method: "DELETE" });
-      alert("Tenant removed successfully.");
+      toast.success("Tenant removed successfully.");
       onRefresh();
     } catch (err) {
-      alert("Failed to remove tenant.");
+      toast.error("Failed to remove tenant.");
     }
   };
 
   return (
-    <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between">
+    <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover:shadow-md transition-shadow">
       <div>
         <div className="flex justify-between items-start">
-          <h3 className="font-bold text-lg">{u.unit_label}</h3>
-          <span className={`text-xs px-2 py-1 rounded-full ${u.is_occupied ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
+          <h3 className="font-bold text-lg text-balance">{u.unit_label}</h3>
+          <Badge variant={u.is_occupied ? "success" : "outline"} className="capitalize">
             {u.is_occupied ? "Occupied" : "Vacant"}
-          </span>
+          </Badge>
         </div>
         <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
       </div>
@@ -56,19 +58,19 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
         {u.is_occupied ? (
           <button
             onClick={handleRemoveTenant}
-            className="text-xs font-medium text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors w-full"
+            className="text-xs font-medium text-red-600 border border-red-255 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors w-full cursor-pointer"
           >
             Remove Tenant
           </button>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full">
+            <DialogTrigger className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full cursor-pointer">
               Invite Tenant
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Invite Tenant to {u.unit_label}</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-balance">Invite Tenant to {u.unit_label}</DialogTitle>
+                <DialogDescription className="text-pretty">
                   Generate a unique invite link for your new tenant.
                 </DialogDescription>
               </DialogHeader>
@@ -92,14 +94,14 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                     });
                     const link = `${window.location.origin}/join/${res.token}`;
                     navigator.clipboard.writeText(link);
-                    alert("Invite link copied to clipboard!\n\n" + link);
+                    toast.success("Invite link copied to clipboard!");
                     setIsDialogOpen(false);
                     onRefresh();
                   } catch (err) {
-                    alert("Failed to generate invite.");
+                    toast.error("Failed to generate invite.");
                   }
                 }}
-                className="text-sm bg-[rgb(var(--ml-accent))] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity w-full"
+                className="text-sm bg-[rgb(var(--ml-accent))] text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity w-full cursor-pointer"
               >
                 Generate & Copy Link
               </button>
@@ -173,8 +175,9 @@ export default function LandlordUnitsPage() {
       setUnits(prev => [...prev, newUnit]);
       setUnitLabel("");
       setRentDay("1");
+      toast.success("Unit created successfully!");
     } catch (err) {
-      alert("Failed to create unit");
+      toast.error("Failed to create unit. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -182,7 +185,7 @@ export default function LandlordUnitsPage() {
 
   if (loading) return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Units 🚪</h1>
+      <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
       <div className="animate-pulse space-y-4">
         <div className="h-10 w-64 bg-[rgb(var(--ml-border))] rounded-md"></div>
         <div className="h-40 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
@@ -197,10 +200,10 @@ export default function LandlordUnitsPage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Units 🚪</h1>
+      <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
 
       {properties.length === 0 ? (
-        <div className="text-center py-12 border border-[rgb(var(--ml-border))] rounded-xl">
+        <div className="text-center py-12 border border-[rgb(var(--ml-border))] rounded-xl text-balance">
           Please add a property first before managing units.
         </div>
       ) : (
@@ -210,7 +213,7 @@ export default function LandlordUnitsPage() {
             <select 
               value={selectedProperty} 
               onChange={e => setSelectedProperty(e.target.value)}
-              className="bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none animate-fadeIn"
+              className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 px-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none animate-fadeIn cursor-pointer"
             >
               {properties.map(p => (
                 <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
@@ -218,32 +221,32 @@ export default function LandlordUnitsPage() {
             </select>
           </div>
 
-          <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Add New Unit</h2>
+          <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+            <h2 className="text-xl font-semibold mb-4 text-balance">Add New Unit</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input 
                 required 
                 value={unitLabel} 
                 onChange={e => setUnitLabel(e.target.value)} 
                 placeholder="Unit Label (e.g. Apt 101, Basement, etc.)" 
-                className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
+                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
               />
               <div className="flex items-center gap-2">
-                <span className="text-sm text-[rgb(var(--ml-text-secondary))]">Rent Due Day:</span>
+                <span className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Rent Due Day:</span>
                 <input 
                   required 
                   type="number"
                   min="1" max="31"
                   value={rentDay} 
                   onChange={e => setRentDay(e.target.value)} 
-                  className="bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors w-24"
+                  className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all w-24 tabular-nums"
                 />
               </div>
             </div>
             <button 
               disabled={isSubmitting}
               type="submit" 
-              className="bg-[rgb(var(--ml-accent))] text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="bg-[rgb(var(--ml-accent))] text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? "Creating..." : "Add Unit"}
             </button>
@@ -264,7 +267,7 @@ export default function LandlordUnitsPage() {
                 </div>
               ))
             ) : units.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl">
+              <div className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-balance">
                 No units in this property yet.
               </div>
             ) : (
