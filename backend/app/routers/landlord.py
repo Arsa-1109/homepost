@@ -463,17 +463,23 @@ async def get_dashboard_summary(
     occupied_count = len(occupied_unit_ids)
     vacant_count = total_units - occupied_count
 
-    # --- Urgent Maintenance (open or in_progress, priority high/urgent) ---
+    # --- Active Maintenance (all open/in_progress, sorted by priority) ---
     if unit_ids:
+        from sqlalchemy import case, literal
+        priority_order = case(
+            (MaintenanceRequest.priority == "urgent", literal(1)),
+            (MaintenanceRequest.priority == "high", literal(2)),
+            (MaintenanceRequest.priority == "medium", literal(3)),
+            (MaintenanceRequest.priority == "low", literal(4)),
+            else_=literal(5)
+        )
         urgent_result = await session.execute(
             select(MaintenanceRequest)
             .where(
                 MaintenanceRequest.unit_id.in_(unit_ids),
                 MaintenanceRequest.status.in_(["open", "in_progress"]),
-                MaintenanceRequest.priority.in_(["high", "urgent"]),
             )
-            .order_by(MaintenanceRequest.created_at.desc())
-            .limit(5)
+            .order_by(priority_order, MaintenanceRequest.created_at.desc())
         )
         urgent_requests = urgent_result.scalars().all()
     else:
@@ -573,8 +579,8 @@ async def get_dashboard_summary(
             {
                 "id": str(r.id),
                 "title": r.title,
-                "priority": r.priority,
-                "status": r.status,
+                "priority": r.priority.value if hasattr(r.priority, 'value') else str(r.priority),
+                "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
                 "unit_label": unit_label_map.get(str(r.unit_id), "—"),
                 "created_at": r.created_at.isoformat(),
             }
