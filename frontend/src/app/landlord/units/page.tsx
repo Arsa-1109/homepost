@@ -31,15 +31,20 @@ type Unit = {
 function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   const [keepData, setKeepData] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const handleRemoveTenant = async () => {
-    if (!window.confirm(`Are you sure you want to remove the tenant from ${u.unit_label}?`)) return;
+    setIsRemoving(true);
     try {
       await fetchAPI(`/api/v1/landlord/units/${u.id}/tenant`, { method: "DELETE" });
       toast.success("Tenant removed successfully.");
+      setIsRemoveDialogOpen(false);
       onRefresh();
     } catch (err) {
       toast.error("Failed to remove tenant.");
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -57,12 +62,34 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
       
       <div className="mt-auto flex flex-col gap-3">
         {u.is_occupied ? (
-          <button
-            onClick={handleRemoveTenant}
-            className="text-xs font-medium text-red-600 border border-red-255 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors w-full cursor-pointer"
-          >
-            Remove Tenant
-          </button>
+          <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+            <DialogTrigger className="text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
+              Remove Tenant
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-balance">Remove Tenant</DialogTitle>
+                <DialogDescription className="text-pretty">
+                  Are you sure you want to remove the tenant from <span className="font-semibold text-[rgb(var(--ml-text-primary))]">{u.unit_label}</span>? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex gap-3 justify-end mt-4">
+                <button 
+                  onClick={() => setIsRemoveDialogOpen(false)}
+                  className="px-4 py-2 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] rounded-lg transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  disabled={isRemoving}
+                  onClick={handleRemoveTenant}
+                  className="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isRemoving ? "Removing..." : "Remove"}
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full cursor-pointer">
@@ -185,16 +212,42 @@ export default function LandlordUnitsPage() {
   };
 
   if (loading) return (
-    <div className="space-y-8 max-w-4xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto animate-pulse">
       <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
-      <div className="animate-pulse space-y-4">
-        <div className="h-10 w-64 bg-[rgb(var(--ml-border))] rounded-md"></div>
-        <div className="h-40 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
-          ))}
+      
+      {/* Property Selector Skeleton */}
+      <div className="flex gap-4 items-center">
+        <div className="h-5 w-28 bg-[rgb(var(--ml-border))] rounded"></div>
+        <div className="h-10 w-48 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+      </div>
+
+      {/* Add Unit Form Skeleton */}
+      <div className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm">
+        <div className="h-7 w-32 bg-[rgb(var(--ml-border))] rounded mb-4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="h-[46px] w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
+            <div className="h-[46px] w-24 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+          </div>
         </div>
+        <div className="h-[48px] w-32 bg-[rgb(var(--ml-border))] rounded-lg"></div>
+      </div>
+
+      {/* Units Grid Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl p-4 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-start">
+                <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
+                <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+              </div>
+              <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+            </div>
+            <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
+          </div>
+        ))}
       </div>
     </div>
   );

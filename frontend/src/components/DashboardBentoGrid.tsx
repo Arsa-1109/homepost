@@ -185,28 +185,28 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
             <div className="grid grid-cols-2 gap-3 mb-1">
-              <div className="flex flex-col justify-center items-center p-3 bg-blue-50/50 rounded-xl border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-blue-600 dark:text-blue-400 mb-1">Properties</span>
-                <span className="text-3xl font-bold text-blue-700 dark:text-blue-300 leading-none tabular-nums">{data.property_stats.total_properties}</span>
+              <div className="flex flex-col justify-center items-center p-3 bg-[rgb(var(--ml-bg-tertiary))] rounded-xl border border-[rgb(var(--ml-border))]">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-[rgb(var(--ml-text-secondary))] mb-1">Properties</span>
+                <span className="text-3xl font-bold text-[rgb(var(--ml-accent))] leading-none tabular-nums">{data.property_stats.total_properties}</span>
               </div>
-              <div className="flex flex-col justify-center items-center p-3 bg-slate-50/50 rounded-xl border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400 mb-1">Total Units</span>
-                <span className="text-3xl font-bold text-slate-700 dark:text-slate-200 leading-none tabular-nums">{data.property_stats.total_units}</span>
+              <div className="flex flex-col justify-center items-center p-3 bg-[rgb(var(--ml-bg-tertiary))] rounded-xl border border-[rgb(var(--ml-border))]">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-[rgb(var(--ml-text-secondary))] mb-1">Total Units</span>
+                <span className="text-3xl font-bold text-[rgb(var(--ml-text-primary))] leading-none tabular-nums">{data.property_stats.total_units}</span>
               </div>
             </div>
             
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
-                <span className="font-medium text-green-700 dark:text-green-400 flex items-center gap-2">
+                <span className="font-medium text-[rgb(var(--ml-text-secondary))] flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>Occupied
                 </span>
-                <span className="font-bold text-slate-800 dark:text-slate-100 tabular-nums">{data.property_stats.occupied_units}</span>
+                <span className="font-bold text-[rgb(var(--ml-text-primary))] tabular-nums">{data.property_stats.occupied_units}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="font-medium text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                <span className="font-medium text-[rgb(var(--ml-text-secondary))] flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-amber-500"></div>Vacant
                 </span>
-                <span className="font-bold text-slate-800 dark:text-slate-100 tabular-nums">{data.property_stats.vacant_units}</span>
+                <span className="font-bold text-[rgb(var(--ml-text-primary))] tabular-nums">{data.property_stats.vacant_units}</span>
               </div>
             </div>
           </CardContent>
