@@ -16,6 +16,8 @@ from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequest
 from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
 from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request
+from app.core.limiter import limiter
+from fastapi import Request
 
 router = APIRouter(prefix="/tenant", tags=["Tenant"])
 
@@ -52,7 +54,9 @@ async def get_my_profile(
 # Maintenance Requests
 # ---------------------------------------------------------------------------
 @router.post("/maintenance", response_model=MaintenanceRequestResponse)
+@limiter.limit("5/minute")
 async def submit_maintenance_request(
+    request: Request,
     req_in: MaintenanceRequestCreate,
     background_tasks: BackgroundTasks,
     profile: TenantProfile = Depends(get_active_tenant_profile),
@@ -112,7 +116,9 @@ async def list_my_maintenance_requests(
     return response_data
 
 @router.post("/maintenance/{request_id}/reopen", response_model=MaintenanceRequestResponse)
+@limiter.limit("5/minute")
 async def reopen_maintenance_request(
+    request: Request,
     request_id: uuid.UUID,
     background_tasks: BackgroundTasks,
     profile: TenantProfile = Depends(get_active_tenant_profile),

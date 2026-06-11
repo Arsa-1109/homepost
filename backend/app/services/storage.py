@@ -9,11 +9,13 @@ The FastAPI server never handles file bytes — R2 does.
    at the storage layer.
 
 Key format conventions:
+Key format conventions:
   - Maintenance images: maintenance/{request_id}/{uuid}.{ext}
   - Documents: documents/{property_id}/{uuid}.{ext}
 """
 
 import uuid
+from typing import BinaryIO
 
 import boto3
 from botocore.config import Config as BotoConfig
@@ -48,26 +50,22 @@ def generate_object_key(prefix: str, filename: str) -> str:
     return f"{prefix}/{unique_name}"
 
 
-def generate_presigned_upload_url(
+def upload_file_to_r2(
+    file_obj: BinaryIO,
     object_key: str,
-    content_type: str,
-    expires: int = 3600,
-) -> dict:
+    content_type: str
+) -> None:
     """
-    Generate a presigned PUT URL for direct client upload to R2.
-    Cloudflare R2 does not support Presigned POST.
+    Upload a file stream directly to Cloudflare R2.
+    Used by the FastAPI backend to proxy uploads, allowing us to enforce 
+    strict size limits in memory before reaching the storage layer.
     """
-    url = _s3_client.generate_presigned_url(
-        ClientMethod="put_object",
-        Params={
-            "Bucket": settings.r2_bucket_name,
-            "Key": object_key,
-            "ContentType": content_type
-        },
-        ExpiresIn=expires,
+    _s3_client.upload_fileobj(
+        Fileobj=file_obj,
+        Bucket=settings.r2_bucket_name,
+        Key=object_key,
+        ExtraArgs={"ContentType": content_type}
     )
-    # Returning in same dictionary format so the router signature doesn't break
-    return {"url": url, "fields": {}}
 
 
 def generate_presigned_download_url(

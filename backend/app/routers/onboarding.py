@@ -11,7 +11,7 @@ All endpoints require a valid Clerk JWT (get_current_user dependency).
 
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -23,6 +23,8 @@ from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
 from sqlalchemy import func
+
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
@@ -60,7 +62,9 @@ async def sync_user(
 
 
 @router.post("/register-landlord")
+@limiter.limit("5/minute")
 async def register_landlord(
+    request: Request,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
@@ -77,7 +81,9 @@ async def register_landlord(
 
 
 @router.post("/reset-role")
+@limiter.limit("5/minute")
 async def reset_role(
+    request: Request,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
@@ -113,7 +119,9 @@ async def reset_role(
 
 
 @router.post("/request-access")
+@limiter.limit("5/minute")
 async def request_access(
+    request: Request,
     payload: RequestAccessPayload,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
@@ -144,7 +152,9 @@ async def request_access(
 
 
 @router.post("/accept-invite")
+@limiter.limit("10/minute")
 async def accept_invite(
+    request: Request,
     payload: AcceptInvitePayload,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
