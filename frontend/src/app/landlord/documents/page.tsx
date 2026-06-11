@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
+import { motion, AnimatePresence } from "motion/react";
 import { uploadFile } from "@/lib/upload";
 import { FileText, FileImage, Download, Eye, File } from "lucide-react";
 import { toast } from "sonner";
@@ -219,97 +220,134 @@ export default function LandlordDocumentsPage() {
           </form>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AnimatePresence mode="wait">
             {docsLoading ? (
-              [1, 2].map((i) => (
-                <div key={i} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
-                  <div className="w-20 h-20 bg-[rgb(var(--ml-border))] rounded-lg shrink-0" />
-                  <div className="flex-1 space-y-2 py-1">
-                    <div className="h-4 bg-[rgb(var(--ml-border))] rounded w-3/4" />
-                    <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/4" />
-                    <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/2" />
+              <motion.div 
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
+                    <div className="w-20 h-20 bg-[rgb(var(--ml-border))] rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-2 py-1">
+                      <div className="h-4 bg-[rgb(var(--ml-border))] rounded w-3/4" />
+                      <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/4" />
+                      <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/2" />
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </motion.div>
             ) : documents.length === 0 ? (
-              <div className="col-span-full text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]">
+              <motion.div 
+                key="empty"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="col-span-full text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]"
+              >
                 No documents uploaded for this property yet.
-              </div>
+              </motion.div>
             ) : (
-              documents.map(doc => {
-                const isImage = doc.file_type.startsWith("image/");
-                const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
+              <motion.div 
+                key="content"
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0 }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                }}
+                className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                {documents.map(doc => {
+                  const isImage = doc.file_type.startsWith("image/");
+                  const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
 
-                return (
-                  <div key={doc.id} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all group shadow-sm hover:shadow-md">
-                    {/* Preview Thumbnail */}
-                    <div className="relative w-20 h-20 border border-[rgb(var(--ml-border))] rounded-lg overflow-hidden shrink-0">
-                      {isImage && doc.file_url ? (
-                        <div className="relative w-full h-full bg-muted flex items-center justify-center">
-                          <img 
-                            src={doc.file_url} 
-                            alt={doc.title} 
-                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-                          />
-                        </div>
-                      ) : isPdf ? (
-                        <div className="w-full h-full bg-red-500/10 text-red-600 dark:text-red-400 flex flex-col items-center justify-center gap-1">
-                          <FileText className="h-8 w-8" />
-                          <span className="text-[10px] font-bold tracking-wider uppercase">PDF</span>
-                        </div>
-                      ) : (
-                        <div className="w-full h-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex flex-col items-center justify-center gap-1">
-                          <File className="h-8 w-8" />
-                          <span className="text-[10px] font-bold tracking-wider uppercase">DOC</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Document Details & Actions */}
-                    <div className="flex-1 flex flex-col justify-between min-w-0">
-                      <div className="space-y-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-base text-foreground group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
-                            {doc.title}
-                          </h3>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-slate-500/10 text-slate-400 border-slate-500/20 font-medium">
-                            {properties.find(p => p.id === selectedProperty)?.name || "Property"}
-                          </span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"} font-medium`}>
-                            {getUnitLabel(doc.unit_id)}
-                          </span>
-                          <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">
-                            {new Date(doc.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2">
-                        {doc.file_url && (
-                          <a 
-                            href={doc.file_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-3 py-1.5 border border-[rgb(var(--ml-border))] rounded-lg text-xs font-medium text-white hover:bg-slate-800 transition-colors"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            View
-                          </a>
+                  return (
+                    <motion.div 
+                      key={doc.id}
+                      variants={{
+                        hidden: { opacity: 0, y: 20 },
+                        show: { opacity: 1, y: 0 }
+                      }}
+                      className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all group shadow-sm hover:shadow-md"
+                    >
+                      {/* Preview Thumbnail */}
+                      <div className="relative w-20 h-20 border border-[rgb(var(--ml-border))] rounded-lg overflow-hidden shrink-0">
+                        {isImage && doc.file_url ? (
+                          <div className="relative w-full h-full bg-muted flex items-center justify-center">
+                            <img 
+                              src={doc.file_url} 
+                              alt={doc.title} 
+                              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                            />
+                          </div>
+                        ) : isPdf ? (
+                          <div className="w-full h-full bg-red-500/10 text-red-600 dark:text-red-400 flex flex-col items-center justify-center gap-1">
+                            <FileText className="h-8 w-8" />
+                            <span className="text-[10px] font-bold tracking-wider uppercase">PDF</span>
+                          </div>
+                        ) : (
+                          <div className="w-full h-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex flex-col items-center justify-center gap-1">
+                            <File className="h-8 w-8" />
+                            <span className="text-[10px] font-bold tracking-wider uppercase text-center px-1 truncate">
+                              {doc.file_key.split('.').pop() || 'FILE'}
+                            </span>
+                          </div>
                         )}
-                        <button 
-                          onClick={() => handleDownload(doc.file_key, doc.title)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-[rgb(var(--ml-accent))] text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          Download
-                        </button>
                       </div>
-                    </div>
-                  </div>
-                );
-              })
+
+                      {/* Document Details & Actions */}
+                      <div className="flex-1 flex flex-col justify-between min-w-0">
+                        <div className="space-y-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-base text-foreground group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
+                              {doc.title}
+                            </h3>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-slate-500/10 text-slate-400 border-slate-500/20 font-medium">
+                              {properties.find(p => p.id === selectedProperty)?.name || "Property"}
+                            </span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"} font-medium`}>
+                              {getUnitLabel(doc.unit_id)}
+                            </span>
+                            <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">
+                              {new Date(doc.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2">
+                          {doc.file_url && (
+                            <a 
+                              href={doc.file_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-3 py-1.5 border border-[rgb(var(--ml-border))] rounded-lg text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-hover))] transition-colors"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              View
+                            </a>
+                          )}
+                          <button 
+                            onClick={() => handleDownload(doc.file_key, doc.title)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[rgb(var(--ml-accent))] text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Download
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
             )}
+          </AnimatePresence>
           </div>
         </>
       )}

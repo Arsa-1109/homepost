@@ -151,8 +151,24 @@
 /* ============================================================
    Smooth Theme Transition
    ============================================================ */
-html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+*, ::backdrop, ::after, ::before {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+/* Ensure interactive hover/focus states remain snappy (150ms) */
+a:hover, 
+button:hover, 
+button:focus,
+input:focus, 
+select:focus, 
+textarea:focus, 
+[role="button"]:hover,
+[role="menuitem"]:hover,
+[role="option"]:hover,
+.group:hover * {
+  transition-duration: 150ms !important;
 }
 
 /* ============================================================

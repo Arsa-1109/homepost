@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI } from "@/lib/api";
 import {
   Dialog,
@@ -253,28 +254,64 @@ export default function LandlordUnitsPage() {
           </form>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <AnimatePresence mode="wait">
             {unitsLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl animate-pulse p-4 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-                      <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+              <motion.div 
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                className="col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+              >
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl animate-pulse p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
+                        <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                      </div>
+                      <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
                     </div>
-                    <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+                    <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
                   </div>
-                  <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
-                </div>
-              ))
+                ))}
+              </motion.div>
             ) : units.length === 0 ? (
-              <div className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-balance">
+              <motion.div 
+                key="empty"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-balance"
+              >
                 No units in this property yet.
-              </div>
+              </motion.div>
             ) : (
-              units.map(u => (
-                <UnitCard key={u.id} u={u} onRefresh={loadUnits} />
-              ))
+              <motion.div 
+                key="content"
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0 }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                }}
+                className="col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+              >
+                {units.map(u => (
+                  <motion.div 
+                    key={u.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      show: { opacity: 1, y: 0 }
+                    }}
+                  >
+                    <UnitCard u={u} onRefresh={loadUnits} />
+                  </motion.div>
+                ))}
+              </motion.div>
             )}
+          </AnimatePresence>
           </div>
         </>
       )}
