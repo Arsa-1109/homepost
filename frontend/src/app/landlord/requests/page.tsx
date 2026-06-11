@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI } from "@/lib/api";
 import { FileIcon, ImageIcon, DownloadIcon, ExternalLinkIcon, Eye, X, InfoIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -120,8 +120,11 @@ function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.2 } }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm"
       onClick={onClose}
     >
       <button 
@@ -136,10 +139,14 @@ function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
         className="relative max-w-[90vw] max-h-[80vh] md:max-w-[80vw] md:max-h-[85vh] flex flex-col items-center justify-center p-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <img 
+        <motion.img 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
           src={url} 
           alt="Full resolution attachment" 
-          className="object-contain max-w-full max-h-[75vh] rounded-lg shadow-2xl border border-white/10 select-none animate-scaleIn"
+          className="object-contain max-w-full max-h-[75vh] rounded-lg shadow-2xl border border-white/10 select-none"
         />
         
         <div className="mt-4 flex items-center gap-4 bg-[#1a1a1a]/95 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm shadow-lg">
@@ -159,7 +166,7 @@ function LightboxModal({ url, onClose }: { url: string; onClose: () => void }) {
           </a>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -443,9 +450,11 @@ function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () 
         </button>
       </div>
 
-      {lightboxUrl && (
-        <LightboxModal url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
-      )}
+      <AnimatePresence>
+        {lightboxUrl && (
+          <LightboxModal url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -483,66 +492,83 @@ export default function LandlordMaintenancePage() {
         </Alert>
       )}
 
-      {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col md:flex-row gap-6 animate-pulse">
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
-                  <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded-full"></div>
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div 
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            className="space-y-4"
+          >
+            {[1, 2, 3].map(i => (
+              <div key={i} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col md:flex-row gap-6 animate-pulse">
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                    <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                  </div>
+                  <div className="h-4 w-1/4 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="space-y-2 pt-2">
+                    <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                    <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                    <div className="h-4 w-2/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  </div>
+                  <div className="flex gap-4 pt-4">
+                    <div className="h-3 w-20 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                    <div className="h-3 w-24 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  </div>
                 </div>
-                <div className="h-4 w-1/4 bg-[rgb(var(--ml-border))] rounded-md"></div>
-                <div className="space-y-2 pt-2">
-                  <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
-                  <div className="h-4 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
-                  <div className="h-4 w-2/3 bg-[rgb(var(--ml-border))] rounded-md"></div>
-                </div>
-                <div className="flex gap-4 pt-4">
-                  <div className="h-3 w-20 bg-[rgb(var(--ml-border))] rounded-md"></div>
-                  <div className="h-3 w-24 bg-[rgb(var(--ml-border))] rounded-md"></div>
+                <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
+                  <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-20 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
+                  <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
                 </div>
               </div>
-              <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))] pt-4 md:pt-0 md:pl-6">
-                <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
-                <div className="h-20 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
-                <div className="h-10 w-full bg-[rgb(var(--ml-border))] rounded-md"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : requests.length === 0 ? (
-        <EmptyState
-          icon={FileIcon}
-          title="No Requests"
-          description="There are no maintenance requests across your properties."
-        />
-      ) : (
-        <motion.div 
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: { staggerChildren: 0.1 }
-            }
-          }}
-          className="space-y-4"
-        >
-          {requests.map(req => (
-            <motion.div 
-              key={req.id}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0 }
-              }}
-            >
-              <RequestCard req={req} onUpdate={loadData} />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
+            ))}
+          </motion.div>
+        ) : requests.length === 0 ? (
+          <motion.div 
+            key="empty"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            <EmptyState
+              icon={FileIcon}
+              title="No Requests"
+              description="There are no maintenance requests across your properties."
+            />
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="content"
+            initial="hidden"
+            animate="show"
+            exit={{ opacity: 0 }}
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.1 }
+              }
+            }}
+            className="space-y-4"
+          >
+            {requests.map(req => (
+              <motion.div 
+                key={req.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0 }
+                }}
+              >
+                <RequestCard req={req} onUpdate={loadData} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
