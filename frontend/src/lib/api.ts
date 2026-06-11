@@ -70,10 +70,16 @@ export async function apiFetch<T = unknown>(
     headers["Authorization"] = `Bearer ${activeToken}`;
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (err) {
+    console.error("Network or CORS error:", err);
+    throw new Error("Unable to connect to the server. Please ensure the backend is running and try again.");
+  }
 
   // Helper: safely parse JSON, throw readable error if HTML/non-JSON returned
   const safeJson = async () => {

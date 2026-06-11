@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
 
 import { AlertCircle, Activity, Building, Users, Home, FileText, Image as ImageIcon } from "lucide-react"
 
@@ -107,9 +108,12 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         </CardHeader>
         <CardContent>
           {data.urgent_maintenance.length === 0 ? (
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-4 text-center">
-              No urgent maintenance requests.
-            </p>
+            <EmptyState 
+              icon={AlertCircle}
+              title="All Caught Up"
+              description="There are no urgent maintenance requests at the moment."
+              className="border-none bg-transparent shadow-none py-8"
+            />
           ) : (
             <ul className="space-y-4">
               {data.urgent_maintenance.map((req) => (
@@ -168,9 +172,12 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         </CardHeader>
         <CardContent>
           {data.units.length === 0 ? (
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
-              No units found. Add a property to get started.
-            </p>
+            <EmptyState 
+              icon={Home}
+              title="No Units"
+              description="Add a property to get started and see your units here."
+              className="border-none bg-transparent shadow-none py-12"
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {data.units.map((unit) => (
@@ -212,9 +219,12 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
         <CardContent className="flex-1 flex flex-col">
           {data.recent_activity.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-sm text-[rgb(var(--ml-text-secondary))] py-6 text-center">
-                No recent activity.
-              </p>
+              <EmptyState 
+                icon={Activity}
+                title="No Activity Yet"
+                description="Recent updates like maintenance or document uploads will appear here."
+                className="border-none bg-transparent shadow-none py-8"
+              />
             </div>
           ) : (
             <ul className="space-y-4">
