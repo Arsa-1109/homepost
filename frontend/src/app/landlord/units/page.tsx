@@ -116,6 +116,7 @@ export default function LandlordUnitsPage() {
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unitsLoading, setUnitsLoading] = useState(false);
   
   const [unitLabel, setUnitLabel] = useState("");
   const [rentDay, setRentDay] = useState("1");
@@ -140,11 +141,14 @@ export default function LandlordUnitsPage() {
 
   const loadUnits = async () => {
     if (!selectedProperty) return;
+    setUnitsLoading(true);
     try {
       const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
       setUnits(data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setUnitsLoading(false);
     }
   };
 
@@ -206,7 +210,7 @@ export default function LandlordUnitsPage() {
             <select 
               value={selectedProperty} 
               onChange={e => setSelectedProperty(e.target.value)}
-              className="bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none"
+              className="bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 outline-none focus:border-[rgb(var(--ml-accent))] appearance-none animate-fadeIn"
             >
               {properties.map(p => (
                 <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
@@ -246,7 +250,20 @@ export default function LandlordUnitsPage() {
           </form>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {units.length === 0 ? (
+            {unitsLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl animate-pulse p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
+                      <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                    </div>
+                    <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+                  </div>
+                  <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
+                </div>
+              ))
+            ) : units.length === 0 ? (
               <div className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl">
                 No units in this property yet.
               </div>

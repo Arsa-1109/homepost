@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers";
 import { UserSync } from "@/components/UserSync";
 import { Geist } from "next/font/google";
 import { CommandPalette } from "@/components/CommandPalette";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { RootHeader } from "@/components/RootHeader";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -33,19 +33,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange={false}
           >
-            <header className="p-4 flex justify-between items-center border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))]">
-              <div className="font-bold text-lg">🏠 Homepost</div>
-              <div className="flex gap-4 items-center">
-                <Show when="signed-out">
-                  <SignInButton />
-                  <SignUpButton />
-                </Show>
-                <Show when="signed-in">
-                  <UserButton />
-                </Show>
-                <ThemeToggle />
-              </div>
-            </header>
+            <RootHeader />
             {children}
             <CommandPalette />
             <Toaster />

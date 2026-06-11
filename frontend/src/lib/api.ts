@@ -62,9 +62,13 @@ export async function apiFetch<T = unknown>(
   }
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...((options.headers as Record<string, string>) || {}),
   };
+
+  // Only default to JSON if we aren't sending FormData
+  if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (activeToken) {
     headers["Authorization"] = `Bearer ${activeToken}`;

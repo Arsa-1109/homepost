@@ -14,6 +14,8 @@ from urllib.parse import urlparse, urlunparse
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
 from app.core.database import engine
@@ -70,12 +72,17 @@ async def lifespan(application: FastAPI):
 
 settings = get_settings()
 
+from app.core.limiter import limiter
+
 app = FastAPI(
     title="Homepost API",
     description="Tenant portal for individual property owners managing 1–5 properties.",
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — allow the Next.js frontend to make cross-origin requests
 # FRONTEND_URL can be a single URL or comma-separated list of URLs
@@ -89,6 +96,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Content-Security-Policy"] = "default-src 'self'"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
@@ -99,8 +108,8 @@ app.add_middleware(
     allow_origins=_raw_origins,
     allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1)(:\d+)?|https://homepost-.*\.vercel\.app|https://homepost\.vercel\.app)$",
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
 )
 
 
