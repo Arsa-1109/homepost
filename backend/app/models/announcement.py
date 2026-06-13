@@ -21,4 +21,4 @@ class Announcement(SQLModel, table=True):
     author_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
     title: str = Field(max_length=255)
     body: str = Field(max_length=5000)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))

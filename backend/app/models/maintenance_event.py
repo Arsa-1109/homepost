@@ -34,7 +34,7 @@ class MaintenanceEvent(SQLModel, table=True):
         sa_column=Column(JSON, nullable=True),
     )
     
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
 
     # Relationship to the parent request
     # Note: We use string references to avoid circular imports.
