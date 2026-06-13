@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { X, Download } from "lucide-react";
 
@@ -65,7 +66,9 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
     };
   }, [onClose]);
 
-  return (
+  if (typeof window === "undefined") return null;
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -125,7 +128,8 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
           </a>
         </motion.div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
