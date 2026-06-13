@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
+import { Hero } from "@/components/Hero";
 import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users } from "lucide-react";
 
 const FEATURE_CONTENT = {
@@ -210,21 +211,10 @@ export default function LandingPage() {
         <div className="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vw] bg-accent-dark/5 rounded-full blur-[80px] pointer-events-none"></div>
 
         {/* Hero Section */}
-        <section className="max-w-[1440px] w-full mx-auto flex flex-col items-center text-center mt-10 mb-20 z-10">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-accent/20 via-accent-light/10 to-transparent blur-3xl rounded-full -z-10"></div>
-            <h1 className="text-5xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl">
-              Homepost
-            </h1>
-          </div>
-          <div className="w-16 h-1 bg-accent rounded-full mb-4"></div>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto opacity-85 leading-relaxed font-medium mt-16">
-            The radically simple portal for individual property owners. Manage requests, share documents, and communicate seamlessly.
-          </p>
-        </section>
+        <Hero />
 
         {/* Auth / Role Selection Area */}
-        <section className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-16">
+        <section className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-48">
 
           {hasRole === null ? (
             <div className="w-full relative min-h-[500px] opacity-0"></div>
