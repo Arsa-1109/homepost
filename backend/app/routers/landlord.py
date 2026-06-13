@@ -211,30 +211,34 @@ async def update_maintenance_request(
     db_req = await session.get(MaintenanceRequest, request_id)
     if not db_req:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
-        
+
     # Ensure this request belongs to one of landlord's units
     unit = await session.get(Unit, db_req.unit_id)
     prop = await session.get(Property, unit.property_id)
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
-        
+
+    # ---------------------------------------------------------------
+    # Phase 1: validate inputs and compute change flags
+    # ---------------------------------------------------------------
     try:
         if db_req.status == "closed":
             raise HTTPException(status_code=400, detail="Cannot modify a closed maintenance request.")
 
-        events_to_add = []
-        
-        # Collect what changed in this update
         status_changed = False
         priority_changed = False
         notes_changed = False
         images_changed = False
-        new_image_keys = []
+        new_image_keys: list[str] = []
 
         if req_in.status and req_in.status != db_req.status:
             if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
                 valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
-                raise HTTPException(status_code=400, detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. Valid transitions are: {valid_states}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. "
+                           f"Valid transitions are: {valid_states}",
+                )
             status_changed = True
 
         if req_in.priority and req_in.priority != db_req.priority:
@@ -249,34 +253,31 @@ async def update_maintenance_request(
             if new_image_keys:
                 images_changed = True
 
-        # Build consolidated events
+        # Capture enum string values BEFORE mutating db_req so event logging has accurate before/after
+        old_status_val: str = db_req.status.value if hasattr(db_req.status, "value") else str(db_req.status)
+        old_priority_val: str = db_req.priority.value if hasattr(db_req.priority, "value") else str(db_req.priority)
+        new_status_val: str = (
+            (req_in.status.value if hasattr(req_in.status, "value") else str(req_in.status))
+            if req_in.status else old_status_val
+        )
+        new_priority_val: str = (
+            (req_in.priority.value if hasattr(req_in.priority, "value") else str(req_in.priority))
+            if req_in.priority else old_priority_val
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # ---------------------------------------------------------------
+    # Phase 2: apply mutations and commit (this MUST always succeed)
+    # ---------------------------------------------------------------
+    from datetime import datetime, timezone as _tz
+
+    try:
         if status_changed:
-            payload = {"old_status": db_req.status, "new_status": req_in.status}
-            desc_parts = [f"Landlord changed status from {db_req.status.upper()} to {req_in.status.upper()}."]
-            
-            # Bundle notes into the status change event
-            if notes_changed:
-                payload["notes"] = req_in.landlord_notes
-                desc_parts.append("Added notes.")
-            
-            # Bundle images into the status change event  
-            if images_changed:
-                payload["image_keys"] = new_image_keys
-                payload["image_count"] = len(new_image_keys)
-                desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
-            
-            events_to_add.append(
-                MaintenanceEvent(
-                    maintenance_request_id=db_req.id,
-                    actor_id=user.id,
-                    event_type="status_changed",
-                    description=" ".join(desc_parts),
-                    payload=payload
-                )
-            )
             db_req.status = req_in.status
-            
-            # Trigger email if status is changing away from OPEN
             if req_in.status != "open":
                 from app.models.tenant_profile import TenantProfile
                 tenant_profile = await session.get(TenantProfile, db_req.tenant_id)
@@ -287,64 +288,98 @@ async def update_maintenance_request(
                             send_status_update,
                             tenant_email=tenant_user.email,
                             request_title=db_req.title,
-                            new_status=req_in.status
+                            new_status=req_in.status,
                         )
-        else:
-            # No status change — create individual events for notes and images
-            if notes_changed:
-                events_to_add.append(
-                    MaintenanceEvent(
-                        maintenance_request_id=db_req.id,
-                        actor_id=user.id,
-                        event_type="note_added",
-                        description="Landlord updated the resolution notes." if db_req.landlord_notes else "Landlord added resolution notes.",
-                        payload={"notes": req_in.landlord_notes}
-                    )
-                )
-            
-            if images_changed:
-                events_to_add.append(
-                    MaintenanceEvent(
-                        maintenance_request_id=db_req.id,
-                        actor_id=user.id,
-                        event_type="images_attached",
-                        description=f"Landlord attached {len(new_image_keys)} resolution file(s).",
-                        payload={"image_count": len(new_image_keys), "image_keys": new_image_keys}
-                    )
-                )
 
         if priority_changed:
-            events_to_add.append(
-                MaintenanceEvent(
-                    maintenance_request_id=db_req.id,
-                    actor_id=user.id,
-                    event_type="priority_changed",
-                    description=f"Landlord changed priority from {db_req.priority.upper()} to {req_in.priority.upper()}.",
-                    payload={"old_priority": db_req.priority, "new_priority": req_in.priority}
-                )
-            )
             db_req.priority = req_in.priority
 
-        # Apply remaining mutations
         if notes_changed:
             db_req.landlord_notes = req_in.landlord_notes
+
         if req_in.landlord_image_keys is not None:
             db_req.landlord_image_keys = req_in.landlord_image_keys
-            
-        for event in events_to_add:
-            session.add(event)
+
+        db_req.updated_at = datetime.now(_tz.utc)
 
         await session.commit()
         await session.refresh(db_req)
+
     except HTTPException:
         raise
     except Exception as e:
         await session.rollback()
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred while updating the database: {str(e)}")
-    
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred while updating the database: {str(e)}",
+        )
+
+    # ---------------------------------------------------------------
+    # Phase 3: audit event logging — best-effort, never blocks response
+    # ---------------------------------------------------------------
+    try:
+        events: list[MaintenanceEvent] = []
+
+        if status_changed:
+            payload: dict = {"old_status": old_status_val, "new_status": new_status_val}
+            desc_parts = [f"Landlord changed status from {old_status_val.upper()} to {new_status_val.upper()}."]
+            if notes_changed:
+                payload["notes"] = req_in.landlord_notes
+                desc_parts.append("Added notes.")
+            if images_changed:
+                payload["image_keys"] = new_image_keys
+                payload["image_count"] = len(new_image_keys)
+                desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
+            events.append(MaintenanceEvent(
+                maintenance_request_id=db_req.id,
+                actor_id=user.id,
+                event_type="status_changed",
+                description=" ".join(desc_parts),
+                payload=payload,
+            ))
+        else:
+            if notes_changed:
+                events.append(MaintenanceEvent(
+                    maintenance_request_id=db_req.id,
+                    actor_id=user.id,
+                    event_type="note_added",
+                    description="Landlord updated the resolution notes." if old_status_val else "Landlord added resolution notes.",
+                    payload={"notes": req_in.landlord_notes},
+                ))
+            if images_changed:
+                events.append(MaintenanceEvent(
+                    maintenance_request_id=db_req.id,
+                    actor_id=user.id,
+                    event_type="images_attached",
+                    description=f"Landlord attached {len(new_image_keys)} resolution file(s).",
+                    payload={"image_count": len(new_image_keys), "image_keys": new_image_keys},
+                ))
+
+        if priority_changed:
+            events.append(MaintenanceEvent(
+                maintenance_request_id=db_req.id,
+                actor_id=user.id,
+                event_type="priority_changed",
+                description=f"Landlord changed priority from {old_priority_val.upper()} to {new_priority_val.upper()}.",
+                payload={"old_priority": old_priority_val, "new_priority": new_priority_val},
+            ))
+
+        if events:
+            for ev in events:
+                session.add(ev)
+            await session.commit()
+
+    except Exception:
+        # Audit logging must never surface as a 500 to the client
+        try:
+            await session.rollback()
+        except Exception:
+            pass
+
     resp = MaintenanceRequestResponse.model_validate(db_req)
     hydrate_maintenance_request(db_req, resp)
     return resp
+
 
 @router.get("/maintenance/{request_id}/events")
 async def list_maintenance_events(
