@@ -10,6 +10,7 @@ from app.models.tenant_profile import TenantProfile
 from app.models.property import Property
 from app.models.unit import Unit
 from app.models.maintenance_request import MaintenanceRequest, RequestStatus
+from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
 from app.models.document import Document
 from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse
@@ -69,6 +70,19 @@ async def submit_maintenance_request(
         status=RequestStatus.OPEN
     )
     session.add(req)
+    await session.flush()
+    
+    # Log the timeline event
+    tenant_user = await session.get(User, profile.user_id)
+    event = MaintenanceEvent(
+        maintenance_request_id=req.id,
+        actor_id=profile.user_id,
+        event_type="created",
+        description="Tenant submitted a new maintenance request.",
+        payload={"priority": req.priority, "title": req.title}
+    )
+    session.add(event)
+    
     await session.commit()
     await session.refresh(req)
     
@@ -93,6 +107,39 @@ async def submit_maintenance_request(
     resp = MaintenanceRequestResponse.model_validate(req)
     hydrate_maintenance_request(req, resp)
     return resp
+
+@router.get("/maintenance/{request_id}/events")
+async def list_maintenance_events(
+    request_id: uuid.UUID,
+    profile: TenantProfile = Depends(get_current_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    db_req = await session.get(MaintenanceRequest, request_id)
+    if not db_req or db_req.tenant_id != profile.id:
+        raise HTTPException(status_code=404, detail="Maintenance request not found.")
+        
+    result = await session.execute(
+        select(MaintenanceEvent, User.full_name)
+        .join(User, MaintenanceEvent.actor_id == User.id)
+        .where(MaintenanceEvent.maintenance_request_id == request_id)
+        .order_by(MaintenanceEvent.created_at.asc())
+    )
+    
+    events = []
+    for event, user_name in result.all():
+        data = event.model_dump()
+        data["actor_name"] = user_name or "Unknown User"
+        if data.get("payload") and "image_keys" in data["payload"]:
+            urls = []
+            for key in data["payload"]["image_keys"]:
+                try:
+                    urls.append(generate_presigned_download_url(key))
+                except Exception:
+                    pass
+            data["payload"]["image_urls"] = urls
+        events.append(data)
+        
+    return events
 
 @router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
 async def list_my_maintenance_requests(
@@ -146,6 +193,17 @@ async def reopen_maintenance_request(
 
     req.status = RequestStatus.OPEN
     req.updated_at = now
+    
+    # Log the reopening event
+    event = MaintenanceEvent(
+        maintenance_request_id=req.id,
+        actor_id=profile.user_id,
+        event_type="reopened",
+        description="Tenant reopened the maintenance request.",
+        payload={"previous_status": "resolved"}
+    )
+    session.add(event)
+    
     await session.commit()
     await session.refresh(req)
     

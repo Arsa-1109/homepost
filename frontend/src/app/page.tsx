@@ -39,25 +39,25 @@ export default function LandingPage() {
         </div>
 
         {/* Feature highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-12 text-left">
-          <div className="p-4 rounded-xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]">
-            <div className="text-2xl mb-2">🔧</div>
-            <h3 className="font-semibold mb-1">Maintenance Requests</h3>
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-12 text-left">
+          <div className="p-6 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] hover:shadow-lg hover:shadow-[rgb(var(--ml-accent))]/5 hover:-translate-y-1 transition-all duration-300 group">
+            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">🔧</div>
+            <h3 className="text-lg font-semibold mb-2">Maintenance Requests</h3>
+            <p className="text-[rgb(var(--ml-text-secondary))] leading-relaxed">
               Tenants submit issues with photos. Track status from open to resolved.
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]">
-            <div className="text-2xl mb-2">📢</div>
-            <h3 className="font-semibold mb-1">Announcements</h3>
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))]">
+          <div className="p-6 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] hover:shadow-lg hover:shadow-[rgb(var(--ml-accent))]/5 hover:-translate-y-1 transition-all duration-300 group">
+            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📢</div>
+            <h3 className="text-lg font-semibold mb-2">Announcements</h3>
+            <p className="text-[rgb(var(--ml-text-secondary))] leading-relaxed">
               Post property-wide updates. Tenants see what matters to them.
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]">
-            <div className="text-2xl mb-2">📄</div>
-            <h3 className="font-semibold mb-1">Document Sharing</h3>
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))]">
+          <div className="p-6 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] hover:shadow-lg hover:shadow-[rgb(var(--ml-accent))]/5 hover:-translate-y-1 transition-all duration-300 group">
+            <div className="text-3xl mb-4 group-hover:scale-110 transition-transform origin-bottom-left">📄</div>
+            <h3 className="text-lg font-semibold mb-2">Document Sharing</h3>
+            <p className="text-[rgb(var(--ml-text-secondary))] leading-relaxed">
               Upload leases, house rules, and more. Tenants download anytime.
             </p>
           </div>

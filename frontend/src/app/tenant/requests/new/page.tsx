@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { uploadFile } from "@/lib/upload";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -90,16 +91,25 @@ export default function NewRequestPage() {
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Priority</label>
-          <select 
-            value={priority}
-            onChange={e => setPriority(e.target.value)}
-            className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors appearance-none"
-          >
-            <option value="low" className="bg-background">Low (Cosmetic, non-urgent)</option>
-            <option value="medium" className="bg-background">Medium (Standard issue)</option>
-            <option value="high" className="bg-background">High (Needs attention soon)</option>
-            <option value="emergency" className="bg-background">Emergency (Immediate threat)</option>
-          </select>
+          <Select value={priority} onValueChange={(val) => setPriority(val || "medium")}>
+            <SelectTrigger className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg h-11 transition-colors">
+              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
+                {priority === "low"
+                  ? "Low (Cosmetic, non-urgent)"
+                  : priority === "medium"
+                  ? "Medium (Standard issue)"
+                  : priority === "high"
+                  ? "High (Needs attention soon)"
+                  : "Emergency (Immediate threat)"}
+              </span>
+            </SelectTrigger>
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+              <SelectItem value="low" className="rounded-lg">Low (Cosmetic, non-urgent)</SelectItem>
+              <SelectItem value="medium" className="rounded-lg">Medium (Standard issue)</SelectItem>
+              <SelectItem value="high" className="rounded-lg">High (Needs attention soon)</SelectItem>
+              <SelectItem value="urgent" className="rounded-lg">Emergency (Immediate threat)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

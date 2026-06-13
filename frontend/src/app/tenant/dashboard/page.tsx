@@ -19,9 +19,19 @@ type MaintenanceRequest = {
   id: string;
   title: string;
   status: "open" | "in_progress" | "resolved" | "closed";
-  priority: "low" | "medium" | "high" | "emergency";
+  priority: "low" | "medium" | "high" | "urgent";
   created_at: string;
 };
+
+function getOrdinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) return "th";
+  switch (day % 10) {
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
+  }
+}
 
 /** Days from today until the given date (positive = future, negative = past) */
 function daysUntil(dateStr: string | null): number | null {
@@ -95,6 +105,14 @@ export default function TenantDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const sizes = JSON.parse(localStorage.getItem('tenant_dashboard_sizes') || '{}');
+      if (sizes.welcome) document.documentElement.style.setProperty('--ts-welcome', sizes.welcome + 'px');
+      if (sizes.countdown) document.documentElement.style.setProperty('--ts-countdown', sizes.countdown + 'px');
+      if (sizes.actions) document.documentElement.style.setProperty('--ts-actions', sizes.actions + 'px');
+      if (sizes.requests) document.documentElement.style.setProperty('--ts-requests', sizes.requests + 'px');
+    } catch(e) {}
+
     async function loadAll() {
       try {
         const [prof, reqs] = await Promise.all([
@@ -136,19 +154,6 @@ export default function TenantDashboard() {
   if (loading) {
     return (
       <>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const sizes = JSON.parse(localStorage.getItem('tenant_dashboard_sizes') || '{}');
-                if (sizes.welcome) document.documentElement.style.setProperty('--ts-welcome', sizes.welcome + 'px');
-                if (sizes.countdown) document.documentElement.style.setProperty('--ts-countdown', sizes.countdown + 'px');
-                if (sizes.actions) document.documentElement.style.setProperty('--ts-actions', sizes.actions + 'px');
-                if (sizes.requests) document.documentElement.style.setProperty('--ts-requests', sizes.requests + 'px');
-              } catch(e) {}
-            `,
-          }}
-        />
         <div className="space-y-6 max-w-2xl mx-auto animate-pulse">
           <div style={{ height: 'var(--ts-welcome, 56px)' }} className="flex flex-col justify-center space-y-2">
             <div className="h-8 w-48 bg-[rgb(var(--ml-bg-secondary))] rounded-xl border border-[rgb(var(--ml-border))]" />
@@ -200,9 +205,7 @@ export default function TenantDashboard() {
           value={rentDays !== null ? `${rentDays}d` : "—"}
           sublabel={
             profile
-              ? `Due on the ${profile.rent_due_day}${
-                  ["st","nd","rd"][profile.rent_due_day - 1] || "th"
-                } of each month`
+              ? `Due on the ${profile.rent_due_day}${getOrdinalSuffix(profile.rent_due_day)} of each month`
               : undefined
           }
           urgent={rentUrgent}

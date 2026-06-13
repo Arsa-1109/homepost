@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Optional
 
 from sqlmodel import Field, SQLModel, Column
-from sqlalchemy import String
+from sqlalchemy import DateTime, String
 
 
 class UserRole(str, Enum):
@@ -50,5 +50,5 @@ class User(SQLModel, table=True):
         foreign_key="users.id",
     )
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
