@@ -129,6 +129,14 @@ async def list_maintenance_events(
     for event, user_name in result.all():
         data = event.model_dump()
         data["actor_name"] = user_name or "Unknown User"
+        if data.get("payload") and "image_keys" in data["payload"]:
+            urls = []
+            for key in data["payload"]["image_keys"]:
+                try:
+                    urls.append(generate_presigned_download_url(key))
+                except Exception:
+                    pass
+            data["payload"]["image_urls"] = urls
         events.append(data)
         
     return events

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
+import Link from "next/link"
 
 import { AlertCircle, Activity, Building, Home, FileText, Image as ImageIcon } from "lucide-react"
 
@@ -231,7 +232,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
             ) : (
               <div className="flex flex-col gap-3">
                 {data.units.map((unit) => (
-                  <div key={unit.id} className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white dark:bg-slate-800/50 border-green-100 dark:border-green-900/30 hover:border-green-200' : unit.has_pending ? 'bg-slate-50/50 dark:bg-slate-800/50 border-amber-100 dark:border-amber-900/30 hover:border-amber-200' : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
+                  <Link key={unit.id} href={`/landlord/units/${unit.id}`} className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 hover:shadow-sm ${unit.is_occupied ? 'bg-white dark:bg-slate-800/50 border-green-100 dark:border-green-900/30 hover:border-green-200' : unit.has_pending ? 'bg-slate-50/50 dark:bg-slate-800/50 border-amber-100 dark:border-amber-900/30 hover:border-amber-200' : 'bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
                     <div className="flex items-center gap-3">
                       <div className={`flex items-center justify-center p-2 rounded-lg ${unit.is_occupied ? 'bg-green-100 text-green-600' : unit.has_pending ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
                         <Home className="h-4 w-4" />
@@ -250,7 +251,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                     ) : (
                       <Badge variant="outline" className="uppercase tracking-wider text-[10px]">Vacant</Badge>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

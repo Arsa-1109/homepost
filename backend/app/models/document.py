@@ -9,6 +9,7 @@ and the R2 object key.
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -22,5 +23,5 @@ class Document(SQLModel, table=True):
     title: str = Field(max_length=255)
     file_key: str = Field(max_length=500)  # R2 object key
     file_type: str = Field(max_length=100)  # MIME type, e.g., "application/pdf"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
     is_archived: bool = Field(default=False)

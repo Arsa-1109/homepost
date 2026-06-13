@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from sqlmodel import Field, SQLModel, Column
-from sqlalchemy import String
+from sqlalchemy import DateTime, String
 
 
 class InviteStatus(str, Enum):
@@ -51,4 +51,4 @@ class Invite(SQLModel, table=True):
         )
     )
     expires_at: datetime = Field(default_factory=_default_expires_at)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))

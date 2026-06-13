@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Column, String
+from sqlalchemy import Column, DateTime, String
 from sqlalchemy.types import JSON
 from sqlmodel import Field, SQLModel, Relationship
 
@@ -82,8 +82,8 @@ class MaintenanceRequest(SQLModel, table=True):
         )
     )
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
 
     # Timeline of events
     events: list["MaintenanceEvent"] = Relationship(back_populates="request", cascade_delete=True)

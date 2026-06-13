@@ -102,7 +102,14 @@ export default function LandlordLayout({
         {/* Top Control Bar — Desktop */}
         <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
           <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))] capitalize">
-            {pathname.split("/").pop()?.replace("-", " ") || "Dashboard"}
+            {(() => {
+              const parts = pathname.split("/");
+              const last = parts.pop() || "dashboard";
+              if (last.length === 36 && last.includes("-")) {
+                return "Unit Details";
+              }
+              return last.replace(/-/g, " ");
+            })()}
           </div>
           <div className="flex gap-4 items-center">
             <UserButton />

@@ -11,6 +11,7 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
+from sqlalchemy import DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -28,4 +29,4 @@ class TenantProfile(SQLModel, table=True):
     is_active: bool = Field(default=True)
     removed_at: Optional[datetime] = Field(default=None)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))

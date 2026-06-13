@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -97,30 +98,36 @@ export default function LandlordAnnouncementsPage() {
         ) : (
           <>
             <div className="space-y-2">
-              <label className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Select Property</label>
-              <select 
-                value={selectedProperty} 
-                onChange={e => setSelectedProperty(e.target.value)}
-                className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
-              >
-                {properties.map(p => (
-                  <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
-                ))}
-              </select>
+              <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property</label>
+              <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val || "")}>
+                <SelectTrigger>
+                  <span className="flex flex-1 text-left line-clamp-1 truncate">
+                    {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Select Unit (Optional)</label>
-              <select 
-                value={selectedUnit} 
-                onChange={e => setSelectedUnit(e.target.value)}
-                className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
-              >
-                <option value="" className="bg-background">All Units (Property-wide)</option>
-                {units.map(u => (
-                  <option key={u.id} value={u.id} className="bg-background">{u.unit_label}</option>
-                ))}
-              </select>
+              <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Unit (Optional)</label>
+              <Select value={selectedUnit || "all"} onValueChange={(val) => setSelectedUnit(val === "all" ? "" : val || "")}>
+                <SelectTrigger>
+                  <span className="flex flex-1 text-left line-clamp-1 truncate">
+                    {selectedUnit === "all" || !selectedUnit ? "All Units (Property-wide)" : units.find(u => u.id === selectedUnit)?.unit_label ? `Unit ${units.find(u => u.id === selectedUnit)?.unit_label}` : "Select Unit"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Units (Property-wide)</SelectItem>
+                  {units.map(u => (
+                    <SelectItem key={u.id} value={u.id}>Unit {u.unit_label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <input 

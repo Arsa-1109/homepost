@@ -19,9 +19,19 @@ type MaintenanceRequest = {
   id: string;
   title: string;
   status: "open" | "in_progress" | "resolved" | "closed";
-  priority: "low" | "medium" | "high" | "emergency";
+  priority: "low" | "medium" | "high" | "urgent";
   created_at: string;
 };
+
+function getOrdinalSuffix(day: number): string {
+  if (day >= 11 && day <= 13) return "th";
+  switch (day % 10) {
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
+  }
+}
 
 /** Days from today until the given date (positive = future, negative = past) */
 function daysUntil(dateStr: string | null): number | null {
@@ -195,9 +205,7 @@ export default function TenantDashboard() {
           value={rentDays !== null ? `${rentDays}d` : "—"}
           sublabel={
             profile
-              ? `Due on the ${profile.rent_due_day}${
-                  ["st","nd","rd"][profile.rent_due_day - 1] || "th"
-                } of each month`
+              ? `Due on the ${profile.rent_due_day}${getOrdinalSuffix(profile.rent_due_day)} of each month`
               : undefined
           }
           urgent={rentUrgent}
