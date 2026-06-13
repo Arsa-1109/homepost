@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Homepost | Grounded Futurism Property Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#c5e7ff",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-tertiary-fixed": "#001e2d",
+                        "secondary-container": "#d97707",
+                        "on-error-container": "#ffdad6",
+                        "error": "#ffb4ab",
+                        "surface-variant": "#353534",
+                        "primary-container": "#f59e0b",
+                        "tertiary-fixed-dim": "#7fd0ff",
+                        "surface-bright": "#393939",
+                        "inverse-primary": "#855300",
+                        "error-container": "#93000a",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-container-highest": "#353534",
+                        "primary": "#ffc174",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "primary-fixed-dim": "#ffb95f",
+                        "background": "#131313",
+                        "on-primary-fixed": "#2a1700",
+                        "on-surface": "#e5e2e1",
+                        "secondary": "#ffb77d",
+                        "surface-container-low": "#1c1b1b",
+                        "on-tertiary": "#00344a",
+                        "on-secondary-container": "#432100",
+                        "secondary-fixed": "#ffdcc3",
+                        "on-tertiary-fixed-variant": "#004c6a",
+                        "on-secondary-fixed": "#2f1500",
+                        "surface-container": "#201f1f",
+                        "surface": "#131313",
+                        "on-background": "#e5e2e1",
+                        "on-primary-container": "#613b00",
+                        "tertiary-container": "#1abdff",
+                        "on-surface-variant": "#d8c3ad",
+                        "inverse-on-surface": "#313030",
+                        "outline-variant": "#534434",
+                        "surface-dim": "#131313",
+                        "on-secondary": "#4d2600",
+                        "outline": "#a08e7a",
+                        "on-tertiary-container": "#004966",
+                        "surface-tint": "#ffb95f",
+                        "tertiary": "#8fd5ff",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "primary-fixed": "#ffddb8",
+                        "on-primary-fixed-variant": "#653e00",
+                        "on-error": "#690005",
+                        "on-primary": "#472a00",
+                        "surface-container-high": "#2a2a2a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "layer-gap": "32px",
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Geist"],
+                        "label-md": ["Geist"],
+                        "display-lg": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "label-sm": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "display-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-md": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #121212;
+            color: #e5e2e1;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .glass-panel {
+            background: rgba(26, 26, 26, 0.6);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid transparent;
+            background-image: linear-gradient(rgba(26, 26, 26, 0.6), rgba(26, 26, 26, 0.6)), linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .glow-amber-high {
+            box-shadow: 0 32px 64px -12px rgba(245, 158, 11, 0.05), 0 0 40px rgba(245, 158, 11, 0.03);
+        }
+
+        .glow-amber-low {
+            box-shadow: 0 16px 32px -8px rgba(245, 158, 11, 0.03), 0 0 20px rgba(245, 158, 11, 0.02);
+        }
+
+        .magnetic-attraction {
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .magnetic-attraction:hover {
+            transform: perspective(1000px) rotateX(2deg) rotateY(2deg) translateZ(10px);
+        }
+        
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.02) 0%, transparent 60%);
+        }
+        
+        /* Typography overrides to ensure exact font rendering */
+        .font-display-lg { font-family: 'Geist', sans-serif; font-size: 64px; font-weight: 700; line-height: 72px; letter-spacing: -0.04em; }
+        .text-display-lg { font-size: 64px; line-height: 72px; letter-spacing: -0.04em; font-weight: 700; }
+        
+        .font-display-md { font-family: 'Geist', sans-serif; font-size: 48px; font-weight: 600; line-height: 56px; letter-spacing: -0.03em; }
+        .text-display-md { font-size: 48px; line-height: 56px; letter-spacing: -0.03em; font-weight: 600; }
+        
+        .font-headline-lg { font-family: 'Geist', sans-serif; font-size: 32px; font-weight: 600; line-height: 40px; letter-spacing: -0.02em; }
+        .text-headline-lg { font-size: 32px; line-height: 40px; letter-spacing: -0.02em; font-weight: 600; }
+        
+        .font-headline-lg-mobile { font-family: 'Geist', sans-serif; font-size: 24px; font-weight: 600; line-height: 32px; letter-spacing: -0.02em; }
+        .text-headline-lg-mobile { font-size: 24px; line-height: 32px; letter-spacing: -0.02em; font-weight: 600; }
+        
+        .font-body-lg { font-family: 'Geist', sans-serif; font-size: 18px; font-weight: 400; line-height: 28px; }
+        .text-body-lg { font-size: 18px; line-height: 28px; font-weight: 400; }
+        
+        .font-body-md { font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; }
+        .text-body-md { font-size: 16px; line-height: 24px; font-weight: 400; }
+        
+        .font-label-md { font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500; line-height: 20px; letter-spacing: 0.02em; }
+        .text-label-md { font-size: 14px; line-height: 20px; letter-spacing: 0.02em; font-weight: 500; }
+        
+        .font-label-sm { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 600; line-height: 16px; letter-spacing: 0.05em; }
+        .text-label-sm { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
+<div class="ambient-bg"></div>
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/60 backdrop-blur-3xl border-b border-white/20 shadow-[0_0_20px_rgba(245,158,11,0.05)]">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-unit max-w-container-max mx-auto h-20">
+<div class="flex items-center gap-4">
+<span class="font-display-md text-display-md font-bold text-on-surface tracking-tight">Homepost</span>
+</div>
+<div class="hidden md:flex items-center gap-8">
+<!-- Navigation is suppressed for landing page flow, keeping structure for potential extension -->
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Features</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Solutions</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Pricing</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Contact</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="font-label-md text-label-md text-primary hover:scale-105 transition-transform duration-300 magnetic-attraction ease-in-out duration-500 hidden md:block">
+                    Login
+                </button>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="relative pt-32 pb-margin-desktop px-margin-mobile md:px-margin-desktop min-h-screen flex flex-col items-center justify-start overflow-hidden">
+<!-- Background decorative elements to enhance depth -->
+<div class="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-primary-container/5 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vw] bg-tertiary-fixed/5 rounded-full blur-[80px] pointer-events-none"></div>
+<!-- Hero Section -->
+<section class="max-w-container-max w-full mx-auto flex flex-col items-center text-center mt-layer-gap mb-24 z-10">
+<h1 class="font-display-lg text-display-lg md:text-[80px] md:leading-[88px] font-extrabold text-on-surface mb-8 tracking-tighter drop-shadow-2xl">
+                Homepost
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto opacity-90 leading-relaxed">
+                The radically simple portal for individual property owners. Manage requests, share documents, and communicate seamlessly.
+            </p>
+</section>
+<!-- Main Action Cards (Antigravity Layout) -->
+<section class="max-w-container-max w-full mx-auto relative h-[600px] md:h-[500px] mb-32 z-20">
+<!-- Owner Card (Closer, Higher Z-index) -->
+<div class="absolute top-0 left-0 md:left-1/2 md:-translate-x-[110%] w-full md:w-[45%] glass-panel rounded-xl p-8 flex flex-col items-start justify-between glow-amber-high magnetic-attraction h-[280px] md:h-[320px] z-30 transform md:rotate-[-2deg]">
+<div class="w-16 h-16 rounded-full bg-primary-container/10 flex items-center justify-center mb-6 border border-primary-container/20">
+<span class="material-symbols-outlined text-primary-container text-3xl" style="font-variation-settings: 'FILL' 1;">real_estate_agent</span>
+</div>
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface mb-2">I am a Property Owner</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.</p>
+</div>
+<button class="w-full py-4 rounded-lg bg-gradient-to-r from-primary-container to-[#D97706] text-on-primary-container font-label-md text-label-md font-bold hover:opacity-90 transition-opacity">
+                    Enter Owner Portal
+                </button>
+</div>
+<!-- Tenant Card (Further back, Lower Z-index, offset) -->
+<div class="absolute top-[300px] md:top-[80px] right-0 md:right-1/2 md:translate-x-[110%] w-full md:w-[40%] glass-panel rounded-xl p-8 flex flex-col items-start justify-between glow-amber-low magnetic-attraction h-[260px] md:h-[300px] z-20 transform md:rotate-[1deg] opacity-95">
+<div class="w-14 h-14 rounded-full bg-surface-variant/50 flex items-center justify-center mb-6 border border-white/5">
+<span class="material-symbols-outlined text-on-surface-variant text-2xl" style="font-variation-settings: 'FILL' 0;">key</span>
+</div>
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface mb-2">I am a Tenant</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Submit requests, view announcements, and access important documents securely.</p>
+</div>
+<button class="w-full py-3 rounded-lg border border-white/20 text-on-surface font-label-md text-label-md hover:bg-white/5 transition-colors">
+                    Access Tenant Portal
+                </button>
+</div>
+</section>
+<!-- Features Section (Lower Floating Cards) -->
+<section class="max-w-container-max w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-gutter z-10 mt-layer-gap">
+<div class="glass-panel rounded-lg p-6 flex flex-col items-center text-center glow-amber-low magnetic-attraction transform hover:-translate-y-2 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary-container text-4xl mb-4" style="font-variation-settings: 'FILL' 0;">build</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface mb-2">Maintenance</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant font-normal">Streamlined request tracking.</p>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col items-center text-center glow-amber-low magnetic-attraction transform md:translate-y-8 hover:-translate-y-2 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary-container text-4xl mb-4" style="font-variation-settings: 'FILL' 0;">campaign</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface mb-2">Announcements</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant font-normal">Instant property-wide updates.</p>
+</div>
+<div class="glass-panel rounded-lg p-6 flex flex-col items-center text-center glow-amber-low magnetic-attraction transform hover:-translate-y-2 transition-transform duration-500">
+<span class="material-symbols-outlined text-primary-container text-4xl mb-4" style="font-variation-settings: 'FILL' 0;">description</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface mb-2">Documents</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant font-normal">Secure centralized storage.</p>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full relative py-layer-gap bg-surface-container-lowest bg-surface-container-low shadow-inner">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop gap-gutter max-w-container-max mx-auto">
+<div class="font-headline-lg text-headline-lg text-on-surface">
+                Homepost
+            </div>
+<div class="font-label-sm text-label-sm text-secondary">
+                © 2024 Homepost. Grounded Futurism.
+            </div>
+<div class="flex gap-4">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors ease-in-out duration-200" href="#">Privacy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors ease-in-out duration-200" href="#">Terms</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors ease-in-out duration-200" href="#">Support</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors ease-in-out duration-200" href="#">LinkedIn</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple vanilla JS for enhanced magnetic hover effect on desktop
+        document.addEventListener('DOMContentLoaded', () => {
+            const isDesktop = window.matchMedia('(min-width: 768px)').matches;
+            
+            if (isDesktop) {
+                const magneticElements = document.querySelectorAll('.magnetic-attraction');
+                
+                magneticElements.forEach(el => {
+                    el.addEventListener('mousemove', (e) => {
+                        const rect = el.getBoundingClientRect();
+                        const x = e.clientX - rect.left; // x position within the element.
+                        const y = e.clientY - rect.top;  // y position within the element.
+                        
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+                        
+                        const rotateX = ((y - centerY) / centerY) * -5; // max 5 deg
+                        const rotateY = ((x - centerX) / centerX) * 5;  // max 5 deg
+                        
+                        el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(20px)`;
+                    });
+                    
+                    el.addEventListener('mouseleave', () => {
+                        // Reset to original transform defined in classes
+                        el.style.transform = '';
+                    });
+                });
+            }
+        });
+    </script>
+</body></html>
