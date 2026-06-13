@@ -5,7 +5,50 @@ import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
-import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon } from "lucide-react";
+import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users } from "lucide-react";
+
+const FEATURE_CONTENT = {
+  owner: [
+    {
+      id: "owner-1",
+      icon: Building2,
+      title: "Portfolio Management",
+      description: "Organize your real estate assets effortlessly. Create properties, manage individual units, and maintain a clear overview of your entire portfolio."
+    },
+    {
+      id: "owner-2",
+      icon: Wrench,
+      title: "Maintenance Tracking",
+      description: "Receive, track, and resolve tenant service requests in one unified dashboard. Keep your properties in top condition and tenants happy."
+    },
+    {
+      id: "owner-3",
+      icon: Users,
+      title: "Tenant Communications",
+      description: "Broadcast important announcements and securely share lease documents. Establish a reliable, centralized channel for all your tenant interactions."
+    }
+  ],
+  tenant: [
+    {
+      id: "tenant-1",
+      icon: Wrench,
+      title: "Quick Maintenance",
+      description: "Report issues instantly with photos from your phone. Track the repair status from request to resolution without the back-and-forth."
+    },
+    {
+      id: "tenant-2",
+      icon: Megaphone,
+      title: "Stay Informed",
+      description: "Receive instant notifications for property-wide announcements, scheduled maintenance, and important building updates."
+    },
+    {
+      id: "tenant-3",
+      icon: FileText,
+      title: "Your Documents",
+      description: "Access your lease agreements, house rules, and important property documents securely, anytime you need them."
+    }
+  ]
+};
 import { api } from "@/lib/api";
 
 function ThemeToggle() {
@@ -32,8 +75,9 @@ export default function LandingPage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
-  
+
   const [roleSelection, setRoleSelection] = useState<"none" | "landlord" | "tenant">("none");
+  const [activeFeatureRole, setActiveFeatureRole] = useState<"owner" | "tenant">("owner");
   const [tenantEmail, setTenantEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +108,7 @@ export default function LandingPage() {
     if (!isLoaded) return;
     setIsSubmitting(true);
     setError("");
-    
+
     if (isSignedIn) {
       try {
         await api.post("/api/v1/onboarding/register-landlord");
@@ -134,7 +178,7 @@ export default function LandingPage() {
             background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.06) 0%, transparent 60%);
         }
       `}</style>
-      
+
       <div className="ambient-bg"></div>
 
       {/* TopNavBar */}
@@ -160,11 +204,11 @@ export default function LandingPage() {
 
       {/* Main Content Area */}
       <main className="relative pt-32 pb-24 px-6 md:px-16 min-h-screen flex flex-col items-center justify-start overflow-hidden z-10">
-        
+
         {/* Background decorative elements to enhance depth */}
         <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vw] bg-accent-dark/5 rounded-full blur-[80px] pointer-events-none"></div>
-        
+
         {/* Hero Section */}
         <section className="max-w-[1440px] w-full mx-auto flex flex-col items-center text-center mt-10 mb-20 z-10">
           <div className="relative">
@@ -181,17 +225,17 @@ export default function LandingPage() {
 
         {/* Auth / Role Selection Area */}
         <section className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-16">
-          
+
           {hasRole === null ? (
             <div className="w-full relative min-h-[500px] opacity-0"></div>
           ) : hasRole ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="p-12 rounded-2xl glass-panel glow-amber-high flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
             >
               <h2 className="text-3xl font-bold">Welcome back!</h2>
-              <button 
+              <button
                 onClick={() => router.push("/dashboard")}
                 className="px-10 py-5 rounded-lg bg-gradient-to-r from-accent to-accent-dark text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent"
               >
@@ -205,10 +249,10 @@ export default function LandingPage() {
                   {error}
                 </div>
               )}
-              
+
               <AnimatePresence>
                 {roleSelection === "none" && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
@@ -223,7 +267,7 @@ export default function LandingPage() {
                       className="absolute top-0 left-0 md:left-[5%] w-full md:w-[440px] glass-panel rounded-xl p-10 flex flex-col items-start justify-between glow-amber-high h-[300px] md:h-[350px] z-30 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-left"
                       onClick={handleLandlordSelect}
                       tabIndex={0}
-                      onKeyDown={(e) => { if(e.key === 'Enter') handleLandlordSelect() }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleLandlordSelect() }}
                     >
                       <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20">
                         <Building2 className="text-accent w-8 h-8" />
@@ -246,7 +290,7 @@ export default function LandingPage() {
                       className="absolute top-[320px] md:top-[60px] right-0 md:right-[5%] w-full md:w-[440px] glass-panel rounded-xl p-10 flex flex-col items-start justify-between glow-amber-low h-[280px] md:h-[320px] z-20 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-right"
                       onClick={() => setRoleSelection("tenant")}
                       tabIndex={0}
-                      onKeyDown={(e) => { if(e.key === 'Enter') setRoleSelection("tenant") }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') setRoleSelection("tenant") }}
                     >
                       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
                         <Key className="text-muted-foreground w-7 h-7" />
@@ -273,11 +317,11 @@ export default function LandingPage() {
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl glass-panel glow-amber-high rounded-xl p-12 flex flex-col items-start justify-center z-40 min-h-[400px]"
                   >
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-8 border border-border mx-auto">
-                        <Key className="text-muted-foreground w-8 h-8" />
+                      <Key className="text-muted-foreground w-8 h-8" />
                     </div>
                     <h2 className="text-3xl font-semibold mb-4 tracking-tight w-full text-center">Tenant Access</h2>
                     <p className="text-center w-full text-muted-foreground font-medium mb-8">Enter your landlord's email address to connect with their portal.</p>
-                    
+
                     <div className="w-full mb-8">
                       <label className="block text-sm font-semibold mb-3 text-foreground tracking-wide">Landlord's Email Address</label>
                       <input
@@ -312,81 +356,156 @@ export default function LandingPage() {
           )}
         </section>
 
+        {/* Feature Context Switcher (Invisible Spotlight) */}
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 w-full relative z-20 mt-24 mb-20">
+          <button
+            onClick={() => setActiveFeatureRole("owner")}
+            className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
+          >
+            <h2 className={`text-4xl md:text-5xl font-extrabold tracking-tight transition-all duration-500 ${activeFeatureRole === "owner" ? "text-foreground drop-shadow-[0_0_30px_rgba(245,158,11,0.6)] scale-105" : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"}`}>Property Owners</h2>
+            {activeFeatureRole === "owner" && (
+              <motion.div
+                layoutId="activeFeatureUnderline"
+                className="absolute -bottom-6 left-0 right-0 mx-auto w-[80%] h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-80 shadow-[0_0_20px_rgba(245,158,11,1)] blur-[1px]"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+          </button>
+
+          <span className="hidden md:block text-muted-foreground/20 text-4xl font-light">|</span>
+
+          <button
+            onClick={() => setActiveFeatureRole("tenant")}
+            className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
+          >
+            <h2 className={`text-4xl md:text-5xl font-extrabold tracking-tight transition-all duration-500 ${activeFeatureRole === "tenant" ? "text-foreground drop-shadow-[0_0_30px_rgba(245,158,11,0.6)] scale-105" : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"}`}>Tenants</h2>
+            {activeFeatureRole === "tenant" && (
+              <motion.div
+                layoutId="activeFeatureUnderline"
+                className="absolute -bottom-6 left-0 right-0 mx-auto w-[80%] h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-80 shadow-[0_0_20px_rgba(245,158,11,1)] blur-[1px]"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+          </button>
+        </div>
+
         {/* Features Section (Asymmetrical Floating Bento) */}
-        <section className="max-w-6xl w-full mx-auto mt-24 mb-32 px-4 relative z-10 perspective-[1200px]">
+        <section className="max-w-6xl w-full mx-auto mb-32 px-4 relative z-10 perspective-[1200px]">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent blur-[120px] -z-10 pointer-events-none"></div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 items-center">
-            
-            {/* Left Card: Maintenance (Tilted Right, Floating Up) */}
+
+            {/* Left Card: (Tilted Right, Floating Up) */}
             <motion.div
               animate={{ y: [0, -25, 0], x: [0, 5, 0] }}
               transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
               className="relative z-10 w-full will-change-transform"
             >
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 50, rotateZ: -2 }}
                 animate={{ opacity: 1, y: 0, rotateZ: -2 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2, opacity: { duration: 0.8 } }}
                 whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
                 className="glass-panel rounded-xl p-10 flex flex-col items-start glow-amber-low relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
               >
-                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
-                  <Wrench className="text-accent w-8 h-8" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-3 tracking-tight">Maintenance</h3>
-                <p className="text-base text-muted-foreground font-medium">
-                  Submit issues instantly with photos. Track resolution status from open to closed effortlessly.
-                </p>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={FEATURE_CONTENT[activeFeatureRole][0].id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col items-start"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
+                      {(() => {
+                        const Icon = FEATURE_CONTENT[activeFeatureRole][0].icon;
+                        return <Icon className="text-accent w-8 h-8" />;
+                      })()}
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-3 tracking-tight">{FEATURE_CONTENT[activeFeatureRole][0].title}</h3>
+                    <p className="text-base text-muted-foreground font-medium">
+                      {FEATURE_CONTENT[activeFeatureRole][0].description}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
               </motion.div>
             </motion.div>
-            
-            {/* Center Card: Announcements (Floating Higher, Larger Focus) */}
+
+            {/* Center Card: (Floating Higher, Larger Focus) */}
             <motion.div
               animate={{ y: [0, -35, 0], x: [0, -6, 0] }}
               transition={{ repeat: Infinity, duration: 9, ease: "easeInOut", delay: 0.5 }}
               className="relative z-20 w-full md:-mt-16 will-change-transform"
             >
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2, opacity: { duration: 0.8 } }}
                 whileHover={{ scale: 1.05, zIndex: 30, y: -10 }}
                 className="glass-panel rounded-xl p-10 flex flex-col items-start glow-amber-high relative overflow-hidden group cursor-pointer border-accent/20 w-full transform-gpu backface-hidden antialiased"
               >
-                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
-                  <Megaphone className="text-accent w-8 h-8" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-3 tracking-tight">Announcements</h3>
-                <p className="text-base text-muted-foreground font-medium">
-                  Instant property-wide broadcasts. Ensure tenants never miss critical updates or scheduled events.
-                </p>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={FEATURE_CONTENT[activeFeatureRole][1].id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, delay: 0.05 }}
+                    className="flex flex-col items-start"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
+                      {(() => {
+                        const Icon = FEATURE_CONTENT[activeFeatureRole][1].icon;
+                        return <Icon className="text-accent w-8 h-8" />;
+                      })()}
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-3 tracking-tight">{FEATURE_CONTENT[activeFeatureRole][1].title}</h3>
+                    <p className="text-base text-muted-foreground font-medium">
+                      {FEATURE_CONTENT[activeFeatureRole][1].description}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
               </motion.div>
             </motion.div>
-            
-            {/* Right Card: Documents (Tilted Left, Floating Down) */}
+
+            {/* Right Card: (Tilted Left, Floating Down) */}
             <motion.div
               animate={{ y: [0, -20, 0], x: [0, 4, 0] }}
               transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
               className="relative z-10 w-full md:mt-24 will-change-transform"
             >
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 50, rotateZ: 2 }}
                 animate={{ opacity: 1, y: 0, rotateZ: 2 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2, opacity: { duration: 0.8 } }}
                 whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
                 className="glass-panel rounded-xl p-10 flex flex-col items-start glow-amber-low relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
               >
-                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
-                  <FileText className="text-accent w-8 h-8" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-3 tracking-tight">Documents</h3>
-                <p className="text-base text-muted-foreground font-medium">
-                  Secure centralized storage. Share leases and house rules with crystal-clear organization.
-                </p>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={FEATURE_CONTENT[activeFeatureRole][2].id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                    className="flex flex-col items-start"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
+                      {(() => {
+                        const Icon = FEATURE_CONTENT[activeFeatureRole][2].icon;
+                        return <Icon className="text-accent w-8 h-8" />;
+                      })()}
+                    </div>
+                    <h3 className="text-2xl font-semibold mb-3 tracking-tight">{FEATURE_CONTENT[activeFeatureRole][2].title}</h3>
+                    <p className="text-base text-muted-foreground font-medium">
+                      {FEATURE_CONTENT[activeFeatureRole][2].description}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
               </motion.div>
             </motion.div>
-            
+
           </div>
         </section>
       </main>
@@ -395,10 +514,10 @@ export default function LandingPage() {
       <footer className="w-full relative py-8 bg-card shadow-inner mt-24">
         <div className="flex flex-col md:flex-row justify-between items-center px-6 md:px-16 gap-4 max-w-[1440px] mx-auto">
           <div className="text-xl font-bold text-foreground">
-              Homepost
+            Homepost
           </div>
           <div className="text-xs font-semibold text-muted-foreground">
-              © 2024 Homepost. Grounded Futurism.
+            © 2024 Homepost. Grounded Futurism.
           </div>
           <div className="flex gap-6">
             <a className="text-xs font-semibold text-muted-foreground hover:text-accent transition-colors focus-visible:ring-2 focus-visible:ring-accent rounded-sm" href="#">Privacy</a>
