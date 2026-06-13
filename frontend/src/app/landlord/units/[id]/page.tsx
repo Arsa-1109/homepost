@@ -40,7 +40,7 @@ export default function UnitDetailsPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [unitData, setUnitData] = useState<UnitDetail | null>(null);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -122,9 +122,9 @@ export default function UnitDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 relative z-10">
-        
+
         {/* LEFT COLUMN: Unit & Tenant Profile Floating Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
@@ -133,14 +133,14 @@ export default function UnitDetailsPage() {
           <div className="rounded-3xl p-6 md:p-8 backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[rgb(var(--ml-border))]/50 shadow-[0_20px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex flex-col relative overflow-hidden group">
             {/* Decorative gradient orb */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-[rgb(var(--ml-accent))]/10 rounded-full blur-[3xl] transform translate-x-1/2 -translate-y-1/3 transition-transform duration-700 group-hover:scale-110 pointer-events-none" />
-            
+
             <div className="flex items-center gap-3 mb-8 relative z-10">
               <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl shadow-inner border border-indigo-500/10">
                 <Home className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Unit Details</h2>
+              <h2 className="text-xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Rent Details</h2>
             </div>
-            
+
             <div className="space-y-6 relative z-10">
               <div className="flex flex-col p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/50 border border-[rgb(var(--ml-border))]/30">
                 <span className="text-xs uppercase tracking-wider font-semibold text-[rgb(var(--ml-text-muted))] mb-2 flex items-center gap-2">
@@ -184,7 +184,7 @@ export default function UnitDetailsPage() {
         </motion.div>
 
         {/* RIGHT COLUMN: Maintenance & Documents */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
@@ -201,7 +201,7 @@ export default function UnitDetailsPage() {
               </h2>
               <Badge variant="secondary" className="rounded-full px-3 py-1 font-semibold text-sm">{maintenanceRequests.length}</Badge>
             </div>
-            
+
             <div className="space-y-4">
               {maintenanceRequests.length === 0 ? (
                 <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/30 border border-dashed border-[rgb(var(--ml-border))]/60 backdrop-blur-sm">
@@ -214,19 +214,19 @@ export default function UnitDetailsPage() {
               ) : (
                 <div className="space-y-4">
                   {maintenanceRequests.map((req, idx) => (
-                    <motion.div 
+                    <motion.div
                       key={req.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: idx * 0.05 }}
                     >
-                      <RequestCard 
-                        req={req} 
+                      <RequestCard
+                        req={req}
                         onUpdate={() => {
                           fetchAPI<MaintenanceRequest[]>(`/api/v1/landlord/maintenance?unit_id=${unitId}`)
                             .then(setMaintenanceRequests)
                             .catch(console.error);
-                        }} 
+                        }}
                       />
                     </motion.div>
                   ))}
@@ -246,7 +246,7 @@ export default function UnitDetailsPage() {
               </h2>
               <Badge variant="secondary" className="rounded-full px-3 py-1 font-semibold text-sm">{documents.length}</Badge>
             </div>
-            
+
             <div>
               {documents.length === 0 ? (
                 <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/30 border border-dashed border-[rgb(var(--ml-border))]/60 backdrop-blur-sm">
@@ -259,8 +259,8 @@ export default function UnitDetailsPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {documents.map((doc, idx) => (
-                    <motion.div 
-                      key={doc.id} 
+                    <motion.div
+                      key={doc.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: idx * 0.05 }}
@@ -277,9 +277,9 @@ export default function UnitDetailsPage() {
                           Added {new Date(doc.created_at).toLocaleDateString()}
                         </p>
                         {doc.file_url && (
-                          <a 
+                          <a
                             href={doc.file_url}
-                            target="_blank" 
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:text-opacity-80 transition-opacity"
                           >
