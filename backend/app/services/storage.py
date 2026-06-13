@@ -53,18 +53,24 @@ def generate_object_key(prefix: str, filename: str) -> str:
 def upload_file_to_r2(
     file_obj: BinaryIO,
     object_key: str,
-    content_type: str
+    content_type: str | None = None
 ) -> None:
     """
     Upload a file stream directly to Cloudflare R2.
     Used by the FastAPI backend to proxy uploads, allowing us to enforce 
     strict size limits in memory before reaching the storage layer.
     """
+    extra_args = {}
+    if content_type:
+        extra_args["ContentType"] = content_type
+    else:
+        extra_args["ContentType"] = "application/octet-stream"
+
     _s3_client.upload_fileobj(
         Fileobj=file_obj,
         Bucket=settings.r2_bucket_name,
         Key=object_key,
-        ExtraArgs={"ContentType": content_type}
+        ExtraArgs=extra_args
     )
 
 
