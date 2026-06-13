@@ -41,6 +41,6 @@ export default async function DashboardRedirect() {
   } else if (userRole === "tenant") {
     redirect("/tenant/dashboard");
   } else {
-    redirect("/onboarding");
+    redirect("/");
   }
 }
