@@ -193,6 +193,36 @@ textarea:focus,
 }
 
 /* ============================================================
+   Shimmer Skeleton — for rich loading states
+   ============================================================ */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--ml-bg-tertiary)) 25%,
+    rgb(var(--ml-bg-secondary)) 37%,
+    rgb(var(--ml-bg-tertiary)) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    background: rgb(var(--ml-bg-tertiary));
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}
+
+/* ============================================================
    Custom Sleek Scrollbars
    ============================================================ */
 ::-webkit-scrollbar {
