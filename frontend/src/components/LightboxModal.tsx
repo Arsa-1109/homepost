@@ -85,10 +85,9 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
         <X className="w-5 h-5" />
       </button>
 
-      {/* Image container — fills all available space, stops click from bubbling */}
+      {/* Image container — backdrop clicks bubble up to onClose; image/pill stop propagation */}
       <div
         className="relative flex flex-col items-center justify-center w-full h-full px-6 py-16 gap-5"
-        onClick={(e) => e.stopPropagation()}
       >
         <motion.img
           initial={{ opacity: 0, scale: 0.93 }}
@@ -99,6 +98,7 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
           alt="Full resolution attachment"
           className="object-contain max-w-full max-h-[80vh] w-auto h-auto rounded-xl shadow-[0_32px_80px_rgba(0,0,0,0.7)] border border-white/10 select-none"
           style={{ willChange: "transform, opacity" }}
+          onClick={(e) => e.stopPropagation()}
         />
 
         {/* Pill toolbar */}
@@ -107,6 +107,7 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.12, duration: 0.2 }}
           className="flex items-center gap-4 bg-[#111]/90 px-5 py-2.5 rounded-full border border-white/10 backdrop-blur-sm shadow-xl min-w-[180px]"
+          onClick={(e) => e.stopPropagation()}
         >
           <span
             className="text-xs text-white/75 font-medium truncate max-w-[180px] sm:max-w-[280px]"
