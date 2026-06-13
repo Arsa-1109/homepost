@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { AlertTriangle, DoorOpen } from "lucide-react";
+import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 import {
   Dialog,
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Property = {
   id: string;
@@ -53,7 +55,9 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
     <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover:shadow-md transition-shadow">
       <div>
         <div className="flex justify-between items-start">
-          <h3 className="font-bold text-lg text-balance">{u.unit_label}</h3>
+          <Link href={`/landlord/units/${u.id}`} className="font-bold text-lg text-balance hover:text-[rgb(var(--ml-accent))] hover:underline transition-colors">
+            {u.unit_label}
+          </Link>
           <Badge variant={u.is_occupied ? "success" : "outline"} className="capitalize">
             {u.is_occupied ? "Occupied" : "Vacant"}
           </Badge>
@@ -61,7 +65,10 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
         <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
       </div>
       
-      <div className="mt-auto flex flex-col gap-3">
+      <div className="mt-auto flex flex-col gap-2">
+        <Link href={`/landlord/units/${u.id}`} className="text-xs text-center font-medium border border-[rgb(var(--ml-border))] text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
+          View Details
+        </Link>
         {u.is_occupied ? (
           <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
             <DialogTrigger className="text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
@@ -292,15 +299,18 @@ export default function LandlordUnitsPage() {
         <>
           <div className="flex gap-4 items-center">
             <span className="font-medium text-[rgb(var(--ml-text-secondary))]">Select Property:</span>
-            <select 
-              value={selectedProperty} 
-              onChange={e => setSelectedProperty(e.target.value)}
-              className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 px-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none animate-fadeIn cursor-pointer"
-            >
-              {properties.map(p => (
-                <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
-              ))}
-            </select>
+            <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val || "")}>
+              <SelectTrigger>
+                <span className="flex flex-1 text-left line-clamp-1 truncate">
+                  {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                {properties.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">

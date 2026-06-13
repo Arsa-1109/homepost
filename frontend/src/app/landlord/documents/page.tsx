@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { uploadFile } from "@/lib/upload";
 import { FileText, FileImage, Download, Eye, File } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -96,7 +97,7 @@ export default function LandlordDocumentsPage() {
         file_type: file.type || "application/octet-stream"
       };
 
-      if (selectedUnit) {
+      if (selectedUnit && selectedUnit !== "all") {
         payload.unit_id = selectedUnit;
       }
 
@@ -169,15 +170,18 @@ export default function LandlordDocumentsPage() {
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex gap-2 items-center">
               <span className="font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
-              <select 
-                value={selectedProperty} 
-                onChange={e => setSelectedProperty(e.target.value)}
-                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-2 px-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
-              >
-                {properties.map(p => (
-                  <option key={p.id} value={p.id} className="bg-background">{p.name}</option>
-                ))}
-              </select>
+              <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
+                <SelectTrigger>
+                  <span className="flex flex-1 text-left line-clamp-1 truncate">
+                    {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -191,16 +195,19 @@ export default function LandlordDocumentsPage() {
                 placeholder="Document Title (e.g. Lease Agreement 2026)" 
                 className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
               />
-              <select 
-                value={selectedUnit} 
-                onChange={e => setSelectedUnit(e.target.value)}
-                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] appearance-none cursor-pointer"
-              >
-                <option value="" className="bg-background">Assign to: All Units (Property-wide)</option>
-                {units.map(u => (
-                  <option key={u.id} value={u.id} className="bg-background">Assign to: {u.unit_label}</option>
-                ))}
-              </select>
+              <Select value={selectedUnit || "all"} onValueChange={(val) => setSelectedUnit(val as string)}>
+                <SelectTrigger>
+                  <span className="flex flex-1 text-left line-clamp-1 truncate">
+                    {selectedUnit === "all" || !selectedUnit ? "Assign to: All Units (Property-wide)" : `Assign to: ${units.find(u => u.id === selectedUnit)?.unit_label}`}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Assign to: All Units (Property-wide)</SelectItem>
+                  {units.map(u => (
+                    <SelectItem key={u.id} value={u.id}>Assign to: {u.unit_label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <input 

@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Column
+from sqlalchemy import DateTime, Column
 from sqlalchemy.types import JSON
 from sqlmodel import Field, SQLModel, Relationship
 
@@ -34,8 +34,9 @@ class MaintenanceEvent(SQLModel, table=True):
         sa_column=Column(JSON, nullable=True),
     )
     
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
 
     # Relationship to the parent request
     # Note: We use string references to avoid circular imports.
     # The parent model MaintenanceRequest will also need to be updated.
+    request: "MaintenanceRequest" = Relationship(back_populates="events")

@@ -8,13 +8,13 @@ class MaintenanceRequestCreate(BaseModel):
     title: str = Field(..., max_length=255)
     description: str = Field(..., max_length=2000)
     priority: RequestPriority = Field(default=RequestPriority.MEDIUM)
-    image_keys: Optional[List[str]] = Field(default=None, max_items=3)
+    image_keys: Optional[List[str]] = Field(default=None)
 
 class MaintenanceRequestUpdate(BaseModel):
     status: RequestStatus | None = None
     priority: RequestPriority | None = None
     landlord_notes: str | None = None
-    landlord_image_keys: Optional[List[str]] = Field(default=None, max_items=3)
+    landlord_image_keys: Optional[List[str]] = Field(default=None)
 
 class MaintenanceRequestResponse(BaseModel):
     id: uuid.UUID

@@ -9,6 +9,7 @@ for automated rent reminders.
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -23,4 +24,4 @@ class Unit(SQLModel, table=True):
     rent_due_day: int = Field(default=1, ge=1, le=31)
     status: str = Field(default="Vacant")
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
