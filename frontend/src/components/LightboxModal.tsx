@@ -53,61 +53,79 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
+    // Lock body scroll while lightbox is open
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prev;
+    };
   }, [onClose]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.2 } }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm"
+      exit={{ opacity: 0, transition: { duration: 0.18 } }}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md"
       onClick={onClose}
     >
-      <button 
+      {/* Close button */}
+      <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50 focus:outline-none border border-white/10"
+        className="absolute top-4 right-4 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50 focus:outline-none border border-white/10 backdrop-blur-sm"
         aria-label="Close preview"
       >
         <X className="w-5 h-5" />
       </button>
 
-      <div 
-        className="relative max-w-[90vw] max-h-[80vh] md:max-w-[80vw] md:max-h-[85vh] flex flex-col items-center justify-center p-2"
+      {/* Image container — fills all available space, stops click from bubbling */}
+      <div
+        className="relative flex flex-col items-center justify-center w-full h-full px-6 py-16 gap-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <motion.img 
-          initial={{ opacity: 0, scale: 0.95 }}
+        <motion.img
+          initial={{ opacity: 0, scale: 0.93 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-          src={url} 
-          alt="Full resolution attachment" 
-          className="object-contain max-w-full max-h-[75vh] rounded-lg shadow-2xl border border-white/10 select-none"
+          exit={{ opacity: 0, scale: 0.93 }}
+          transition={{ duration: 0.22, type: "spring", stiffness: 280, damping: 26 }}
+          src={url}
+          alt="Full resolution attachment"
+          className="object-contain max-w-full max-h-[80vh] w-auto h-auto rounded-xl shadow-[0_32px_80px_rgba(0,0,0,0.7)] border border-white/10 select-none"
+          style={{ willChange: "transform, opacity" }}
         />
-        
-        <div className="mt-4 flex items-center gap-4 bg-[#1a1a1a]/95 px-4 py-2 rounded-full border border-white/10 backdrop-blur-sm shadow-lg">
-          <span className="text-xs text-white/80 font-medium truncate max-w-[200px] sm:max-w-xs" title={url.split('?')[0].split('/').pop() || "Attachment"}>
+
+        {/* Pill toolbar */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.2 }}
+          className="flex items-center gap-4 bg-[#111]/90 px-5 py-2.5 rounded-full border border-white/10 backdrop-blur-sm shadow-xl min-w-[180px]"
+        >
+          <span
+            className="text-xs text-white/75 font-medium truncate max-w-[180px] sm:max-w-[280px]"
+            title={url.split("?")[0].split("/").pop() || "Attachment"}
+          >
             {friendlyName}
           </span>
-          <div className="w-[1px] h-3 bg-white/25" />
-          <a 
+          <div className="w-px h-3.5 bg-white/20 shrink-0" />
+          <a
             href={url}
             download
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-foreground font-semibold transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-white font-semibold transition-colors shrink-0"
+            onClick={(e) => e.stopPropagation()}
           >
             <Download className="w-3.5 h-3.5" />
             Download
           </a>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );
 }
+
