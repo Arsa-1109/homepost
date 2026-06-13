@@ -64,16 +64,16 @@
   }
 
   .dark {
-    /* Dark Mode — stepped slate palette */
-    --ml-bg-primary: 15 18 25;       /* slate-950 */
-    --ml-bg-secondary: 26 31 46;     /* slate-850 */
-    --ml-bg-tertiary: 30 41 59;      /* slate-800 */
-    --ml-text-primary: 248 250 252;  /* slate-50 */
-    --ml-text-secondary: 148 163 184;/* slate-400 */
-    --ml-accent: 245 158 11;         /* amber-500 (same) */
-    --ml-accent-light: 251 191 36;   /* amber-400 */
-    --ml-accent-dark: 217 119 6;     /* amber-600 */
-    --ml-border: 51 65 85;           /* slate-700 */
+    /* Dark Mode — Near Black & Amber */
+    --ml-bg-primary: 5 5 5;          /* near black */
+    --ml-bg-secondary: 15 15 15;     /* very dark grey */
+    --ml-bg-tertiary: 25 25 25;
+    --ml-text-primary: 255 255 255;
+    --ml-text-secondary: 161 161 170;
+    --ml-accent: 245 158 11;         /* amber-500 */
+    --ml-accent-light: 251 191 36;
+    --ml-accent-dark: 217 119 6;
+    --ml-border: 39 39 42;
     
     /* Shadcn UI Variables */
     --background: rgb(var(--ml-bg-primary));
