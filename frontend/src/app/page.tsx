@@ -6,6 +6,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { Hero } from "@/components/Hero";
+import { DemoDashboard } from "@/components/DemoDashboard";
 import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users } from "lucide-react";
 
 const FEATURE_CONTENT = {
@@ -204,7 +205,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Main Content Area */}
-      <main className="relative pt-32 pb-24 px-6 md:px-16 min-h-screen flex flex-col items-center justify-start overflow-hidden z-10">
+      <main className="relative pt-32 pb-24 px-6 md:px-16 min-h-screen z-10 block">
 
         {/* Background decorative elements to enhance depth */}
         <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
@@ -222,7 +223,7 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-12 rounded-2xl glass-panel glow-amber-high flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
+              className="p-12 rounded-2xl bg-card border border-border glow-amber-high flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
             >
               <h2 className="text-3xl font-bold">Welcome back!</h2>
               <button
@@ -254,7 +255,7 @@ export default function LandingPage() {
                       animate={{ rotateZ: -1, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.04, rotateZ: -1, rotateX: 4, rotateY: 4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="absolute top-0 left-0 md:left-[5%] w-full md:w-[440px] glass-panel rounded-xl p-10 flex flex-col items-start justify-between glow-amber-high h-[300px] md:h-[350px] z-30 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-left"
+                      className="absolute top-0 left-0 md:left-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between glow-amber-high h-[300px] md:h-[350px] z-30 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-left"
                       onClick={handleLandlordSelect}
                       tabIndex={0}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleLandlordSelect() }}
@@ -277,7 +278,7 @@ export default function LandingPage() {
                       animate={{ rotateZ: 2, y: 0, scale: 0.96 }}
                       whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="absolute top-[320px] md:top-[60px] right-0 md:right-[5%] w-full md:w-[440px] glass-panel rounded-xl p-10 flex flex-col items-start justify-between glow-amber-low h-[280px] md:h-[320px] z-20 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-right"
+                      className="absolute top-[320px] md:top-[60px] right-0 md:right-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between glow-amber-low h-[280px] md:h-[320px] z-20 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-right"
                       onClick={() => setRoleSelection("tenant")}
                       tabIndex={0}
                       onKeyDown={(e) => { if (e.key === 'Enter') setRoleSelection("tenant") }}
@@ -304,7 +305,7 @@ export default function LandingPage() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 30, scale: 0.95 }}
                     onSubmit={handleTenantSubmit}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl glass-panel glow-amber-high rounded-xl p-12 flex flex-col items-start justify-center z-40 min-h-[400px]"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-card border border-border glow-amber-high rounded-xl p-12 flex flex-col items-start justify-center z-40 min-h-[400px]"
                   >
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-8 border border-border mx-auto">
                       <Key className="text-muted-foreground w-8 h-8" />
@@ -346,8 +347,13 @@ export default function LandingPage() {
           )}
         </section>
 
-        {/* Feature Context Switcher (Invisible Spotlight) */}
-        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 w-full relative z-20 mt-24 mb-20">
+        {/* Demo Dashboard Area */}
+        <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
+          <DemoDashboard />
+        </section>
+
+        {/* Text Divider between Auth and Features */}
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 w-full relative z-20 mt-12 mb-20">
           <button
             onClick={() => setActiveFeatureRole("owner")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
