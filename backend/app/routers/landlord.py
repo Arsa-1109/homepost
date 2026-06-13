@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.property import Property
 from app.models.unit import Unit
 from app.models.maintenance_request import MaintenanceRequest, VALID_TRANSITIONS
+from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
 from app.schemas.property import PropertyCreate, PropertyUpdate
 from app.schemas.unit import UnitCreate, UnitUpdate, UnitResponse
@@ -111,22 +112,82 @@ async def list_units(
 
     return response_data
 
+@router.get("/units/{unit_id}")
+async def get_unit_details(
+    unit_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    from app.models.tenant_profile import TenantProfile
+    unit = await session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+        
+    prop = await session.get(Property, unit.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Access denied.")
+        
+    # Check if occupied and get tenant
+    occ_res = await session.execute(
+        select(TenantProfile).where(
+            TenantProfile.unit_id == unit.id,
+            TenantProfile.is_active == True,
+        )
+    )
+    tenant_profile = occ_res.scalars().first()
+    
+    tenant_name = None
+    tenant_email = None
+    if tenant_profile:
+        tenant_user = await session.get(User, tenant_profile.user_id)
+        if tenant_user:
+            tenant_name = tenant_user.full_name
+            tenant_email = tenant_user.email
+            
+    # Check if pending invite
+    from app.models.invite import Invite
+    inv_res = await session.execute(
+        select(Invite).where(
+            Invite.unit_id == unit.id,
+            Invite.status == "pending"
+        )
+    )
+    has_pending = inv_res.first() is not None
+
+    resp = UnitResponse.model_validate(unit)
+    resp.is_occupied = tenant_profile is not None
+    resp.has_pending = has_pending
+
+    return {
+        "unit": resp,
+        "property_name": prop.name,
+        "tenant_name": tenant_name,
+        "tenant_email": tenant_email
+    }
+
 # ---------------------------------------------------------------------------
 # Maintenance Requests
 # ---------------------------------------------------------------------------
 @router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
 async def list_maintenance_requests(
+    unit_id: uuid.UUID | None = None,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    # Get all maintenance requests for landlord's properties using a single JOIN
-    req_result = await session.execute(
+    # Get maintenance requests for landlord's properties using a single JOIN
+    query = (
         select(MaintenanceRequest, Property.name, Unit.unit_label)
         .join(Unit, MaintenanceRequest.unit_id == Unit.id)
         .join(Property, Unit.property_id == Property.id)
         .where(Property.owner_id == user.id)
-        .order_by(MaintenanceRequest.created_at.desc())
     )
+    
+    if unit_id:
+        query = query.where(Unit.id == unit_id)
+        
+    query = query.order_by(MaintenanceRequest.created_at.desc())
+    
+    req_result = await session.execute(query)
     requests = req_result.all()
     
     response_data = []
@@ -158,10 +219,61 @@ async def update_maintenance_request(
         raise HTTPException(status_code=403, detail="Access denied.")
         
     try:
+        if db_req.status == "closed":
+            raise HTTPException(status_code=400, detail="Cannot modify a closed maintenance request.")
+
+        events_to_add = []
+        
+        # Collect what changed in this update
+        status_changed = False
+        priority_changed = False
+        notes_changed = False
+        images_changed = False
+        new_image_keys = []
+
         if req_in.status and req_in.status != db_req.status:
             if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
                 valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
                 raise HTTPException(status_code=400, detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. Valid transitions are: {valid_states}")
+            status_changed = True
+
+        if req_in.priority and req_in.priority != db_req.priority:
+            priority_changed = True
+
+        if req_in.landlord_notes is not None and req_in.landlord_notes != db_req.landlord_notes:
+            notes_changed = True
+
+        if req_in.landlord_image_keys is not None:
+            existing_keys = db_req.landlord_image_keys or []
+            new_image_keys = [k for k in req_in.landlord_image_keys if k not in existing_keys]
+            if new_image_keys:
+                images_changed = True
+
+        # Build consolidated events
+        if status_changed:
+            payload = {"old_status": db_req.status, "new_status": req_in.status}
+            desc_parts = [f"Landlord changed status from {db_req.status.upper()} to {req_in.status.upper()}."]
+            
+            # Bundle notes into the status change event
+            if notes_changed:
+                payload["notes"] = req_in.landlord_notes
+                desc_parts.append("Added notes.")
+            
+            # Bundle images into the status change event  
+            if images_changed:
+                payload["image_keys"] = new_image_keys
+                payload["image_count"] = len(new_image_keys)
+                desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
+            
+            events_to_add.append(
+                MaintenanceEvent(
+                    maintenance_request_id=db_req.id,
+                    actor_id=user.id,
+                    event_type="status_changed",
+                    description=" ".join(desc_parts),
+                    payload=payload
+                )
+            )
             db_req.status = req_in.status
             
             # Trigger email if status is changing away from OPEN
@@ -177,16 +289,51 @@ async def update_maintenance_request(
                             request_title=db_req.title,
                             new_status=req_in.status
                         )
+        else:
+            # No status change — create individual events for notes and images
+            if notes_changed:
+                events_to_add.append(
+                    MaintenanceEvent(
+                        maintenance_request_id=db_req.id,
+                        actor_id=user.id,
+                        event_type="note_added",
+                        description="Landlord updated the resolution notes." if db_req.landlord_notes else "Landlord added resolution notes.",
+                        payload={"notes": req_in.landlord_notes}
+                    )
+                )
+            
+            if images_changed:
+                events_to_add.append(
+                    MaintenanceEvent(
+                        maintenance_request_id=db_req.id,
+                        actor_id=user.id,
+                        event_type="images_attached",
+                        description=f"Landlord attached {len(new_image_keys)} resolution file(s).",
+                        payload={"image_count": len(new_image_keys), "image_keys": new_image_keys}
+                    )
+                )
 
-        if req_in.priority:
+        if priority_changed:
+            events_to_add.append(
+                MaintenanceEvent(
+                    maintenance_request_id=db_req.id,
+                    actor_id=user.id,
+                    event_type="priority_changed",
+                    description=f"Landlord changed priority from {db_req.priority.upper()} to {req_in.priority.upper()}.",
+                    payload={"old_priority": db_req.priority, "new_priority": req_in.priority}
+                )
+            )
             db_req.priority = req_in.priority
-            
-        if req_in.landlord_notes is not None:
+
+        # Apply remaining mutations
+        if notes_changed:
             db_req.landlord_notes = req_in.landlord_notes
-            
         if req_in.landlord_image_keys is not None:
             db_req.landlord_image_keys = req_in.landlord_image_keys
             
+        for event in events_to_add:
+            session.add(event)
+
         await session.commit()
         await session.refresh(db_req)
     except HTTPException:
@@ -198,6 +345,44 @@ async def update_maintenance_request(
     resp = MaintenanceRequestResponse.model_validate(db_req)
     hydrate_maintenance_request(db_req, resp)
     return resp
+
+@router.get("/maintenance/{request_id}/events")
+async def list_maintenance_events(
+    request_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    db_req = await session.get(MaintenanceRequest, request_id)
+    if not db_req:
+        raise HTTPException(status_code=404, detail="Maintenance request not found.")
+        
+    unit = await session.get(Unit, db_req.unit_id)
+    prop = await session.get(Property, unit.property_id)
+    if prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Access denied.")
+        
+    result = await session.execute(
+        select(MaintenanceEvent, User.full_name)
+        .join(User, MaintenanceEvent.actor_id == User.id)
+        .where(MaintenanceEvent.maintenance_request_id == request_id)
+        .order_by(MaintenanceEvent.created_at.asc())
+    )
+    
+    events = []
+    for event, user_name in result.all():
+        data = event.model_dump()
+        data["actor_name"] = user_name or "Unknown User"
+        if data.get("payload") and "image_keys" in data["payload"]:
+            urls = []
+            for key in data["payload"]["image_keys"]:
+                try:
+                    urls.append(generate_presigned_download_url(key))
+                except Exception:
+                    pass
+            data["payload"]["image_urls"] = urls
+        events.append(data)
+        
+    return events
 
 # ---------------------------------------------------------------------------
 # Announcements
@@ -279,6 +464,40 @@ async def list_documents(
     result = await session.execute(
         select(Document)
         .where(Document.property_id == property_id)
+        .order_by(Document.created_at.desc())
+    )
+    docs = result.scalars().all()
+    
+    response_data = []
+    for d in docs:
+        url = ""
+        try:
+            url = generate_presigned_download_url(d.file_key)
+        except Exception:
+            pass
+        resp = DocumentResponse.model_validate(d)
+        resp.file_url = url
+        response_data.append(resp)
+        
+    return response_data
+
+@router.get("/units/{unit_id}/documents", response_model=list[DocumentResponse])
+async def list_unit_documents(
+    unit_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    # Ensure unit and property belong to landlord
+    unit = await session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+    prop = await session.get(Property, unit.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Access denied.")
+        
+    result = await session.execute(
+        select(Document)
+        .where(Document.unit_id == unit_id)
         .order_by(Document.created_at.desc())
     )
     docs = result.scalars().all()
