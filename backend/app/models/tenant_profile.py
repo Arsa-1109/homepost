@@ -29,4 +29,4 @@ class TenantProfile(SQLModel, table=True):
     is_active: bool = Field(default=True)
     removed_at: Optional[datetime] = Field(default=None)
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))

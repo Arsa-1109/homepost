@@ -20,4 +20,4 @@ class Property(SQLModel, table=True):
     name: str = Field(max_length=255)
     address: str = Field(max_length=500)
     city: str = Field(max_length=100)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc, sa_type=DateTime(timezone=True)))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
