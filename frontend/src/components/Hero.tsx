@@ -22,12 +22,12 @@ export function Hero() {
   useGSAP(() => {
     // 1. Entrance Animation
     const enterTl = gsap.timeline();
-    
+
     enterTl.fromTo(titleRef.current,
       { y: 60, opacity: 0, rotateX: -40, scale: 0.9 },
       { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: 1.4, ease: "power4.out" }
     );
-    
+
     enterTl.fromTo(dividerRef.current,
       { scaleX: 0, opacity: 0 },
       { scaleX: 1, opacity: 1, duration: 1, ease: "power3.out" },
@@ -57,7 +57,7 @@ export function Hero() {
         trigger: container.current,
         // Dynamically set the start position to exactly where the container is on load!
         // This eliminates the "dead zone" and makes it pin instantly upon scrolling.
-        start: () => `top top+=${container.current?.getBoundingClientRect().top || 128}`, 
+        start: () => `top top+=${container.current?.getBoundingClientRect().top || 128}`,
         end: "+=150%", // How long the pin lasts
         scrub: 1.2,
         pin: true,
@@ -74,7 +74,7 @@ export function Hero() {
     // Fade out Homepost text at the precise speed requested
     scrollTl.to(titleScrollRef.current, {
       opacity: 0,
-      duration: 0.27,
+      duration: 0.17,
       ease: "power2.inOut",
     }, 0);
 
@@ -89,28 +89,27 @@ export function Hero() {
   }, { scope: container });
 
   return (
-    <section ref={container} className="relative w-full min-h-[60vh] flex flex-col items-center justify-start text-center overflow-visible z-10 perspective-[1000px] pt-32 pb-16">
-      
+    <section ref={container} className="relative w-full min-h-[60vh] flex flex-col items-center justify-start text-center overflow-visible z-30 perspective-[1000px] pt-32 pb-16 pointer-events-none">
+
       {/* 1. Title Area */}
       <div ref={titleScrollRef} className="relative w-full flex flex-col items-center origin-center will-change-transform [transform-style:preserve-3d]">
-        <div ref={titleTiltRef} className="relative w-full flex flex-col items-center origin-center will-change-transform z-20 pointer-events-auto">
-          <div className="absolute inset-0 bg-gradient-to-r from-accent/20 via-accent-light/10 to-transparent blur-3xl rounded-full -z-10"></div>
-          <h1 
-            ref={titleRef} 
-            className="text-5xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl"
+        <div ref={titleTiltRef} className="relative w-full flex flex-col items-center origin-center will-change-transform z-20">
+          <h1
+            ref={titleRef}
+            className="text-5xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl opacity-0"
           >
             Homepost
           </h1>
         </div>
       </div>
-      
+
       {/* 2. Subtitle Area */}
       <div ref={dividerScrollRef} className="will-change-transform origin-center mt-6">
-        <div ref={dividerRef} className="w-16 h-1 bg-accent rounded-full mb-4 mx-auto"></div>
+        <div ref={dividerRef} className="w-16 h-1 bg-accent rounded-full mb-4 mx-auto opacity-0"></div>
       </div>
 
       <div ref={subtitleScrollRef} className="w-full flex justify-center will-change-transform mt-8">
-        <p ref={subtitleRef} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium px-4">
+        <p ref={subtitleRef} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium px-4 opacity-0">
           The radically simple portal for individual property owners. Manage requests, share documents, and communicate seamlessly.
         </p>
       </div>

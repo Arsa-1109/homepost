@@ -16,6 +16,8 @@ dist/
 __pycache__/
 *.pyc
 *.pyo
+.agents
+
 
 # ========================
 # Environment Variables
