@@ -64,6 +64,7 @@ function ThemeToggle() {
 
   return (
     <button
+      type="button"
       onClick={() => setTheme(currentTheme === "dark" ? "light" : "dark")}
       className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       aria-label="Toggle theme"
@@ -192,11 +193,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             {!isSignedIn ? (
-              <button onClick={() => router.push("/sign-in")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
+              <button type="button" onClick={() => router.push("/sign-in")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
                 Log in
               </button>
             ) : (
-              <button onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
+              <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
                 Dashboard
               </button>
             )}
@@ -250,15 +251,12 @@ export default function LandingPage() {
                     className="w-full relative h-[650px] md:h-[450px] max-w-5xl mx-auto perspective-[1200px]"
                   >
                     {/* Owner Card (Closer, Left, Higher Z) */}
-                    <motion.div
+                    <motion.article
                       initial={{ rotateZ: -1, y: 0, scale: 1 }}
                       animate={{ rotateZ: -1, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.04, rotateZ: -1, rotateX: 4, rotateY: 4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="absolute top-0 left-0 md:left-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between glow-amber-high h-[300px] md:h-[350px] z-30 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-left"
-                      onClick={handleLandlordSelect}
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleLandlordSelect() }}
+                      className="absolute top-0 left-0 md:left-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between glow-amber-high h-[300px] md:h-[350px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
                     >
                       <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20">
                         <Building2 className="text-accent w-8 h-8" />
@@ -267,21 +265,23 @@ export default function LandingPage() {
                         <h2 className="text-2xl md:text-3xl font-semibold mb-3 tracking-tight">I am a Property Owner</h2>
                         <p className="text-base text-muted-foreground mb-6 font-medium">Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.</p>
                       </div>
-                      <button disabled={isSubmitting} className="w-full py-4 rounded-lg bg-gradient-to-r from-accent to-accent-dark text-white font-bold text-base hover:opacity-90 transition-opacity disabled:opacity-50 flex justify-center items-center gap-2">
+                      <button 
+                        type="button"
+                        onClick={handleLandlordSelect}
+                        disabled={isSubmitting} 
+                        className="w-full py-4 rounded-lg bg-gradient-to-r from-accent to-accent-dark text-white font-bold text-base hover:opacity-90 transition-opacity disabled:opacity-50 flex justify-center items-center gap-2 relative before:absolute before:inset-0"
+                      >
                         {isSubmitting && roleSelection === 'none' ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enter Owner Portal"}
                       </button>
-                    </motion.div>
+                    </motion.article>
 
                     {/* Tenant Card (Further back, Right, Tilted) */}
-                    <motion.div
+                    <motion.article
                       initial={{ rotateZ: 2, y: 0, scale: 0.96 }}
                       animate={{ rotateZ: 2, y: 0, scale: 0.96 }}
                       whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="absolute top-[320px] md:top-[60px] right-0 md:right-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between glow-amber-low h-[280px] md:h-[320px] z-20 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent origin-bottom-right"
-                      onClick={() => setRoleSelection("tenant")}
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter') setRoleSelection("tenant") }}
+                      className="absolute top-[320px] md:top-[60px] right-0 md:right-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between glow-amber-low h-[280px] md:h-[320px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
                     >
                       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
                         <Key className="text-muted-foreground w-7 h-7" />
@@ -290,10 +290,14 @@ export default function LandingPage() {
                         <h2 className="text-2xl md:text-3xl font-semibold mb-3 tracking-tight">I am a Tenant</h2>
                         <p className="text-base text-muted-foreground mb-6 font-medium">Submit requests, view announcements, and access important documents securely.</p>
                       </div>
-                      <button className="w-full py-4 rounded-lg border border-border text-foreground font-semibold text-base hover:bg-black/5 dark:hover:bg-white/5 transition-colors mt-auto">
+                      <button 
+                        type="button"
+                        onClick={() => setRoleSelection("tenant")}
+                        className="w-full py-4 rounded-lg border border-border text-foreground font-semibold text-base hover:bg-black/5 dark:hover:bg-white/5 transition-colors mt-auto relative before:absolute before:inset-0"
+                      >
                         Access Tenant Portal
                       </button>
-                    </motion.div>
+                    </motion.article>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -321,6 +325,8 @@ export default function LandingPage() {
                         onChange={(e) => setTenantEmail(e.target.value)}
                         placeholder="landlord@example.com"
                         required
+                        inputMode="email"
+                        autoComplete="email"
                         className="w-full p-4 rounded-lg border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-lg font-medium shadow-inner placeholder:text-muted-foreground/40"
                       />
                     </div>
@@ -355,6 +361,7 @@ export default function LandingPage() {
         {/* Text Divider between Auth and Features */}
         <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 w-full relative z-20 mt-12 mb-20">
           <button
+            type="button"
             onClick={() => setActiveFeatureRole("owner")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
           >
@@ -371,6 +378,7 @@ export default function LandingPage() {
           <span className="hidden md:block text-muted-foreground/20 text-4xl font-light">|</span>
 
           <button
+            type="button"
             onClick={() => setActiveFeatureRole("tenant")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
           >
@@ -399,7 +407,8 @@ export default function LandingPage() {
             >
               <motion.div
                 initial={{ opacity: 0, y: 50, rotateZ: -2 }}
-                animate={{ opacity: 1, y: 0, rotateZ: -2 }}
+                whileInView={{ opacity: 1, y: 0, rotateZ: -2 }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2, opacity: { duration: 0.8 } }}
                 whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
                 className="glass-panel rounded-xl p-10 flex flex-col items-start glow-amber-low relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
@@ -436,7 +445,8 @@ export default function LandingPage() {
             >
               <motion.div
                 initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2, opacity: { duration: 0.8 } }}
                 whileHover={{ scale: 1.05, zIndex: 30, y: -10 }}
                 className="glass-panel rounded-xl p-10 flex flex-col items-start glow-amber-high relative overflow-hidden group cursor-pointer border-accent/20 w-full transform-gpu backface-hidden antialiased"
@@ -473,7 +483,8 @@ export default function LandingPage() {
             >
               <motion.div
                 initial={{ opacity: 0, y: 50, rotateZ: 2 }}
-                animate={{ opacity: 1, y: 0, rotateZ: 2 }}
+                whileInView={{ opacity: 1, y: 0, rotateZ: 2 }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, mass: 1.2, opacity: { duration: 0.8 } }}
                 whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
                 className="glass-panel rounded-xl p-10 flex flex-col items-start glow-amber-low relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
@@ -514,11 +525,6 @@ export default function LandingPage() {
           </div>
           <div className="text-xs font-semibold text-muted-foreground">
             © 2024 Homepost. Grounded Futurism.
-          </div>
-          <div className="flex gap-6">
-            <a className="text-xs font-semibold text-muted-foreground hover:text-accent transition-colors focus-visible:ring-2 focus-visible:ring-accent rounded-sm" href="#">Privacy</a>
-            <a className="text-xs font-semibold text-muted-foreground hover:text-accent transition-colors focus-visible:ring-2 focus-visible:ring-accent rounded-sm" href="#">Terms</a>
-            <a className="text-xs font-semibold text-muted-foreground hover:text-accent transition-colors focus-visible:ring-2 focus-visible:ring-accent rounded-sm" href="#">Support</a>
           </div>
         </div>
       </footer>
