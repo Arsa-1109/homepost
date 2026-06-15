@@ -12,6 +12,8 @@ node_modules/
 out/
 build/
 dist/
+*.tsbuildinfo
+.eslintcache
 *.egg-info/
 __pycache__/
 *.pyc
@@ -48,6 +50,7 @@ backend/venv/
 # ========================
 .vscode/
 .agents
+skills-lock.json
 .idea/
 *.swp
 *.swo
