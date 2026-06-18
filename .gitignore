@@ -12,14 +12,10 @@ node_modules/
 out/
 build/
 dist/
-*.tsbuildinfo
-.eslintcache
 *.egg-info/
 __pycache__/
 *.pyc
 *.pyo
-.agents
-
 
 # ========================
 # Environment Variables
@@ -52,6 +48,8 @@ backend/venv/
 # ========================
 .vscode/
 .agents
+.agent/
+openspec/
 skills-lock.json
 .idea/
 *.swp
