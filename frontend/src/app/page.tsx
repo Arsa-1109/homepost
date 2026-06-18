@@ -74,6 +74,33 @@ function ThemeToggle() {
   );
 }
 
+function PortalSkeleton() {
+  return (
+    <div className="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 justify-center items-center opacity-60 animate-pulse px-4 min-h-[400px]">
+      {/* Owner Card Skeleton */}
+      <div className="w-full md:w-[440px] min-h-[300px] lg:h-[350px] rounded-xl border border-border/20 bg-card/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 md:flex-1 lg:flex-none">
+        <div className="w-16 h-16 rounded-full bg-muted/40 border border-border/10"></div>
+        <div className="space-y-3 flex-1 w-full">
+          <div className="h-6 w-2/3 bg-muted/40 rounded-md"></div>
+          <div className="h-4 w-5/6 bg-muted/20 rounded-md"></div>
+          <div className="h-4 w-3/4 bg-muted/20 rounded-md"></div>
+        </div>
+        <div className="h-12 w-full bg-muted/30 rounded-lg"></div>
+      </div>
+      
+      {/* Tenant Card Skeleton */}
+      <div className="w-full md:w-[440px] min-h-[280px] lg:h-[320px] rounded-xl border border-border/10 bg-card/10 backdrop-blur-sm p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 hidden md:flex md:flex-1 lg:flex-none">
+        <div className="w-14 h-14 rounded-full bg-muted/30 border border-border/10"></div>
+        <div className="space-y-3 flex-1 w-full">
+          <div className="h-6 w-1/2 bg-muted/40 rounded-md"></div>
+          <div className="h-4 w-4/5 bg-muted/20 rounded-md"></div>
+        </div>
+        <div className="h-12 w-full bg-muted/30 rounded-lg"></div>
+      </div>
+    </div>
+  );
+}
+
 function generatePeakPaths(
   cx: number,
   cy: number,
@@ -315,7 +342,7 @@ export default function LandingPage() {
       const checkRole = async () => {
         try {
           const me: any = await api.get("/api/v1/onboarding/me");
-          if (me && me.role && me.role !== "none") {
+          if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
             setHasRole(true);
           } else {
             setHasRole(false);
@@ -330,6 +357,18 @@ export default function LandingPage() {
     }
   }, [isLoaded, isSignedIn, user]);
 
+  // Fallback: If Clerk takes too long or fails to load, default to showing the portal cards
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (hasRole === null) {
+        console.warn("Clerk loading timed out. Falling back to default landing page state.");
+        setHasRole(false);
+      }
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [hasRole]);
+
   const handleLandlordSelect = async () => {
     if (!isLoaded) return;
     setIsSubmitting(true);
@@ -338,6 +377,9 @@ export default function LandingPage() {
     if (isSignedIn) {
       try {
         await api.post("/api/v1/onboarding/register-landlord");
+        if (typeof window !== "undefined") {
+          document.cookie = "mock_user_onboarding_complete=true; path=/";
+        }
         router.push("/sync-role");
       } catch (err: any) {
         setError(err.message || "Failed to register as landlord.");
@@ -358,6 +400,9 @@ export default function LandingPage() {
     if (isSignedIn) {
       try {
         await api.post("/api/v1/onboarding/request-access", { landlord_email: tenantEmail });
+        if (typeof window !== "undefined") {
+          document.cookie = "mock_user_onboarding_complete=true; path=/";
+        }
         router.push("/sync-role");
       } catch (err: any) {
         setError(err.message || "Failed to request access. Check the email.");
@@ -372,78 +417,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-accent/20 selection:text-foreground relative font-sans transition-colors duration-300">
-      <style>{`
-        :root {
-          --ml-dune-op-1: 0.24;
-          --ml-dune-op-2: 0.20;
-          --ml-dune-op-3: 0.18;
-          --ml-dune-op-4: 0.16;
-          --ml-dune-op-5: 0.14;
-        }
-        .dark {
-          --ml-dune-op-1: 0.05;
-          --ml-dune-op-2: 0.045;
-          --ml-dune-op-3: 0.04;
-          --ml-dune-op-4: 0.035;
-          --ml-dune-op-5: 0.03;
-        }
-
-        .glass-panel {
-            background: var(--glass-bg, rgba(255, 255, 255, 0.6));
-            backdrop-filter: blur(32px);
-            -webkit-backdrop-filter: blur(32px);
-            border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.05));
-            background-clip: padding-box, border-box;
-        }
-        .dark .glass-panel {
-            --glass-bg: rgba(26, 26, 26, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-
-        @keyframes dune-drift-1 {
-          0% { transform: translate(0, 0) scale(1) rotate(-10deg); }
-          33% { transform: translate(30vw, 20vh) scale(1.1) rotate(-5deg); }
-          66% { transform: translate(-10vw, -15vh) scale(0.95) rotate(-15deg); }
-          100% { transform: translate(0, 0) scale(1) rotate(-10deg); }
-        }
-        @keyframes dune-drift-2 {
-          0% { transform: translate(0, 0) scale(1) rotate(7deg); }
-          33% { transform: translate(-25vw, -30vh) scale(0.9) rotate(2deg); }
-          66% { transform: translate(20vw, 25vh) scale(1.05) rotate(12deg); }
-          100% { transform: translate(0, 0) scale(1) rotate(7deg); }
-        }
-        @keyframes dune-drift-3 {
-          0% { transform: translate(0, 0) scale(1) rotate(-5deg); }
-          33% { transform: translate(20vw, -25vh) scale(1.08) rotate(5deg); }
-          66% { transform: translate(-30vw, 20vh) scale(0.92) rotate(-10deg); }
-          100% { transform: translate(0, 0) scale(1) rotate(-5deg); }
-        }
-        @keyframes dune-drift-4 {
-          0% { transform: translate(0, 0) scale(1) rotate(12deg); }
-          33% { transform: translate(-20vw, 30vh) scale(0.95) rotate(5deg); }
-          66% { transform: translate(35vw, -10vh) scale(1.1) rotate(15deg); }
-          100% { transform: translate(0, 0) scale(1) rotate(12deg); }
-        }
-
-        .animate-dune-drift-1 {
-          animation: dune-drift-1 90s ease-in-out infinite;
-        }
-        .animate-dune-drift-2 {
-          animation: dune-drift-2 105s ease-in-out infinite;
-        }
-        .animate-dune-drift-3 {
-          animation: dune-drift-3 120s ease-in-out infinite;
-        }
-        .animate-dune-drift-4 {
-          animation: dune-drift-4 135s ease-in-out infinite;
-        }
-        .pin-spacer {
-          z-index: 30 !important;
-          pointer-events: none !important;
-        }
-      `}</style>
-
       {/* Ambient Sand Dune Topographic Background System */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
         {RANDOMIZED_DUNES.map((dune: any, index) => {
@@ -472,7 +445,7 @@ export default function LandingPage() {
           return (
             <div
               key={index}
-              className={`absolute ${dune.opacity} ${dune.anim} ${dune.blur}`}
+              className={`absolute transform-gpu will-change-transform ${dune.opacity} ${dune.anim} ${dune.blur}`}
               style={{
                 top: dune.top,
                 left: dune.left,
@@ -528,7 +501,7 @@ export default function LandingPage() {
         <section className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-48">
 
           {hasRole === null ? (
-            <div className="w-full relative min-h-[500px] opacity-0"></div>
+            <PortalSkeleton />
           ) : hasRole ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -544,7 +517,7 @@ export default function LandingPage() {
               </button>
             </motion.div>
           ) : (
-            <div className="w-full relative h-[600px] md:h-[500px]">
+            <div className="w-full relative min-h-auto lg:h-[500px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-4">
               {error && (
                 <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
                   {error}
@@ -557,7 +530,7 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="w-full relative h-[650px] md:h-[450px] max-w-5xl mx-auto perspective-[1200px]"
+                    className="w-full relative min-h-auto lg:h-[450px] flex flex-col md:flex-row lg:block gap-8 max-w-5xl mx-auto perspective-[1200px]"
                   >
                     {/* Owner Card (Closer, Left, Higher Z) */}
                     <motion.article
@@ -565,7 +538,7 @@ export default function LandingPage() {
                       animate={{ rotateZ: -1, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.04, rotateZ: -1, rotateX: 4, rotateY: 4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="absolute top-0 left-0 md:left-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between shadow-xl h-[300px] md:h-[350px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
+                      className="relative lg:absolute lg:top-0 lg:left-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-10 flex flex-col items-start justify-between shadow-xl min-h-[300px] lg:h-[350px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
                     >
                       <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20">
                         <Building2 className="text-accent w-8 h-8" />
@@ -590,7 +563,7 @@ export default function LandingPage() {
                       animate={{ rotateZ: 2, y: 0, scale: 0.96 }}
                       whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="absolute top-[320px] md:top-[60px] right-0 md:right-[5%] w-full md:w-[440px] bg-card border border-border rounded-xl p-10 flex flex-col items-start justify-between shadow-lg h-[280px] md:h-[320px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
+                      className="relative lg:absolute lg:top-[60px] lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-10 flex flex-col items-start justify-between shadow-lg min-h-[280px] lg:h-[320px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
                     >
                       <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
                         <Key className="text-muted-foreground w-7 h-7" />
@@ -614,9 +587,9 @@ export default function LandingPage() {
               <AnimatePresence>
                 {roleSelection === "tenant" && (
                   <motion.form
-                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
+                    animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
+                    exit={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
                     onSubmit={handleTenantSubmit}
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-card border border-border shadow-xl rounded-xl p-12 flex flex-col items-start justify-center z-40 min-h-[400px]"
                   >
@@ -627,8 +600,9 @@ export default function LandingPage() {
                     <p className="text-center w-full text-muted-foreground font-medium mb-8">Enter your landlord's email address to connect with their portal.</p>
 
                     <div className="w-full mb-8">
-                      <label className="block text-sm font-semibold mb-3 text-foreground tracking-wide">Landlord's Email Address</label>
+                      <label htmlFor="landlord-email" className="block text-sm font-semibold mb-3 text-foreground tracking-wide">Landlord's Email Address</label>
                       <input
+                        id="landlord-email"
                         type="email"
                         value={tenantEmail}
                         onChange={(e) => setTenantEmail(e.target.value)}
@@ -663,13 +637,13 @@ export default function LandingPage() {
         </section>
 
         {/* Text Divider between Auth and Features */}
-        <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 w-full relative z-20 mt-12 mb-20">
+        <div className="flex flex-row justify-center items-center gap-4 md:gap-12 w-full relative z-20 mt-12 mb-20">
           <button
             type="button"
             onClick={() => setActiveFeatureRole("owner")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
           >
-            <h2 className={`text-4xl md:text-5xl font-extrabold tracking-tight transition-all duration-500 ${activeFeatureRole === "owner" ? "text-foreground drop-shadow-[0_0_30px_rgb(var(--ml-accent)/0.6)] scale-105" : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"}`}>Property Owners</h2>
+            <h2 className={`text-lg sm:text-xl md:text-4xl lg:text-5xl font-extrabold tracking-tight transition-all duration-500 ${activeFeatureRole === "owner" ? "text-foreground drop-shadow-[0_0_30px_rgb(var(--ml-accent)/0.6)] scale-105" : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"}`}>Property Owners</h2>
             {activeFeatureRole === "owner" && (
               <motion.div
                 layoutId="activeFeatureUnderline"
@@ -679,14 +653,14 @@ export default function LandingPage() {
             )}
           </button>
 
-          <span className="hidden md:block text-muted-foreground/20 text-4xl font-light">|</span>
+          <span className="text-muted-foreground/25 text-xl md:text-4xl font-light">|</span>
 
           <button
             type="button"
             onClick={() => setActiveFeatureRole("tenant")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
           >
-            <h2 className={`text-4xl md:text-5xl font-extrabold tracking-tight transition-all duration-500 ${activeFeatureRole === "tenant" ? "text-foreground drop-shadow-[0_0_30px_rgb(var(--ml-accent)/0.6)] scale-105" : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"}`}>Residents</h2>
+            <h2 className={`text-lg sm:text-xl md:text-4xl lg:text-5xl font-extrabold tracking-tight transition-all duration-500 ${activeFeatureRole === "tenant" ? "text-foreground drop-shadow-[0_0_30px_rgb(var(--ml-accent)/0.6)] scale-105" : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"}`}>Residents</h2>
             {activeFeatureRole === "tenant" && (
               <motion.div
                 layoutId="activeFeatureUnderline"

@@ -17,6 +17,9 @@ export default function SyncRolePage() {
         const user: any = await api.get("/api/v1/onboarding/me");
         
         if (user && user.role && user.role !== "none") {
+          if (typeof window !== "undefined") {
+            document.cookie = "mock_user_onboarding_complete=true; path=/";
+          }
           if (user.role === "landlord") {
             await completeOnboarding();
             router.push("/landlord/dashboard");

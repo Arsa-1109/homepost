@@ -278,3 +278,75 @@ textarea:focus,
     }
   }
 }
+
+/* ============================================================
+   Topographic Sand Dune Background & Glass Panels
+   ============================================================ */
+:root {
+  --ml-dune-op-1: 0.24;
+  --ml-dune-op-2: 0.20;
+  --ml-dune-op-3: 0.18;
+  --ml-dune-op-4: 0.16;
+  --ml-dune-op-5: 0.14;
+}
+.dark {
+  --ml-dune-op-1: 0.05;
+  --ml-dune-op-2: 0.045;
+  --ml-dune-op-3: 0.04;
+  --ml-dune-op-4: 0.035;
+  --ml-dune-op-5: 0.03;
+}
+
+.glass-panel {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--glass-border, rgba(0, 0, 0, 0.05));
+  background-clip: padding-box, border-box;
+}
+.dark .glass-panel {
+  --glass-bg: rgba(26, 26, 26, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes dune-drift-1 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(-10deg); }
+  33% { transform: translate3d(30vw, 20vh, 0) scale(1.1) rotate(-5deg); }
+  66% { transform: translate3d(-10vw, -15vh, 0) scale(0.95) rotate(-15deg); }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(-10deg); }
+}
+@keyframes dune-drift-2 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(7deg); }
+  33% { transform: translate3d(-25vw, -30vh, 0) scale(0.9) rotate(2deg); }
+  66% { transform: translate3d(20vw, 25vh, 0) scale(1.05) rotate(12deg); }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(7deg); }
+}
+@keyframes dune-drift-3 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(-5deg); }
+  33% { transform: translate3d(20vw, -25vh, 0) scale(1.08) rotate(5deg); }
+  66% { transform: translate3d(-30vw, 20vh, 0) scale(0.92) rotate(-10deg); }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(-5deg); }
+}
+@keyframes dune-drift-4 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(12deg); }
+  33% { transform: translate3d(-20vw, 30vh, 0) scale(0.95) rotate(5deg); }
+  66% { transform: translate3d(35vw, -10vh, 0) scale(1.1) rotate(15deg); }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(12deg); }
+}
+
+.animate-dune-drift-1 {
+  animation: dune-drift-1 90s ease-in-out infinite;
+}
+.animate-dune-drift-2 {
+  animation: dune-drift-2 105s ease-in-out infinite;
+}
+.animate-dune-drift-3 {
+  animation: dune-drift-3 120s ease-in-out infinite;
+}
+.animate-dune-drift-4 {
+  animation: dune-drift-4 135s ease-in-out infinite;
+}
+.pin-spacer {
+  z-index: 30 !important;
+  pointer-events: none !important;
+}
