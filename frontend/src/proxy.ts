@@ -19,6 +19,10 @@ export default clerkMiddleware(async (auth, req) => {
     // Redirect signed-in users away from auth/landing pages
     if (authState.userId) {
       if (req.nextUrl.pathname.startsWith("/sign-")) {
+        // Do not redirect for sso-callback pages to allow Clerk client-side handling
+        if (req.nextUrl.pathname.endsWith("/sso-callback")) {
+          return NextResponse.next();
+        }
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
       if (req.nextUrl.pathname === "/") {
