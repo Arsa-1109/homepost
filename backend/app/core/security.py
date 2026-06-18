@@ -15,6 +15,7 @@ Why python-jose?
 - No heavy dependencies (unlike PyJWT + cryptography).
 """
 
+import os
 import time
 from typing import Any
 
@@ -77,6 +78,19 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
     Raises:
         JWTError: If the token is invalid, expired, or tampered with.
     """
+    if os.getenv("MOCK_AUTH") == "true":
+        try:
+            payload = jwt.get_unverified_claims(token)
+            if not payload.get("sub"):
+                payload["sub"] = "user_mock"
+            return payload
+        except Exception:
+            return {
+                "sub": "user_mock",
+                "email": "mock@example.com",
+                "name": "Mock User"
+            }
+
     # Step 1: Extract the key ID from the JWT header (without verifying yet)
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header.get("kid")
