@@ -3,13 +3,28 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const AuthContext = createContext({
+interface MockUser {
+  id: string;
+  primaryEmailAddress: { emailAddress: string } | null;
+  fullName: string | null;
+}
+
+interface AuthContextType {
+  isLoaded: boolean;
+  isSignedIn: boolean;
+  userId: string | null;
+  user: MockUser | null;
+  getToken: () => Promise<string | null>;
+}
+
+const AuthContext = createContext<AuthContextType>({
   isLoaded: false,
   isSignedIn: false,
   userId: null,
   user: null,
-  getToken: async () => null as string | null,
+  getToken: async () => null,
 });
+
 
 let setMockStateGlobal: any = null;
 
