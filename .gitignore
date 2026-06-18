@@ -48,6 +48,9 @@ backend/venv/
 # ========================
 .vscode/
 .agents
+.agent/
+openspec/
+skills-lock.json
 .idea/
 *.swp
 *.swo
