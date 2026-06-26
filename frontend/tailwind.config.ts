@@ -48,8 +48,8 @@ const config: Config = {
         accent: {
           DEFAULT: "var(--accent)",
           foreground: "var(--accent-foreground)",
-          light: "#fbbf24",
-          dark: "#d97706",
+          light: "#a3e635",
+          dark: "#65a30d",
         },
         // Off-white for light mode
         surface: {
@@ -58,7 +58,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-outfit)", "system-ui", "sans-serif"],
       },
     },
   },
