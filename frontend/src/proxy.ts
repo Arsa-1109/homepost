@@ -17,8 +17,20 @@ export default clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) {
     const authState = await auth();
     // Redirect signed-in users away from auth/landing pages
-    if (authState.userId && (req.nextUrl.pathname === "/" || req.nextUrl.pathname.startsWith("/sign-"))) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (authState.userId) {
+      if (req.nextUrl.pathname.startsWith("/sign-")) {
+        // Do not redirect for sso-callback pages to allow Clerk client-side handling
+        if (req.nextUrl.pathname.endsWith("/sso-callback")) {
+          return NextResponse.next();
+        }
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+      if (req.nextUrl.pathname === "/") {
+        const metadata = authState.sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
+        if (metadata?.onboardingComplete) {
+          return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
+      }
     }
     return NextResponse.next();
   }

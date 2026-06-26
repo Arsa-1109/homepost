@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { 
   Menu, 
   LayoutDashboard, 
@@ -67,9 +68,9 @@ export default function LandlordLayout({
         </button>
 
         {!isCollapsed && (
-          <div className="text-xl font-bold mb-8 text-[rgb(var(--ml-accent))] px-6 tracking-tight select-none">
+          <Link href="/" className="block text-xl font-bold mb-8 text-[rgb(var(--ml-accent))] px-6 tracking-tight hover:opacity-80 transition-opacity">
             🏠 Homepost
-          </div>
+          </Link>
         )}
 
         <nav className="flex-1 space-y-1 px-3">
@@ -119,7 +120,7 @@ export default function LandlordLayout({
 
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40">
-          <div className="text-lg font-bold text-[rgb(var(--ml-accent))]">🏠 Homepost</div>
+          <Link href="/" className="text-lg font-bold text-[rgb(var(--ml-accent))] hover:opacity-80 transition-opacity">🏠 Homepost</Link>
           <div className="flex gap-3 items-center">
             <UserButton />
             <ThemeToggle />
@@ -133,9 +134,9 @@ export default function LandlordLayout({
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0 pt-10">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <div className="px-6 py-2 text-xl font-bold text-[rgb(var(--ml-accent))] select-none">
+                <Link href="/" onClick={() => setIsMobileOpen(false)} className="block px-6 py-2 text-xl font-bold text-[rgb(var(--ml-accent))] hover:opacity-80 transition-opacity">
                   🏠 Homepost
-                </div>
+                </Link>
                 <nav className="space-y-1 p-4">
                   {NAV_ITEMS.map((item) => {
                     const Icon = item.icon;

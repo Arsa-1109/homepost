@@ -23,7 +23,7 @@ export default function TenantLayout({
     <div className="flex flex-col min-h-screen">
       {/* Tenant Portal Top Header */}
       <header className="p-4 flex justify-between items-center border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-80">
-        <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))]">🏠 Homepost</div>
+        <Link href="/" className="font-bold text-lg text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors">🏠 Homepost</Link>
         <div className="flex gap-4 items-center">
           <UserButton />
           <ThemeToggle />
