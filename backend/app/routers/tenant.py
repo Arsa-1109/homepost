@@ -28,6 +28,7 @@ router = APIRouter(prefix="/tenant", tags=["Tenant"])
 @router.get("/profile")
 async def get_my_profile(
     profile: TenantProfile = Depends(get_current_tenant_profile),
+    user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
     """
@@ -49,6 +50,7 @@ async def get_my_profile(
         "lease_end": profile.lease_end.isoformat() if profile.lease_end else None,
         "rent_due_day": unit.rent_due_day,
         "is_active": profile.is_active,
+        "tenant_name": user.full_name,
     }
 
 # ---------------------------------------------------------------------------
