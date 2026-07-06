@@ -44,6 +44,8 @@ function AccessRequestCard({
   const [units, setUnits] = useState<Unit[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [leaseStart, setLeaseStart] = useState<string>("");
+  const [leaseEnd, setLeaseEnd] = useState<string>("");
 
   useEffect(() => {
     async function loadUnits() {
@@ -76,7 +78,9 @@ function AccessRequestCard({
     try {
       await api.post("/api/v1/landlord/approve-tenant", {
         user_id: tenant.id,
-        unit_id: unitId
+        unit_id: unitId,
+        lease_start: leaseStart || null,
+        lease_end: leaseEnd || null
       });
       toast.success(`${tenant.full_name || tenant.email} approved successfully!`);
       onApprove(tenant.id);
@@ -107,7 +111,7 @@ function AccessRequestCard({
   const vacantUnits = units.filter(u => !u.is_occupied);
 
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[rgb(var(--ml-border))]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
+    <div className="rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
       
       {/* Left: Tenant Profile Info */}
       <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -120,48 +124,71 @@ function AccessRequestCard({
         </div>
       </div>
 
-      {/* Middle: Selection of Property & Unit */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto shrink-0 z-20">
-        <div className="w-full sm:w-48">
-          <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Property</span>
-          <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
-              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
-                {propertyId ? properties.find(p => p.id === propertyId)?.name : "Select Property"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
-              {properties.map(p => (
-                <SelectItem key={p.id} value={p.id} className="rounded-lg">{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Middle: Selection of Property, Unit & Lease Dates */}
+      <div className="flex flex-col gap-4 w-full md:w-auto z-20">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-48">
+            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Property</span>
+            <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
+              <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
+                <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
+                  {propertyId ? properties.find(p => p.id === propertyId)?.name : "Select Property"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+                {properties.map(p => (
+                  <SelectItem key={p.id} value={p.id} className="rounded-lg">{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full sm:w-48">
+            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Assign Unit</span>
+            <Select 
+              value={unitId} 
+              onValueChange={(val) => setUnitId(val || "")} 
+              disabled={!propertyId || loadingUnits}
+            >
+              <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
+                <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
+                  {loadingUnits ? "Loading..." : unitId ? (units.find(u => u.id === unitId)?.unit_label ? `Unit ${units.find(u => u.id === unitId)?.unit_label}` : "Select Unit") : "Select Unit"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+                {vacantUnits.map(u => (
+                  <SelectItem key={u.id} value={u.id} className="rounded-lg">Unit {u.unit_label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {propertyId && !loadingUnits && vacantUnits.length === 0 && (
+              <p className="text-[10px] text-amber-500 font-semibold mt-1 px-1 flex items-center gap-1">
+                <ShieldAlert className="w-3 h-3" /> No vacant units.
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="w-full sm:w-48">
-          <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Assign Unit</span>
-          <Select 
-            value={unitId} 
-            onValueChange={(val) => setUnitId(val || "")} 
-            disabled={!propertyId || loadingUnits}
-          >
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
-              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
-                {loadingUnits ? "Loading..." : unitId ? (units.find(u => u.id === unitId)?.unit_label ? `Unit ${units.find(u => u.id === unitId)?.unit_label}` : "Select Unit") : "Select Unit"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
-              {vacantUnits.map(u => (
-                <SelectItem key={u.id} value={u.id} className="rounded-lg">Unit {u.unit_label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {propertyId && !loadingUnits && vacantUnits.length === 0 && (
-            <p className="text-[10px] text-amber-500 font-semibold mt-1 px-1 flex items-center gap-1">
-              <ShieldAlert className="w-3 h-3" /> No vacant units.
-            </p>
-          )}
-        </div>
+        {unitId && (
+          <div className="flex flex-col gap-1.5 w-full">
+            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] block uppercase tracking-widest">Lease Period (Optional)</span>
+            <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+              <input 
+                type="date"
+                value={leaseStart}
+                onChange={(e) => setLeaseStart(e.target.value)}
+                className="w-full sm:w-auto bg-[rgb(var(--ml-bg-primary))]/40 border border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 focus:border-[rgb(var(--ml-accent))] focus:outline-none transition-all px-3 h-10 rounded-xl text-sm text-[rgb(var(--ml-text-primary))]"
+              />
+              <span className="text-[rgb(var(--ml-text-secondary))] text-xs font-semibold px-1 self-center">to</span>
+              <input 
+                type="date"
+                value={leaseEnd}
+                onChange={(e) => setLeaseEnd(e.target.value)}
+                className="w-full sm:w-auto bg-[rgb(var(--ml-bg-primary))]/40 border border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 focus:border-[rgb(var(--ml-accent))] focus:outline-none transition-all px-3 h-10 rounded-xl text-sm text-[rgb(var(--ml-text-primary))]"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Right: Actions */}

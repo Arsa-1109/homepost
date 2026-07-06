@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
+import { CheckCircle } from "lucide-react";
 
 export default function SyncRolePage() {
   const router = useRouter();
@@ -66,7 +67,10 @@ export default function SyncRolePage() {
     return (
       <main className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-4 text-center">
-          <h1 className="text-3xl font-bold">🎉 Request Sent!</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center justify-center gap-2">
+            <CheckCircle className="w-7 h-7 text-[rgb(var(--ml-accent))]" />
+            <span>Request Sent!</span>
+          </h1>
           <p className="text-[rgb(var(--ml-text-secondary))]">
             We&apos;ve notified your landlord. You&apos;ll be able to access your dashboard once they approve your request.
           </p>

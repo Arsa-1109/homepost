@@ -6,6 +6,9 @@ from pydantic import BaseModel
 from app.core.limiter import limiter
 from app.core.config import get_settings
 import io
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
@@ -24,16 +27,22 @@ async def upload_file_direct(
     user: User = Depends(get_current_user)
 ):
     settings = get_settings()
-    
+
+    # In mock mode, return a mock key without touching R2
+    if settings.is_r2_mock:
+        mock_key = generate_object_key(f"mock/{prefix}", file.filename)
+        logger.warning("[MOCK R2] Returning mock file_key '%s' (dummy credentials)", mock_key)
+        return DirectUploadResponse(file_key=mock_key)
+
     file_bytes = await file.read()
     if len(file_bytes) > settings.max_upload_size_bytes:
         raise HTTPException(status_code=413, detail="File too large (exceeds 10MB limit).")
-        
+
     object_key = generate_object_key(prefix, file.filename)
-    
+
     # Upload to R2 synchronously
     upload_file_to_r2(io.BytesIO(file_bytes), object_key, file.content_type)
-    
+
     return DirectUploadResponse(file_key=object_key)
 
 
@@ -48,7 +57,11 @@ async def get_presigned_download_url(
     """
     Generate a presigned GET URL to view or download a file from R2.
     """
-    if not file_key.startswith("maintenance/") and not file_key.startswith("documents/"):
+    if (
+        not file_key.startswith("maintenance/")
+        and not file_key.startswith("documents/")
+        and not file_key.startswith("mock/")
+    ):
         raise HTTPException(status_code=400, detail="Invalid file key.")
         
     filename = file_key.split("/")[-1] if download else None

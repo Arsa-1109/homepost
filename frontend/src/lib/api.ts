@@ -109,7 +109,7 @@ export async function apiFetch<T = unknown>(
 
   if (response.status === 403) {
     if (typeof window !== "undefined") {
-      window.location.href = "/onboarding";
+      window.location.href = "/";
     }
     throw new Error(
       "You don't have permission to access this resource. Redirecting..."
@@ -132,11 +132,14 @@ export async function apiFetch<T = unknown>(
 // Alias for files expecting fetchAPI
 export const fetchAPI = apiFetch;
 
-// Alias for files expecting api.post/api.get
 export const api = {
   get: (path: string, token: string | null = null) => apiFetch(path, { method: "GET" }, token),
   post: (path: string, body?: any, token: string | null = null) => apiFetch(path, { 
     method: "POST", 
+    body: body ? JSON.stringify(body) : undefined 
+  }, token),
+  put: (path: string, body?: any, token: string | null = null) => apiFetch(path, { 
+    method: "PUT", 
     body: body ? JSON.stringify(body) : undefined 
   }, token)
 };

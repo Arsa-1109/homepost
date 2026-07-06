@@ -89,7 +89,7 @@ function RequestCard({ req, onReopen, canReopen, onViewImage }: {
   const hasNotes = !!req.landlord_notes;
 
   return (
-    <div className="rounded-xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all hover:border-[rgb(var(--ml-border-hover))]">
+    <div className="rounded-2xl border border-[rgb(var(--ml-border))]/50 bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all duration-300 hover:border-[rgb(var(--ml-accent))]/50 shadow-sm hover:shadow-md group/card hover-lift">
       {/* --- Collapsed Header --- */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -308,20 +308,20 @@ function TenantRequestsContent() {
         onCancel={() => setConfirmReopen(null)}
       />
 
-      <div className="w-full min-w-0 space-y-5 max-w-2xl mx-auto">
+      <div className="w-full min-w-0 space-y-8 max-w-2xl mx-auto animate-fade-slide-up">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[rgb(var(--ml-accent))]/10 shrink-0">
-              <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-[rgb(var(--ml-accent))]" />
+            <div className="p-3 rounded-2xl bg-[rgb(var(--ml-accent))]/10 shrink-0">
+              <Wrench className="w-6 h-6 text-[rgb(var(--ml-accent))]" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[rgb(var(--ml-text-primary))] leading-tight">
+            <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
               Maintenance Requests
             </h1>
           </div>
           {profile?.is_active && (
             <Link
               href="/tenant/requests/new"
-              className="self-start sm:self-auto bg-[rgb(var(--ml-accent))] text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm whitespace-nowrap"
+              className="self-start sm:self-auto bg-[rgb(var(--ml-accent))] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 whitespace-nowrap active:scale-95"
             >
               + New Request
             </Link>
@@ -331,23 +331,25 @@ function TenantRequestsContent() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="px-5 py-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
-                <div className="flex items-center gap-3">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[rgb(var(--ml-border))]" />
+              <div key={i} className="px-5 py-5 border border-[rgb(var(--ml-border))]/50 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-3 h-3 rounded-full bg-[rgb(var(--ml-border))]/60" />
                   <div className="flex-1">
-                    <div className="h-4 w-1/3 bg-[rgb(var(--ml-border))] rounded-md mb-1.5" />
-                    <div className="h-3 w-2/3 bg-[rgb(var(--ml-border))] rounded-md" />
+                    <div className="h-5 w-1/3 bg-[rgb(var(--ml-border))]/60 rounded-md mb-2" />
+                    <div className="h-4 w-2/3 bg-[rgb(var(--ml-border))]/60 rounded-md" />
                   </div>
-                  <div className="h-5 w-16 bg-[rgb(var(--ml-border))] rounded-full" />
+                  <div className="h-6 w-20 bg-[rgb(var(--ml-border))]/60 rounded-full" />
                 </div>
               </div>
             ))}
           </div>
         ) : requests.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))]">
-            <Wrench className="w-10 h-10 mx-auto text-[rgb(var(--ml-text-secondary))]/30 mb-3" />
-            <p className="text-[rgb(var(--ml-text-secondary))] font-medium">No maintenance requests yet</p>
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))]/50 mt-1">Submit a request when something needs fixing</p>
+          <div className="text-center py-20 border border-dashed border-[rgb(var(--ml-border))]/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-[rgb(var(--ml-bg-tertiary))] flex items-center justify-center mb-5 shadow-inner">
+              <Wrench className="w-7 h-7 text-[rgb(var(--ml-text-muted))]" />
+            </div>
+            <p className="text-[rgb(var(--ml-text-primary))] font-bold text-lg">No maintenance requests yet</p>
+            <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] mt-2">Submit a request when something needs fixing</p>
           </div>
         ) : (
           <div className="space-y-3">

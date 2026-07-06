@@ -42,7 +42,7 @@ export default function LandlordDashboard() {
       await api.post("/api/v1/onboarding/reset-role");
       const { resetOnboarding } = await import("@/app/actions/onboarding");
       await resetOnboarding();
-      router.push("/onboarding");
+      router.push("/");
     } catch (err) {
       console.error("Failed to reset role:", err);
       toast.error("Failed to reset role. Please try again.");
@@ -93,9 +93,20 @@ export default function LandlordDashboard() {
     }
   }
 
+  const headerDesc = data 
+    ? (() => {
+        const uniqueProperties = Array.from(new Set(data.units.map(u => u.property_name).filter(Boolean)));
+        if (uniqueProperties.length === 1) {
+          const totalUnitsLabel = `${data.property_stats.total_units} unit${data.property_stats.total_units !== 1 ? 's' : ''}`;
+          return `${uniqueProperties[0]} · 1 property · ${totalUnitsLabel}`;
+        }
+        return `${data.property_stats.total_properties} properties · ${data.property_stats.total_units} units`;
+      })()
+    : undefined;
+
   return (
     <div className="space-y-6 p-6">
-      <DashboardHeader />
+      <DashboardHeader description={headerDesc} />
       {loading ? (
         <DashboardBentoSkeleton />
       ) : error || !data ? (

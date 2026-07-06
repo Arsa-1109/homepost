@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
+import { Sparkles } from "lucide-react";
 
 export default function JoinPage({
   params,
@@ -98,7 +99,10 @@ export default function JoinPage({
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-4">
-        <h1 className="text-3xl font-bold">🎉 You&apos;ve been invited!</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center justify-center gap-2">
+          <Sparkles className="w-7 h-7 text-[rgb(var(--ml-accent))]" />
+          <span>You&apos;ve been invited!</span>
+        </h1>
         <p className="text-[rgb(var(--ml-text-secondary))]">
           Click below to accept your invite and join the property.
         </p>

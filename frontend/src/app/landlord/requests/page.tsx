@@ -12,16 +12,32 @@ import {
   InfoIcon, 
   ChevronDown, 
   Wrench,
-  AlertTriangle
+  AlertTriangle,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 import { uploadFile } from "@/lib/upload";
 import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
 import { LightboxModal, getFriendlyFileName } from "@/components/LightboxModal";
+import { KanbanBoard } from "./KanbanBoard";
+
+import {
+  DndContext,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { cn } from "@/lib/utils";
 
 export type MaintenanceRequest = {
   id: string;
@@ -171,13 +187,21 @@ function AttachmentThumbnail({
   );
 }
 
-export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () => void }) {
+export function RequestCard({ 
+  req, 
+  onUpdate,
+  forceExpanded = false
+}: { 
+  req: MaintenanceRequest;
+  onUpdate: () => void;
+  forceExpanded?: boolean;
+}) {
   const [status, setStatus] = useState(req.status);
   const [notes, setNotes] = useState(req.landlord_notes || "");
   const [files, setFiles] = useState<File[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(forceExpanded);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
 
@@ -235,10 +259,10 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
   };
 
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[rgb(var(--ml-border))]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-all hover:border-[rgb(var(--ml-accent))]/30 group/card">
+    <div className="rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-all hover:border-[rgb(var(--ml-accent))]/30 group/card">
       <div 
         className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none relative z-10"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => !forceExpanded && setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="p-3 bg-orange-500/10 text-orange-500 rounded-2xl border border-orange-500/10 shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-300">
@@ -272,16 +296,18 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
             </span>
             <span className="text-[rgb(var(--ml-text-muted))]">{new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
-          <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-[rgb(var(--ml-border))]/30">
-            <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
-          </button>
+          {!forceExpanded && (
+            <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-[rgb(var(--ml-border))]/30">
+              <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+            </button>
+          )}
         </div>
       </div>
 
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
+            initial={forceExpanded ? false : { height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -298,105 +324,89 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                   </div>
         
                   {req.image_urls && req.image_urls.length > 0 && (
-                    <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest block">Tenant Photos & Context:</span>
+                    <div>
+                      <h4 className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-2.5">Tenant Attachments</h4>
                       <div className="flex flex-wrap gap-4">
-                        {req.image_urls.map((url, idx) => (
-                          <AttachmentThumbnail key={idx} url={url} onViewImage={setLightboxUrl} />
+                        {req.image_urls.map((url, index) => (
+                          <AttachmentThumbnail key={index} url={url} onViewImage={setLightboxUrl} />
                         ))}
                       </div>
                     </div>
                   )}
 
                   {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
-                    <div className="space-y-2.5">
-                      <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest block">Landlord Resolution Files:</span>
+                    <div>
+                      <h4 className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-2.5">My Uploaded Files</h4>
                       <div className="flex flex-wrap gap-4">
-                        {req.landlord_image_urls.map((url, idx) => (
-                          <AttachmentThumbnail key={idx} url={url} onViewImage={setLightboxUrl} />
+                        {req.landlord_image_urls.map((url, index) => (
+                          <AttachmentThumbnail key={index} url={url} onViewImage={setLightboxUrl} />
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
-      
-                <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))]/50 pt-6 md:pt-0 md:pl-6">
+
+                <div className="md:w-80 flex flex-col space-y-5 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))]/40 pt-6 md:pt-0 md:pl-8">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
                   <div>
-                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-2 block uppercase tracking-widest">Status</span>
-                    <Select value={status} onValueChange={(val: any) => setStatus(val)} disabled={req.status === "closed"}>
-                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
-                        <SelectValue placeholder="Select Status" />
+                    <label className="block text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-2">Update Status</label>
+                    <Select 
+                      value={status} 
+                      onValueChange={(val: any) => setStatus(val)}
+                      disabled={req.status === "closed"}
+                    >
+                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 rounded-2xl h-11 text-xs">
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
-                        {["open", "in_progress", "resolved", "closed"].map((opt) => {
-                          const isAllowed = opt === req.status || VALID_TRANSITIONS[req.status]?.includes(opt);
-                          return (
-                            <SelectItem key={opt} value={opt} disabled={!isAllowed} className="rounded-lg">
-                              {opt === "in_progress" ? "In Progress" : opt.charAt(0).toUpperCase() + opt.slice(1)}
-                            </SelectItem>
-                          );
-                        })}
+                      <SelectContent>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div>
-                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-2 block uppercase tracking-widest">Landlord Notes (Optional)</span>
+                    <label className="block text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-2">Internal Note</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      disabled={req.status === "closed"}
-                      placeholder="Add a comment or internal note..."
-                      className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border border-[rgb(var(--ml-border))]/40 rounded-2xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/10 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-all min-h-[90px] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Add an internal note only visible to you..."
+                      className="w-full text-xs bg-[rgb(var(--ml-bg-primary))]/40 border border-[rgb(var(--ml-border))]/40 rounded-2xl p-3 min-h-[90px] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all placeholder-[rgb(var(--ml-text-muted))]"
                     />
                   </div>
-        
-                  <div>
-                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-2 block uppercase tracking-widest">Attach Photos/Docs (Max 3)</span>
-                    <div className="relative group/upload">
-                      <input 
-                        type="file" 
-                        multiple
-                        accept="image/*,application/pdf"
-                        onChange={handleFileChange}
-                        disabled={req.status === "closed"}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
-                      />
-                      <div className="w-full border border-dashed border-[rgb(var(--ml-border))]/70 bg-[rgb(var(--ml-bg-primary))]/40 group-hover/upload:border-[rgb(var(--ml-accent))]/50 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
-                        <ImageIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))] group-hover/upload:text-[rgb(var(--ml-accent))] transition-colors" />
-                        <span className="text-xs font-semibold text-[rgb(var(--ml-text-primary))] mt-1">Upload Files</span>
-                        <span className="text-[10px] text-[rgb(var(--ml-text-secondary))]">PDF or Images</span>
-                      </div>
-                    </div>
-                    {files.length > 0 && (
-                      <p className="text-[11px] font-medium text-[rgb(var(--ml-accent))] mt-2 px-1 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--ml-accent))] animate-pulse"></span>
-                        {files.length} file(s) selected
-                      </p>
-                    )}
-                  </div>
 
-                  {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl flex items-start gap-2 break-words animate-fadeIn">
-                      <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-semibold text-red-300 mb-0.5">Could not update request</p>
-                        <p className="leading-relaxed">{error}</p>
-                      </div>
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-2">Attach Files</label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[rgb(var(--ml-accent))]/10 file:text-[rgb(var(--ml-accent))] hover:file:bg-[rgb(var(--ml-accent))]/20 file:transition-colors file:cursor-pointer text-muted-foreground border border-[rgb(var(--ml-border))]/40 rounded-2xl p-2.5 bg-[rgb(var(--ml-bg-primary))]/20"
+                    />
+                  </div>
 
                   <button
                     onClick={handleUpdate}
-                    disabled={!hasChanges || isUpdating || req.status === "closed"}
-                    className="w-full bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white text-sm font-semibold h-11 rounded-xl transition-all shadow-md shadow-[rgb(var(--ml-accent))]/10 hover:shadow-[rgb(var(--ml-accent))]/20 active:scale-[0.98] disabled:opacity-40 disabled:scale-100 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto"
+                    disabled={isUpdating || !hasChanges}
+                    className="w-full bg-[rgb(var(--ml-accent))] text-white font-semibold py-3 text-xs rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50"
                   >
-                    {isUpdating && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                    {isUpdating ? "Updating..." : "Update Request"}
+                    {isUpdating ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </div>
 
-              <div className="mt-8 border-t border-[rgb(var(--ml-border))]/30">
+              {/* Maintenance Timeline section */}
+              <div className="mt-8 border-t border-[rgb(var(--ml-border))]/40 pt-6">
+                <h4 className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-4">Request Log & Timeline</h4>
                 <MaintenanceTimeline requestId={req.id} userType="landlord" refreshKey={timelineRefreshKey} onViewImage={setLightboxUrl} />
               </div>
             </div>
@@ -416,6 +426,20 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
 export default function LandlordMaintenancePage() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewType, setViewType] = useState<"list" | "kanban">("list");
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
+
+  // Setup sensors for @dnd-kit
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: {
+      delay: 150,
+      tolerance: 5,
+    },
+  });
+  const keyboardSensor = useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates,
+  });
+  const sensors = useSensors(pointerSensor, keyboardSensor);
 
   async function loadData() {
     try {
@@ -432,22 +456,106 @@ export default function LandlordMaintenancePage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const reqId = params.get("id");
+      if (reqId && requests.length > 0) {
+        const found = requests.find((r) => r.id === reqId);
+        if (found) {
+          setSelectedRequest(found);
+        }
+      }
+    }
+  }, [requests]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const requestId = active.id as string;
+    const newStatus = over.id as "open" | "in_progress" | "resolved" | "closed";
+
+    const req = requests.find((r) => r.id === requestId);
+    if (!req) return;
+
+    if (req.status === newStatus) return;
+
+    const allowedTransitions = VALID_TRANSITIONS[req.status] || [];
+    if (!allowedTransitions.includes(newStatus)) {
+      const rawMsg = `invalid status transition from '${req.status}' to '${newStatus}'`;
+      toast.error(getEmpatheticErrorMessage(rawMsg));
+      return;
+    }
+
+    // Optimistic Update
+    const originalRequests = [...requests];
+    setRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: newStatus } : r))
+    );
+
+    try {
+      await fetchAPI(`/api/v1/landlord/maintenance/${requestId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      toast.success("Request status updated successfully!");
+    } catch (err: any) {
+      // Revert on error
+      setRequests(originalRequests);
+      const rawMsg = err.message || "Failed to update request status";
+      toast.error(getEmpatheticErrorMessage(rawMsg));
+    }
+  };
+
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto min-h-screen relative">
       {/* Background orbs */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[rgb(var(--ml-accent))]/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="mb-8 flex flex-col gap-2 relative z-10">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-orange-500/10 text-orange-500 rounded-2xl shadow-inner border border-orange-500/10">
-            <Wrench className="w-6 h-6" />
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
+            <div className="p-2.5 bg-orange-500/10 text-orange-500 rounded-2xl shadow-inner border border-orange-500/10">
+              <Wrench className="w-6 h-6" />
+            </div>
+            Maintenance Requests
+          </h1>
+          <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] pl-1">
+            Review and resolve property repair issues reported by tenants.
+          </p>
+        </div>
+
+        {/* View Toggle Buttons */}
+        {!loading && requests.length > 0 && (
+          <div className="flex bg-muted p-1 rounded-xl border border-border/40 self-start">
+            <button
+              onClick={() => setViewType("list")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                viewType === "list"
+                  ? "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-accent))] shadow-sm border border-border/30"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <List className="w-3.5 h-3.5" />
+              List
+            </button>
+            <button
+              onClick={() => setViewType("kanban")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                viewType === "kanban"
+                  ? "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-accent))] shadow-sm border border-border/30"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Kanban
+            </button>
           </div>
-          Maintenance Requests
-        </h1>
-        <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] pl-1">
-          Review and resolve property repair issues reported by tenants.
-        </p>
+        )}
       </div>
 
       {!loading && requests.length >= 50 && (
@@ -508,9 +616,20 @@ export default function LandlordMaintenancePage() {
               description="There are no maintenance requests across your properties."
             />
           </motion.div>
+        ) : viewType === "kanban" ? (
+          <motion.div
+            key="kanban-view"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+              <KanbanBoard requests={requests} onViewDetails={setSelectedRequest} />
+            </DndContext>
+          </motion.div>
         ) : (
           <motion.div 
-            key="content"
+            key="list-view"
             initial="hidden"
             animate="show"
             exit={{ opacity: 0 }}
@@ -537,6 +656,22 @@ export default function LandlordMaintenancePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Kanban Card Details Dialog Modal */}
+      <Dialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 border-none bg-transparent shadow-none">
+          {selectedRequest && (
+            <RequestCard
+              req={selectedRequest}
+              onUpdate={() => {
+                loadData();
+                setSelectedRequest(null);
+              }}
+              forceExpanded={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

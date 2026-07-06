@@ -343,6 +343,9 @@ export default function LandingPage() {
         try {
           const me: any = await api.get("/api/v1/onboarding/me");
           if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
+            if (typeof window !== "undefined") {
+              document.cookie = "mock_user_onboarding_complete=true; path=/";
+            }
             setHasRole(true);
           } else {
             setHasRole(false);
@@ -510,7 +513,12 @@ export default function LandingPage() {
             >
               <h2 className="text-3xl font-bold">Welcome back!</h2>
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    document.cookie = "mock_user_onboarding_complete=true; path=/";
+                  }
+                  router.push("/dashboard");
+                }}
                 className="px-10 py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Go to Dashboard <ArrowRight className="w-6 h-6" />

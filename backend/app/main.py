@@ -87,8 +87,25 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS — allow the Next.js frontend to make cross-origin requests
 # FRONTEND_URL can be a single URL or comma-separated list of URLs
 # Supports regex matching for local development and Vercel preview/branch deployments.
+#
+# NOTE: Starlette processes middleware in LIFO order (last-added runs first).
+# CORS is registered FIRST so that it becomes the outermost wrapper, ensuring
+# Access-Control-Allow-Origin headers are present on ALL responses — including
+# unhandled 500 errors that would otherwise be blocked by the browser.
 # ---------------------------------------------------------------------------
-# Security Headers
+_raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_raw_origins,
+    allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1)(:\d+)?|https://homepost-.*\.vercel\.app|https://homepost\.vercel\.app)$",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
+)
+
+# ---------------------------------------------------------------------------
+# Security Headers (registered after CORS so it runs inside the CORS wrapper)
+# ---------------------------------------------------------------------------
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
@@ -101,16 +118,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
-
-_raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_raw_origins,
-    allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1)(:\d+)?|https://homepost-.*\.vercel\.app|https://homepost\.vercel\.app)$",
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
-)
 
 
 # ---------------------------------------------------------------------------

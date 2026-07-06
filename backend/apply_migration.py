@@ -7,17 +7,17 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 # Load from .env if present
 env_path = os.path.join(os.path.dirname(__file__), ".env")
-DB_URL = "postgresql+psycopg://postgres:REPLACED_SECRET@acela.proxy.rlwy.net:50955/railway"
+DB_URL = "postgresql+asyncpg://postgres:REPLACED_SECRET@acela.proxy.rlwy.net:50955/railway"
 if os.path.exists(env_path):
     with open(env_path, "r") as f:
         for line in f:
             if line.startswith("DATABASE_URL="):
                 DB_URL = line.strip().split("=")[1].strip('"').strip("'")
-                # Ensure it uses psycopg
+                # Ensure it uses asyncpg
                 if DB_URL.startswith("postgresql://"):
-                    DB_URL = DB_URL.replace("postgresql://", "postgresql+psycopg://")
+                    DB_URL = DB_URL.replace("postgresql://", "postgresql+asyncpg://")
                 elif DB_URL.startswith("postgres://"):
-                    DB_URL = DB_URL.replace("postgres://", "postgresql+psycopg://")
+                    DB_URL = DB_URL.replace("postgres://", "postgresql+asyncpg://")
                 break
 
 async def migrate():

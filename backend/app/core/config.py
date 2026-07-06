@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     # --- Upload Constraints ---
     max_upload_size_bytes: int = 10_485_760  # 10 MB
 
+    # --- Auth ---
+    mock_auth: bool = False
+
+    @property
+    def is_r2_mock(self) -> bool:
+        """True when R2 credentials are dummy/missing (local dev mode)."""
+        return not self.r2_endpoint_url or "dummy" in self.r2_endpoint_url
+
 
 @lru_cache
 def get_settings() -> Settings:

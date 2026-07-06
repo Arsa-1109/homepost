@@ -149,7 +149,14 @@ export function clerkMiddleware(handler: any) {
     const mockAuthObj = async () => mockAuthResult;
     Object.assign(mockAuthObj, mockAuthResult);
 
-    return handler(mockAuthObj, req, event);
+    try {
+      return await handler(mockAuthObj, req, event);
+    } catch (err: any) {
+      if (err.message === "Auth required (mocked)") {
+        return NextResponse.redirect(new URL("/sign-in", req.url));
+      }
+      throw err;
+    }
   };
 }
 

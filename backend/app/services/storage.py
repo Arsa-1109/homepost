@@ -14,6 +14,7 @@ Key format conventions:
   - Documents: documents/{property_id}/{uuid}.{ext}
 """
 
+import logging
 import uuid
 from typing import BinaryIO
 
@@ -24,20 +25,31 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
+logger = logging.getLogger(__name__)
+
 # ---------------------------------------------------------------------------
-# R2 Client — S3-compatible
+# R2 Client — S3-compatible (lazy-initialized to avoid connection errors
+# when running with dummy credentials in local development)
 # ---------------------------------------------------------------------------
-_s3_client = boto3.client(
-    "s3",
-    endpoint_url=settings.r2_endpoint_url,
-    aws_access_key_id=settings.r2_access_key_id,
-    aws_secret_access_key=settings.r2_secret_access_key,
-    config=BotoConfig(
-        signature_version="s3v4",
-        s3={'addressing_style': 'path'}
-    ),
-    region_name="auto",  # R2 uses "auto" for region
-)
+_s3_client = None
+
+
+def _get_s3_client():
+    """Return the boto3 S3 client, creating it on first use."""
+    global _s3_client
+    if _s3_client is None:
+        _s3_client = boto3.client(
+            "s3",
+            endpoint_url=settings.r2_endpoint_url,
+            aws_access_key_id=settings.r2_access_key_id,
+            aws_secret_access_key=settings.r2_secret_access_key,
+            config=BotoConfig(
+                signature_version="s3v4",
+                s3={'addressing_style': 'path'}
+            ),
+            region_name="auto",
+        )
+    return _s3_client
 
 
 def generate_object_key(prefix: str, filename: str) -> str:
@@ -57,21 +69,31 @@ def upload_file_to_r2(
 ) -> None:
     """
     Upload a file stream directly to Cloudflare R2.
-    Used by the FastAPI backend to proxy uploads, allowing us to enforce 
+    Used by the FastAPI backend to proxy uploads, allowing us to enforce
     strict size limits in memory before reaching the storage layer.
+
+    In mock mode (dummy R2 credentials), logs a warning and skips the upload.
     """
+    if settings.is_r2_mock:
+        logger.warning("[MOCK R2] Skipping upload for key '%s' (dummy credentials)", object_key)
+        return
+
     extra_args = {}
     if content_type:
         extra_args["ContentType"] = content_type
     else:
         extra_args["ContentType"] = "application/octet-stream"
 
-    _s3_client.upload_fileobj(
+    _get_s3_client().upload_fileobj(
         Fileobj=file_obj,
         Bucket=settings.r2_bucket_name,
         Key=object_key,
         ExtraArgs=extra_args
     )
+
+
+# Placeholder returned when R2 is in mock mode
+_MOCK_IMAGE_URL = "https://placehold.co/600x400?text=Mock+Image"
 
 
 def generate_presigned_download_url(
@@ -88,8 +110,11 @@ def generate_presigned_download_url(
         filename: Optional clean filename to set ResponseContentDisposition attachment header.
 
     Returns:
-        Presigned GET URL string.
+        Presigned GET URL string, or a placeholder URL in mock mode.
     """
+    if settings.is_r2_mock or object_key.startswith("mock/"):
+        return _MOCK_IMAGE_URL
+
     params = {
         "Bucket": settings.r2_bucket_name,
         "Key": object_key,
@@ -99,7 +124,7 @@ def generate_presigned_download_url(
         clean_filename = "".join(c for c in filename if c.isalnum() or c in "._- ")
         params["ResponseContentDisposition"] = f'attachment; filename="{clean_filename}"'
 
-    url = _s3_client.generate_presigned_url(
+    url = _get_s3_client().generate_presigned_url(
         ClientMethod="get_object",
         Params=params,
         ExpiresIn=expires,

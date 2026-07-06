@@ -43,11 +43,11 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // ⚠️ Secure Onboarding Guard: Check session claims mapping to publicMetadata
+  // Secure Onboarding Guard: Check session claims mapping to publicMetadata
   // Requires "metadata": "{{user.public_metadata}}" in the Clerk JWT template
   const metadata = sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
   if (!metadata?.onboardingComplete) {
-    const onboardingUrl = new URL("/onboarding", req.url);
+    const onboardingUrl = new URL("/", req.url);
     return NextResponse.redirect(onboardingUrl);
   }
 

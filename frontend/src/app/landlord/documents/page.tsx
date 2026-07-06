@@ -143,7 +143,12 @@ export default function LandlordDocumentsPage() {
 
   if (loading) return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Documents 📄</h1>
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/10">
+          <FileText className="w-6 h-6" />
+        </div>
+        <h1 className="text-3xl font-bold">Documents</h1>
+      </div>
       <div className="animate-pulse space-y-4">
         <div className="h-10 w-48 bg-[rgb(var(--ml-border))] rounded-md"></div>
         <div className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
@@ -159,7 +164,12 @@ export default function LandlordDocumentsPage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Documents 📄</h1>
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/10">
+          <FileText className="w-6 h-6" />
+        </div>
+        <h1 className="text-3xl font-bold">Documents</h1>
+      </div>
 
       {properties.length === 0 ? (
         <div className="text-center py-12 border border-[rgb(var(--ml-border))] rounded-xl">

@@ -257,7 +257,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                       {/* Fallback for OLD events: had image_count but no image_keys stored */}
                       {event.payload?.image_count > 0 && !event.payload?.image_urls && (
                         <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-[rgb(var(--ml-border))]">
-                          <span className="text-purple-400/60 text-sm">🖼</span>
+                          <ImageIcon className="w-4 h-4 text-purple-400/60 shrink-0" />
                           <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]/60 italic">
                             {event.payload.image_count} file{event.payload.image_count !== 1 ? 's' : ''} attached
                             <span className="ml-1 opacity-50">(preview unavailable for older records)</span>

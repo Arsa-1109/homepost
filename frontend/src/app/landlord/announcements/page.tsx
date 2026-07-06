@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Megaphone } from "lucide-react";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -88,7 +89,12 @@ export default function LandlordAnnouncementsPage() {
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-balance">Announcements 📢</h1>
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/10">
+          <Megaphone className="w-6 h-6" />
+        </div>
+        <h1 className="text-3xl font-bold text-balance">Announcements</h1>
+      </div>
 
       <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
         <h2 className="text-xl font-semibold mb-4 text-balance">Post New Announcement</h2>
