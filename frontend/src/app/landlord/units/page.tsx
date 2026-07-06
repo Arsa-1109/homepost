@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { AlertTriangle, DoorOpen } from "lucide-react";
+import { AlertTriangle, DoorOpen, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
 import {
@@ -52,51 +52,51 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   };
 
   return (
-    <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover:shadow-md transition-shadow">
+    <div className="p-5 border border-[rgb(var(--ml-border))]/50 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover-lift transition-all duration-300 group/card min-h-[190px] shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-[rgb(var(--ml-accent))]/40">
       <div>
-        <div className="flex justify-between items-start">
-          <Link href={`/landlord/units/${u.id}`} className="font-bold text-lg text-balance hover:text-[rgb(var(--ml-accent))] hover:underline transition-colors">
+        <div className="flex justify-between items-start gap-2">
+          <Link href={`/landlord/units/${u.id}`} className="font-extrabold text-lg tracking-tight text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors truncate block max-w-[150px]">
             {u.unit_label}
           </Link>
-          <Badge variant={u.is_occupied ? "success" : "outline"} className="capitalize">
+          <Badge variant={u.is_occupied ? "success" : "outline"} className="capitalize tracking-wider text-[9px] font-extrabold px-2 py-0.5 shrink-0">
             {u.is_occupied ? "Occupied" : "Vacant"}
           </Badge>
         </div>
-        <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
+        <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-1 mb-4">Rent due on day {u.rent_due_day}</p>
       </div>
       
       <div className="mt-auto flex flex-col gap-2">
-        <Link href={`/landlord/units/${u.id}`} className="text-xs text-center font-medium border border-[rgb(var(--ml-border))] text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
+        <Link href={`/landlord/units/${u.id}`} className="text-xs text-center font-bold border border-[rgb(var(--ml-border))]/60 text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] px-3 py-2.5 rounded-xl transition-all w-full cursor-pointer hover-lift shadow-sm">
           View Details
         </Link>
         {u.is_occupied ? (
           <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
-            <DialogTrigger className="text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
+            <DialogTrigger className="text-xs text-center font-bold text-red-600 dark:text-red-400 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 px-3 py-2.5 rounded-xl transition-all w-full cursor-pointer hover-lift">
               Remove Tenant
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))]">
-              <div className="bg-red-50/50 dark:bg-red-950/20 px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 mb-4 ring-8 ring-red-50 dark:ring-red-950/30">
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))] rounded-2xl">
+              <div className="bg-red-50 dark:bg-red-950/40 px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]/30">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900 mb-4 ring-8 ring-red-50 dark:ring-red-950">
                   <AlertTriangle className="h-7 w-7 text-red-600 dark:text-red-400" />
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-bold text-[rgb(var(--ml-text-primary))]">Remove Tenant</DialogTitle>
-                  <DialogDescription className="text-center mt-3 text-pretty text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                    Are you sure you want to remove the tenant from <span className="font-semibold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>? This action is permanent and cannot be undone.
+                  <DialogTitle className="text-center text-xl font-extrabold text-[rgb(var(--ml-text-primary))] tracking-tight">Remove Tenant</DialogTitle>
+                  <DialogDescription className="text-center mt-3 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
+                    Are you sure you want to remove the tenant from <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>? This action is permanent and cannot be undone.
                   </DialogDescription>
                 </DialogHeader>
               </div>
-              <div className="bg-[rgb(var(--ml-bg-tertiary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
+              <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
                 <button 
                   onClick={() => setIsRemoveDialogOpen(false)}
-                  className="px-5 py-2.5 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                  className="px-5 py-2.5 text-xs font-bold border border-[rgb(var(--ml-border))]/30 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                 >
                   Cancel
                 </button>
                 <button 
                   disabled={isRemoving}
                   onClick={handleRemoveTenant}
-                  className="px-5 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-sm shadow-red-600/20 active:scale-[0.98]"
+                  className="px-5 py-2.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-sm shadow-red-600/20 active:scale-[0.98]"
                 >
                   {isRemoving ? "Removing..." : "Yes, remove tenant"}
                 </button>
@@ -105,36 +105,36 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
           </Dialog>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="text-xs bg-[rgb(var(--ml-accent))] text-white px-3 py-2 rounded-lg hover:opacity-90 transition-opacity w-full cursor-pointer">
+            <DialogTrigger className="text-xs text-center bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3 py-2.5 rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] transition-all w-full cursor-pointer hover-lift shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)]">
               Invite Tenant
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))]">
-              <div className="bg-[rgba(var(--ml-accent),0.05)] dark:bg-[rgba(var(--ml-accent),0.1)] px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(var(--ml-accent),0.15)] dark:bg-[rgba(var(--ml-accent),0.2)] mb-4 ring-8 ring-[rgba(var(--ml-accent),0.05)] dark:ring-[rgba(var(--ml-accent),0.1)]">
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))] rounded-2xl">
+              <div className="bg-[rgba(var(--ml-accent),0.03)] dark:bg-[rgba(var(--ml-accent),0.05)] px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]/15">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(var(--ml-accent),0.12)] dark:bg-[rgba(var(--ml-accent),0.15)] mb-4 ring-8 ring-[rgba(var(--ml-accent),0.03)] dark:ring-[rgba(var(--ml-accent),0.05)]">
                   <DoorOpen className="h-7 w-7 text-[rgb(var(--ml-accent))]" />
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-bold text-[rgb(var(--ml-text-primary))]">Invite Tenant</DialogTitle>
-                  <DialogDescription className="text-center mt-2 text-pretty text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                    Generate a unique, secure invite link for your new tenant moving into <span className="font-semibold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>.
+                  <DialogTitle className="text-center text-xl font-extrabold text-[rgb(var(--ml-text-primary))] tracking-tight">Invite Tenant</DialogTitle>
+                  <DialogDescription className="text-center mt-2 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
+                    Generate a unique, secure invite link for your new tenant moving into <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>.
                   </DialogDescription>
                 </DialogHeader>
               </div>
               
-              <div className="bg-[rgb(var(--ml-bg-tertiary))]">
-                <div className="px-6 py-5 border-b border-[rgb(var(--ml-border))]">
-                  <label className="flex items-start gap-3 p-3 rounded-lg border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] cursor-pointer hover:border-[rgb(var(--ml-accent))] transition-colors group">
+              <div className="bg-[rgb(var(--ml-bg-tertiary))]/50">
+                <div className="px-6 py-5 border-b border-[rgb(var(--ml-border))]/15">
+                  <label className="flex items-start gap-3 p-3.5 rounded-xl border border-[rgb(var(--ml-border))]/25 bg-[rgb(var(--ml-bg-secondary))]/60 cursor-pointer hover:border-[rgb(var(--ml-accent))]/30 transition-all group">
                     <div className="mt-0.5">
                       <input 
                         type="checkbox" 
                         checked={keepData}
                         onChange={(e) => setKeepData(e.target.checked)}
-                        className="w-4 h-4 rounded border-[rgb(var(--ml-border))] text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer"
+                        className="w-4 h-4 rounded border-[rgb(var(--ml-border))]/30 text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer accent-[rgb(var(--ml-accent))]"
                       />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-[rgb(var(--ml-text-primary))]">Retain Previous Data</p>
-                      <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">Keep the previous tenant's documents and history attached to this unit.</p>
+                      <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">Retain Previous Data</p>
+                      <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">Keep the previous tenant's documents and history attached to this unit.</p>
                     </div>
                   </label>
                 </div>
@@ -142,7 +142,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                 <div className="px-6 py-4 flex gap-3 justify-end items-center">
                   <button 
                     onClick={() => setIsDialogOpen(false)}
-                    className="px-5 py-2.5 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                    className="px-5 py-2.5 text-xs font-bold border border-[rgb(var(--ml-border))]/30 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                   >
                     Cancel
                   </button>
@@ -162,7 +162,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                         toast.error("Failed to generate invite.");
                       }
                     }}
-                    className="px-5 py-2.5 text-sm font-semibold bg-[rgb(var(--ml-accent))] hover:brightness-110 text-white rounded-lg transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.2)] active:scale-[0.98] cursor-pointer"
+                    className="px-5 py-2.5 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer hover-lift"
                   >
                     Generate Link
                   </button>
@@ -175,6 +175,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
     </div>
   );
 }
+
 
 export default function LandlordUnitsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -239,8 +240,8 @@ export default function LandlordUnitsPage() {
       setUnitLabel("");
       setRentDay("1");
       toast.success("Unit created successfully!");
-    } catch (err) {
-      toast.error("Failed to create unit. Please try again.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create unit. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -248,39 +249,42 @@ export default function LandlordUnitsPage() {
 
   if (loading) return (
     <div className="space-y-8 max-w-4xl mx-auto animate-pulse">
-      <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
+      <div className="mb-6">
+        <div className="h-9 w-40 bg-[rgb(var(--ml-border))]/40 rounded-xl mb-2"></div>
+        <div className="h-4 w-64 bg-[rgb(var(--ml-border))]/40 rounded-lg"></div>
+      </div>
       
       {/* Property Selector Skeleton */}
       <div className="flex gap-4 items-center">
-        <div className="h-5 w-28 bg-[rgb(var(--ml-border))] rounded"></div>
-        <div className="h-10 w-48 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+        <div className="h-5 w-28 bg-[rgb(var(--ml-border))]/40 rounded"></div>
+        <div className="h-10 w-48 bg-[rgb(var(--ml-bg-secondary))]/30 border border-[rgb(var(--ml-border))]/25 rounded-xl"></div>
       </div>
 
       {/* Add Unit Form Skeleton */}
-      <div className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm">
-        <div className="h-7 w-32 bg-[rgb(var(--ml-border))] rounded mb-4"></div>
+      <div className="p-6 bg-[rgb(var(--ml-bg-secondary))]/30 border border-[rgb(var(--ml-border))]/25 rounded-2xl space-y-4 shadow-sm">
+        <div className="h-7 w-32 bg-[rgb(var(--ml-border))]/40 rounded mb-4"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-[46px] w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+          <div className="h-[46px] w-full bg-[rgb(var(--ml-bg-secondary))]/30 border border-[rgb(var(--ml-border))]/25 rounded-xl"></div>
           <div className="flex items-center gap-2">
-            <div className="h-5 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-            <div className="h-[46px] w-24 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+            <div className="h-5 w-24 bg-[rgb(var(--ml-border))]/40 rounded"></div>
+            <div className="h-[46px] w-24 bg-[rgb(var(--ml-bg-secondary))]/30 border border-[rgb(var(--ml-border))]/25 rounded-xl"></div>
           </div>
         </div>
-        <div className="h-[48px] w-32 bg-[rgb(var(--ml-border))] rounded-lg"></div>
+        <div className="h-[42px] w-32 bg-[rgb(var(--ml-border))]/40 rounded-xl"></div>
       </div>
 
       {/* Units Grid Skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl p-4 flex flex-col justify-between">
+          <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))]/30 border border-[rgb(var(--ml-border))]/25 rounded-2xl p-5 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start">
-                <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-                <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                <div className="h-6 w-24 bg-[rgb(var(--ml-border))]/40 rounded"></div>
+                <div className="h-6 w-16 bg-[rgb(var(--ml-border))]/40 rounded-full"></div>
               </div>
-              <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+              <div className="h-4 w-32 bg-[rgb(var(--ml-border))]/40 rounded mt-2"></div>
             </div>
-            <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
+            <div className="h-8 w-full bg-[rgb(var(--ml-border))]/40 rounded-xl mt-auto"></div>
           </div>
         ))}
       </div>
@@ -288,57 +292,70 @@ export default function LandlordUnitsPage() {
   );
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
+          <div className="p-2.5 bg-indigo-500/10 text-indigo-500 rounded-2xl border border-indigo-500/10 shadow-inner">
+            <DoorOpen className="w-6 h-6" />
+          </div>
+          Units
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] pl-1 mt-2">
+          Set up property units, manage occupancy, and generate tenant invite links.
+        </p>
+      </div>
 
       {properties.length === 0 ? (
-        <div className="text-center py-12 border border-[rgb(var(--ml-border))] rounded-xl text-balance">
+        <div className="text-center py-12 border border-[rgb(var(--ml-border))]/25 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl text-balance text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">
           Please add a property first before managing units.
         </div>
       ) : (
         <>
-          <div className="flex gap-4 items-center">
-            <span className="font-medium text-[rgb(var(--ml-text-secondary))]">Select Property:</span>
+          <div className="flex gap-4 items-center bg-[rgb(var(--ml-bg-secondary))] p-4 rounded-2xl border border-[rgb(var(--ml-border))]/15 shadow-sm max-w-max">
+            <span className="font-bold text-xs uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
             <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val || "")}>
-              <SelectTrigger>
-                <span className="flex flex-1 text-left line-clamp-1 truncate">
+              <SelectTrigger className="w-48 bg-[rgb(var(--ml-bg-secondary))]/60 border-border/30 rounded-xl">
+                <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-sm">
                   {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
                 </span>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl">
                 {properties.map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id} className="font-semibold text-sm">{p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
-            <h2 className="text-xl font-semibold mb-4 text-balance">Add New Unit</h2>
+          <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]/25 rounded-2xl space-y-5 shadow-sm">
+            <div>
+              <h2 className="text-lg font-bold text-[rgb(var(--ml-text-primary))] tracking-tight">Add New Unit</h2>
+              <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">Define a unit identifier and set the recurring monthly rent due date.</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input 
                 required 
                 value={unitLabel} 
                 onChange={e => setUnitLabel(e.target.value)} 
                 placeholder="Unit Label (e.g. Apt 101, Basement, etc.)" 
-                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+                className="w-full bg-[rgb(var(--ml-bg-secondary))]/55 border border-[rgb(var(--ml-border))]/30 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
               />
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Rent Due Day:</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] select-none">Rent Due Day:</span>
                 <input 
                   required 
                   type="number"
                   min="1" max="31"
                   value={rentDay} 
                   onChange={e => setRentDay(e.target.value)} 
-                  className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all w-24 tabular-nums"
+                  className="bg-[rgb(var(--ml-bg-secondary))]/55 border border-[rgb(var(--ml-border))]/30 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all w-24 tabular-nums"
                 />
               </div>
             </div>
             <button 
               disabled={isSubmitting}
               type="submit" 
-              className="bg-[rgb(var(--ml-accent))] text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              className="bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-6 py-2.5 text-sm rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] hover-lift transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? "Creating..." : "Add Unit"}
             </button>
@@ -355,15 +372,15 @@ export default function LandlordUnitsPage() {
                 className="col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
               >
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl animate-pulse p-4 flex flex-col justify-between">
+                  <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))]/30 border border-[rgb(var(--ml-border))]/25 rounded-2xl p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
-                        <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-                        <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                        <div className="h-6 w-24 bg-[rgb(var(--ml-border))]/40 rounded"></div>
+                        <div className="h-6 w-16 bg-[rgb(var(--ml-border))]/40 rounded-full"></div>
                       </div>
-                      <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+                      <div className="h-4 w-32 bg-[rgb(var(--ml-border))]/40 rounded mt-2"></div>
                     </div>
-                    <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
+                    <div className="h-8 w-full bg-[rgb(var(--ml-border))]/40 rounded-xl mt-auto"></div>
                   </div>
                 ))}
               </motion.div>
@@ -373,7 +390,7 @@ export default function LandlordUnitsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-balance"
+                className="col-span-full text-center py-10 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))]/25 rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/10"
               >
                 No units in this property yet.
               </motion.div>
