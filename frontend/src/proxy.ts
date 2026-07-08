@@ -38,7 +38,9 @@ export default clerkMiddleware(async (auth, req) => {
   // ⚠️ Secure Onboarding Guard: Check session claims mapping to publicMetadata
   // Requires "metadata": "{{user.public_metadata}}" in the Clerk JWT template
   const metadata = sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
-  if (!metadata?.onboardingComplete) {
+  const isSyncOrDashboard = req.nextUrl.pathname === "/dashboard" || req.nextUrl.pathname === "/sync-role";
+
+  if (!metadata?.onboardingComplete && !isSyncOrDashboard) {
     const onboardingUrl = new URL("/", req.url);
     return NextResponse.redirect(onboardingUrl);
   }
