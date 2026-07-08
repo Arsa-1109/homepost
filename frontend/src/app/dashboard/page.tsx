@@ -40,6 +40,8 @@ export default async function DashboardRedirect() {
     redirect("/landlord/dashboard");
   } else if (userRole === "tenant") {
     redirect("/tenant/dashboard");
+  } else if (userRole === "tenant_pending") {
+    redirect("/sync-role");
   } else {
     redirect("/");
   }

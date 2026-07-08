@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { Hero } from "@/components/Hero";
@@ -483,9 +483,12 @@ export default function LandingPage() {
                 Log in
               </button>
             ) : (
-              <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
-                Dashboard
-              </button>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
+                  Dashboard
+                </button>
+                <UserButton />
+              </div>
             )}
           </div>
         </div>
