@@ -211,6 +211,22 @@ export function useUser() {
   };
 }
 
+export function useSession() {
+  const context = useContext(AuthContext);
+  // Mock session — reload() is a no-op since mock JWTs are always current
+  const session = context.isSignedIn
+    ? {
+        reload: async () => {},
+        getToken: context.getToken,
+      }
+    : null;
+  return {
+    isLoaded: context.isLoaded,
+    isSignedIn: context.isSignedIn,
+    session,
+  };
+}
+
 export function UserButton() {
   const { isSignedIn, user } = useUser();
   const [open, setOpen] = useState(false);
