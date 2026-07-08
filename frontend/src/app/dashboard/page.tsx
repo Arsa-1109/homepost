@@ -20,11 +20,7 @@ export default function DashboardRedirect() {
       try {
         const user: any = await api.get("/api/v1/onboarding/me");
         if (user && user.role) {
-          if (user.role === "landlord") {
-            router.push("/landlord/dashboard");
-          } else if (user.role === "tenant") {
-            router.push("/tenant/dashboard");
-          } else if (user.role === "tenant_pending") {
+          if (user.role === "landlord" || user.role === "tenant" || user.role === "tenant_pending") {
             router.push("/sync-role");
           } else {
             router.push("/");
