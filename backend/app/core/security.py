@@ -78,7 +78,7 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
     Raises:
         JWTError: If the token is invalid, expired, or tampered with.
     """
-    if os.getenv("MOCK_AUTH") == "true":
+    if settings.mock_auth or os.getenv("MOCK_AUTH") == "true":
         try:
             payload = jwt.get_unverified_claims(token)
             if not payload.get("sub"):

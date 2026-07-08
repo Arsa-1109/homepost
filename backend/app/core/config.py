@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     # --- App ---
     frontend_url: str = "http://localhost:3000"
     max_reopen_days: int = 14
+    mock_auth: bool = False
 
     # --- Upload Constraints ---
     max_upload_size_bytes: int = 10_485_760  # 10 MB
