@@ -1,48 +1,49 @@
-import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+"use client";
 
-export default async function DashboardRedirect() {
-  const authState = await auth();
-  const token = await authState.getToken();
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { api } from "@/lib/api";
 
-  if (!token) {
-    redirect("/sign-in");
-  }
+export default function DashboardRedirect() {
+  const { isLoaded, userId } = useAuth();
+  const router = useRouter();
 
-  let userRole = null;
-
-  try {
-    let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    if (!baseUrl.startsWith("http")) {
-      baseUrl = `https://${baseUrl}`;
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!userId) {
+      router.push("/sign-in");
+      return;
     }
-    const res = await fetch(`${baseUrl}/api/v1/onboarding/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      cache: "no-store"
-    });
 
-    if (res.ok) {
-      const contentType = res.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const user = await res.json();
-        userRole = user.role;
-      } else {
-        console.warn("API returned non-JSON response:", res.status);
+    async function checkRole() {
+      try {
+        const user: any = await api.get("/api/v1/onboarding/me");
+        if (user && user.role) {
+          if (user.role === "landlord") {
+            router.push("/landlord/dashboard");
+          } else if (user.role === "tenant") {
+            router.push("/tenant/dashboard");
+          } else if (user.role === "tenant_pending") {
+            router.push("/sync-role");
+          } else {
+            router.push("/");
+          }
+        } else {
+          router.push("/");
+        }
+      } catch (err) {
+        console.error("Dashboard redirect failed:", err);
+        router.push("/");
       }
     }
-  } catch (err) {
-    console.error("Dashboard fetch failed:", err);
-  }
 
-  if (userRole === "landlord") {
-    redirect("/landlord/dashboard");
-  } else if (userRole === "tenant") {
-    redirect("/tenant/dashboard");
-  } else if (userRole === "tenant_pending") {
-    redirect("/sync-role");
-  } else {
-    redirect("/");
-  }
+    checkRole();
+  }, [isLoaded, userId, router]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
+    </div>
+  );
 }
