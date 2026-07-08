@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "@clerk/nextjs";
 import { api } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
 
 export default function SyncRolePage() {
   const router = useRouter();
+  const { session } = useSession();
   const [status, setStatus] = useState("Syncing your account...");
   const [isPending, setIsPending] = useState(false);
 
@@ -22,11 +24,15 @@ export default function SyncRolePage() {
           }
           if (user.role === "landlord") {
             await completeOnboarding();
-            router.push("/landlord/dashboard");
+            // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
+            if (session) await session.reload();
+            window.location.href = "/landlord/dashboard";
             return;
           } else if (user.role === "tenant") {
             await completeOnboarding();
-            router.push("/tenant/dashboard");
+            // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
+            if (session) await session.reload();
+            window.location.href = "/tenant/dashboard";
             return;
           } else if (user.role === "tenant_pending") {
             setIsPending(true);
@@ -43,7 +49,9 @@ export default function SyncRolePage() {
           await api.post("/api/v1/onboarding/register-landlord");
           localStorage.removeItem("onboarding_intent");
           await completeOnboarding();
-          router.push("/landlord/dashboard");
+          // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
+          if (session) await session.reload();
+          window.location.href = "/landlord/dashboard";
         } else if (intent === "tenant" && landlordEmail) {
           setStatus("Sending access request to landlord...");
           await api.post("/api/v1/onboarding/request-access", { landlord_email: landlordEmail });
@@ -60,7 +68,7 @@ export default function SyncRolePage() {
       }
     }
     syncRole();
-  }, [router]);
+  }, [router, session]);
 
   if (isPending) {
     return (
