@@ -42,7 +42,7 @@ export default function LandlordDashboard() {
       await api.post("/api/v1/onboarding/reset-role");
       const { resetOnboarding } = await import("@/app/actions/onboarding");
       await resetOnboarding();
-      router.push("/onboarding");
+      router.push("/");
     } catch (err) {
       console.error("Failed to reset role:", err);
       toast.error("Failed to reset role. Please try again.");

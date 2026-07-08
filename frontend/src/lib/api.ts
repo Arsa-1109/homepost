@@ -109,7 +109,7 @@ export async function apiFetch<T = unknown>(
 
   if (response.status === 403) {
     if (typeof window !== "undefined") {
-      window.location.href = "/onboarding";
+      window.location.href = "/";
     }
     throw new Error(
       "You don't have permission to access this resource. Redirecting..."

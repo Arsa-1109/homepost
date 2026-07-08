@@ -9,9 +9,6 @@ const isPublicRoute = createRouteMatcher([
   "/join/(.*)",
 ]);
 
-// Onboarding route — auth required but no onboarding check
-const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
-
 export default clerkMiddleware(async (auth, req) => {
   // Allow public routes through
   if (isPublicRoute(req)) {
@@ -38,16 +35,11 @@ export default clerkMiddleware(async (auth, req) => {
   // Protect all non-public routes
   const { userId, sessionClaims } = await auth.protect();
 
-  // Skip onboarding check for the onboarding page itself
-  if (isOnboardingRoute(req)) {
-    return NextResponse.next();
-  }
-
   // ⚠️ Secure Onboarding Guard: Check session claims mapping to publicMetadata
   // Requires "metadata": "{{user.public_metadata}}" in the Clerk JWT template
   const metadata = sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
   if (!metadata?.onboardingComplete) {
-    const onboardingUrl = new URL("/onboarding", req.url);
+    const onboardingUrl = new URL("/", req.url);
     return NextResponse.redirect(onboardingUrl);
   }
 
