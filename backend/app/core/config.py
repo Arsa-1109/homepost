@@ -16,6 +16,8 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+from urllib.parse import quote_plus, unquote
+
 class Settings(BaseSettings):
     """
     Central configuration. Every env var maps to a field here.
@@ -38,11 +40,33 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL is required")
         # Strip whitespace, quotes, and newlines that Railway might inject
         v = v.strip().strip("'\"")
+        
         # Normalise any postgres:// or postgresql:// to asyncpg driver
         if v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgresql://"):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        # Safely URL-encode the password in the connection string to handle special characters
+        try:
+            if "://" in v:
+                scheme, remainder = v.split("://", 1)
+                if "/" in remainder:
+                    authority, path = remainder.split("/", 1)
+                else:
+                    authority, path = remainder, ""
+                
+                if "@" in authority:
+                    credentials, host_port = authority.rsplit("@", 1)
+                    if ":" in credentials:
+                        username, password = credentials.split(":", 1)
+                        # Prevents double-encoding if already encoded
+                        encoded_password = quote_plus(unquote(password))
+                        authority = f"{username}:{encoded_password}@{host_port}"
+                        v = f"{scheme}://{authority}/{path}"
+        except Exception:
+            pass  # Fallback to the original URL if parsing fails
+
         return v
 
     # --- Clerk Auth ---
