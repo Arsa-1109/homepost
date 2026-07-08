@@ -33,16 +33,32 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // Protect all non-public routes
-  const { userId, sessionClaims } = await auth.protect();
+  const { sessionClaims } = await auth.protect();
 
-  // ⚠️ Secure Onboarding Guard: Check session claims mapping to publicMetadata
+  // ⚠️ Secure Onboarding Guard + Role-Based Access Control
   // Requires "metadata": "{{user.public_metadata}}" in the Clerk JWT template
-  const metadata = sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
-  const isSyncOrDashboard = req.nextUrl.pathname === "/dashboard" || req.nextUrl.pathname === "/sync-role";
+  const metadata = sessionClaims?.metadata as {
+    onboardingComplete?: boolean;
+    role?: "landlord" | "tenant";
+  } | undefined;
 
+  const pathname = req.nextUrl.pathname;
+  const isSyncOrDashboard = pathname === "/dashboard" || pathname === "/sync-role";
+
+  // If onboarding is not complete, only allow /dashboard and /sync-role
   if (!metadata?.onboardingComplete && !isSyncOrDashboard) {
-    const onboardingUrl = new URL("/", req.url);
-    return NextResponse.redirect(onboardingUrl);
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  // Role-based route protection — block access to wrong-role dashboards
+  const userRole = metadata?.role;
+  if (pathname.startsWith("/landlord") && userRole !== "landlord") {
+    // Tenant trying to access landlord area → send to their dashboard
+    return NextResponse.redirect(new URL(userRole === "tenant" ? "/tenant/dashboard" : "/", req.url));
+  }
+  if (pathname.startsWith("/tenant") && userRole !== "tenant") {
+    // Landlord trying to access tenant area → send to their dashboard
+    return NextResponse.redirect(new URL(userRole === "landlord" ? "/landlord/dashboard" : "/", req.url));
   }
 
   return NextResponse.next();

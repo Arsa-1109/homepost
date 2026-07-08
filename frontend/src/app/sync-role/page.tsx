@@ -23,13 +23,13 @@ export default function SyncRolePage() {
             document.cookie = "mock_user_onboarding_complete=true; path=/";
           }
           if (user.role === "landlord") {
-            await completeOnboarding();
+            await completeOnboarding("landlord");
             // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
             if (session) await session.reload();
             window.location.href = "/landlord/dashboard";
             return;
           } else if (user.role === "tenant") {
-            await completeOnboarding();
+            await completeOnboarding("tenant");
             // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
             if (session) await session.reload();
             window.location.href = "/tenant/dashboard";
@@ -48,7 +48,7 @@ export default function SyncRolePage() {
           setStatus("Setting up your landlord account...");
           await api.post("/api/v1/onboarding/register-landlord");
           localStorage.removeItem("onboarding_intent");
-          await completeOnboarding();
+          await completeOnboarding("landlord");
           // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
           if (session) await session.reload();
           window.location.href = "/landlord/dashboard";
