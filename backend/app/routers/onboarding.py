@@ -22,6 +22,7 @@ from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
+from app.models.unit import Unit
 from sqlalchemy import func
 
 from app.core.limiter import limiter
@@ -215,6 +216,13 @@ async def accept_invite(
         is_active=True
     )
     session.add(profile)
+
+    # Update unit status
+    unit = await session.get(Unit, invite.unit_id)
+    if unit:
+        unit.status = "Occupied"
+        session.add(unit)
+
     await session.commit()
 
     return {"status": "success", "message": "Invite accepted. You are now a tenant."}
