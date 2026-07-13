@@ -637,6 +637,11 @@ async def approve_tenant(
         is_active=True
     )
     session.add(profile)
+
+    # Update unit status
+    unit.status = "Occupied"
+    session.add(unit)
+
     await session.commit()
     return {"status": "success", "message": "Tenant approved."}
 
