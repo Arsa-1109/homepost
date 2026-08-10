@@ -277,17 +277,18 @@ function SidebarTrigger({
   )
 }
 
-function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
+function SidebarRail({ className, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar()
 
   return (
-    <button
+    <Button
       data-sidebar="rail"
       data-slot="sidebar-rail"
       aria-label="Toggle Sidebar"
       tabIndex={-1}
       onClick={toggleSidebar}
       title="Toggle Sidebar"
+      variant="ghost"
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",

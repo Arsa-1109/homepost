@@ -80,8 +80,11 @@ export async function apiFetch<T = unknown>(
       ...options,
       headers,
     });
-  } catch (err) {
-    console.error("Network or CORS error:", err);
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      throw err;
+    }
+    console.error("Network error fetching " + path + ":", err);
     throw new Error("Unable to connect to the server. Please ensure the backend is running and try again.");
   }
 

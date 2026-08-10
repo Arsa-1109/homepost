@@ -105,7 +105,7 @@ function AttachmentThumbnail({
     return (
       <div 
         onClick={handleView}
-        className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border border-[rgb(var(--ml-border))]/50 overflow-hidden bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-accent))] transition-all cursor-pointer flex-shrink-0"
+        className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border border-[var(--ml-border)]/50 overflow-hidden bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-accent))] transition-all cursor-pointer flex-shrink-0"
       >
         <img 
           src={url} 
@@ -139,7 +139,7 @@ function AttachmentThumbnail({
   return (
     <div 
       onClick={handleView}
-      className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border border-[rgb(var(--ml-border))]/50 bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-accent))] transition-all flex flex-col items-center justify-between p-3 cursor-pointer flex-shrink-0 select-none"
+      className="group relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl border border-[var(--ml-border)]/50 bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-accent))] transition-all flex flex-col items-center justify-between p-3 cursor-pointer flex-shrink-0 select-none"
     >
       <div className="flex-1 flex items-center justify-center">
         <FileIcon className="w-8 h-8 text-[rgb(var(--ml-accent))]" />
@@ -219,11 +219,11 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
 
   const getStatusColor = (s: string) => {
     switch (s) {
-      case "open": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "in_progress": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
-      case "resolved": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-      case "closed": return "bg-gray-500/10 text-gray-400 border-gray-500/20";
-      default: return "bg-gray-500/10 text-gray-400 border-gray-500/20";
+      case "open": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      case "in_progress": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      case "resolved": return "bg-lime-500/10 text-lime-400 border-lime-500/20";
+      case "closed": return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
+      default: return "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
     }
   };
 
@@ -235,18 +235,18 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
   };
 
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[rgb(var(--ml-border))]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-all hover:border-[rgb(var(--ml-accent))]/30 group/card">
+    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden transition-all hover:border-[rgb(var(--ml-accent))]/30 group/card">
       <div 
         className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none relative z-10"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3 bg-orange-500/10 text-orange-500 rounded-2xl border border-orange-500/10 shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-300">
+          <div className="p-3 bg-orange-500/10 text-orange-400 rounded-2xl border border-orange-500/20 shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-300">
             <Wrench className="w-5.5 h-5.5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1 flex-wrap">
-              <h3 className="text-lg font-bold truncate text-[rgb(var(--ml-text-primary))] group-hover/card:text-[rgb(var(--ml-accent))] transition-colors">{req.title}</h3>
+              <h3 className="text-lg font-bold truncate text-[rgb(var(--ml-text-primary))] group-hover/card:text-orange-400 transition-colors">{req.title}</h3>
               <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase tracking-wider font-bold shrink-0 ${getStatusColor(req.status)}`}>
                 {req.status.replace("_", " ")}
               </span>
@@ -257,22 +257,22 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
           </div>
         </div>
         
-        <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full border-t sm:border-t-0 border-[rgb(var(--ml-border))]/40 pt-4 sm:pt-0">
+        <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full border-t sm:border-t-0 border-[var(--ml-border)]/40 pt-4 sm:pt-0">
           <div className="flex items-center gap-4 text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
             <span className={`px-2 py-0.5 rounded-md uppercase tracking-wider text-[9px] border ${
               req.priority === "urgent"
                 ? "bg-red-500/10 text-red-500 border-red-500/25 animate-pulse"
                 : req.priority === "high"
-                ? "bg-orange-500/10 text-orange-500 border-orange-500/25"
+                ? "bg-orange-500/15 text-orange-400 border-orange-500/30 font-bold"
                 : req.priority === "medium"
-                ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
-                : "bg-gray-500/10 text-gray-400 border-gray-500/25"
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                : "bg-zinc-500/10 text-zinc-400 border-zinc-500/25"
             }`}>
               {req.priority}
             </span>
-            <span className="text-[rgb(var(--ml-text-muted))]">{new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            <span className="text-[rgb(var(--ml-text-secondary))]">{new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
-          <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-[rgb(var(--ml-border))]/30">
+          <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-[var(--ml-border)]/30">
             <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
           </button>
         </div>
@@ -285,14 +285,14 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden border-t border-[rgb(var(--ml-border))]/50"
+            className="overflow-hidden border-t border-[var(--ml-border)]/50"
           >
             <div className="p-6 bg-[rgb(var(--ml-bg-primary))]/20">
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="flex-1 space-y-6">
                   <div>
                     <h4 className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest mb-2.5">Description</h4>
-                    <p className="text-sm text-[rgb(var(--ml-text-primary))] leading-relaxed bg-[rgb(var(--ml-bg-primary))]/40 p-5 rounded-2xl border border-[rgb(var(--ml-border))]/30 whitespace-pre-wrap">
+                    <p className="text-sm text-[rgb(var(--ml-text-primary))] leading-relaxed bg-[rgb(var(--ml-bg-primary))]/40 p-5 rounded-2xl border border-[var(--ml-border)]/30 whitespace-pre-wrap">
                       {req.description}
                     </p>
                   </div>
@@ -320,14 +320,14 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                   )}
                 </div>
       
-                <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))]/50 pt-6 md:pt-0 md:pl-6">
+                <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[var(--ml-border)]/50 pt-6 md:pt-0 md:pl-6">
                   <div>
                     <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-2 block uppercase tracking-widest">Status</span>
                     <Select value={status} onValueChange={(val: any) => setStatus(val)} disabled={req.status === "closed"}>
-                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
+                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[var(--ml-border)]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
                         <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
                         {["open", "in_progress", "resolved", "closed"].map((opt) => {
                           const isAllowed = opt === req.status || VALID_TRANSITIONS[req.status]?.includes(opt);
                           return (
@@ -346,7 +346,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                       onChange={(e) => setNotes(e.target.value)}
                       disabled={req.status === "closed"}
                       placeholder="Add a comment or internal note..."
-                      className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border border-[rgb(var(--ml-border))]/40 rounded-2xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/10 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-all min-h-[90px] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border border-[var(--ml-border)]/40 rounded-2xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/10 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-all min-h-[90px] resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
         
@@ -361,7 +361,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                         disabled={req.status === "closed"}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
                       />
-                      <div className="w-full border border-dashed border-[rgb(var(--ml-border))]/70 bg-[rgb(var(--ml-bg-primary))]/40 group-hover/upload:border-[rgb(var(--ml-accent))]/50 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
+                      <div className="w-full border border-dashed border-[var(--ml-border)]/70 bg-[rgb(var(--ml-bg-primary))]/40 group-hover/upload:border-[rgb(var(--ml-accent))]/50 rounded-2xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
                         <ImageIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))] group-hover/upload:text-[rgb(var(--ml-accent))] transition-colors" />
                         <span className="text-xs font-semibold text-[rgb(var(--ml-text-primary))] mt-1">Upload Files</span>
                         <span className="text-[10px] text-[rgb(var(--ml-text-secondary))]">PDF or Images</span>
@@ -396,7 +396,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                 </div>
               </div>
 
-              <div className="mt-8 border-t border-[rgb(var(--ml-border))]/30">
+              <div className="mt-8 border-t border-[var(--ml-border)]/30">
                 <MaintenanceTimeline requestId={req.id} userType="landlord" refreshKey={timelineRefreshKey} onViewImage={setLightboxUrl} />
               </div>
             </div>
@@ -433,14 +433,14 @@ export default function LandlordMaintenancePage() {
   }, []);
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto min-h-screen relative">
+    <div className="space-y-6 max-w-6xl mx-auto relative">
       {/* Background orbs */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[rgb(var(--ml-accent))]/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-zinc-500/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="mb-8 flex flex-col gap-2 relative z-10">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-orange-500/10 text-orange-500 rounded-2xl shadow-inner border border-orange-500/10">
+        <h1 className="text-3xl font-bold text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
+          <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl shadow-inner border border-[rgb(var(--ml-accent))]/20">
             <Wrench className="w-6 h-6" />
           </div>
           Maintenance Requests
@@ -451,8 +451,8 @@ export default function LandlordMaintenancePage() {
       </div>
 
       {!loading && requests.length >= 50 && (
-        <Alert className="bg-orange-500/10 text-orange-600 border-orange-500/20 mb-6">
-          <InfoIcon className="h-4 w-4" color="currentColor" />
+        <Alert className="bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-text-primary))] border-[rgb(var(--ml-accent))]/20 mb-6">
+          <InfoIcon className="h-4 w-4 text-[rgb(var(--ml-accent))]" color="currentColor" />
           <AlertTitle>Notice</AlertTitle>
           <AlertDescription>
             Showing the first 50 requests. Pagination coming soon.
@@ -464,33 +464,30 @@ export default function LandlordMaintenancePage() {
         {loading ? (
           <motion.div 
             key="loading"
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             className="space-y-6"
           >
-            {[1, 2, 3].map(i => (
-              <div key={i} className="p-6 rounded-3xl border border-[rgb(var(--ml-border))]/50 bg-[rgb(var(--ml-bg-secondary))]/40 flex flex-col md:flex-row gap-6 animate-pulse">
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                    <div className="h-6 w-24 bg-[rgb(var(--ml-border))]/40 rounded-full"></div>
-                  </div>
-                  <div className="h-4 w-1/4 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                  <div className="space-y-2 pt-2">
-                    <div className="h-4 w-full bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                    <div className="h-4 w-full bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                    <div className="h-4 w-2/3 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                  </div>
-                  <div className="flex gap-4 pt-4">
-                    <div className="h-3 w-20 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                    <div className="h-3 w-24 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
+            {[1, 2, 3, 4].map(i => (
+              <div
+                key={i}
+                className="rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl skeleton shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-44 sm:w-56 rounded-lg skeleton" />
+                      <div className="h-5 w-20 rounded-full skeleton" />
+                    </div>
+                    <div className="h-4 w-36 rounded-md skeleton" />
                   </div>
                 </div>
-                <div className="md:w-80 flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-[rgb(var(--ml-border))]/40 pt-4 md:pt-0 md:pl-6">
-                  <div className="h-10 w-full bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                  <div className="h-20 w-full bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                  <div className="h-10 w-full bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
+                <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-[var(--ml-border)]">
+                  <div className="h-5 w-16 rounded-md skeleton" />
+                  <div className="h-4 w-24 rounded-md skeleton" />
+                  <div className="w-8 h-8 rounded-xl skeleton shrink-0" />
                 </div>
               </div>
             ))}

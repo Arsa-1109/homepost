@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
 import { FileText, FileImage, Download, Eye, File } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Document = {
   id: string;
@@ -88,40 +89,40 @@ export default function TenantDocumentsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4 md:p-6">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Shared Documents 📄</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Shared Documents</h1>
         <p className="text-[rgb(var(--ml-text-secondary))] text-sm">
           Important files shared by your landlord (lease agreements, move-in instructions, etc.)
         </p>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
-              <div className="w-20 h-20 bg-slate-800 rounded-lg shrink-0" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60">
+              <div className="w-20 h-20 rounded-lg skeleton shrink-0" />
               <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-slate-800 rounded w-3/4" />
-                <div className="h-3 bg-slate-800 rounded w-1/4" />
-                <div className="h-3 bg-slate-800 rounded w-1/2" />
+                <div className="skeleton h-4 w-3/4 rounded-md" />
+                <div className="skeleton h-3 w-1/4 rounded-md" />
+                <div className="skeleton h-7 w-20 rounded-lg mt-2" />
               </div>
             </div>
           ))}
         </div>
       ) : documents.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))]">
-          <p className="text-[rgb(var(--ml-text-secondary))]">No documents shared yet.</p>
+        <div className="text-center py-16 border border-blue-500/20 shadow-[0_0_25px_rgba(96,165,250,0.04)] rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/60">
+          <p className="text-[rgb(var(--ml-text-primary))] font-semibold">No documents shared yet.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {documents.map((doc) => (
             <div 
               key={doc.id} 
-              className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all group shadow-sm hover:shadow-md"
+              className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all group shadow-sm"
             >
               {/* Preview Thumbnail */}
-              <div className="relative w-20 h-20 border border-[rgb(var(--ml-border))] rounded-lg overflow-hidden shrink-0">
+              <div className="relative w-20 h-20 border border-[var(--ml-border)] rounded-lg overflow-hidden shrink-0">
                 {renderPreview(doc)}
               </div>
 
@@ -134,7 +135,7 @@ export default function TenantDocumentsPage() {
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] font-medium uppercase">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] font-medium uppercase">
                       {getFileBadge(doc.file_type)}
                     </span>
                     <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">
@@ -145,23 +146,31 @@ export default function TenantDocumentsPage() {
 
                 <div className="flex items-center gap-2 pt-2">
                   {doc.file_url && (
-                    <a 
-                      href={doc.file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-[rgb(var(--ml-border))] rounded-lg text-xs font-medium text-white hover:bg-slate-800 transition-colors"
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1.5 px-3 text-xs"
                     >
-                      <Eye className="h-3.5 w-3.5" />
-                      View
-                    </a>
+                      <a 
+                        href={doc.file_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        View
+                      </a>
+                    </Button>
                   )}
-                  <button 
+                  <Button 
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleDownload(doc.file_key, doc.title)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[rgb(var(--ml-accent))] text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                    className="h-8 gap-1.5 px-3 text-xs font-medium cursor-pointer"
                   >
                     <Download className="h-3.5 w-3.5" />
                     Download
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

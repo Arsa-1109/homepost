@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { Building2 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function RootHeader() {
@@ -16,8 +17,11 @@ export function RootHeader() {
   if (isPortal) return null;
 
   return (
-    <header className="p-4 flex justify-between items-center border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))]">
-      <div className="font-bold text-lg">🏠 Homepost</div>
+    <header className="p-4 flex justify-between items-center border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]">
+      <div className="flex items-center gap-2 font-bold text-lg text-[rgb(var(--ml-text-primary))]">
+        <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
+        <span>Homepost</span>
+      </div>
       <div className="flex gap-4 items-center">
         <Show when="signed-out">
           <SignInButton />

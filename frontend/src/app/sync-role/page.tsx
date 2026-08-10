@@ -1,37 +1,53 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@clerk/nextjs";
 import { api } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
 
-export default function SyncRolePage() {
+function SyncRoleContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { session } = useSession();
   const [status, setStatus] = useState("Syncing your account...");
   const [isPending, setIsPending] = useState(false);
+  
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const syncInProgress = useRef(false);
 
   useEffect(() => {
     async function syncRole() {
+      // Guard against React Strict Mode double-invocation
+      if (syncInProgress.current) return;
+      syncInProgress.current = true;
+
       try {
-        // First check if the user already has a role set
         const user: any = await api.get("/api/v1/onboarding/me");
         
         if (user && user.role && user.role !== "none") {
+          // Cookies required for offline clerk mock system
           if (typeof window !== "undefined") {
             document.cookie = "mock_user_onboarding_complete=true; path=/";
           }
           if (user.role === "landlord") {
+            if (typeof window !== "undefined") {
+              document.cookie = "mock_user_role=landlord; path=/";
+            }
             await completeOnboarding("landlord");
-            // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
             if (session) await session.reload();
+            // Hard redirect forces full app remount to fetch new clerk JWT/metadata
             window.location.href = "/landlord/dashboard";
             return;
           } else if (user.role === "tenant") {
+            if (typeof window !== "undefined") {
+              document.cookie = "mock_user_role=tenant; path=/";
+            }
             await completeOnboarding("tenant");
-            // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
             if (session) await session.reload();
+            // Hard redirect forces full app remount to fetch new clerk JWT/metadata
             window.location.href = "/tenant/dashboard";
             return;
           } else if (user.role === "tenant_pending") {
@@ -40,35 +56,60 @@ export default function SyncRolePage() {
           }
         }
 
-        // No role set. Check local storage for intent.
-        const intent = localStorage.getItem("onboarding_intent");
-        const landlordEmail = localStorage.getItem("landlord_email");
+        const intent = searchParams.get("intent");
+        const landlordEmail = searchParams.get("landlord_email");
 
         if (intent === "landlord") {
           setStatus("Setting up your landlord account...");
           await api.post("/api/v1/onboarding/register-landlord");
-          localStorage.removeItem("onboarding_intent");
           await completeOnboarding("landlord");
-          // Force Clerk to refresh the JWT so middleware sees onboardingComplete=true
           if (session) await session.reload();
+          // Hard redirect forces full app remount to fetch new clerk JWT/metadata
           window.location.href = "/landlord/dashboard";
         } else if (intent === "tenant" && landlordEmail) {
           setStatus("Sending access request to landlord...");
           await api.post("/api/v1/onboarding/request-access", { landlord_email: landlordEmail });
-          localStorage.removeItem("onboarding_intent");
-          localStorage.removeItem("landlord_email");
           setIsPending(true);
         } else {
-          // No intent found, or incomplete info.
           router.push("/");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Sync role failed:", err);
-        router.push("/");
+        const code = err?.response?.status || err?.status || 500;
+        setErrorStatus(code);
+        if (code === 400) {
+          setErrorMessage("Looks like you already have an account role set up.");
+        } else {
+          setErrorMessage("Something went wrong finishing your setup. Try again?");
+        }
+      } finally {
+        syncInProgress.current = false; // Allow future retries
       }
     }
     syncRole();
-  }, [router, session]);
+  }, [router, session, searchParams]);
+
+  if (errorStatus) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-md w-full space-y-4 text-center">
+          <h1 className="text-3xl font-bold text-destructive">Oops!</h1>
+          <p className="text-[rgb(var(--ml-text-secondary))]">{errorMessage}</p>
+          <div className="mt-6 flex justify-center gap-4">
+            {errorStatus === 400 ? (
+              <button onClick={() => router.push("/dashboard")} className="px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white font-medium">
+                Go to Dashboard
+              </button>
+            ) : (
+              <button onClick={() => { syncInProgress.current = false; window.location.reload(); }} className="px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white font-medium">
+                Retry
+              </button>
+            )}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (isPending) {
     return (
@@ -96,5 +137,17 @@ export default function SyncRolePage() {
         <p className="text-[rgb(var(--ml-text-secondary))] font-medium">{status}</p>
       </div>
     </main>
+  );
+}
+
+export default function SyncRolePage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
+      </main>
+    }>
+      <SyncRoleContent />
+    </Suspense>
   );
 }

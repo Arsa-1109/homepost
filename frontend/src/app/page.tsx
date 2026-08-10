@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/Hero";
 import { DemoDashboard } from "@/components/DemoDashboard";
 import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users } from "lucide-react";
@@ -338,23 +339,29 @@ export default function LandingPage() {
 
   // Check if user already has a role
   useEffect(() => {
+    let isMounted = true;
     if (isLoaded && isSignedIn && user) {
       const checkRole = async () => {
         try {
           const me: any = await api.get("/api/v1/onboarding/me");
-          if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
-            setHasRole(true);
-          } else {
-            setHasRole(false);
+          if (isMounted) {
+            if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
+              setHasRole(true);
+            } else {
+              setHasRole(false);
+            }
           }
         } catch (err) {
-          setHasRole(false);
+          if (isMounted) setHasRole(false);
         }
       };
       checkRole();
     } else if (isLoaded && !isSignedIn) {
       setHasRole(false);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [isLoaded, isSignedIn, user]);
 
   // Fallback: If Clerk takes too long or fails to load, default to showing the portal cards
@@ -386,8 +393,7 @@ export default function LandingPage() {
         setIsSubmitting(false);
       }
     } else {
-      localStorage.setItem("onboarding_intent", "landlord");
-      router.push("/sign-up");
+      router.push("/sign-up?intent=landlord");
     }
   };
 
@@ -409,9 +415,7 @@ export default function LandingPage() {
         setIsSubmitting(false);
       }
     } else {
-      localStorage.setItem("onboarding_intent", "tenant");
-      localStorage.setItem("landlord_email", tenantEmail);
-      router.push("/sign-up");
+      router.push(`/sign-up?intent=tenant&landlord_email=${encodeURIComponent(tenantEmail)}`);
     }
   };
 
@@ -479,14 +483,14 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
             {!isSignedIn ? (
-              <button type="button" onClick={() => router.push("/sign-in")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
+              <Button variant="link" onClick={() => router.push("/sign-in")} className="text-sm font-medium text-accent">
                 Log in
-              </button>
+              </Button>
             ) : (
               <div className="flex items-center gap-3">
-                <button type="button" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent hover:scale-105 transition-transform duration-300 focus-visible:ring-2 focus-visible:ring-accent rounded-md px-2 py-1">
+                <Button variant="link" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent">
                   Dashboard
-                </button>
+                </Button>
                 <UserButton />
               </div>
             )}
@@ -512,12 +516,12 @@ export default function LandingPage() {
               className="p-12 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
             >
               <h2 className="text-3xl font-bold">Welcome back!</h2>
-              <button
+              <Button
                 onClick={() => router.push("/dashboard")}
                 className="px-10 py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Go to Dashboard <ArrowRight className="w-6 h-6" />
-              </button>
+              </Button>
             </motion.div>
           ) : (
             <div className="w-full relative min-h-auto lg:h-[500px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-4">
@@ -550,14 +554,14 @@ export default function LandingPage() {
                         <h2 className="text-2xl md:text-3xl font-semibold mb-3 tracking-tight">I am a Property Owner</h2>
                         <p className="text-base text-muted-foreground mb-6 font-medium">Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.</p>
                       </div>
-                      <button
+                      <Button
                         type="button"
                         onClick={handleLandlordSelect}
-                        disabled={isSubmitting}
-                        className="w-full py-4 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity disabled:opacity-50 flex justify-center items-center gap-2 relative before:absolute before:inset-0"
+                        isLoading={isSubmitting && roleSelection === 'none'}
+                        className="w-full py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity"
                       >
-                        {isSubmitting && roleSelection === 'none' ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enter Owner Portal"}
-                      </button>
+                        Enter Owner Portal
+                      </Button>
                     </motion.article>
 
                     {/* Tenant Card (Further back, Right, Tilted) */}
@@ -575,13 +579,14 @@ export default function LandingPage() {
                         <h2 className="text-2xl md:text-3xl font-semibold mb-3 tracking-tight">I am a Tenant</h2>
                         <p className="text-base text-muted-foreground mb-6 font-medium">Submit requests, view announcements, and access important documents securely.</p>
                       </div>
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
                         onClick={() => setRoleSelection("tenant")}
-                        className="w-full py-4 rounded-lg border border-border text-foreground font-semibold text-base hover:bg-black/5 dark:hover:bg-white/5 transition-colors mt-auto relative before:absolute before:inset-0"
+                        className="w-full py-4 h-auto rounded-lg text-foreground font-semibold text-base mt-auto"
                       >
                         Access Tenant Portal
-                      </button>
+                      </Button>
                     </motion.article>
                   </motion.div>
                 )}
@@ -617,20 +622,21 @@ export default function LandingPage() {
                       />
                     </div>
                     <div className="flex gap-4 w-full">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
                         onClick={() => setRoleSelection("none")}
-                        className="px-8 py-4 rounded-lg font-semibold border border-border text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-accent"
+                        className="px-8 py-4 h-auto rounded-lg font-semibold"
                       >
                         Back
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="flex-1 px-8 py-4 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-accent"
+                        isLoading={isSubmitting}
+                        className="flex-1 px-8 py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold"
                       >
-                        {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Request Access"}
-                      </button>
+                        Request Access
+                      </Button>
                     </div>
                   </motion.form>
                 )}
@@ -640,9 +646,11 @@ export default function LandingPage() {
         </section>
 
         {/* Text Divider between Auth and Features */}
-        <div className="flex flex-row justify-center items-center gap-4 md:gap-12 w-full relative z-20 mt-12 mb-20">
+        <div role="tablist" aria-label="Feature Roles" className="flex flex-row justify-center items-center gap-4 md:gap-12 w-full relative z-20 mt-12 mb-20">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeFeatureRole === "owner"}
             onClick={() => setActiveFeatureRole("owner")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
           >
@@ -656,10 +664,12 @@ export default function LandingPage() {
             )}
           </button>
 
-          <span className="text-muted-foreground/25 text-xl md:text-4xl font-light">|</span>
+          <span className="text-muted-foreground/25 text-xl md:text-4xl font-light" aria-hidden="true">|</span>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeFeatureRole === "tenant"}
             onClick={() => setActiveFeatureRole("tenant")}
             className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
           >

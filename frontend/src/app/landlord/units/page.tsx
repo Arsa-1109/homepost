@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type Property = {
   id: string;
@@ -52,7 +53,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   };
 
   return (
-    <div className="p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover:shadow-md transition-shadow">
+    <div className="p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover:shadow-md transition-shadow">
       <div>
         <div className="flex justify-between items-start">
           <Link href={`/landlord/units/${u.id}`} className="font-bold text-lg text-balance hover:text-[rgb(var(--ml-accent))] hover:underline transition-colors">
@@ -66,7 +67,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
       </div>
       
       <div className="mt-auto flex flex-col gap-2">
-        <Link href={`/landlord/units/${u.id}`} className="text-xs text-center font-medium border border-[rgb(var(--ml-border))] text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
+        <Link href={`/landlord/units/${u.id}`} className="text-xs text-center font-medium border border-[var(--ml-border)] text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3 py-2 rounded-lg transition-colors w-full cursor-pointer">
           View Details
         </Link>
         {u.is_occupied ? (
@@ -75,7 +76,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               Remove Tenant
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))]">
-              <div className="bg-red-50/50 dark:bg-red-950/20 px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]">
+              <div className="bg-red-50/50 dark:bg-red-950/20 px-6 pt-8 pb-6 flex flex-col items-center border-b border-[var(--ml-border)]">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 mb-4 ring-8 ring-red-50 dark:ring-red-950/30">
                   <AlertTriangle className="h-7 w-7 text-red-600 dark:text-red-400" />
                 </div>
@@ -89,7 +90,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               <div className="bg-[rgb(var(--ml-bg-tertiary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
                 <button 
                   onClick={() => setIsRemoveDialogOpen(false)}
-                  className="px-5 py-2.5 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                  className="px-5 py-2.5 text-sm font-medium border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                 >
                   Cancel
                 </button>
@@ -109,7 +110,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               Invite Tenant
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))]">
-              <div className="bg-[rgba(var(--ml-accent),0.05)] dark:bg-[rgba(var(--ml-accent),0.1)] px-6 pt-8 pb-6 flex flex-col items-center border-b border-[rgb(var(--ml-border))]">
+              <div className="bg-[rgba(var(--ml-accent),0.05)] dark:bg-[rgba(var(--ml-accent),0.1)] px-6 pt-8 pb-6 flex flex-col items-center border-b border-[var(--ml-border)]">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(var(--ml-accent),0.15)] dark:bg-[rgba(var(--ml-accent),0.2)] mb-4 ring-8 ring-[rgba(var(--ml-accent),0.05)] dark:ring-[rgba(var(--ml-accent),0.1)]">
                   <DoorOpen className="h-7 w-7 text-[rgb(var(--ml-accent))]" />
                 </div>
@@ -122,14 +123,14 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               </div>
               
               <div className="bg-[rgb(var(--ml-bg-tertiary))]">
-                <div className="px-6 py-5 border-b border-[rgb(var(--ml-border))]">
-                  <label className="flex items-start gap-3 p-3 rounded-lg border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] cursor-pointer hover:border-[rgb(var(--ml-accent))] transition-colors group">
+                <div className="px-6 py-5 border-b border-[var(--ml-border)]">
+                  <label className="flex items-start gap-3 p-3 rounded-lg border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] cursor-pointer hover:border-[rgb(var(--ml-accent))] transition-colors group">
                     <div className="mt-0.5">
                       <input 
                         type="checkbox" 
                         checked={keepData}
                         onChange={(e) => setKeepData(e.target.checked)}
-                        className="w-4 h-4 rounded border-[rgb(var(--ml-border))] text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer"
+                        className="w-4 h-4 rounded border-[var(--ml-border)] text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer"
                       />
                     </div>
                     <div>
@@ -142,7 +143,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                 <div className="px-6 py-4 flex gap-3 justify-end items-center">
                   <button 
                     onClick={() => setIsDialogOpen(false)}
-                    className="px-5 py-2.5 text-sm font-medium border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                    className="px-5 py-2.5 text-sm font-medium border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                   >
                     Cancel
                   </button>
@@ -247,40 +248,40 @@ export default function LandlordUnitsPage() {
   };
 
   if (loading) return (
-    <div className="space-y-8 max-w-4xl mx-auto animate-pulse">
-      <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold text-[rgb(var(--ml-text-primary))]">Units</h1>
       
       {/* Property Selector Skeleton */}
       <div className="flex gap-4 items-center">
-        <div className="h-5 w-28 bg-[rgb(var(--ml-border))] rounded"></div>
-        <div className="h-10 w-48 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+        <div className="skeleton h-5 w-28 rounded-md" />
+        <div className="skeleton h-10 w-48 rounded-lg" />
       </div>
 
       {/* Add Unit Form Skeleton */}
-      <div className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm">
-        <div className="h-7 w-32 bg-[rgb(var(--ml-border))] rounded mb-4"></div>
+      <div className="p-6 bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)] rounded-xl space-y-4 shadow-sm">
+        <div className="skeleton h-6 w-32 rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="h-[46px] w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+          <div className="skeleton h-[46px] w-full rounded-lg" />
           <div className="flex items-center gap-2">
-            <div className="h-5 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-            <div className="h-[46px] w-24 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg"></div>
+            <div className="skeleton h-5 w-24 rounded-md" />
+            <div className="skeleton h-[46px] w-24 rounded-lg" />
           </div>
         </div>
-        <div className="h-[48px] w-32 bg-[rgb(var(--ml-border))] rounded-lg"></div>
+        <div className="skeleton h-[40px] w-32 rounded-lg" />
       </div>
 
       {/* Units Grid Skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl p-4 flex flex-col justify-between">
-            <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-44 w-full bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)] rounded-2xl p-5 flex flex-col justify-between">
+            <div className="space-y-3">
               <div className="flex justify-between items-start">
-                <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-                <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                <div className="skeleton h-6 w-24 rounded-lg" />
+                <div className="skeleton h-5 w-16 rounded-full" />
               </div>
-              <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+              <div className="skeleton h-4 w-32 rounded-md" />
             </div>
-            <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
+            <div className="skeleton h-9 w-full rounded-xl" />
           </div>
         ))}
       </div>
@@ -288,19 +289,19 @@ export default function LandlordUnitsPage() {
   );
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-balance">Units 🚪</h1>
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold text-balance">Units</h1>
 
       {properties.length === 0 ? (
-        <div className="text-center py-12 border border-[rgb(var(--ml-border))] rounded-xl text-balance">
+        <div className="text-center py-12 border border-[var(--ml-border)] rounded-xl text-balance">
           Please add a property first before managing units.
         </div>
       ) : (
         <>
           <div className="flex gap-4 items-center">
-            <span className="font-medium text-[rgb(var(--ml-text-secondary))]">Select Property:</span>
+            <span className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
             <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val || "")}>
-              <SelectTrigger>
+              <SelectTrigger className="w-[280px]">
                 <span className="flex flex-1 text-left line-clamp-1 truncate">
                   {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
                 </span>
@@ -313,35 +314,40 @@ export default function LandlordUnitsPage() {
             </Select>
           </div>
 
-          <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+          <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] rounded-xl space-y-4 shadow-sm animate-fadeIn">
             <h2 className="text-xl font-semibold mb-4 text-balance">Add New Unit</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input 
-                required 
-                value={unitLabel} 
-                onChange={e => setUnitLabel(e.target.value)} 
-                placeholder="Unit Label (e.g. Apt 101, Basement, etc.)" 
-                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
-              />
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-[rgb(var(--ml-text-secondary))] select-none">Rent Due Day:</span>
+              <div className="space-y-1">
+                <label htmlFor="unit-label" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Unit Label</label>
                 <input 
+                  id="unit-label"
+                  required 
+                  value={unitLabel} 
+                  onChange={e => setUnitLabel(e.target.value)} 
+                  placeholder="Unit Label (e.g. Apt 101, Basement, etc.)" 
+                  className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="rent-day" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Rent Due Day (1-31)</label>
+                <input 
+                  id="rent-day"
                   required 
                   type="number"
                   min="1" max="31"
                   value={rentDay} 
                   onChange={e => setRentDay(e.target.value)} 
-                  className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all w-24 tabular-nums"
+                  className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all tabular-nums"
                 />
               </div>
             </div>
-            <button 
-              disabled={isSubmitting}
+            <Button 
               type="submit" 
-              className="bg-[rgb(var(--ml-accent))] text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              isLoading={isSubmitting}
+              className="bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white font-medium px-6 py-3 rounded-lg cursor-pointer transition-opacity w-full sm:w-auto"
             >
-              {isSubmitting ? "Creating..." : "Add Unit"}
-            </button>
+              Add Unit
+            </Button>
           </form>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -349,21 +355,23 @@ export default function LandlordUnitsPage() {
             {unitsLoading ? (
               <motion.div 
                 key="loading"
-                initial={{ opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                className="col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+                className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl animate-pulse p-4 flex flex-col justify-between">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col justify-between h-[160px]">
                     <div>
                       <div className="flex justify-between items-start">
-                        <div className="h-6 w-24 bg-[rgb(var(--ml-border))] rounded"></div>
-                        <div className="h-6 w-16 bg-[rgb(var(--ml-border))] rounded-full"></div>
+                        <div className="h-6 w-24 skeleton rounded-md"></div>
+                        <div className="h-5 w-16 skeleton rounded-full"></div>
                       </div>
-                      <div className="h-4 w-32 bg-[rgb(var(--ml-border))] rounded mt-2"></div>
+                      <div className="h-4 w-32 skeleton rounded mt-4"></div>
                     </div>
-                    <div className="h-8 w-full bg-[rgb(var(--ml-border))] rounded-lg mt-auto"></div>
+                    <div className="mt-auto">
+                      <div className="h-10 w-full skeleton rounded-lg"></div>
+                    </div>
                   </div>
                 ))}
               </motion.div>
@@ -373,7 +381,7 @@ export default function LandlordUnitsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-balance"
+                className="col-span-full text-center py-8 text-[rgb(var(--ml-text-secondary))] border border-dashed border-[var(--ml-border)] rounded-xl text-balance"
               >
                 No units in this property yet.
               </motion.div>
@@ -387,7 +395,7 @@ export default function LandlordUnitsPage() {
                   hidden: { opacity: 0 },
                   show: { opacity: 1, transition: { staggerChildren: 0.1 } }
                 }}
-                className="col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+                className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 {units.map(u => (
                   <motion.div 

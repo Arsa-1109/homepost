@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI, api } from "@/lib/api";
-import { Building, Check, X, ShieldAlert, ChevronLeft, Users, InfoIcon } from "lucide-react";
+import { Building, Check, X, ShieldAlert, ChevronLeft, Users, InfoIcon, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -44,6 +45,7 @@ function AccessRequestCard({
   const [units, setUnits] = useState<Unit[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     async function loadUnits() {
@@ -105,32 +107,54 @@ function AccessRequestCard({
   };
 
   const vacantUnits = units.filter(u => !u.is_occupied);
+  const hasNoVacantUnits = Boolean(propertyId && !loadingUnits && vacantUnits.length === 0);
 
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[rgb(var(--ml-border))]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
+    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 p-4 md:p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
       
-      {/* Left: Tenant Profile Info */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="p-3.5 bg-blue-500/10 text-blue-500 rounded-2xl border border-blue-500/10 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
-          <Users className="w-5.5 h-5.5" />
+      {/* Top / Left: Tenant Profile Info + Mobile Disclosure Trigger */}
+      <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
+            <Users className="w-5.5 h-5.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold truncate text-[rgb(var(--ml-text-primary))]">{tenant.full_name || "New Tenant"}</h3>
+              {hasNoVacantUnits && (
+                <span className="inline-flex md:hidden items-center gap-1 text-[10px] text-zinc-400 font-semibold px-2 py-0.5 rounded-full bg-zinc-500/10 border border-zinc-500/20 shrink-0">
+                  <ShieldAlert className="w-3 h-3" /> No vacant units
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] truncate mt-0.5">{tenant.email}</p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold truncate text-[rgb(var(--ml-text-primary))]">{tenant.full_name || "New Tenant"}</h3>
-          <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] truncate mt-0.5">{tenant.email}</p>
-        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsMobileOpen(prev => !prev)}
+          className="md:hidden flex items-center gap-1.5 text-xs text-[rgb(var(--ml-text-secondary))] hover:text-foreground shrink-0"
+          aria-expanded={isMobileOpen}
+          aria-label="Toggle Property and Unit selection"
+        >
+          <span>{isMobileOpen ? "Hide" : "Assign"}</span>
+          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isMobileOpen ? "rotate-180" : ""}`} />
+        </Button>
       </div>
 
-      {/* Middle: Selection of Property & Unit */}
-      <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto shrink-0 z-20">
+      {/* Middle: Selection of Property & Unit (Always visible on desktop, disclosure on mobile) */}
+      <div className={`flex-col sm:flex-row gap-4 w-full md:w-auto shrink-0 z-20 ${isMobileOpen || hasNoVacantUnits ? "flex" : "hidden md:flex"}`}>
         <div className="w-full sm:w-48">
           <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Property</span>
           <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
+            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[var(--ml-border)]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
               <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
                 {propertyId ? properties.find(p => p.id === propertyId)?.name : "Select Property"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
               {properties.map(p => (
                 <SelectItem key={p.id} value={p.id} className="rounded-lg">{p.name}</SelectItem>
               ))}
@@ -145,42 +169,45 @@ function AccessRequestCard({
             onValueChange={(val) => setUnitId(val || "")} 
             disabled={!propertyId || loadingUnits}
           >
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[rgb(var(--ml-border))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
+            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[var(--ml-border)]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
               <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
                 {loadingUnits ? "Loading..." : unitId ? (units.find(u => u.id === unitId)?.unit_label ? `Unit ${units.find(u => u.id === unitId)?.unit_label}` : "Select Unit") : "Select Unit"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
               {vacantUnits.map(u => (
                 <SelectItem key={u.id} value={u.id} className="rounded-lg">Unit {u.unit_label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {propertyId && !loadingUnits && vacantUnits.length === 0 && (
-            <p className="text-[10px] text-amber-500 font-semibold mt-1 px-1 flex items-center gap-1">
+          {hasNoVacantUnits && (
+            <p className="text-[10px] text-zinc-400 font-semibold mt-1 px-1 flex items-center gap-1">
               <ShieldAlert className="w-3 h-3" /> No vacant units.
             </p>
           )}
         </div>
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-3 w-full md:w-auto shrink-0 md:pt-4">
-        <button
+      {/* Right / Bottom: Actions (Sticky bottom action bar on mobile inside card) */}
+      <div className="sticky bottom-0 md:static z-10 flex items-center gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-4 bg-[rgb(var(--ml-bg-secondary))]/95 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-2 -mx-2 md:p-0 md:mx-0 rounded-2xl md:rounded-none border-t border-[var(--ml-border)]/40 md:border-t-0">
+        <Button
+          variant="destructive"
           onClick={handleDeny}
-          disabled={isSubmitting}
-          className="flex-1 md:flex-initial h-10 px-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-500/5 hover:bg-red-500/10 text-red-600 dark:text-red-400 text-sm font-semibold transition-all flex items-center justify-center gap-1.5 active:scale-[0.98] disabled:opacity-40 cursor-pointer"
+          isLoading={isSubmitting}
+          className="flex-1 md:flex-initial h-10 px-4 rounded-xl font-semibold gap-1.5 cursor-pointer"
         >
           <X className="w-4 h-4" /> Deny
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="default"
           onClick={handleApprove}
-          disabled={isSubmitting || !unitId}
-          className="flex-1 md:flex-initial h-10 px-5 rounded-xl bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white text-sm font-semibold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-[rgb(var(--ml-accent))]/10 hover:shadow-[rgb(var(--ml-accent))]/20 active:scale-[0.98] disabled:opacity-40 disabled:scale-100 disabled:shadow-none cursor-pointer"
+          isLoading={isSubmitting}
+          disabled={!unitId}
+          className="flex-1 md:flex-initial h-10 px-5 rounded-xl font-semibold gap-1.5 bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black cursor-pointer"
         >
           <Check className="w-4 h-4" /> Approve
-        </button>
+        </Button>
       </div>
 
     </div>
@@ -220,14 +247,14 @@ export default function AccessRequestsPage() {
     <div className="p-6 md:p-8 max-w-5xl mx-auto min-h-screen relative">
       {/* Background orbs */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[rgb(var(--ml-accent))]/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-zinc-500/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="mb-8 flex flex-col gap-2 relative z-10">
-        <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-muted))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
+        <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
           <ChevronLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
         <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-2xl shadow-inner border border-blue-500/10">
+          <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl shadow-inner border border-[rgb(var(--ml-accent))]/20">
             <Users className="w-6 h-6" />
           </div>
           Access Requests
@@ -241,13 +268,13 @@ export default function AccessRequestsPage() {
         {loading ? (
           <motion.div 
             key="loading"
-            initial={{ opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             className="space-y-6"
           >
             {[1, 2].map(i => (
-              <div key={i} className="p-6 rounded-3xl border border-[rgb(var(--ml-border))]/50 bg-[rgb(var(--ml-bg-secondary))]/40 flex flex-col md:flex-row gap-6 animate-pulse">
+              <div key={i} className="p-6 rounded-3xl border border-[var(--ml-border)]/50 bg-[rgb(var(--ml-bg-secondary))]/40 flex flex-col md:flex-row gap-6 animate-pulse">
                 <div className="flex-1 space-y-4">
                   <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
                   <div className="h-4 w-1/2 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>

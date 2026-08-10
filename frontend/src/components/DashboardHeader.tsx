@@ -17,7 +17,7 @@ export function DashboardHeader() {
         </Link>
         <Link 
           href="/landlord/announcements" 
-          className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white")}
+          className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-auto")}
         >
           <Megaphone className="mr-2 h-4 w-4" />
           New Announcement

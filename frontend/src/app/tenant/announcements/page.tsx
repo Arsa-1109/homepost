@@ -29,21 +29,21 @@ export default function TenantAnnouncementsPage() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold">Property Announcements 📢</h1>
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold">Property Announcements</h1>
 
       {loading ? (
         <div className="text-center py-12 text-[rgb(var(--ml-text-secondary))] animate-pulse">
           Loading announcements...
         </div>
       ) : announcements.length === 0 ? (
-        <div className="text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))]">
-          <p className="text-[rgb(var(--ml-text-secondary))]">No announcements from your landlord.</p>
+        <div className="text-center py-12 border border-purple-500/20 shadow-[0_0_20px_rgba(167,139,250,0.04)] rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/60">
+          <p className="text-[rgb(var(--ml-text-primary))] font-semibold">No announcements from your landlord.</p>
         </div>
       ) : (
         <div className="space-y-6">
           {announcements.map(ann => (
-            <div key={ann.id} className="p-6 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
+            <div key={ann.id} className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm hover:border-purple-500/30 hover:shadow-[0_8px_25px_rgba(167,139,250,0.05)] transition-all">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-xl">{ann.title}</h3>
                 <span className="text-xs text-[rgb(var(--ml-text-secondary))]">

@@ -94,7 +94,7 @@ export default function LandlordDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <DashboardHeader />
       {loading ? (
         <DashboardBentoSkeleton />
@@ -116,15 +116,15 @@ export default function LandlordDashboard() {
           />
 
           {data.property_stats.total_properties === 0 && (
-            <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <h4 className="font-semibold text-yellow-600 dark:text-yellow-500">Chose Landlord by mistake?</h4>
-                <p className="text-sm text-yellow-600/80 dark:text-yellow-500/80">You currently have no properties. You can reset your account and switch to a tenant role.</p>
+                <h4 className="font-semibold text-[rgb(var(--ml-text-primary))]">Chose Landlord by mistake?</h4>
+                <p className="text-sm text-[rgb(var(--ml-text-secondary))]">You currently have no properties. You can reset your account and switch to a tenant role.</p>
               </div>
               <button 
                 onClick={() => setConfirmReset(true)}
                 disabled={resetting}
-                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 bg-secondary hover:bg-muted text-foreground border border-border text-sm font-medium rounded-lg transition-all active:scale-[0.98] disabled:opacity-50 shrink-0 cursor-pointer"
               >
                 {resetting ? "Resetting..." : "Switch to Tenant"}
               </button>
@@ -132,19 +132,19 @@ export default function LandlordDashboard() {
           )}
 
           {pendingTenants.length > 0 && (
-            <div className="bg-blue-500/10 border border-blue-500/30 p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-[rgb(var(--ml-accent))]/10 border border-[rgb(var(--ml-accent))]/30 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-500" />
+                <div className="p-2 bg-[rgb(var(--ml-accent))]/20 rounded-lg">
+                  <Users className="w-5 h-5 text-[rgb(var(--ml-accent))]" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-blue-800 dark:text-blue-300">Action Required</h4>
-                  <p className="text-sm text-blue-800/80 dark:text-blue-300/80">You have {pendingTenants.length} pending tenant request{pendingTenants.length > 1 ? 's' : ''} waiting for approval.</p>
+                  <h4 className="font-semibold text-[rgb(var(--ml-text-primary))]">Action Required</h4>
+                  <p className="text-sm text-[rgb(var(--ml-text-secondary))]">You have {pendingTenants.length} pending tenant request{pendingTenants.length > 1 ? 's' : ''} waiting for approval.</p>
                 </div>
               </div>
               <button 
                 onClick={() => router.push('/landlord/access-requests')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+                className="px-4 py-2 bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black text-sm font-semibold rounded-lg transition-all active:scale-[0.98] whitespace-nowrap cursor-pointer"
               >
                 Review Requests
               </button>

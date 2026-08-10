@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { AlertTriangle, Info, Trash2, RefreshCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ConfirmVariant = "danger" | "warning" | "info";
 
@@ -22,19 +24,19 @@ const variantConfig: Record<ConfirmVariant, {
   confirmBtn: string;
 }> = {
   danger: {
-    icon: <Trash2 className="w-5 h-5 text-red-400" />,
+    icon: <Trash2 className="w-5 h-5 text-red-500" />,
     iconBg: "bg-red-500/10 border border-red-500/20",
-    confirmBtn: "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20",
+    confirmBtn: "bg-red-600 hover:bg-red-500 text-white shadow-sm",
   },
   warning: {
-    icon: <AlertTriangle className="w-5 h-5 text-amber-400" />,
+    icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
     iconBg: "bg-amber-500/10 border border-amber-500/20",
-    confirmBtn: "bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20",
+    confirmBtn: "bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-sm",
   },
   info: {
-    icon: <Info className="w-5 h-5 text-blue-400" />,
-    iconBg: "bg-blue-500/10 border border-blue-500/20",
-    confirmBtn: "bg-[rgb(var(--ml-accent))] hover:opacity-90 text-white shadow-lg shadow-[rgb(var(--ml-accent))]/20",
+    icon: <Info className="w-5 h-5 text-zinc-400" />,
+    iconBg: "bg-zinc-500/10 border border-zinc-500/20",
+    confirmBtn: "bg-lime-500 hover:bg-lime-400 text-black font-semibold shadow-sm",
   },
 };
 
@@ -49,6 +51,17 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cfg = variantConfig[variant];
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onCancel]);
 
   return (
     <AnimatePresence>
@@ -78,7 +91,7 @@ export function ConfirmDialog({
             aria-labelledby="confirm-title"
             aria-describedby="confirm-desc"
           >
-            <div className="w-full max-w-sm rounded-2xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] shadow-2xl p-6 flex flex-col gap-4 pointer-events-auto">
+            <div className="w-full max-w-sm rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] shadow-2xl p-6 flex flex-col gap-4 pointer-events-auto">
               {/* Icon + Title */}
               <div className="flex items-start gap-4">
                 <div className={`p-2.5 rounded-xl shrink-0 ${cfg.iconBg}`}>
@@ -96,18 +109,20 @@ export function ConfirmDialog({
 
               {/* Actions */}
               <div className="flex items-center justify-end gap-3 pt-1">
-                <button
+                <Button
+                  variant="outline"
                   onClick={onCancel}
-                  className="px-4 py-2 text-sm font-medium rounded-xl border border-[rgb(var(--ml-border))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] transition-all"
+                  className="px-4 py-2 text-sm font-medium rounded-xl text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] cursor-pointer"
                 >
                   {cancelLabel}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant={variant === "danger" ? "destructive" : "default"}
                   onClick={onConfirm}
-                  className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${cfg.confirmBtn}`}
+                  className={`px-4 py-2 text-sm font-semibold rounded-xl cursor-pointer ${cfg.confirmBtn}`}
                 >
                   {confirmLabel}
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>

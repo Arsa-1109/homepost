@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { X, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function getFriendlyFileName(url: string) {
   try {
@@ -77,13 +78,15 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
       onClick={onClose}
     >
       {/* Close button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onClose}
-        className="absolute top-4 right-4 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50 focus:outline-none border border-white/10 backdrop-blur-sm"
+        className="absolute top-4 right-4 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-50 focus:outline-none border border-white/10 backdrop-blur-sm cursor-pointer"
         aria-label="Close preview"
       >
         <X className="w-5 h-5" />
-      </button>
+      </Button>
 
       {/* Image container — backdrop clicks bubble up to onClose; image/pill stop propagation */}
       <div
@@ -116,17 +119,23 @@ export function LightboxModal({ url, onClose }: { url: string; onClose: () => vo
             {friendlyName}
           </span>
           <div className="w-px h-3.5 bg-white/20 shrink-0" />
-          <a
-            href={url}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-white font-semibold transition-colors shrink-0"
-            onClick={(e) => e.stopPropagation()}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="h-auto p-0 flex items-center gap-1.5 text-xs text-[rgb(var(--ml-accent))] hover:text-white font-semibold transition-colors shrink-0 cursor-pointer hover:bg-transparent"
           >
-            <Download className="w-3.5 h-3.5" />
-            Download
-          </a>
+            <a
+              href={url}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download
+            </a>
+          </Button>
         </motion.div>
       </div>
     </motion.div>,

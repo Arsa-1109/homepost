@@ -55,21 +55,22 @@ export default function LandlordLayout({
     <div className="flex min-h-screen">
       {/* Sidebar — Desktop */}
       <aside className={cn(
-        "hidden md:flex flex-col border-r border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 relative py-6",
+        "hidden md:flex flex-col border-r border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 relative py-6",
         isCollapsed ? "w-16" : "w-64"
       )}>
         {/* Toggle Button */}
         <button
           onClick={toggleCollapse}
-          className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] p-1 rounded-full text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] shadow-sm transition-colors z-50 hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer"
+          className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] p-1 rounded-full text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] shadow-sm transition-colors z-50 hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
         {!isCollapsed && (
-          <Link href="/" className="block text-xl font-bold mb-8 text-[rgb(var(--ml-accent))] px-6 tracking-tight hover:opacity-80 transition-opacity">
-            🏠 Homepost
+          <Link href="/" className="flex items-center gap-2 text-xl font-bold mb-8 text-[rgb(var(--ml-text-primary))] px-6 tracking-tight hover:opacity-80 transition-opacity">
+            <Building2 className="size-6 text-[rgb(var(--ml-accent))]" />
+            <span>Homepost</span>
           </Link>
         )}
 
@@ -85,7 +86,7 @@ export default function LandlordLayout({
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] group relative",
                   isCollapsed && "justify-center px-0",
                   isActive
-                    ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-bold border-l-4 border-[rgb(var(--ml-accent))] rounded-l-none"
+                    ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-semibold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
                     : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))]"
                 )}
                 title={isCollapsed ? item.label : undefined}
@@ -101,7 +102,7 @@ export default function LandlordLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Top Control Bar — Desktop */}
-        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
+        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
           <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))] capitalize">
             {(() => {
               const parts = pathname.split("/");
@@ -119,8 +120,11 @@ export default function LandlordLayout({
         </header>
 
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between p-4 border-b border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40">
-          <Link href="/" className="text-lg font-bold text-[rgb(var(--ml-accent))] hover:opacity-80 transition-opacity">🏠 Homepost</Link>
+        <header className="md:hidden flex items-center justify-between p-4 border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40">
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold text-[rgb(var(--ml-text-primary))] hover:opacity-80 transition-opacity">
+            <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
+            <span>Homepost</span>
+          </Link>
           <div className="flex gap-3 items-center">
             <UserButton />
             <ThemeToggle />
@@ -134,8 +138,9 @@ export default function LandlordLayout({
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0 pt-10">
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-                <Link href="/" onClick={() => setIsMobileOpen(false)} className="block px-6 py-2 text-xl font-bold text-[rgb(var(--ml-accent))] hover:opacity-80 transition-opacity">
-                  🏠 Homepost
+                <Link href="/" onClick={() => setIsMobileOpen(false)} className="flex items-center gap-2 px-6 py-2 text-xl font-bold text-[rgb(var(--ml-text-primary))] hover:opacity-80 transition-opacity">
+                  <Building2 className="size-6 text-[rgb(var(--ml-accent))]" />
+                  <span>Homepost</span>
                 </Link>
                 <nav className="space-y-1 p-4">
                   {NAV_ITEMS.map((item) => {
@@ -149,7 +154,7 @@ export default function LandlordLayout({
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))]",
                           isActive
-                            ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-bold border-l-4 border-[rgb(var(--ml-accent))] rounded-l-none"
+                            ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-semibold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
                             : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))]"
                         )}
                       >
@@ -165,7 +170,30 @@ export default function LandlordLayout({
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 overflow-auto">{children}</main>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-[var(--ml-border)] px-2 py-1.5 flex items-center justify-around">
+          {NAV_ITEMS.slice(0, 5).map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <a
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 px-1.5 py-1 rounded-lg text-[9.5px] font-medium transition-all duration-200 cursor-pointer",
+                  isActive
+                    ? "text-[rgb(var(--ml-accent))] font-semibold"
+                    : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
+                )}
+              >
+                <Icon className={cn("size-5 transition-transform", isActive && "scale-110 text-[rgb(var(--ml-accent))]")} />
+                <span className="truncate max-w-[72px] tracking-tight">{item.label}</span>
+              </a>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );

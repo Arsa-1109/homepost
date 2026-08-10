@@ -1,13 +1,31 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardRedirect() {
   const { isLoaded, userId } = useAuth();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+
+  const checkRole = async () => {
+    setError(null);
+    try {
+      const user: any = await api.get("/api/v1/onboarding/me");
+      if (user && user.role) {
+        // Route to /sync-role to ensure Clerk session metadata and cookies are synced
+        router.push("/sync-role");
+      } else {
+        router.push("/sync-role");
+      }
+    } catch (err: any) {
+      console.error("Dashboard redirect failed:", err);
+      setError(err?.message || "Unable to connect to backend server.");
+    }
+  };
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -16,26 +34,30 @@ export default function DashboardRedirect() {
       return;
     }
 
-    async function checkRole() {
-      try {
-        const user: any = await api.get("/api/v1/onboarding/me");
-        if (user && user.role) {
-          if (user.role === "landlord" || user.role === "tenant" || user.role === "tenant_pending") {
-            router.push("/sync-role");
-          } else {
-            router.push("/");
-          }
-        } else {
-          router.push("/");
-        }
-      } catch (err) {
-        console.error("Dashboard redirect failed:", err);
-        router.push("/");
-      }
-    }
-
     checkRole();
   }, [isLoaded, userId, router]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-card border border-border shadow-xl text-center space-y-6">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto text-xl font-bold">
+            ⚠️
+          </div>
+          <h2 className="text-xl font-bold tracking-tight">Connection Issue</h2>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <div className="flex flex-col gap-3 pt-2">
+            <Button onClick={checkRole} className="w-full">
+              Try Again
+            </Button>
+            <Button variant="outline" onClick={() => (window.location.href = "/")} className="w-full">
+              Back to Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

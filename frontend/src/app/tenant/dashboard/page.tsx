@@ -55,11 +55,13 @@ function daysUntilRent(dueDay: number): number {
   return Math.round((thisMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+import { Wrench, Megaphone, FileText } from "lucide-react";
+
 const STATUS_COLOR: Record<string, string> = {
-  open: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  in_progress: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  resolved: "bg-green-500/20 text-green-400 border-green-500/30",
-  closed: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+  open: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  in_progress: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  resolved: "bg-lime-500/10 text-lime-400 border-lime-500/20",
+  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
 function CountdownCard({
@@ -78,7 +80,7 @@ function CountdownCard({
       className={`p-6 rounded-2xl border flex flex-col items-center text-center justify-center gap-1 transition-all ${
         urgent
           ? "bg-red-500/10 border-red-500/40"
-          : "bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))]"
+          : "bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)]"
       }`}
     >
       <span className="text-xs font-medium uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
@@ -153,17 +155,47 @@ export default function TenantDashboard() {
 
   if (loading) {
     return (
-      <>
-        <div className="space-y-6 max-w-2xl mx-auto animate-pulse">
-          <div style={{ height: 'var(--ts-welcome, 56px)' }} className="flex flex-col justify-center space-y-2">
-            <div className="h-8 w-48 bg-[rgb(var(--ml-bg-secondary))] rounded-xl border border-[rgb(var(--ml-border))]" />
-            <div className="h-4 w-32 bg-[rgb(var(--ml-bg-secondary))] rounded-md border border-[rgb(var(--ml-border))]" />
-          </div>
-          <div style={{ height: 'var(--ts-countdown, 160px)' }} className="w-full bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
-          <div style={{ height: 'var(--ts-actions, 128px)' }} className="w-full bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
-          <div style={{ height: 'var(--ts-requests, 192px)' }} className="w-full bg-[rgb(var(--ml-bg-secondary))] rounded-2xl border border-[rgb(var(--ml-border))]" />
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-2">
+          <div className="skeleton h-8 w-48 rounded-xl" />
+          <div className="skeleton h-4 w-36 rounded-md" />
         </div>
-      </>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          <div className="p-6 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col items-center justify-center space-y-3 h-[170px]">
+            <div className="skeleton h-3 w-24 rounded" />
+            <div className="skeleton h-12 w-20 rounded-xl" />
+            <div className="skeleton h-3 w-40 rounded" />
+          </div>
+
+          <div className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col justify-between space-y-3 h-[170px]">
+            <div className="skeleton h-3 w-28 rounded" />
+            <div className="grid grid-cols-3 gap-3">
+              <div className="skeleton h-20 rounded-xl" />
+              <div className="skeleton h-20 rounded-xl" />
+              <div className="skeleton h-20 rounded-xl" />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <div className="skeleton h-4 w-32 rounded" />
+            <div className="skeleton h-3 w-16 rounded" />
+          </div>
+          <div className="space-y-2">
+            {[1, 2].map(i => (
+              <div key={i} className="p-4 rounded-xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between">
+                <div className="space-y-1.5 flex-1">
+                  <div className="skeleton h-4 w-44 rounded" />
+                  <div className="skeleton h-3 w-28 rounded" />
+                </div>
+                <div className="skeleton h-5 w-20 rounded-full shrink-0" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -184,11 +216,11 @@ export default function TenantDashboard() {
   const rentUrgent = rentDays !== null && rentDays <= 3;
 
   return (
-    <div ref={gridRef} className="space-y-6 max-w-2xl mx-auto">
+    <div ref={gridRef} className="space-y-6 max-w-4xl mx-auto">
 
       {/* Welcome header */}
       <div>
-        <h1 className="text-2xl font-bold">Welcome Home 🏠</h1>
+        <h1 className="text-2xl font-bold">Welcome Home</h1>
         {profile && (
           <p className="text-[rgb(var(--ml-text-secondary))] mt-1 text-sm">
             {profile.unit_label} · {profile.property_name}
@@ -197,9 +229,8 @@ export default function TenantDashboard() {
         )}
       </div>
 
-      {/* Countdown cards */}
-      {/* Parent grid class was `grid grid-cols-2 gap-4`. I removed the grid wrapper and switched to a single full-width block since only one card remains. */}
-      <div>
+      {/* Hero cards: Countdown + Quick actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         <CountdownCard
           label="Rent Due In"
           value={rentDays !== null ? `${rentDays}d` : "—"}
@@ -210,35 +241,34 @@ export default function TenantDashboard() {
           }
           urgent={rentUrgent}
         />
-      </div>
 
-      {/* Quick actions */}
-      <div className="p-5 rounded-2xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-3 gap-3">
-          <Link
-            href="/tenant/requests/new"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/10 transition-all text-center group"
-          >
-            <span className="text-2xl group-hover:scale-110 transition-transform">🔧</span>
-            <span className="text-xs font-medium">New Request</span>
-          </Link>
-          <Link
-            href="/tenant/announcements"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/10 transition-all text-center group"
-          >
-            <span className="text-2xl group-hover:scale-110 transition-transform">📢</span>
-            <span className="text-xs font-medium">Announcements</span>
-          </Link>
-          <Link
-            href="/tenant/documents"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/10 transition-all text-center group"
-          >
-            <span className="text-2xl group-hover:scale-110 transition-transform">📄</span>
-            <span className="text-xs font-medium">Documents</span>
-          </Link>
+        <div className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <Link
+              href="/tenant/requests/new"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-[var(--ml-border)] hover:border-orange-500/40 hover:bg-orange-500/10 transition-all text-center group"
+            >
+              <Wrench className="size-6 text-orange-400 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-medium">New Request</span>
+            </Link>
+            <Link
+              href="/tenant/announcements"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-[var(--ml-border)] hover:border-purple-500/40 hover:bg-purple-500/10 transition-all text-center group"
+            >
+              <Megaphone className="size-6 text-purple-400 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-medium">Announcements</span>
+            </Link>
+            <Link
+              href="/tenant/documents"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-[var(--ml-border)] hover:border-blue-500/40 hover:bg-blue-500/10 transition-all text-center group"
+            >
+              <FileText className="size-6 text-blue-400 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-medium">Documents</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -257,11 +287,11 @@ export default function TenantDashboard() {
         </div>
 
         {requests.length === 0 ? (
-          <div className="p-6 rounded-2xl border border-dashed border-[rgb(var(--ml-border))] text-center">
+          <div className="p-6 rounded-2xl border border-orange-500/20 shadow-[0_0_20px_rgba(251,146,60,0.04)] bg-[rgb(var(--ml-bg-secondary))]/60 text-center">
             <p className="text-[rgb(var(--ml-text-secondary))] text-sm">No maintenance requests yet.</p>
             <Link
               href="/tenant/requests/new"
-              className="mt-3 inline-block text-sm font-medium text-[rgb(var(--ml-accent))] hover:underline"
+              className="mt-3 inline-block text-sm font-medium text-orange-400 hover:underline"
             >
               Submit your first request →
             </Link>
@@ -272,7 +302,7 @@ export default function TenantDashboard() {
               <Link
                 key={req.id}
                 href={`/tenant/requests?requestId=${req.id}`}
-                className="flex items-center justify-between p-4 rounded-xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors cursor-pointer block"
+                className="flex items-center justify-between p-4 rounded-xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors cursor-pointer block"
               >
                 <div className="min-w-0">
                   <p className="font-medium truncate">{req.title}</p>

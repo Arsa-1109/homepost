@@ -6,6 +6,7 @@ import { fetchAPI } from "@/lib/api";
 import { uploadFile } from "@/lib/upload";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function NewRequestPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/tenant/requests" className="text-[rgb(var(--ml-text-secondary))] hover:text-foreground transition-colors">
           ← Back
@@ -62,37 +63,39 @@ export default function NewRequestPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-[rgb(var(--ml-bg-secondary))] p-6 rounded-xl border border-[rgb(var(--ml-border))]">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-[rgb(var(--ml-bg-secondary))] p-6 rounded-xl border border-[var(--ml-border)]">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Issue Title</label>
+          <label htmlFor="issue-title" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Issue Title</label>
           <input 
+            id="issue-title"
             required
             maxLength={255}
             value={title}
             onChange={e => setTitle(e.target.value)}
             type="text" 
             placeholder="e.g. Leaking faucet in kitchen" 
-            className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
+            className="w-full bg-transparent border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Description</label>
+          <label htmlFor="issue-description" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Description</label>
           <textarea 
+            id="issue-description"
             required
             maxLength={2000}
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={4} 
             placeholder="Please provide details about the issue..." 
-            className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors resize-none"
+            className="w-full bg-transparent border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors resize-none"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Priority</label>
+          <label htmlFor="issue-priority" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Priority</label>
           <Select value={priority} onValueChange={(val) => setPriority(val || "medium")}>
-            <SelectTrigger className="w-full bg-transparent border border-[rgb(var(--ml-border))] rounded-lg h-11 transition-colors">
+            <SelectTrigger id="issue-priority" className="w-full bg-transparent border border-[var(--ml-border)] rounded-lg h-11 transition-colors">
               <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
                 {priority === "low"
                   ? "Low (Cosmetic, non-urgent)"
@@ -103,7 +106,7 @@ export default function NewRequestPage() {
                   : "Emergency (Immediate threat)"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[rgb(var(--ml-border))] rounded-xl">
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
               <SelectItem value="low" className="rounded-lg">Low (Cosmetic, non-urgent)</SelectItem>
               <SelectItem value="medium" className="rounded-lg">Medium (Standard issue)</SelectItem>
               <SelectItem value="high" className="rounded-lg">High (Needs attention soon)</SelectItem>
@@ -113,8 +116,9 @@ export default function NewRequestPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Attach Photo (Optional)</label>
+          <label htmlFor="issue-photo" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Attach Photo (Optional)</label>
           <input 
+            id="issue-photo"
             type="file" 
             accept="image/*"
             onChange={e => setImage(e.target.files?.[0] || null)}
@@ -122,13 +126,13 @@ export default function NewRequestPage() {
           />
         </div>
 
-        <button 
-          disabled={loading}
-          type="submit" 
-          className="w-full bg-[rgb(var(--ml-accent))] text-white font-medium p-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+        <Button 
+          type="submit"
+          isLoading={loading}
+          className="w-full bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white font-medium p-3 rounded-lg cursor-pointer"
         >
-          {loading ? "Submitting..." : "Submit Request"}
-        </button>
+          Submit Request
+        </Button>
       </form>
     </div>
   );

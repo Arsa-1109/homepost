@@ -15,6 +15,7 @@ import {
   History,
   ChevronDown
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export type MaintenanceEvent = {
   id: string;
@@ -28,17 +29,17 @@ export type MaintenanceEvent = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  open: "bg-blue-500/10 text-blue-500 border-blue-500/25",
-  in_progress: "bg-amber-500/10 text-amber-500 border-amber-500/25",
-  resolved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/25",
-  closed: "bg-gray-500/10 text-gray-400 border-gray-500/25",
+  open: "bg-blue-500/10 text-blue-400 border-blue-500/25",
+  in_progress: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+  resolved: "bg-lime-500/10 text-lime-400 border-lime-500/25",
+  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/25",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low: "bg-gray-500/10 text-gray-400 border-gray-500/25",
-  medium: "bg-amber-500/10 text-amber-500 border-amber-500/25",
-  high: "bg-orange-500/10 text-orange-500 border-orange-500/25",
-  critical: "bg-red-500/10 text-red-500 border-red-500/25",
+  low: "bg-zinc-500/10 text-zinc-400 border-zinc-500/25",
+  medium: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+  high: "bg-orange-500/10 text-orange-400 border-orange-500/25",
+  critical: "bg-red-500/10 text-red-400 border-red-500/25",
 };
 
 interface Props {
@@ -81,17 +82,17 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
         return <RefreshCcw className="h-3.5 w-3.5 text-amber-500" />;
       case "status_changed": {
         const status = event.payload?.new_status?.toLowerCase();
-        if (status === "resolved") return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
-        if (status === "closed") return <CheckCircle2 className="h-3.5 w-3.5 text-gray-400" />;
-        if (status === "in_progress") return <CheckCircle2 className="h-3.5 w-3.5 text-amber-500" />;
-        return <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />;
+        if (status === "resolved") return <CheckCircle2 className="h-3.5 w-3.5 text-lime-400" />;
+        if (status === "closed") return <CheckCircle2 className="h-3.5 w-3.5 text-zinc-400" />;
+        if (status === "in_progress") return <CheckCircle2 className="h-3.5 w-3.5 text-amber-400" />;
+        return <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />;
       }
       case "priority_changed":
-        return <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />;
+        return <AlertTriangle className="h-3.5 w-3.5 text-orange-400" />;
       case "note_added":
-        return <MessageSquare className="h-3.5 w-3.5 text-indigo-500" />;
+        return <MessageSquare className="h-3.5 w-3.5 text-[rgb(var(--ml-accent))]" />;
       case "images_attached":
-        return <ImageIcon className="h-3.5 w-3.5 text-purple-500" />;
+        return <ImageIcon className="h-3.5 w-3.5 text-[rgb(var(--ml-accent))]" />;
       default:
         return <Clock className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />;
     }
@@ -99,7 +100,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
 
   if (isLoading) {
     return (
-      <div className="flex justify-center p-6 mt-6 border-t border-[rgb(var(--ml-border))]">
+      <div className="flex justify-center p-6 mt-6 border-t border-[var(--ml-border)]">
         <div className="w-5 h-5 border-2 border-[rgb(var(--ml-accent))] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -110,28 +111,29 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
   }
 
   if (events.length === 0) {
-    return <div className="text-sm text-[rgb(var(--ml-text-secondary))] p-4 mt-6 border-t border-[rgb(var(--ml-border))]">No history available.</div>;
+    return <div className="text-sm text-[rgb(var(--ml-text-secondary))] p-4 mt-6 border-t border-[var(--ml-border)]">No history available.</div>;
   }
 
   return (
-    <div className="mt-6 pt-6 border-t border-[rgb(var(--ml-border))]">
-      <button 
+    <div className="mt-6 pt-6 border-t border-[var(--ml-border)]">
+      <Button 
+        variant="ghost"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between group outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] rounded-lg p-1 -ml-1 transition-all"
+        className="w-full h-auto flex items-center justify-between group outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] rounded-lg p-1 -ml-1 transition-all cursor-pointer hover:bg-transparent"
       >
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-[rgb(var(--ml-bg-tertiary))] group-hover:bg-[rgb(var(--ml-accent))]/10 transition-colors border border-[rgb(var(--ml-border))]">
+          <div className="p-1.5 rounded-md bg-[rgb(var(--ml-bg-tertiary))] group-hover:bg-[rgb(var(--ml-accent))]/10 transition-colors border border-[var(--ml-border)]">
             <History className="w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors" />
           </div>
           <h3 className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-text-primary))] uppercase tracking-wide transition-colors">
             Timeline History
           </h3>
-          <span className="ml-2 text-[10px] font-medium bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] px-2 py-0.5 rounded-full border border-[rgb(var(--ml-border))] group-hover:border-[rgb(var(--ml-border-hover))] transition-colors">
+          <span className="ml-2 text-[10px] font-medium bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] px-2 py-0.5 rounded-full border border-[var(--ml-border)] group-hover:border-[rgb(var(--ml-border-hover))] transition-colors">
             {events.length} Event{events.length !== 1 ? 's' : ''}
           </span>
         </div>
         <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
-      </button>
+      </Button>
 
       <AnimatePresence initial={false}>
         {isExpanded && (
@@ -156,16 +158,16 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                     transition={{ delay: idx * 0.05 }}
                     className="relative flex gap-4"
                   >
-                    <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--ml-bg-primary))] border border-[rgb(var(--ml-border))] ring-4 ring-[rgb(var(--ml-bg-secondary))] mt-0.5 shadow-sm">
+                    <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--ml-bg-primary))] border border-[var(--ml-border)] ring-4 ring-[rgb(var(--ml-bg-secondary))] mt-0.5 shadow-sm">
                       {style}
                     </div>
                     
-                    <div className="flex-1 bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] p-3 rounded-lg shadow-sm group/card hover:border-[rgb(var(--ml-border-hover))] transition-colors">
+                    <div className="flex-1 bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] p-3 rounded-lg shadow-sm group/card hover:border-[rgb(var(--ml-border-hover))] transition-colors">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-semibold text-[rgb(var(--ml-text-primary))]">
                           {event.actor_name}
                         </span>
-                        <span className="text-[11px] font-medium text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-secondary))] px-2 py-0.5 rounded-full border border-[rgb(var(--ml-border))]">
+                        <span className="text-[11px] font-medium text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-secondary))] px-2 py-0.5 rounded-full border border-[var(--ml-border)]">
                           {format(new Date(event.created_at), "MMM d, yyyy • h:mm a")}
                         </span>
                       </div>
@@ -200,7 +202,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                       
                       {/* Notes: shown for note_added events AND bundled into status_changed etc */}
                       {event.payload?.notes && (
-                        <div className="mt-3 p-3 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))]/50 border-l-2 border-l-blue-500/50">
+                        <div className="mt-3 p-3 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)]/50 border-l-2 border-l-blue-500/50">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/70 block mb-1">
                             <MessageSquare className="w-3 h-3 inline-block mr-1 -mt-0.5" />
                             Note
@@ -213,12 +215,13 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
 
                       {/* Images: show thumbnails if image_urls present (new events with keys) */}
                       {event.payload?.image_urls && event.payload.image_urls.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-[rgb(var(--ml-border))]/30">
+                        <div className="mt-4 pt-3 border-t border-[var(--ml-border)]/30">
                           <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/60 block mb-2">Attached Files</span>
                           <div className="flex flex-wrap gap-2">
                             {event.payload.image_urls.map((url: string, imgIdx: number) => (
-                              <button 
+                              <Button 
                                 key={imgIdx} 
+                                variant="ghost"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -228,7 +231,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                                     window.open(url, "_blank");
                                   }
                                 }}
-                                className="group/img block overflow-hidden rounded-lg border border-[rgb(var(--ml-border))] hover:border-[rgb(var(--ml-accent))] transition-all hover:shadow-lg bg-[rgb(var(--ml-bg-primary))]"
+                                className="group/img block p-0 h-auto overflow-hidden rounded-lg border border-[var(--ml-border)] hover:border-[rgb(var(--ml-accent))] transition-all hover:shadow-lg bg-[rgb(var(--ml-bg-primary))] cursor-pointer"
                               >
                                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden">
                                   <img 
@@ -248,7 +251,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                                     }}
                                   />
                                 </div>
-                              </button>
+                              </Button>
                             ))}
                           </div>
                         </div>
@@ -256,7 +259,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
 
                       {/* Fallback for OLD events: had image_count but no image_keys stored */}
                       {event.payload?.image_count > 0 && !event.payload?.image_urls && (
-                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-[rgb(var(--ml-border))]">
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-[var(--ml-border)]">
                           <span className="text-purple-400/60 text-sm">🖼</span>
                           <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]/60 italic">
                             {event.payload.image_count} file{event.payload.image_count !== 1 ? 's' : ''} attached

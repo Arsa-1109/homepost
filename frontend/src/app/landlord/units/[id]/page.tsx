@@ -69,14 +69,14 @@ export default function UnitDetailsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen">
+      <div className="space-y-6 max-w-7xl mx-auto relative min-h-screen">
         {/* Back link + title row */}
         <div className="mb-8 flex flex-col gap-2">
           <div className="skeleton h-4 w-32 rounded-lg mb-2" />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="skeleton h-9 w-40 rounded-xl" />
-              <div className="skeleton h-5 w-16 rounded-full" />
+              <div className="skeleton h-9 w-44 rounded-xl" />
+              <div className="skeleton h-5 w-20 rounded-full" />
             </div>
             <div className="skeleton h-9 w-40 rounded-xl" />
           </div>
@@ -87,11 +87,11 @@ export default function UnitDetailsPage() {
         </div>
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
 
           {/* LEFT: Unified floating card */}
           <div className="lg:col-span-1">
-            <div className="rounded-3xl p-6 md:p-8 border border-[rgb(var(--ml-border))]/40 bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.06)] space-y-6">
+            <div className="rounded-3xl p-6 md:p-8 border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-xl shadow-sm space-y-6">
 
               {/* Rent details header */}
               <div className="flex items-center gap-3">
@@ -100,13 +100,13 @@ export default function UnitDetailsPage() {
               </div>
 
               {/* Rent due date block */}
-              <div className="rounded-2xl p-4 border border-[rgb(var(--ml-border))]/30 bg-[rgb(var(--ml-bg-primary))]/40 space-y-2">
+              <div className="rounded-2xl p-4 border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-primary))]/50 space-y-2">
                 <div className="skeleton h-3 w-24 rounded" />
                 <div className="skeleton h-6 w-36 rounded-lg" />
               </div>
 
               {/* Divider */}
-              <div className="skeleton h-px w-full rounded" />
+              <div className="h-px w-full bg-[rgb(var(--ml-border))]" />
 
               {/* Tenant info header */}
               <div className="flex items-center gap-3">
@@ -115,12 +115,12 @@ export default function UnitDetailsPage() {
               </div>
 
               {/* Tenant name + email block */}
-              <div className="rounded-2xl p-5 border border-[rgb(var(--ml-border))]/30 bg-[rgb(var(--ml-bg-primary))]/40 space-y-4">
+              <div className="rounded-2xl p-5 border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-primary))]/50 space-y-4">
                 <div className="space-y-2">
                   <div className="skeleton h-3 w-16 rounded" />
                   <div className="skeleton h-6 w-44 rounded-lg" />
                 </div>
-                <div className="pt-3 border-t border-[rgb(var(--ml-border))]/20 space-y-2">
+                <div className="pt-3 border-t border-[var(--ml-border)] space-y-2">
                   <div className="skeleton h-3 w-24 rounded" />
                   <div className="skeleton h-5 w-52 rounded-lg" />
                 </div>
@@ -145,8 +145,7 @@ export default function UnitDetailsPage() {
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className="p-5 rounded-2xl border border-[rgb(var(--ml-border))]/40 bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm space-y-3"
-                    style={{ animationDelay: `${i * 80}ms` }}
+                    className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -155,8 +154,8 @@ export default function UnitDetailsPage() {
                       </div>
                       <div className="skeleton h-5 w-16 rounded-full" />
                     </div>
-                    <div className="skeleton h-4 w-full rounded" />
-                    <div className="skeleton h-4 w-3/4 rounded" />
+                    <div className="skeleton h-4 w-full rounded-md" />
+                    <div className="skeleton h-4 w-3/4 rounded-md" />
                     <div className="skeleton h-3 w-24 rounded" />
                   </div>
                 ))}
@@ -177,8 +176,7 @@ export default function UnitDetailsPage() {
                 {[0, 1].map((i) => (
                   <div
                     key={i}
-                    className="p-5 rounded-2xl border border-[rgb(var(--ml-border))]/40 bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm flex items-start gap-4"
-                    style={{ animationDelay: `${i * 80}ms` }}
+                    className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm flex items-start gap-4"
                   >
                     <div className="skeleton h-11 w-11 rounded-xl shrink-0" />
                     <div className="flex-1 space-y-2">
@@ -211,7 +209,7 @@ export default function UnitDetailsPage() {
   const { unit_label, is_occupied, rent_due_day } = unit;
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen relative">
+    <div className="space-y-6 max-w-7xl mx-auto relative">
       <div className="mb-8 flex flex-col gap-2 relative z-10">
         <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-muted))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
           <ChevronLeft className="w-4 h-4" /> Back to Dashboard
@@ -225,7 +223,7 @@ export default function UnitDetailsPage() {
               <Badge variant="outline" className="uppercase tracking-widest text-[10px] font-bold py-1 px-2 border-dashed">Vacant</Badge>
             )}
           </div>
-          <Link href="/landlord/requests" className="px-4 py-2 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] text-[rgb(var(--ml-text-primary))] text-sm font-medium rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors shadow-sm">
+          <Link href="/landlord/requests" className="px-4 py-2 bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] text-[rgb(var(--ml-text-primary))] text-sm font-medium rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors shadow-sm">
             View All Maintenance
           </Link>
         </div>
@@ -234,7 +232,7 @@ export default function UnitDetailsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
 
         {/* LEFT COLUMN: Unit & Tenant Profile Floating Card */}
         <motion.div
@@ -243,19 +241,19 @@ export default function UnitDetailsPage() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="lg:col-span-1"
         >
-          <div className="rounded-3xl p-6 md:p-8 backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[rgb(var(--ml-border))]/50 shadow-[0_20px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex flex-col relative overflow-hidden group">
+          <div className="rounded-3xl p-6 md:p-8 backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)]/50 shadow-[0_20px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex flex-col relative overflow-hidden group">
             {/* Decorative gradient orb */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-[rgb(var(--ml-accent))]/10 rounded-full blur-[3xl] transform translate-x-1/2 -translate-y-1/3 transition-transform duration-700 group-hover:scale-110 pointer-events-none" />
 
             <div className="flex items-center gap-3 mb-8 relative z-10">
-              <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl shadow-inner border border-indigo-500/10">
+              <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl shadow-inner border border-[rgb(var(--ml-accent))]/20">
                 <Home className="w-6 h-6" />
               </div>
               <h2 className="text-xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Rent Details</h2>
             </div>
 
             <div className="space-y-6 relative z-10">
-              <div className="flex flex-col p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/50 border border-[rgb(var(--ml-border))]/30">
+              <div className="flex flex-col p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/50 border border-[var(--ml-border)]/30">
                 <span className="text-xs uppercase tracking-wider font-semibold text-[rgb(var(--ml-text-muted))] mb-2 flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5" /> Rent Due Date
                 </span>
@@ -266,7 +264,7 @@ export default function UnitDetailsPage() {
             <div className="h-px w-full bg-gradient-to-r from-transparent via-[rgb(var(--ml-border))] to-transparent my-8 relative z-10" />
 
             <div className="flex items-center gap-3 mb-6 relative z-10">
-              <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl shadow-inner border border-emerald-500/10">
+              <div className="p-3 bg-blue-500/10 text-blue-400 rounded-2xl shadow-inner border border-blue-500/20">
                 <UserIcon className="w-6 h-6" />
               </div>
               <h2 className="text-xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Tenant Information</h2>
@@ -274,20 +272,20 @@ export default function UnitDetailsPage() {
 
             <div className="relative z-10">
               {is_occupied ? (
-                <div className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-[rgb(var(--ml-bg-primary))]/50 to-transparent border border-[rgb(var(--ml-border))]/30">
+                <div className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-[rgb(var(--ml-bg-primary))]/50 to-transparent border border-[var(--ml-border)]/30">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase tracking-widest font-bold text-[rgb(var(--ml-text-muted))] mb-1">Full Name</span>
                     <span className="text-[rgb(var(--ml-text-primary))] font-semibold text-lg">{tenant_name || "N/A"}</span>
                   </div>
-                  <div className="flex flex-col pt-3 border-t border-[rgb(var(--ml-border))]/30">
+                  <div className="flex flex-col pt-3 border-t border-[var(--ml-border)]/30">
                     <span className="text-[10px] uppercase tracking-widest font-bold text-[rgb(var(--ml-text-muted))] mb-1">Email Address</span>
                     <span className="text-[rgb(var(--ml-text-primary))] font-medium">{tenant_email || "N/A"}</span>
                   </div>
                 </div>
               ) : (
-                <div className="py-8 flex flex-col items-center justify-center text-center rounded-2xl bg-slate-500/5 border border-dashed border-[rgb(var(--ml-border))]">
-                  <div className="w-12 h-12 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))]/50 flex items-center justify-center mb-4 shadow-sm">
-                    <UserIcon className="w-5 h-5 text-[rgb(var(--ml-text-muted))]" />
+                <div className="py-8 flex flex-col items-center justify-center text-center rounded-2xl bg-[rgb(var(--ml-bg-primary))]/60 border border-[var(--ml-border)] shadow-sm">
+                  <div className="w-12 h-12 rounded-full bg-zinc-500/10 border border-[var(--ml-border)] flex items-center justify-center mb-3 shadow-sm">
+                    <UserIcon className="w-5 h-5 text-zinc-400" />
                   </div>
                   <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">This unit is currently vacant.</p>
                 </div>
@@ -307,7 +305,7 @@ export default function UnitDetailsPage() {
           <section>
             <div className="flex items-center justify-between mb-6 px-1">
               <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-[rgb(var(--ml-text-primary))]">
-                <div className="p-2 bg-orange-500/10 text-orange-500 rounded-xl shadow-inner border border-orange-500/10">
+                <div className="p-2 bg-orange-500/10 text-orange-400 rounded-xl shadow-inner border border-orange-500/20">
                   <Wrench className="w-5 h-5" />
                 </div>
                 Maintenance Requests
@@ -317,9 +315,9 @@ export default function UnitDetailsPage() {
 
             <div className="space-y-4">
               {maintenanceRequests.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/30 border border-dashed border-[rgb(var(--ml-border))]/60 backdrop-blur-sm">
-                  <div className="w-14 h-14 rounded-full bg-[rgb(var(--ml-bg-tertiary))] flex items-center justify-center mb-4 shadow-inner">
-                    <Wrench className="w-6 h-6 text-[rgb(var(--ml-text-muted))]" />
+                <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/70 border border-[var(--ml-border)] backdrop-blur-sm shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-orange-500/10 border border-[var(--ml-border)] flex items-center justify-center mb-4 shadow-inner">
+                    <Wrench className="w-6 h-6 text-orange-400" />
                   </div>
                   <p className="text-base font-semibold text-[rgb(var(--ml-text-primary))] mb-1">No Active Requests</p>
                   <p className="text-sm text-[rgb(var(--ml-text-secondary))]">This unit is well-maintained with no recorded issues.</p>
@@ -352,7 +350,7 @@ export default function UnitDetailsPage() {
           <section>
             <div className="flex items-center justify-between mb-6 px-1">
               <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-[rgb(var(--ml-text-primary))]">
-                <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl shadow-inner border border-blue-500/10">
+                <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl shadow-inner border border-blue-500/20">
                   <FileText className="w-5 h-5" />
                 </div>
                 Documents
@@ -362,9 +360,9 @@ export default function UnitDetailsPage() {
 
             <div>
               {documents.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/30 border border-dashed border-[rgb(var(--ml-border))]/60 backdrop-blur-sm">
-                  <div className="w-14 h-14 rounded-full bg-[rgb(var(--ml-bg-tertiary))] flex items-center justify-center mb-4 shadow-inner">
-                    <FileText className="w-6 h-6 text-[rgb(var(--ml-text-muted))]" />
+                <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/70 border border-[var(--ml-border)] backdrop-blur-sm shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-blue-500/10 border border-[var(--ml-border)] flex items-center justify-center mb-4 shadow-inner">
+                    <FileText className="w-6 h-6 text-blue-400" />
                   </div>
                   <p className="text-base font-semibold text-[rgb(var(--ml-text-primary))] mb-1">No Documents Found</p>
                   <p className="text-sm text-[rgb(var(--ml-text-secondary))]">Upload leases or important files for this unit.</p>
@@ -377,9 +375,9 @@ export default function UnitDetailsPage() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      className="p-5 rounded-2xl border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm flex items-start gap-4 transition-all duration-300 hover:border-[rgb(var(--ml-accent))]/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.05)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] group"
+                      className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm flex items-start gap-4 transition-all duration-300 hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] group"
                     >
-                      <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -394,7 +392,7 @@ export default function UnitDetailsPage() {
                             href={doc.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:text-opacity-80 transition-opacity"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors"
                           >
                             <DownloadIcon className="w-3.5 h-3.5" /> DOWNLOAD FILE
                           </a>

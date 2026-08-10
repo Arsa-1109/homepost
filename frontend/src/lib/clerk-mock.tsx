@@ -91,8 +91,6 @@ export function mockLogout() {
   localStorage.removeItem("mock_user_email");
   localStorage.removeItem("mock_user_name");
   localStorage.removeItem("mock_user_id");
-  localStorage.removeItem("onboarding_intent");
-  localStorage.removeItem("landlord_email");
   
   if (typeof window !== "undefined") {
     document.cookie = "mock_user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
@@ -298,7 +296,7 @@ export function SignUpButton({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SignIn() {
+export function SignIn({ fallbackRedirectUrl }: { fallbackRedirectUrl?: string } = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -308,12 +306,7 @@ export function SignIn() {
     if (!email) return;
     mockLogin(email, name || email.split("@")[0]);
     
-    const intent = localStorage.getItem("onboarding_intent");
-    if (intent) {
-      router.push("/");
-    } else {
-      router.push("/dashboard");
-    }
+    router.push(fallbackRedirectUrl || "/dashboard");
   };
 
   return (
@@ -359,7 +352,7 @@ export function SignIn() {
   );
 }
 
-export function SignUp() {
+export function SignUp({ fallbackRedirectUrl }: { fallbackRedirectUrl?: string } = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -369,12 +362,7 @@ export function SignUp() {
     if (!email) return;
     mockLogin(email, name || email.split("@")[0]);
     
-    const intent = localStorage.getItem("onboarding_intent");
-    if (intent) {
-      router.push("/");
-    } else {
-      router.push("/dashboard");
-    }
+    router.push(fallbackRedirectUrl || "/dashboard");
   };
 
   return (

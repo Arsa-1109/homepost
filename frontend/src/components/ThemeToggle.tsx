@@ -14,11 +14,11 @@ export function ThemeToggle() {
   }, []);
 
   return (
-    <div className="flex bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] p-1 rounded-xl gap-1 shadow-sm">
+    <div className="flex bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] p-1 rounded-xl gap-1 shadow-sm">
       <Button
         variant="ghost"
         size="icon"
-        className={`w-8 h-8 rounded-lg ${mounted && resolvedTheme === 'light' ? 'bg-[rgb(var(--ml-bg-secondary))] shadow-sm border border-[rgb(var(--ml-border))]' : 'hover:bg-[rgb(var(--ml-bg-secondary))]'}`}
+        className={`w-8 h-8 rounded-lg ${mounted && resolvedTheme === 'light' ? 'bg-[rgb(var(--ml-bg-secondary))] shadow-sm border border-[var(--ml-border)]' : 'hover:bg-[rgb(var(--ml-bg-secondary))]'}`}
         onClick={() => setTheme("light")}
         title="Light Mode"
       >
@@ -28,7 +28,7 @@ export function ThemeToggle() {
       <Button
         variant="ghost"
         size="icon"
-        className={`w-8 h-8 rounded-lg ${mounted && resolvedTheme === 'dark' ? 'bg-[rgb(var(--ml-bg-secondary))] shadow-sm border border-[rgb(var(--ml-border))]' : 'hover:bg-[rgb(var(--ml-bg-secondary))]'}`}
+        className={`w-8 h-8 rounded-lg ${mounted && resolvedTheme === 'dark' ? 'bg-[rgb(var(--ml-bg-secondary))] shadow-sm border border-[var(--ml-border)]' : 'hover:bg-[rgb(var(--ml-bg-secondary))]'}`}
         onClick={() => setTheme("dark")}
         title="Dark Mode"
       >

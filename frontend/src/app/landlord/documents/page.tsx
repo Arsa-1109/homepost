@@ -7,6 +7,7 @@ import { uploadFile } from "@/lib/upload";
 import { FileText, FileImage, Download, Eye, File } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -142,36 +143,38 @@ export default function LandlordDocumentsPage() {
   };
 
   if (loading) return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Documents 📄</h1>
-      <div className="animate-pulse space-y-4">
-        <div className="h-10 w-48 bg-[rgb(var(--ml-border))] rounded-md"></div>
-        <div className="h-48 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
-        <div className="h-8 w-32 bg-[rgb(var(--ml-border))] rounded-md mt-8"></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 w-full bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl"></div>
-          ))}
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold text-[rgb(var(--ml-text-primary))]">Documents</h1>
+      <div className="space-y-6">
+        <div className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-4">
+          <div className="skeleton h-6 w-48 rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="skeleton h-10 w-full rounded-lg" />
+            <div className="skeleton h-10 w-full rounded-lg" />
+          </div>
+          <div className="skeleton h-10 w-full rounded-lg" />
+          <div className="skeleton h-20 w-full rounded-lg" />
+          <div className="skeleton h-10 w-full rounded-lg" />
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Documents 📄</h1>
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold">Documents</h1>
 
       {properties.length === 0 ? (
-        <div className="text-center py-12 border border-[rgb(var(--ml-border))] rounded-xl">
+        <div className="text-center py-12 border border-[var(--ml-border)] rounded-xl">
           Please add a property first before uploading documents.
         </div>
       ) : (
         <>
           <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex gap-2 items-center">
-              <span className="font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
+            <div className="flex items-center gap-2">
+              <label htmlFor="select-doc-property" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</label>
               <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
-                <SelectTrigger>
+                <SelectTrigger id="select-doc-property">
                   <span className="flex flex-1 text-left line-clamp-1 truncate">
                     {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
                   </span>
@@ -185,45 +188,55 @@ export default function LandlordDocumentsPage() {
             </div>
           </div>
 
-          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] rounded-xl space-y-4 shadow-sm animate-fadeIn">
             <h2 className="text-xl font-semibold mb-4 text-balance">Upload New Document</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input 
-                required 
-                value={title} 
-                onChange={e => setTitle(e.target.value)} 
-                placeholder="Document Title (e.g. Lease Agreement 2026)" 
-                className="bg-[rgb(var(--ml-bg-tertiary))] border border-[rgb(var(--ml-border))] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
-              />
-              <Select value={selectedUnit || "all"} onValueChange={(val) => setSelectedUnit(val as string)}>
-                <SelectTrigger>
-                  <span className="flex flex-1 text-left line-clamp-1 truncate">
-                    {selectedUnit === "all" || !selectedUnit ? "Assign to: All Units (Property-wide)" : `Assign to: ${units.find(u => u.id === selectedUnit)?.unit_label}`}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Assign to: All Units (Property-wide)</SelectItem>
-                  {units.map(u => (
-                    <SelectItem key={u.id} value={u.id}>Assign to: {u.unit_label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-1">
+                <label htmlFor="doc-title" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Document Title</label>
+                <input 
+                  id="doc-title"
+                  required 
+                  value={title} 
+                  onChange={e => setTitle(e.target.value)} 
+                  placeholder="Document Title (e.g. Lease Agreement 2026)" 
+                  className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="select-doc-unit" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Target Unit</label>
+                <Select value={selectedUnit || "all"} onValueChange={(val) => setSelectedUnit(val as string)}>
+                  <SelectTrigger id="select-doc-unit">
+                    <span className="flex flex-1 text-left line-clamp-1 truncate">
+                      {selectedUnit === "all" || !selectedUnit ? "Assign to: All Units (Property-wide)" : `Assign to: ${units.find(u => u.id === selectedUnit)?.unit_label}`}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Assign to: All Units (Property-wide)</SelectItem>
+                    {units.map(u => (
+                      <SelectItem key={u.id} value={u.id}>Assign to: {u.unit_label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
+            <div className="space-y-1">
+              <label htmlFor="doc-file" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Select File</label>
               <input 
+                id="doc-file"
                 required
                 type="file" 
                 onChange={e => setFile(e.target.files?.[0] || null)}
-                className="w-full text-sm text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer pt-1"
+                className="w-full text-sm text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:font-medium file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer pt-1"
               />
             </div>
-            <button 
-              disabled={isSubmitting || !file}
+            <Button 
+              disabled={!file}
+              isLoading={isSubmitting}
               type="submit" 
-              className="bg-[rgb(var(--ml-accent))] text-white font-medium px-6 py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="w-full sm:w-auto bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white font-medium px-6 py-3 rounded-lg cursor-pointer transition-opacity"
             >
-              {isSubmitting ? "Uploading..." : "Upload Document"}
-            </button>
+              Upload Document
+            </Button>
           </form>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,18 +244,18 @@ export default function LandlordDocumentsPage() {
             {docsLoading ? (
               <motion.div 
                 key="loading"
-                initial={{ opacity: 0 }}
+                initial={false}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.15 } }}
                 className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 {[1, 2].map((i) => (
-                  <div key={i} className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse">
-                    <div className="w-20 h-20 bg-[rgb(var(--ml-border))] rounded-lg shrink-0" />
+                  <div key={i} className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60">
+                    <div className="w-20 h-20 rounded-lg skeleton shrink-0" />
                     <div className="flex-1 space-y-2 py-1">
-                      <div className="h-4 bg-[rgb(var(--ml-border))] rounded w-3/4" />
-                      <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/4" />
-                      <div className="h-3 bg-[rgb(var(--ml-border))] rounded w-1/2" />
+                      <div className="skeleton h-4 w-3/4 rounded-md" />
+                      <div className="skeleton h-3.5 w-1/3 rounded-md" />
+                      <div className="skeleton h-7 w-20 rounded-lg mt-2" />
                     </div>
                   </div>
                 ))}
@@ -253,7 +266,7 @@ export default function LandlordDocumentsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="col-span-full text-center py-12 border border-dashed border-[rgb(var(--ml-border))] rounded-xl text-[rgb(var(--ml-text-secondary))]"
+                className="col-span-full text-center py-12 border border-blue-500/20 shadow-[0_0_20px_rgba(96,165,250,0.04)] rounded-xl text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-secondary))]/60"
               >
                 No documents uploaded for this property yet.
               </motion.div>
@@ -280,10 +293,10 @@ export default function LandlordDocumentsPage() {
                         hidden: { opacity: 0, y: 20 },
                         show: { opacity: 1, y: 0 }
                       }}
-                      className="flex gap-4 p-4 border border-[rgb(var(--ml-border))] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all group shadow-sm hover:shadow-md"
+                      className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all group shadow-sm"
                     >
                       {/* Preview Thumbnail */}
-                      <div className="relative w-20 h-20 border border-[rgb(var(--ml-border))] rounded-lg overflow-hidden shrink-0">
+                      <div className="relative w-20 h-20 border border-[var(--ml-border)] rounded-lg overflow-hidden shrink-0">
                         {isImage && doc.file_url ? (
                           <div className="relative w-full h-full bg-muted flex items-center justify-center">
                             <img 
@@ -298,7 +311,7 @@ export default function LandlordDocumentsPage() {
                             <span className="text-[10px] font-bold tracking-wider uppercase">PDF</span>
                           </div>
                         ) : (
-                          <div className="w-full h-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex flex-col items-center justify-center gap-1">
+                          <div className="w-full h-full bg-blue-500/10 text-blue-400 flex flex-col items-center justify-center gap-1">
                             <File className="h-8 w-8" />
                             <span className="text-[10px] font-bold tracking-wider uppercase text-center px-1 truncate">
                               {doc.file_key.split('.').pop() || 'FILE'}
@@ -316,10 +329,10 @@ export default function LandlordDocumentsPage() {
                             </h3>
                           </div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-slate-500/10 text-slate-400 border-slate-500/20 font-medium">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full border bg-zinc-500/10 text-zinc-400 border-zinc-500/20 font-medium">
                               {properties.find(p => p.id === selectedProperty)?.name || "Property"}
                             </span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"} font-medium`}>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${doc.unit_id ? "bg-lime-500/10 text-lime-400 border-lime-500/20" : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"} font-medium`}>
                               {getUnitLabel(doc.unit_id)}
                             </span>
                             <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">
@@ -330,23 +343,31 @@ export default function LandlordDocumentsPage() {
 
                         <div className="flex items-center gap-2 pt-2">
                           {doc.file_url && (
-                            <a 
-                              href={doc.file_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1.5 px-3 py-1.5 border border-[rgb(var(--ml-border))] rounded-lg text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-hover))] transition-colors"
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1.5 px-3 text-xs"
                             >
-                              <Eye className="h-3.5 w-3.5" />
-                              View
-                            </a>
+                              <a 
+                                href={doc.file_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                View
+                              </a>
+                            </Button>
                           )}
-                          <button 
+                          <Button 
+                            variant="secondary"
+                            size="sm"
                             onClick={() => handleDownload(doc.file_key, doc.title)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[rgb(var(--ml-accent))] text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                            className="h-8 gap-1.5 px-3 text-xs font-medium cursor-pointer"
                           >
                             <Download className="h-3.5 w-3.5" />
                             Download
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     </motion.div>

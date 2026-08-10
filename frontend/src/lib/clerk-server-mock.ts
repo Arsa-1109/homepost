@@ -7,6 +7,7 @@ export const auth = async () => {
   const mockUserId = cookieStore.get("mock_user_id")?.value || null;
   const mockUserName = cookieStore.get("mock_user_name")?.value || null;
   const mockOnboardingComplete = cookieStore.get("mock_user_onboarding_complete")?.value === "true";
+  const mockUserRole = cookieStore.get("mock_user_role")?.value || null;
 
   return {
     userId: mockUserId,
@@ -16,6 +17,7 @@ export const auth = async () => {
       name: mockUserName,
       metadata: {
         onboardingComplete: mockOnboardingComplete,
+        role: mockUserRole,
       }
     } : null,
     getToken: async () => {
@@ -33,6 +35,7 @@ auth.protect = async () => {
   const mockUserEmail = cookieStore.get("mock_user_email")?.value || null;
   const mockUserName = cookieStore.get("mock_user_name")?.value || null;
   const mockOnboardingComplete = cookieStore.get("mock_user_onboarding_complete")?.value === "true";
+  const mockUserRole = cookieStore.get("mock_user_role")?.value || null;
 
   if (!mockUserId) {
     throw new Error("Auth required (mocked)");
@@ -45,6 +48,7 @@ auth.protect = async () => {
       name: mockUserName,
       metadata: {
         onboardingComplete: mockOnboardingComplete,
+        role: mockUserRole,
       }
     }
   };
@@ -81,10 +85,20 @@ export const clerkClient = async () => {
       updateUserMetadata: async (userId: string, metadata: any) => {
         const cookieStore = await cookies();
         const complete = metadata?.publicMetadata?.onboardingComplete;
-        if (complete) {
-          cookieStore.set("mock_user_onboarding_complete", "true");
-        } else {
-          cookieStore.set("mock_user_onboarding_complete", "false");
+        const role = metadata?.publicMetadata?.role;
+        if (complete !== undefined) {
+          if (complete) {
+            cookieStore.set("mock_user_onboarding_complete", "true");
+          } else {
+            cookieStore.set("mock_user_onboarding_complete", "false");
+          }
+        }
+        if (role !== undefined) {
+          if (role === null) {
+            cookieStore.delete("mock_user_role");
+          } else {
+            cookieStore.set("mock_user_role", role as string);
+          }
         }
         return {};
       }
@@ -98,6 +112,7 @@ export function clerkMiddleware(handler: any) {
     const mockUserId = req.cookies?.get("mock_user_id")?.value || null;
     const mockUserName = req.cookies?.get("mock_user_name")?.value || null;
     const mockOnboardingComplete = req.cookies?.get("mock_user_onboarding_complete")?.value === "true";
+    const mockUserRole = req.cookies?.get("mock_user_role")?.value || null;
 
     const mockAuthResult = {
       userId: mockUserId,
@@ -107,6 +122,7 @@ export function clerkMiddleware(handler: any) {
         name: mockUserName,
         metadata: {
           onboardingComplete: mockOnboardingComplete,
+          role: mockUserRole,
         }
       } : null,
       getToken: async () => {
@@ -140,6 +156,7 @@ export function clerkMiddleware(handler: any) {
             name: mockUserName,
             metadata: {
               onboardingComplete: mockOnboardingComplete,
+              role: mockUserRole,
             }
           }
         };
