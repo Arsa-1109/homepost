@@ -40,7 +40,11 @@ export default function TenantAnnouncementsPage() {
     loadData();
   }, []);
 
-  const [nowTimestamp] = useState(() => Date.now());
+  const [nowTimestamp, setNowTimestamp] = useState<number>(0);
+
+  useEffect(() => {
+    setNowTimestamp(Date.now());
+  }, []);
 
   const filteredAnnouncements = useMemo(() => {
     return announcements.filter((ann) => {
@@ -65,25 +69,8 @@ export default function TenantAnnouncementsPage() {
     });
   }, [announcements, searchQuery, selectedFilter, nowTimestamp]);
 
-  if (loading) {
-    return (
-      <div className="space-y-6 max-w-4xl mx-auto pb-12">
-        <div className="space-y-2">
-          <div className="skeleton h-8 w-56 rounded-xl" />
-          <div className="skeleton h-4 w-72 rounded-md" />
-        </div>
-        <div className="p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] h-36 skeleton" />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 rounded-2xl skeleton" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up pb-16">
+    <div className="space-y-8 max-w-4xl mx-auto pb-16">
       {/* Header Section */}
       <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
@@ -104,8 +91,7 @@ export default function TenantAnnouncementsPage() {
         </div>
 
         {/* Search & Filter Bar */}
-        {announcements.length > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
             {/* Filter Pills */}
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
               {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
@@ -138,10 +124,9 @@ export default function TenantAnnouncementsPage() {
               />
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Main Feed Container */}
+        {/* Announcements List Container */}
       <div className="space-y-4">
         {announcements.length > 0 && (
           <div className="flex items-center justify-between px-1">
@@ -153,7 +138,25 @@ export default function TenantAnnouncementsPage() {
 
         <div className="space-y-4">
           <AnimatePresence mode="wait">
-            {announcements.length === 0 ? (
+            {loading ? (
+              [1, 2, 3].map((i) => (
+                <div key={`skel-${i}`} className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="skeleton h-5 w-24 rounded-md" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="skeleton h-4 w-16 rounded-md" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <div className="skeleton h-6 w-3/4 rounded-lg" />
+                    <div className="skeleton h-4 w-full rounded-md mt-2" />
+                    <div className="skeleton h-4 w-5/6 rounded-md" />
+                  </div>
+                </div>
+              ))
+            ) : announcements.length === 0 ? (
               /* Genuinely No Announcements Empty State */
               <motion.div
                 key="empty-all"

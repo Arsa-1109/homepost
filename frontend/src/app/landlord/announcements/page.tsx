@@ -160,7 +160,11 @@ export default function LandlordAnnouncementsPage() {
     }
   };
 
-  const [nowTimestamp] = useState(() => Date.now());
+  const [nowTimestamp, setNowTimestamp] = useState<number>(0);
+
+  useEffect(() => {
+    setNowTimestamp(Date.now());
+  }, []);
 
   const filteredAnnouncements = useMemo(() => {
     return announcements.filter((ann) => {
@@ -193,26 +197,9 @@ export default function LandlordAnnouncementsPage() {
     return unit ? `Unit ${unit.unit_label}` : "Unit Specific";
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6 max-w-5xl mx-auto pb-12">
-        <div className="space-y-2">
-          <div className="skeleton h-8 w-48 rounded-xl" />
-          <div className="skeleton h-4 w-64 rounded-md" />
-        </div>
-        <div className="p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] h-40 skeleton" />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 rounded-2xl skeleton" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="space-y-8 max-w-5xl mx-auto animate-fade-slide-up pb-16">
+      <div className="space-y-8 max-w-5xl mx-auto pb-16">
       {/* Header Section */}
       <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
@@ -232,10 +219,14 @@ export default function LandlordAnnouncementsPage() {
           </div>
 
           {/* Action & Property Selector Controls */}
-          {properties.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-              {/* Property Switcher */}
-              <div className="relative flex-1 sm:w-56">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            {/* Property Switcher */}
+            <div className="relative flex-1 sm:w-56">
+              {loading ? (
+                <div className="w-full bg-[rgb(var(--ml-bg-primary))]/90 border border-border/60 rounded-xl h-11 flex items-center px-3">
+                  <div className="skeleton h-4 w-32 rounded-md" />
+                </div>
+              ) : properties.length > 0 ? (
                 <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
                   <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/90 border-border/60 rounded-xl h-11">
                     <span className="flex items-center gap-2 font-bold text-xs text-[rgb(var(--ml-text-primary))] truncate">
@@ -248,59 +239,57 @@ export default function LandlordAnnouncementsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* Toggle Post Announcement Form Button */}
-              <Button
-                onClick={() => setShowUploadForm(prev => !prev)}
-                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
-              >
-                {showUploadForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                <span>{showUploadForm ? "Hide Form" : "Post Announcement"}</span>
-              </Button>
+              ) : null}
             </div>
-          )}
+
+            {/* Toggle Post Announcement Form Button */}
+            <Button
+              onClick={() => setShowUploadForm(prev => !prev)}
+              className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
+            >
+              {showUploadForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              <span>{showUploadForm ? "Hide Form" : "Post Announcement"}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Search & Filter Controls Bar */}
-        {announcements.length > 0 && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
-            {/* Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-              {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setSelectedFilter(filter)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
-                    selectedFilter === filter
-                      ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
-                      : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
-                  }`}
-                >
-                  {filter === "ALL" && "All Notices"}
-                  {filter === "RECENT" && "Last 7 Days"}
-                  {filter === "PROPERTY" && "Property-Wide"}
-                  {filter === "UNIT" && "Unit-Specific"}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Input */}
-            <div className="relative flex-1 sm:w-64 sm:flex-initial">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--ml-text-secondary))]" />
-              <input
-                type="text"
-                placeholder="Search notices..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
-              />
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
+          {/* Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+            {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setSelectedFilter(filter)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+                  selectedFilter === filter
+                    ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
+                    : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+                }`}
+              >
+                {filter === "ALL" && "All Notices"}
+                {filter === "RECENT" && "Last 7 Days"}
+                {filter === "PROPERTY" && "Property-Wide"}
+                {filter === "UNIT" && "Unit-Specific"}
+              </button>
+            ))}
           </div>
-        )}
+
+          {/* Search Input */}
+          <div className="relative flex-1 sm:w-64 sm:flex-initial">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--ml-text-secondary))]" />
+            <input
+              type="text"
+              placeholder="Search notices..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
+            />
+          </div>
+        </div>
       </div>
 
-      {properties.length === 0 ? (
+      {!loading && properties.length === 0 ? (
         <div className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3">
           <Building className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
           <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">No Properties Found</h3>
@@ -438,7 +427,26 @@ export default function LandlordAnnouncementsPage() {
 
             <div className="space-y-4">
               <AnimatePresence mode="wait">
-                {announcements.length === 0 ? (
+                {loading ? (
+                  [1, 2, 3].map((i) => (
+                    <div key={`skel-${i}`} className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="skeleton h-5 w-24 rounded-md" />
+                          <div className="skeleton h-5 w-20 rounded-md" />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="skeleton h-4 w-16 rounded-md" />
+                        </div>
+                      </div>
+                      <div className="space-y-2 pt-1">
+                        <div className="skeleton h-6 w-3/4 rounded-lg" />
+                        <div className="skeleton h-4 w-full rounded-md mt-2" />
+                        <div className="skeleton h-4 w-5/6 rounded-md" />
+                      </div>
+                    </div>
+                  ))
+                ) : announcements.length === 0 ? (
                   /* Genuinely No Announcements Empty State */
                   <motion.div
                     key="empty-all"
