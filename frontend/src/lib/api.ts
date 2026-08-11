@@ -35,7 +35,14 @@ export async function apiFetch<T = unknown>(
   options: RequestInit = {},
   token: string | null = null
 ): Promise<T> {
-  let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  let baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!baseUrl) {
+    if (typeof window !== "undefined" && window.location.hostname) {
+      baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+    } else {
+      baseUrl = "http://127.0.0.1:8000";
+    }
+  }
   // Ensure the base URL always has a protocol scheme
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;
@@ -123,9 +130,16 @@ export async function apiFetch<T = unknown>(
 
   // Handle auth errors gracefully
   if (response.status === 401) {
-    // Token expired or invalid — redirect to sign-in
+    // Token expired or invalid — sign out to prevent infinite redirect loops
     if (typeof window !== "undefined") {
-      window.location.href = "/sign-in";
+      const clerkGlobal = (window as any).Clerk;
+      if (clerkGlobal?.signOut) {
+        clerkGlobal.signOut().then(() => {
+          window.location.href = "/sign-in";
+        });
+      } else {
+        window.location.href = "/sign-in";
+      }
     }
     throw new Error(
       "Your session has expired. Please sign in again to continue."
