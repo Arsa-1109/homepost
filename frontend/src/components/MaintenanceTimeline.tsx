@@ -13,7 +13,8 @@ import {
   RefreshCcw,
   Clock,
   History,
-  ChevronDown
+  ChevronDown,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,17 +30,17 @@ export type MaintenanceEvent = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  open: "bg-blue-500/10 text-blue-400 border-blue-500/25",
-  in_progress: "bg-amber-500/10 text-amber-400 border-amber-500/25",
-  resolved: "bg-lime-500/10 text-lime-400 border-lime-500/25",
-  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/25",
+  open: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  in_progress: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  resolved: "bg-lime-500/10 text-lime-400 border-lime-500/20",
+  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low: "bg-zinc-500/10 text-zinc-400 border-zinc-500/25",
-  medium: "bg-amber-500/10 text-amber-400 border-amber-500/25",
-  high: "bg-orange-500/10 text-orange-400 border-orange-500/25",
-  critical: "bg-red-500/10 text-red-400 border-red-500/25",
+  low: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+  medium: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  high: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  critical: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
 interface Props {
@@ -77,9 +78,9 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
   const getEventStyle = (event: MaintenanceEvent) => {
     switch (event.event_type) {
       case "created":
-        return <PlusCircle className="h-3.5 w-3.5 text-blue-500" />;
+        return <PlusCircle className="h-3.5 w-3.5 text-blue-400" />;
       case "reopened":
-        return <RefreshCcw className="h-3.5 w-3.5 text-amber-500" />;
+        return <RefreshCcw className="h-3.5 w-3.5 text-amber-400" />;
       case "status_changed": {
         const status = event.payload?.new_status?.toLowerCase();
         if (status === "resolved") return <CheckCircle2 className="h-3.5 w-3.5 text-lime-400" />;
@@ -100,40 +101,41 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
 
   if (isLoading) {
     return (
-      <div className="flex justify-center p-6 mt-6 border-t border-border">
+      <div className="flex justify-center p-6 mt-6 border-t border-border/30">
         <div className="w-5 h-5 border-2 border-[rgb(var(--ml-accent))] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-sm text-red-500 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg mt-6">{error}</div>;
+    return <div className="text-xs text-red-400 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl mt-6 font-medium">{error}</div>;
   }
 
   if (events.length === 0) {
-    return <div className="text-sm text-[rgb(var(--ml-text-secondary))] p-4 mt-6 border-t border-border">No history available.</div>;
+    return <div className="text-xs text-[rgb(var(--ml-text-secondary))] p-4 mt-6 border-t border-border/30 font-medium">No history available.</div>;
   }
 
   return (
-    <div className="mt-6 pt-6 border-t border-border">
-      <Button 
-        variant="ghost"
+    <div className="mt-6 pt-6 border-t border-border/30">
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full h-auto flex items-center justify-between group outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] rounded-lg p-1 -ml-1 transition-all cursor-pointer hover:bg-transparent"
+        className="w-full flex items-center justify-between group outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] rounded-2xl p-3 -mx-3 transition-all cursor-pointer hover:bg-[rgb(var(--ml-bg-tertiary))]/40 border border-transparent hover:border-border/40"
       >
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-[rgb(var(--ml-bg-tertiary))] group-hover:bg-[rgb(var(--ml-accent))]/10 transition-colors border border-border">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-[rgb(var(--ml-bg-tertiary))] group-hover:bg-[rgb(var(--ml-accent))]/10 transition-colors border border-border/40">
             <History className="w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors" />
           </div>
-          <h3 className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-text-primary))] uppercase tracking-wide transition-colors">
-            Timeline History
-          </h3>
-          <span className="ml-2 text-[10px] font-medium bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] px-2 py-0.5 rounded-full border border-border group-hover:border-[rgb(var(--ml-border-hover))] transition-colors">
-            {events.length} Event{events.length !== 1 ? 's' : ''}
-          </span>
+          <div className="flex items-center gap-2.5">
+            <h3 className="text-xs font-bold text-[rgb(var(--ml-text-primary))] uppercase tracking-wider">
+              Timeline History
+            </h3>
+            <span className="text-[10px] font-bold bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] px-2.5 py-0.5 rounded-full border border-border/50 shadow-sm">
+              {events.length} {events.length === 1 ? "Event" : "Events"}
+            </span>
+          </div>
         </div>
-        <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
-      </Button>
+        <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-text-primary))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+      </button>
 
       <AnimatePresence initial={false}>
         {isExpanded && (
@@ -144,131 +146,138 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="relative pl-3 space-y-6 mt-6 pb-2">
-              <div className="absolute left-[15px] top-2 bottom-2 w-px bg-[rgb(var(--ml-border))]"></div>
+            <div className="relative pl-4 space-y-6 mt-6 pb-2">
+              {/* Sleek Vertical Connecting Line (pl-4 = 16px padding. Node is w-6 = 24px wide. Center is at 16 + 12 = 28px. Line left is 27px) */}
+              <div className="absolute left-[27px] top-3 bottom-3 w-[2px] bg-gradient-to-b from-border/80 via-border/50 to-border/20 z-0"></div>
               
               <AnimatePresence>
                 {events.map((event, idx) => {
                   const style = getEventStyle(event);
                   return (
-                  <motion.div 
-                    key={event.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="relative flex gap-4"
-                  >
-                    <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--ml-bg-primary))] border border-border ring-4 ring-[rgb(var(--ml-bg-secondary))] mt-0.5 shadow-sm">
-                      {style}
-                    </div>
-                    
-                    <div className="flex-1 bg-[rgb(var(--ml-bg-tertiary))] border border-border p-3 rounded-lg shadow-sm group/card hover:border-[rgb(var(--ml-border-hover))] transition-colors">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-semibold text-[rgb(var(--ml-text-primary))]">
-                          {event.actor_name}
-                        </span>
-                        <span className="text-[11px] font-medium text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-secondary))] px-2 py-0.5 rounded-full border border-border">
-                          {format(new Date(event.created_at), "MMM d, yyyy • h:mm a")}
-                        </span>
+                    <motion.div 
+                      key={event.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                      className="relative flex items-start gap-4"
+                    >
+                      {/* Node Icon Circle (24px wide, ring-4 stays completely inside container with 16px left padding) */}
+                      <div className="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--ml-bg-secondary))] border border-border/70 ring-4 ring-[rgb(var(--ml-bg-tertiary))] shadow-sm mt-0.5">
+                        {style}
                       </div>
-                      <p className="text-sm text-[rgb(var(--ml-text-secondary))] leading-relaxed">
-                        {event.description.replace(/_/g, " ")}
-                      </p>
                       
-                      {/* Specific payload rendering */}
-                      {event.event_type === "status_changed" && event.payload && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${STATUS_COLORS[event.payload.old_status?.toLowerCase()] || STATUS_COLORS.open}`}>
-                            {event.payload.old_status?.replace("_", " ")}
+                      {/* Main Event Card */}
+                      <div className="flex-1 bg-[rgb(var(--ml-bg-secondary))]/80 border border-border/50 p-4 rounded-2xl shadow-sm hover:border-border/80 transition-all min-w-0">
+                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                          <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))] tracking-tight">
+                            {event.actor_name}
                           </span>
-                          <span className="text-[rgb(var(--ml-text-secondary))]/50">→</span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${STATUS_COLORS[event.payload.new_status?.toLowerCase()] || STATUS_COLORS.open}`}>
-                            {event.payload.new_status?.replace("_", " ")}
+                          <span className="text-[10px] font-semibold text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-tertiary))]/60 px-2.5 py-0.5 rounded-full border border-border/40 shadow-xs">
+                            {format(new Date(event.created_at), "MMM d, yyyy • h:mm a")}
                           </span>
                         </div>
-                      )}
-                      
-                      {event.event_type === "priority_changed" && event.payload && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${PRIORITY_COLORS[event.payload.old_priority?.toLowerCase()] || PRIORITY_COLORS.medium}`}>
-                            {event.payload.old_priority?.replace("_", " ")}
-                          </span>
-                          <span className="text-[rgb(var(--ml-text-secondary))]/50">→</span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${PRIORITY_COLORS[event.payload.new_priority?.toLowerCase()] || PRIORITY_COLORS.medium}`}>
-                            {event.payload.new_priority?.replace("_", " ")}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Notes: shown for note_added events AND bundled into status_changed etc */}
-                      {event.payload?.notes && (
-                        <div className="mt-3 p-3 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-border/50 border-l-2 border-l-blue-500/50">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/70 block mb-1">
-                            <MessageSquare className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-                            Note
-                          </span>
-                          <p className="text-sm text-[rgb(var(--ml-text-primary))]/90 whitespace-pre-wrap">
-                            {event.payload.notes}
-                          </p>
-                        </div>
-                      )}
 
-                      {/* Images: show thumbnails if image_urls present (new events with keys) */}
-                      {event.payload?.image_urls && event.payload.image_urls.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-border/30">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/60 block mb-2">Attached Files</span>
-                          <div className="flex flex-wrap gap-2">
-                            {event.payload.image_urls.map((url: string, imgIdx: number) => (
-                              <Button 
-                                key={imgIdx} 
-                                variant="ghost"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  if (onViewImage) {
-                                    onViewImage(url);
-                                  } else {
-                                    window.open(url, "_blank");
-                                  }
-                                }}
-                                className="group/img block p-0 h-auto overflow-hidden rounded-lg border border-border hover:border-[rgb(var(--ml-accent))] transition-all hover:shadow-lg bg-[rgb(var(--ml-bg-primary))] cursor-pointer"
-                              >
-                                <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden">
-                                  <img 
-                                    src={url} 
-                                    alt={`Attachment ${imgIdx + 1}`} 
-                                    className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-200"
-                                    onError={(e) => {
-                                      const el = e.target as HTMLImageElement;
-                                      el.style.display = "none";
-                                      const parent = el.parentElement;
-                                      if (parent) {
-                                        const ph = document.createElement("div");
-                                        ph.className = "text-[10px] text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium flex flex-col items-center gap-1";
-                                        ph.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>File';
-                                        parent.appendChild(ph);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </Button>
-                            ))}
+                        <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed font-medium">
+                          {event.description.replace(/_/g, " ")}
+                        </p>
+                        
+                        {/* Status Change Badges */}
+                        {event.event_type === "status_changed" && event.payload && (
+                          <div className="mt-3 flex items-center gap-2 flex-wrap">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${STATUS_COLORS[event.payload.old_status?.toLowerCase()] || STATUS_COLORS.open}`}>
+                              {event.payload.old_status?.replace("_", " ")}
+                            </span>
+                            <ArrowRight className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]/50" />
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${STATUS_COLORS[event.payload.new_status?.toLowerCase()] || STATUS_COLORS.open}`}>
+                              {event.payload.new_status?.replace("_", " ")}
+                            </span>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        
+                        {/* Priority Change Badges */}
+                        {event.event_type === "priority_changed" && event.payload && (
+                          <div className="mt-3 flex items-center gap-2 flex-wrap">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${PRIORITY_COLORS[event.payload.old_priority?.toLowerCase()] || PRIORITY_COLORS.medium}`}>
+                              {event.payload.old_priority?.replace("_", " ")}
+                            </span>
+                            <ArrowRight className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]/50" />
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${PRIORITY_COLORS[event.payload.new_priority?.toLowerCase()] || PRIORITY_COLORS.medium}`}>
+                              {event.payload.new_priority?.replace("_", " ")}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Landlord Note Container */}
+                        {event.payload?.notes && (
+                          <div className="mt-3 p-3.5 rounded-xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/40 border-l-2 border-l-[rgb(var(--ml-accent))]/80 shadow-xs">
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[rgb(var(--ml-accent))] mb-1.5 uppercase tracking-wider">
+                              <MessageSquare className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
+                              <span>Note</span>
+                            </div>
+                            <p className="text-xs text-[rgb(var(--ml-text-primary))]/95 font-medium leading-relaxed whitespace-pre-wrap">
+                              {event.payload.notes}
+                            </p>
+                          </div>
+                        )}
 
-                      {/* Fallback for OLD events: had image_count but no image_keys stored */}
-                      {event.payload?.image_count > 0 && !event.payload?.image_urls && (
-                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-border">
-                          <span className="text-purple-400/60 text-sm">🖼</span>
-                          <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]/60 italic">
-                            {event.payload.image_count} file{event.payload.image_count !== 1 ? 's' : ''} attached
-                            <span className="ml-1 opacity-50">(preview unavailable for older records)</span>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
+                        {/* Attached Images Container */}
+                        {event.payload?.image_urls && event.payload.image_urls.length > 0 && (
+                          <div className="mt-4 pt-3 border-t border-border/30">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] block mb-2 flex items-center gap-1.5">
+                              <ImageIcon className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]" />
+                              Attached Files
+                            </span>
+                            <div className="flex flex-wrap gap-2.5">
+                              {event.payload.image_urls.map((url: string, imgIdx: number) => (
+                                <button 
+                                  key={imgIdx} 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (onViewImage) {
+                                      onViewImage(url);
+                                    } else {
+                                      window.open(url, "_blank");
+                                    }
+                                  }}
+                                  className="group/img block p-0 overflow-hidden rounded-2xl border border-border/60 hover:border-[rgb(var(--ml-accent))] transition-all bg-[rgb(var(--ml-bg-primary))] cursor-pointer shadow-sm hover:shadow-md"
+                                >
+                                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden">
+                                    <img 
+                                      src={url} 
+                                      alt={`Attachment ${imgIdx + 1}`} 
+                                      className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-300"
+                                      onError={(e) => {
+                                        const el = e.target as HTMLImageElement;
+                                        el.style.display = "none";
+                                        const parent = el.parentElement;
+                                        if (parent) {
+                                          const ph = document.createElement("div");
+                                          ph.className = "text-[10px] text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium flex flex-col items-center gap-1";
+                                          ph.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>File';
+                                          parent.appendChild(ph);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Fallback for OLD events */}
+                        {event.payload?.image_count > 0 && !event.payload?.image_urls && (
+                          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgb(var(--ml-bg-primary))]/40 border border-dashed border-border/50">
+                            <span className="text-amber-400 text-xs">🖼</span>
+                            <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium italic">
+                              {event.payload.image_count} file{event.payload.image_count !== 1 ? "s" : ""} attached
+                              <span className="ml-1 opacity-60">(preview unavailable for older records)</span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
                   );
                 })}
               </AnimatePresence>
