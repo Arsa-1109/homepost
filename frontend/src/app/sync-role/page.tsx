@@ -3,13 +3,13 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@clerk/nextjs";
-import { api } from "@/lib/api";
+import { api, UserRoleResponse } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
 
 function SyncRoleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { session } = useSession();
+  const { isLoaded, session } = useSession();
   const [status, setStatus] = useState("Syncing your account...");
   const [isPending, setIsPending] = useState(false);
   
@@ -19,15 +19,18 @@ function SyncRoleContent() {
   const syncInProgress = useRef(false);
 
   useEffect(() => {
+    if (!isLoaded) return;
+
     async function syncRole() {
       // Guard against React Strict Mode double-invocation
       if (syncInProgress.current) return;
       syncInProgress.current = true;
 
       try {
-        const user: any = await api.get("/api/v1/onboarding/me");
+        const token = session ? await session.getToken() : null;
+        const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
         
-        if (user && user.role && user.role !== "none") {
+        if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
           // Cookies required for offline clerk mock system
           if (typeof window !== "undefined") {
             document.cookie = "mock_user_onboarding_complete=true; path=/";
@@ -61,14 +64,14 @@ function SyncRoleContent() {
 
         if (intent === "landlord") {
           setStatus("Setting up your landlord account...");
-          await api.post("/api/v1/onboarding/register-landlord");
+          await api.post("/api/v1/onboarding/register-landlord", undefined, token);
           await completeOnboarding("landlord");
           if (session) await session.reload();
           // Hard redirect forces full app remount to fetch new clerk JWT/metadata
           window.location.href = "/landlord/dashboard";
         } else if (intent === "tenant" && landlordEmail) {
           setStatus("Sending access request to landlord...");
-          await api.post("/api/v1/onboarding/request-access", { landlord_email: landlordEmail });
+          await api.post("/api/v1/onboarding/request-access", { landlord_email: landlordEmail }, token);
           setIsPending(true);
         } else {
           router.push("/");
@@ -87,7 +90,7 @@ function SyncRoleContent() {
       }
     }
     syncRole();
-  }, [router, session, searchParams]);
+  }, [isLoaded, router, session, searchParams]);
 
   if (errorStatus) {
     return (

@@ -12,7 +12,7 @@
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { api } from "@/lib/api";
+import { api, UserRoleResponse } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
 
 export default function JoinPage({
@@ -22,7 +22,7 @@ export default function JoinPage({
 }) {
   const { token } = use(params);
   const router = useRouter();
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, userId, getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [error, setError] = useState("");
@@ -39,7 +39,8 @@ export default function JoinPage({
 
     async function checkUserRole() {
       try {
-        const user: any = await api.get("/api/v1/onboarding/me");
+        const authToken = await getToken();
+        const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", authToken);
         if (user && user.role) {
           if (user.role === "landlord") {
             router.push("/landlord/dashboard");
@@ -58,13 +59,14 @@ export default function JoinPage({
       }
     }
     checkUserRole();
-  }, [isLoaded, userId, token, router]);
+  }, [isLoaded, userId, token, router, getToken]);
 
   const handleAccept = async () => {
     setLoading(true);
     setError("");
     try {
-      await api.post("/api/v1/onboarding/accept-invite", { token });
+      const authToken = await getToken();
+      await api.post("/api/v1/onboarding/accept-invite", { token }, authToken);
       await completeOnboarding();
       router.push("/tenant/dashboard");
     } catch (err: any) {

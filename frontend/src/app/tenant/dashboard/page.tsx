@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
+import { Wrench, Megaphone, Calendar, Plus, ArrowRight, Clock, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type TenantProfile = {
   unit_label: string;
@@ -20,6 +22,13 @@ type MaintenanceRequest = {
   title: string;
   status: "open" | "in_progress" | "resolved" | "closed";
   priority: "low" | "medium" | "high" | "urgent";
+  created_at: string;
+};
+
+type Announcement = {
+  id: string;
+  title: string;
+  body: string;
   created_at: string;
 };
 
@@ -48,81 +57,37 @@ function daysUntilRent(dueDay: number): number {
   const today = new Date();
   const thisMonth = new Date(today.getFullYear(), today.getMonth(), dueDay);
   if (thisMonth <= today) {
-    // Due date already passed this month — look at next month
     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, dueDay);
     return Math.round((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
   return Math.round((thisMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-import { Wrench, Megaphone, FileText, Home } from "lucide-react";
-
 const STATUS_COLOR: Record<string, string> = {
-  open: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  in_progress: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  resolved: "bg-lime-500/10 text-lime-400 border-lime-500/20",
-  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+  open: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  in_progress: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  resolved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  closed: "bg-slate-500/10 text-slate-400 border-slate-500/20",
 };
-
-function CountdownCard({
-  label,
-  value,
-  sublabel,
-  urgent,
-}: {
-  label: string;
-  value: string;
-  sublabel?: string;
-  urgent?: boolean;
-}) {
-  return (
-    <div
-      className={`p-6 rounded-2xl border flex flex-col items-center text-center justify-center gap-1 transition-all shadow-sm ${
-        urgent
-          ? "bg-red-500/10 border-red-500/40 text-red-400"
-          : "bg-[rgb(var(--ml-bg-secondary))] border-border/50"
-      }`}
-    >
-      <span className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
-        {label}
-      </span>
-      <span
-        className={`text-5xl font-extrabold my-2 tracking-tight ${
-          urgent ? "text-red-400" : "text-[rgb(var(--ml-accent))]"
-        }`}
-      >
-        {value}
-      </span>
-      {sublabel && (
-        <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">{sublabel}</span>
-      )}
-    </div>
-  );
-}
 
 export default function TenantDashboard() {
   const [profile, setProfile] = useState<TenantProfile | null>(null);
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const sizes = JSON.parse(localStorage.getItem('tenant_dashboard_sizes') || '{}');
-      if (sizes.welcome) document.documentElement.style.setProperty('--ts-welcome', sizes.welcome + 'px');
-      if (sizes.countdown) document.documentElement.style.setProperty('--ts-countdown', sizes.countdown + 'px');
-      if (sizes.actions) document.documentElement.style.setProperty('--ts-actions', sizes.actions + 'px');
-      if (sizes.requests) document.documentElement.style.setProperty('--ts-requests', sizes.requests + 'px');
-    } catch(e) {}
-
     async function loadAll() {
       try {
-        const [prof, reqs] = await Promise.all([
+        const [prof, reqs, anns] = await Promise.all([
           fetchAPI<TenantProfile>("/api/v1/tenant/profile"),
           fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance"),
+          fetchAPI<Announcement[]>("/api/v1/tenant/announcements"),
         ]);
         setProfile(prof);
-        setRequests(reqs.slice(0, 3)); // Show last 3 requests
+        setRequests(reqs.slice(0, 5)); // Show up to 5 recent requests
+        setAnnouncements(anns);
       } catch (err: any) {
         setError(err.message ?? "Something went wrong.");
       } finally {
@@ -132,68 +97,22 @@ export default function TenantDashboard() {
     loadAll();
   }, []);
 
-  const gridRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!gridRef.current) return;
-    const observer = new ResizeObserver(() => {
-      if (!gridRef.current) return;
-      const children = gridRef.current.children;
-      if (children.length >= 4) {
-        const sizes = {
-          welcome: children[0].getBoundingClientRect().height,
-          countdown: children[1].getBoundingClientRect().height,
-          actions: children[2].getBoundingClientRect().height,
-          requests: children[3].getBoundingClientRect().height,
-        };
-        localStorage.setItem('tenant_dashboard_sizes', JSON.stringify(sizes));
-      }
-    });
-    Array.from(gridRef.current.children).forEach(child => observer.observe(child));
-    return () => observer.disconnect();
-  }, [loading]);
-
   if (loading) {
     return (
-      <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="space-y-6 max-w-4xl mx-auto pb-12">
         <div className="space-y-2">
           <div className="skeleton h-8 w-48 rounded-xl" />
           <div className="skeleton h-4 w-36 rounded-md" />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-          <div className="p-6 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col items-center justify-center space-y-3 h-[170px]">
-            <div className="skeleton h-3 w-24 rounded" />
-            <div className="skeleton h-12 w-20 rounded-xl" />
-            <div className="skeleton h-3 w-40 rounded" />
-          </div>
-
-          <div className="p-5 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col justify-between space-y-3 h-[170px]">
-            <div className="skeleton h-3 w-28 rounded" />
-            <div className="grid grid-cols-3 gap-3">
-              <div className="skeleton h-20 rounded-xl" />
-              <div className="skeleton h-20 rounded-xl" />
-              <div className="skeleton h-20 rounded-xl" />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="p-6 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] h-28 skeleton" />
+          <div className="p-6 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] h-28 skeleton" />
         </div>
-
+        <div className="h-14 rounded-2xl skeleton" />
         <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <div className="skeleton h-4 w-32 rounded" />
-            <div className="skeleton h-3 w-16 rounded" />
-          </div>
-          <div className="space-y-2">
-            {[1, 2].map(i => (
-              <div key={i} className="p-4 rounded-xl border border-border bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between">
-                <div className="space-y-1.5 flex-1">
-                  <div className="skeleton h-4 w-44 rounded" />
-                  <div className="skeleton h-3 w-28 rounded" />
-                </div>
-                <div className="skeleton h-5 w-20 rounded-full shrink-0" />
-              </div>
-            ))}
-          </div>
+          <div className="skeleton h-5 w-32 rounded" />
+          <div className="skeleton h-24 rounded-2xl" />
+          <div className="skeleton h-24 rounded-2xl" />
         </div>
       </div>
     );
@@ -201,125 +120,206 @@ export default function TenantDashboard() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="p-6 rounded-2xl border border-red-500/30 bg-red-500/10 text-center">
-          <p className="text-red-400 font-medium mb-1">Could not load your dashboard</p>
-          <p className="text-sm text-[rgb(var(--ml-text-secondary))]">{error}</p>
+      <div className="max-w-xl mx-auto space-y-4 pt-8">
+        <div className="p-6 rounded-3xl border border-red-500/20 bg-red-500/10 text-center">
+          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <p className="text-red-500 font-bold mb-1">Could not load your dashboard</p>
+          <p className="text-xs text-[rgb(var(--ml-text-secondary))]">{error}</p>
         </div>
       </div>
     );
   }
 
   const rentDays = profile ? daysUntilRent(profile.rent_due_day) : null;
+  const rentUrgent = rentDays !== null && rentDays <= 3;
   const leaseDays = profile ? daysUntil(profile.lease_end) : null;
   const leaseUrgent = leaseDays !== null && leaseDays <= 30;
-  const rentUrgent = rentDays !== null && rentDays <= 3;
+  const latestAnnouncement = announcements.length > 0 ? announcements[0] : null;
 
   return (
-    <div ref={gridRef} className="space-y-6 max-w-7xl mx-auto animate-fade-slide-up">
-
-      {/* Welcome header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+    <div className="space-y-6 max-w-4xl mx-auto animate-fade-slide-up pb-16">
+      {/* 1. Header Section */}
+      <div>
+        <h1 className="text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
           Welcome Home
         </h1>
         {profile && (
-          <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
+          <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-1">
             {profile.unit_label} · {profile.property_name}
             {profile.property_city ? `, ${profile.property_city}` : ""}
           </p>
         )}
       </div>
 
-      {/* Hero cards: Countdown + Quick actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-        <CountdownCard
-          label="Rent Due In"
-          value={rentDays !== null ? `${rentDays}d` : "—"}
-          sublabel={
-            profile
-              ? `Due on the ${profile.rent_due_day}${getOrdinalSuffix(profile.rent_due_day)} of each month`
-              : undefined
-          }
-          urgent={rentUrgent}
-        />
+      {/* 2. Latest Announcement Banner (if available) */}
+      {latestAnnouncement && (
+        <Link 
+          href="/tenant/announcements"
+          className="group block p-4 sm:p-5 rounded-2xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-200"
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 shrink-0 mt-0.5">
+              <Megaphone className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
+                  Latest Announcement
+                </span>
+                <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium">
+                  {new Date(latestAnnouncement.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+              <h3 className="font-bold text-sm text-[rgb(var(--ml-text-primary))] group-hover:text-purple-400 transition-colors mt-0.5 truncate">
+                {latestAnnouncement.title}
+              </h3>
+              <p className="text-xs text-[rgb(var(--ml-text-secondary))] line-clamp-1 mt-0.5">
+                {latestAnnouncement.body}
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 transition-transform self-center shrink-0" />
+          </div>
+        </Link>
+      )}
 
-        <div className="p-5 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <Link
-              href="/tenant/requests/new"
-              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-border hover:border-orange-500/40 hover:bg-orange-500/10 transition-all text-center group"
-            >
-              <Wrench className="size-6 text-orange-400 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">New Request</span>
-            </Link>
-            <Link
-              href="/tenant/announcements"
-              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-border hover:border-purple-500/40 hover:bg-purple-500/10 transition-all text-center group"
-            >
-              <Megaphone className="size-6 text-purple-400 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">Announcements</span>
-            </Link>
-            <Link
-              href="/tenant/documents"
-              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-border hover:border-blue-500/40 hover:bg-blue-500/10 transition-all text-center group"
-            >
-              <FileText className="size-6 text-blue-400 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-medium">Documents</span>
-            </Link>
+      {/* 3. Hero Metric Cards: Rent Due + Lease Expiration */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Rent Due Card */}
+        <div 
+          className={`p-5 sm:p-6 rounded-3xl border transition-all shadow-sm ${
+            rentUrgent
+              ? "bg-red-500/10 border-red-500/30 text-red-500"
+              : "bg-[rgb(var(--ml-bg-secondary))] border-border"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                Rent Due In
+              </span>
+              <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">
+                {profile
+                  ? `Due on the ${profile.rent_due_day}${getOrdinalSuffix(profile.rent_due_day)} of each month`
+                  : "Monthly rent schedule"}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span 
+                className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                  rentUrgent ? "text-red-500" : "text-[rgb(var(--ml-accent))]"
+                }`}
+              >
+                {rentDays !== null ? `${rentDays}d` : "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Lease Expiration Card */}
+        <div 
+          className={`p-5 sm:p-6 rounded-3xl border transition-all shadow-sm ${
+            leaseUrgent
+              ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+              : "bg-[rgb(var(--ml-bg-secondary))] border-border"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                Lease Ends In
+              </span>
+              <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">
+                {profile?.lease_end
+                  ? `Ends on ${new Date(profile.lease_end).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : "No lease end date set"}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span 
+                className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                  leaseUrgent ? "text-amber-500" : "text-[rgb(var(--ml-text-primary))]"
+                }`}
+              >
+                {leaseDays !== null ? `${leaseDays}d` : "—"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Recent maintenance requests */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
-            Recent Requests
+      {/* 4. Primary Single CTA: New Maintenance Request */}
+      <Button
+        asChild
+        size="lg"
+        className="w-full h-14 rounded-2xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90 transition-all font-bold text-sm shadow-md hover:shadow-lg active:scale-[0.99] cursor-pointer"
+      >
+        <Link href="/tenant/requests/new" className="flex items-center justify-center gap-2">
+          <Wrench className="w-5 h-5" />
+          <span>New Maintenance Request</span>
+        </Link>
+      </Button>
+
+      {/* 5. Main Activity Section: Recent Requests */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+            Recent Maintenance Activity
           </h2>
           <Link
             href="/tenant/requests"
-            className="text-xs text-[rgb(var(--ml-accent))] hover:underline"
+            className="text-xs font-bold text-[rgb(var(--ml-text-primary))] hover:underline flex items-center gap-1"
           >
-            View all →
+            View all ({requests.length}) <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
         {requests.length === 0 ? (
-          <div className="p-6 rounded-2xl border border-orange-500/20 shadow-[0_0_20px_rgba(251,146,60,0.04)] bg-[rgb(var(--ml-bg-secondary))]/60 text-center">
-            <p className="text-[rgb(var(--ml-text-secondary))] text-sm">No maintenance requests yet.</p>
-            <Link
-              href="/tenant/requests/new"
-              className="mt-3 inline-block text-sm font-medium text-orange-400 hover:underline"
-            >
-              Submit your first request →
-            </Link>
+          <div className="p-8 rounded-3xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border flex items-center justify-center mx-auto text-[rgb(var(--ml-text-secondary))]">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-bold text-sm text-[rgb(var(--ml-text-primary))]">All clear! No active requests</p>
+              <p className="text-xs text-[rgb(var(--ml-text-secondary))] max-w-sm mx-auto">
+                Need something fixed? Tap the button above to submit a new ticket directly to your landlord.
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {requests.map((req) => (
               <Link
                 key={req.id}
                 href={`/tenant/requests?requestId=${req.id}`}
-                className="flex items-center justify-between p-4 rounded-xl border border-border bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors cursor-pointer block"
+                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] hover:border-border transition-all duration-200 shadow-sm hover:shadow-md gap-3"
               >
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{req.title}</p>
-                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">
-                    {new Date(req.created_at).toLocaleDateString()}
-                    {" · "}Priority: {req.priority.toUpperCase()}
-                  </p>
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full border uppercase tracking-wider font-extrabold ${
+                        STATUS_COLOR[req.status] ?? STATUS_COLOR.closed
+                      }`}
+                    >
+                      {req.status.replace("_", " ")}
+                    </span>
+                    <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium">
+                      Priority: <span className="capitalize">{req.priority}</span>
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-base text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors truncate">
+                    {req.title}
+                  </h3>
                 </div>
-                <span
-                  className={`ml-3 shrink-0 text-xs px-2 py-1 rounded-full border uppercase tracking-wider font-bold ${
-                    STATUS_COLOR[req.status] ?? STATUS_COLOR.closed
-                  }`}
-                >
-                  {req.status.replace("_", " ")}
-                </span>
+
+                <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-[rgb(var(--ml-text-secondary))] pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
+                  <span className="flex items-center gap-1 font-medium">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 transition-transform" />
+                </div>
               </Link>
             ))}
           </div>

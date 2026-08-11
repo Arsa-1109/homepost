@@ -10,6 +10,17 @@
  *   const data = await apiFetch("/api/v1/properties", { method: "GET" });
  */
 
+export interface UserRoleResponse {
+  id: string;
+  clerk_id: string;
+  email: string;
+  full_name: string;
+  role: "landlord" | "tenant" | "tenant_pending" | "unassigned" | "none" | string;
+  requested_landlord_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 /**
  * Make an authenticated API request to the FastAPI backend.
  *
@@ -34,29 +45,40 @@ export async function apiFetch<T = unknown>(
 
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
-    // Wait for Clerk to load/initialize (max 5 seconds)
-    const clerk = await new Promise<any>((resolve) => {
-      if ((window as any).Clerk?.loaded) {
-        resolve((window as any).Clerk);
-        return;
-      }
-      const interval = setInterval(() => {
-        if ((window as any).Clerk?.loaded) {
-          clearInterval(interval);
-          resolve((window as any).Clerk);
-        }
-      }, 50);
-      setTimeout(() => {
-        clearInterval(interval);
-        resolve((window as any).Clerk || null);
-      }, 5000);
-    });
-
-    if (clerk?.session) {
+    const clerkGlobal = (window as any).Clerk;
+    if (clerkGlobal?.session) {
       try {
-        activeToken = await clerk.session.getToken();
+        activeToken = await clerkGlobal.session.getToken();
       } catch (err) {
         console.error("Failed to automatically get Clerk token:", err);
+      }
+    }
+
+    if (!activeToken) {
+      // Short poll (max 500ms) to see if Clerk initializes
+      const clerk = await new Promise<any>((resolve) => {
+        if ((window as any).Clerk?.loaded || (window as any).Clerk?.session) {
+          resolve((window as any).Clerk);
+          return;
+        }
+        const interval = setInterval(() => {
+          if ((window as any).Clerk?.loaded || (window as any).Clerk?.session) {
+            clearInterval(interval);
+            resolve((window as any).Clerk);
+          }
+        }, 30);
+        setTimeout(() => {
+          clearInterval(interval);
+          resolve((window as any).Clerk || null);
+        }, 500);
+      });
+
+      if (clerk?.session) {
+        try {
+          activeToken = await clerk.session.getToken();
+        } catch (err) {
+          console.error("Failed to automatically get Clerk token:", err);
+        }
       }
     }
   }
@@ -137,14 +159,14 @@ export const fetchAPI = apiFetch;
 
 // Alias for files expecting api.post/api.get
 export const api = {
-  get: (path: string, token: string | null = null) => apiFetch(path, { method: "GET" }, token),
-  post: (path: string, body?: any, token: string | null = null) => apiFetch(path, { 
+  get: <T = unknown>(path: string, token: string | null = null) => apiFetch<T>(path, { method: "GET" }, token),
+  post: <T = unknown>(path: string, body?: any, token: string | null = null) => apiFetch<T>(path, { 
     method: "POST", 
     body: body ? JSON.stringify(body) : undefined 
   }, token),
-  put: (path: string, body?: any, token: string | null = null) => apiFetch(path, { 
+  put: <T = unknown>(path: string, body?: any, token: string | null = null) => apiFetch<T>(path, { 
     method: "PUT", 
     body: body ? JSON.stringify(body) : undefined 
   }, token),
-  delete: (path: string, token: string | null = null) => apiFetch(path, { method: "DELETE" }, token)
+  delete: <T = unknown>(path: string, token: string | null = null) => apiFetch<T>(path, { method: "DELETE" }, token)
 };

@@ -57,9 +57,11 @@ function Button({
   asChild = false,
   children,
   render,
+  nativeButton,
   ...props
 }: ButtonProps) {
   const renderProp = render || (asChild && React.isValidElement(children) ? children : undefined);
+  const isNativeButton = nativeButton ?? (renderProp ? false : undefined);
 
   return (
     <ButtonPrimitive
@@ -67,6 +69,7 @@ function Button({
       className={cn("relative", buttonVariants({ variant, size, className }))}
       disabled={isLoading || props.disabled}
       render={renderProp}
+      nativeButton={isNativeButton}
       {...props}
     >
       {isLoading && (

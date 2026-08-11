@@ -52,7 +52,7 @@ const FEATURE_CONTENT = {
     }
   ]
 };
-import { api } from "@/lib/api";
+import { api, UserRoleResponse } from "@/lib/api";
 
 function ThemeToggle() {
   const { theme, setTheme, systemTheme } = useTheme();
@@ -327,7 +327,7 @@ const RANDOMIZED_DUNES = DUNES_CONFIG.map((dune, idx) => {
 
 export default function LandingPage() {
   const router = useRouter();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
 
   const [roleSelection, setRoleSelection] = useState<"none" | "landlord" | "tenant">("none");
@@ -343,7 +343,8 @@ export default function LandingPage() {
     if (isLoaded && isSignedIn && user) {
       const checkRole = async () => {
         try {
-          const me: any = await api.get("/api/v1/onboarding/me");
+          const token = await getToken();
+          const me = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
           if (isMounted) {
             if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
               setHasRole(true);
@@ -362,7 +363,7 @@ export default function LandingPage() {
     return () => {
       isMounted = false;
     };
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoaded, isSignedIn, user, getToken]);
 
   // Fallback: If Clerk takes too long or fails to load, default to showing the portal cards
   useEffect(() => {
@@ -383,7 +384,8 @@ export default function LandingPage() {
 
     if (isSignedIn) {
       try {
-        await api.post("/api/v1/onboarding/register-landlord");
+        const token = await getToken();
+        await api.post("/api/v1/onboarding/register-landlord", undefined, token);
         if (typeof window !== "undefined") {
           document.cookie = "mock_user_onboarding_complete=true; path=/";
         }
@@ -405,7 +407,8 @@ export default function LandingPage() {
 
     if (isSignedIn) {
       try {
-        await api.post("/api/v1/onboarding/request-access", { landlord_email: tenantEmail });
+        const token = await getToken();
+        await api.post("/api/v1/onboarding/request-access", { landlord_email: tenantEmail }, token);
         if (typeof window !== "undefined") {
           document.cookie = "mock_user_onboarding_complete=true; path=/";
         }

@@ -3,19 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { api } from "@/lib/api";
+import { api, UserRoleResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 export default function DashboardRedirect() {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, userId, getToken } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   const checkRole = async () => {
     setError(null);
     try {
-      const user: any = await api.get("/api/v1/onboarding/me");
-      if (user && user.role && user.role !== "none") {
+      const token = await getToken();
+      const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
+      if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
         // Route to /sync-role to ensure Clerk session metadata and cookies are synced
         router.push("/sync-role");
       } else {
