@@ -488,9 +488,15 @@ export default function LandingPage() {
               </Button>
             ) : (
               <div className="flex items-center gap-3">
-                <Button variant="link" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent">
-                  Dashboard
-                </Button>
+                {hasRole ? (
+                  <Button variant="link" onClick={() => router.push("/dashboard")} className="text-sm font-medium text-accent">
+                    Dashboard
+                  </Button>
+                ) : (
+                  <a href="#role-selection" className="text-sm font-medium text-accent hover:underline px-3 py-1.5">
+                    Select Role
+                  </a>
+                )}
                 <UserButton />
               </div>
             )}
@@ -505,7 +511,7 @@ export default function LandingPage() {
         <Hero />
 
         {/* Auth / Role Selection Area */}
-        <section className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-48">
+        <section id="role-selection" className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-48">
 
           {hasRole === null ? (
             <PortalSkeleton />

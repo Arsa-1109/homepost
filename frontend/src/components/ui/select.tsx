@@ -41,7 +41,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/60 dark:bg-white/5 backdrop-blur-md px-4 min-h-[44px] text-sm font-medium text-slate-800 dark:text-slate-200 shadow-sm transition-all hover:bg-white/80 dark:hover:bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-full items-center justify-between gap-2 rounded-xl border border-border/40 bg-[rgb(var(--ml-bg-primary))]/40 dark:bg-[rgb(var(--ml-bg-primary))]/40 backdrop-blur-md px-4 min-h-[44px] text-sm font-medium text-slate-800 dark:text-slate-200 shadow-sm transition-all hover:bg-[rgb(var(--ml-bg-primary))]/70 dark:hover:bg-[rgb(var(--ml-bg-primary))]/70 outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))]/50 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -86,7 +86,7 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
-          className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-[220px] origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-white/95 dark:bg-[#121212]/95 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-200 shadow-2xl shadow-black/10 p-1.5 duration-150 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+          className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-[220px] origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-white/95 dark:bg-[rgb(var(--ml-bg-secondary))] backdrop-blur-xl border border-border/40 text-slate-700 dark:text-slate-200 shadow-2xl shadow-black/20 p-1.5 duration-150 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
           {...props}
         >
           <SelectScrollUpButton />

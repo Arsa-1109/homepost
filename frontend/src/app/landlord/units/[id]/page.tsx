@@ -17,6 +17,7 @@ import { MaintenanceRequest, RequestCard } from "@/app/landlord/requests/page";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import Link from "next/link";
+import { DatePicker } from "@/components/ui/date-picker";
 
 type UnitDetail = {
   unit: {
@@ -566,11 +567,10 @@ export default function UnitDetailsPage() {
                   <label className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest block mb-2">
                     Lease Start Date
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={editLeaseStart}
-                    onChange={(e) => setEditLeaseStart(e.target.value)}
-                    className="w-full bg-[rgb(var(--ml-bg-primary))]/50 border border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 focus:border-[rgb(var(--ml-accent))] focus:outline-none transition-all px-4 h-11 rounded-xl text-sm text-[rgb(var(--ml-text-primary))]"
+                    onChange={setEditLeaseStart}
+                    placeholder="Select start date"
                   />
                 </div>
 
@@ -578,11 +578,10 @@ export default function UnitDetailsPage() {
                   <label className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest block mb-2">
                     Lease End Date
                   </label>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={editLeaseEnd}
-                    onChange={(e) => setEditLeaseEnd(e.target.value)}
-                    className="w-full bg-[rgb(var(--ml-bg-primary))]/50 border border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 focus:border-[rgb(var(--ml-accent))] focus:outline-none transition-all px-4 h-11 rounded-xl text-sm text-[rgb(var(--ml-text-primary))]"
+                    onChange={setEditLeaseEnd}
+                    placeholder="Select end date"
                   />
                 </div>
 

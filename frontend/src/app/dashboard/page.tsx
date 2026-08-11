@@ -15,11 +15,12 @@ export default function DashboardRedirect() {
     setError(null);
     try {
       const user: any = await api.get("/api/v1/onboarding/me");
-      if (user && user.role) {
+      if (user && user.role && user.role !== "none") {
         // Route to /sync-role to ensure Clerk session metadata and cookies are synced
         router.push("/sync-role");
       } else {
-        router.push("/sync-role");
+        // User has no role set in database yet -> send to home page to pick a role
+        router.push("/");
       }
     } catch (err: any) {
       console.error("Dashboard redirect failed:", err);
