@@ -294,13 +294,10 @@ export default function LandlordUnitsPage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
       <div className="mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-500/10 text-indigo-500 rounded-2xl border border-indigo-500/10 shadow-inner">
-            <DoorOpen className="w-6 h-6" />
-          </div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
           Units
         </h1>
-        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] pl-1 mt-2">
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
           Set up property units, manage occupancy, and generate tenant invite links.
         </p>
       </div>
@@ -314,7 +311,7 @@ export default function LandlordUnitsPage() {
           <div className="flex gap-4 items-center bg-[rgb(var(--ml-bg-secondary))] p-4 rounded-2xl border border-border/15 shadow-sm max-w-max">
             <span className="font-bold text-xs uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
             <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val || "")}>
-              <SelectTrigger className="w-48 bg-[rgb(var(--ml-bg-secondary))]/60 border-border/30 rounded-xl">
+              <SelectTrigger className="w-48 bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl">
                 <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-sm">
                   {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
                 </span>
@@ -338,18 +335,22 @@ export default function LandlordUnitsPage() {
                 value={unitLabel} 
                 onChange={e => setUnitLabel(e.target.value)} 
                 placeholder="Unit Label (e.g. Apt 101, Basement, etc.)" 
-                className="w-full bg-[rgb(var(--ml-bg-secondary))]/55 border border-border/30 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
+                className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
               />
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] select-none">Rent Due Day:</span>
-                <input 
-                  required 
-                  type="number"
-                  min="1" max="31"
-                  value={rentDay} 
-                  onChange={e => setRentDay(e.target.value)} 
-                  className="bg-[rgb(var(--ml-bg-secondary))]/55 border border-border/30 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all w-24 tabular-nums"
-                />
+                <Select value={rentDay} onValueChange={(val) => setRentDay(val || "1")}>
+                  <SelectTrigger className="w-24 bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl h-[46px]">
+                    <SelectValue placeholder="Day" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl max-h-60">
+                    {Array.from({ length: 31 }, (_, i) => (
+                      <SelectItem key={i + 1} value={(i + 1).toString()} className="font-semibold text-sm">
+                        {i + 1}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <button 

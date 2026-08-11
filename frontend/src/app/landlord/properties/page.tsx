@@ -61,13 +61,10 @@ export default function LandlordPropertiesPage() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
       <div className="mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-2xl border border-blue-500/10 shadow-inner">
-            <Building2 className="w-6 h-6" />
-          </div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
           Properties
         </h1>
-        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] pl-1 mt-2">
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
           Manage your real estate catalog and view general property settings.
         </p>
       </div>
@@ -83,21 +80,21 @@ export default function LandlordPropertiesPage() {
             value={name} 
             onChange={e => setName(e.target.value)} 
             placeholder="Name (e.g. Sunset Apartments)" 
-            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/50"
+            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
           />
           <input 
             required 
             value={address} 
             onChange={e => setAddress(e.target.value)} 
             placeholder="Address (e.g. 123 Main St)" 
-            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/50"
+            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
           />
           <input 
             required 
             value={city} 
             onChange={e => setCity(e.target.value)} 
             placeholder="City" 
-            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/50"
+            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
           />
         </div>
         <div className="flex justify-end pt-3 border-t border-border/15">

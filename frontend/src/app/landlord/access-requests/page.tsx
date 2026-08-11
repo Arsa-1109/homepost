@@ -244,7 +244,7 @@ export default function AccessRequestsPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto min-h-screen relative">
+    <div className="p-6 md:p-8 max-w-4xl mx-auto relative">
       {/* Background orbs */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[rgb(var(--ml-accent))]/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-zinc-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -253,10 +253,7 @@ export default function AccessRequestsPage() {
         <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
           <ChevronLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl shadow-inner border border-[rgb(var(--ml-accent))]/20">
-            <Users className="w-6 h-6" />
-          </div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
           Access Requests
         </h1>
         <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] pl-1">

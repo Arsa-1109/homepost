@@ -143,7 +143,7 @@ export default function LandlordDocumentsPage() {
   };
 
   if (loading) return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-[rgb(var(--ml-text-primary))]">Documents</h1>
       <div className="space-y-6">
         <div className="p-6 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-4">
@@ -161,8 +161,15 @@ export default function LandlordDocumentsPage() {
   );
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold">Documents</h1>
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          Documents
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
+          Upload and manage leases, agreements, and property documentation.
+        </p>
+      </div>
 
       {properties.length === 0 ? (
         <div className="text-center py-12 border border-border rounded-xl">
@@ -170,25 +177,23 @@ export default function LandlordDocumentsPage() {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <label htmlFor="select-doc-property" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</label>
-              <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
-                <SelectTrigger id="select-doc-property">
-                  <span className="flex flex-1 text-left line-clamp-1 truncate">
-                    {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  {properties.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex gap-4 items-center bg-[rgb(var(--ml-bg-secondary))] p-4 rounded-2xl border border-border/15 shadow-sm max-w-max">
+            <span className="font-bold text-xs uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] select-none">Select Property:</span>
+            <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
+              <SelectTrigger id="select-doc-property" className="w-48 bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl">
+                <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-sm">
+                  {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl">
+                {properties.map(p => (
+                  <SelectItem key={p.id} value={p.id} className="font-semibold text-sm">{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-xl space-y-4 shadow-sm animate-fadeIn">
+          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border/25 rounded-2xl space-y-4 shadow-sm animate-fadeIn">
             <h2 className="text-xl font-semibold mb-4 text-balance">Upload New Document</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -199,21 +204,21 @@ export default function LandlordDocumentsPage() {
                   value={title} 
                   onChange={e => setTitle(e.target.value)} 
                   placeholder="Document Title (e.g. Lease Agreement 2026)" 
-                  className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+                  className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
                 />
               </div>
               <div className="space-y-1">
                 <label htmlFor="select-doc-unit" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Target Unit</label>
                 <Select value={selectedUnit || "all"} onValueChange={(val) => setSelectedUnit(val as string)}>
-                  <SelectTrigger id="select-doc-unit">
-                    <span className="flex flex-1 text-left line-clamp-1 truncate">
+                  <SelectTrigger id="select-doc-unit" className="bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl">
+                    <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-sm">
                       {selectedUnit === "all" || !selectedUnit ? "Assign to: All Units (Property-wide)" : `Assign to: ${units.find(u => u.id === selectedUnit)?.unit_label}`}
                     </span>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Assign to: All Units (Property-wide)</SelectItem>
+                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl">
+                    <SelectItem value="all" className="font-semibold text-sm">Assign to: All Units (Property-wide)</SelectItem>
                     {units.map(u => (
-                      <SelectItem key={u.id} value={u.id}>Assign to: {u.unit_label}</SelectItem>
+                      <SelectItem key={u.id} value={u.id} className="font-semibold text-sm">Assign to: {u.unit_label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

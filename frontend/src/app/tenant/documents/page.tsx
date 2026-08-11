@@ -89,10 +89,12 @@ export default function TenantDocumentsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Shared Documents</h1>
-        <p className="text-[rgb(var(--ml-text-secondary))] text-sm">
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          Shared Documents
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
           Important files shared by your landlord (lease agreements, move-in instructions, etc.)
         </p>
       </div>

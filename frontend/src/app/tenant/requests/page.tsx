@@ -259,20 +259,20 @@ function TenantRequestsContent() {
         onCancel={() => setConfirmReopen(null)}
       />
 
-      <div className="w-full min-w-0 space-y-5 max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 shrink-0">
-              <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[rgb(var(--ml-text-primary))] leading-tight">
+      <div className="w-full min-w-0 space-y-6 max-w-4xl mx-auto animate-fade-slide-up">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
               Maintenance Requests
             </h1>
+            <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
+              Track repair progress, view landlord updates, and submit new requests.
+            </p>
           </div>
           {profile?.is_active && (
             <Link
               href="/tenant/requests/new"
-              className="self-start sm:self-auto bg-[rgb(var(--ml-accent))] text-black px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-sm font-semibold hover:bg-[rgb(var(--ml-accent-light))] transition-colors shadow-sm whitespace-nowrap"
+              className="self-start sm:self-auto bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-5 py-2.5 text-xs rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] hover-lift transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] whitespace-nowrap cursor-pointer"
             >
               + New Request
             </Link>

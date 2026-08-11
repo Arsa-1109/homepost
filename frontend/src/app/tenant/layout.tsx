@@ -21,7 +21,7 @@ export default function TenantLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-dvh">
       {/* Tenant Portal Top Header */}
       <header className="p-4 flex justify-between items-center border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-80">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg text-[rgb(var(--ml-text-primary))] hover:opacity-80 transition-opacity">

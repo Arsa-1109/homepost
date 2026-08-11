@@ -8,6 +8,8 @@ import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
+import { Wrench, ChevronLeft } from "lucide-react";
+
 export default function NewRequestPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -49,23 +51,28 @@ export default function NewRequestPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/tenant/requests" className="text-[rgb(var(--ml-text-secondary))] hover:text-foreground transition-colors">
-          ← Back
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-slide-up">
+      <div className="mb-6 flex flex-col gap-2">
+        <Link href="/tenant/requests" className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-1">
+          <ChevronLeft className="w-4 h-4" /> Back to Requests
         </Link>
-        <h1 className="text-2xl font-bold">New Maintenance Request</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          New Maintenance Request
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] pl-1">
+          Submit details and photos regarding a repair issue in your unit.
+        </p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-sm font-semibold">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-[rgb(var(--ml-bg-secondary))] p-6 rounded-xl border border-border">
-        <div className="space-y-2">
-          <label htmlFor="issue-title" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Issue Title</label>
+      <form onSubmit={handleSubmit} className="space-y-5 bg-[rgb(var(--ml-bg-secondary))] p-6 rounded-2xl border border-border/25 shadow-sm">
+        <div className="space-y-1.5">
+          <label htmlFor="issue-title" className="text-xs font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">Issue Title</label>
           <input 
             id="issue-title"
             required
@@ -74,12 +81,12 @@ export default function NewRequestPage() {
             onChange={e => setTitle(e.target.value)}
             type="text" 
             placeholder="e.g. Leaking faucet in kitchen" 
-            className="w-full bg-transparent border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
+            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
           />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="issue-description" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Description</label>
+        <div className="space-y-1.5">
+          <label htmlFor="issue-description" className="text-xs font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">Description</label>
           <textarea 
             id="issue-description"
             required
@@ -88,15 +95,15 @@ export default function NewRequestPage() {
             onChange={e => setDescription(e.target.value)}
             rows={4} 
             placeholder="Please provide details about the issue..." 
-            className="w-full bg-transparent border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors resize-none"
+            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40 resize-none"
           />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="issue-priority" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Priority</label>
+        <div className="space-y-1.5">
+          <label htmlFor="issue-priority" className="text-xs font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">Priority</label>
           <Select value={priority} onValueChange={(val) => setPriority(val || "medium")}>
-            <SelectTrigger id="issue-priority" className="w-full bg-transparent border border-border rounded-lg h-11 transition-colors">
-              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
+            <SelectTrigger id="issue-priority" className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl h-[46px]">
+              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm font-semibold">
                 {priority === "low"
                   ? "Low (Cosmetic, non-urgent)"
                   : priority === "medium"
@@ -106,33 +113,33 @@ export default function NewRequestPage() {
                   : "Emergency (Immediate threat)"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
-              <SelectItem value="low" className="rounded-lg">Low (Cosmetic, non-urgent)</SelectItem>
-              <SelectItem value="medium" className="rounded-lg">Medium (Standard issue)</SelectItem>
-              <SelectItem value="high" className="rounded-lg">High (Needs attention soon)</SelectItem>
-              <SelectItem value="urgent" className="rounded-lg">Emergency (Immediate threat)</SelectItem>
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl">
+              <SelectItem value="low" className="font-semibold text-sm">Low (Cosmetic, non-urgent)</SelectItem>
+              <SelectItem value="medium" className="font-semibold text-sm">Medium (Standard issue)</SelectItem>
+              <SelectItem value="high" className="font-semibold text-sm">High (Needs attention soon)</SelectItem>
+              <SelectItem value="urgent" className="font-semibold text-sm">Emergency (Immediate threat)</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="issue-photo" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Attach Photo (Optional)</label>
+        <div className="space-y-1.5">
+          <label htmlFor="issue-photo" className="text-xs font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">Attach Photo (Optional)</label>
           <input 
             id="issue-photo"
             type="file" 
             accept="image/*"
             onChange={e => setImage(e.target.files?.[0] || null)}
-            className="w-full text-sm text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[rgb(var(--ml-accent))] file:text-white hover:file:opacity-90 cursor-pointer"
+            className="w-full text-xs text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[rgb(var(--ml-accent))] file:text-[rgb(var(--ml-bg-primary))] hover:file:opacity-90 cursor-pointer"
           />
         </div>
 
-        <Button 
+        <button 
           type="submit"
-          isLoading={loading}
-          className="w-full bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white font-medium p-3 rounded-lg cursor-pointer"
+          disabled={loading}
+          className="w-full bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold py-3 px-6 text-sm rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] hover-lift transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer"
         >
-          Submit Request
-        </Button>
+          {loading ? "Submitting..." : "Submit Request"}
+        </button>
       </form>
     </div>
   );

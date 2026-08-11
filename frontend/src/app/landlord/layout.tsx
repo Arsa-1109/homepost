@@ -52,13 +52,16 @@ export default function LandlordLayout({
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-dvh overflow-hidden">
       {/* Sidebar — Desktop */}
+      {/* aside: overflow-visible + relative so the toggle button can hang -14px to the right without being clipped.
+           CSS spec: overflow-y:auto forces overflow-x:hidden on the SAME element, so the button
+           must live on the aside itself, not inside the scrollable inner div. */}
       <aside className={cn(
-        "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 relative py-6",
+        "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 h-dvh sticky top-0 shrink-0 overflow-visible relative",
         isCollapsed ? "w-16" : "w-64"
       )}>
-        {/* Toggle Button */}
+        {/* Toggle Button — child of aside (overflow-visible), never clipped */}
         <button
           onClick={toggleCollapse}
           className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-border p-1 rounded-full text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] shadow-sm transition-colors z-50 hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer"
@@ -67,40 +70,43 @@ export default function LandlordLayout({
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
 
-        {!isCollapsed && (
-          <Link href="/" className="flex items-center gap-2 text-xl font-bold mb-8 text-[rgb(var(--ml-text-primary))] px-6 tracking-tight hover:opacity-80 transition-opacity">
-            <Building2 className="size-6 text-[rgb(var(--ml-accent))]" />
-            <span>Homepost</span>
-          </Link>
-        )}
+        {/* Inner scroll container — only this div scrolls, aside stays overflow-visible */}
+        <div className="flex flex-col h-full overflow-y-auto py-6">
+          {!isCollapsed && (
+            <Link href="/" className="flex items-center gap-2 text-xl font-bold mb-8 text-[rgb(var(--ml-text-primary))] px-6 tracking-tight hover:opacity-80 transition-opacity">
+              <Building2 className="size-6 text-[rgb(var(--ml-accent))]" />
+              <span>Homepost</span>
+            </Link>
+          )}
 
-        <nav className="flex-1 space-y-1 px-3">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] group relative",
-                  isCollapsed && "justify-center px-0",
-                  isActive
-                    ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-semibold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
-                    : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))]"
-                )}
-                title={isCollapsed ? item.label : undefined}
-              >
-                <Icon className={cn("size-5 shrink-0 transition-transform group-hover:scale-105", isActive && "text-[rgb(var(--ml-accent))]" )} />
-                {!isCollapsed && <span className="truncate">{item.label}</span>}
-              </a>
-            );
-          })}
-        </nav>
+          <nav className="flex-1 space-y-1 px-3">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] group relative",
+                    isCollapsed && "justify-center px-0",
+                    isActive
+                      ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-semibold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
+                      : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))]"
+                  )}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <Icon className={cn("size-5 shrink-0 transition-transform group-hover:scale-105", isActive && "text-[rgb(var(--ml-accent))]" )} />
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </aside>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Control Bar — Desktop */}
         <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
           <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))] capitalize">
@@ -147,7 +153,7 @@ export default function LandlordLayout({
                     const Icon = item.icon;
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
-                      <a
+                      <Link
                         key={item.label}
                         href={item.href}
                         onClick={() => setIsMobileOpen(false)}
@@ -160,7 +166,7 @@ export default function LandlordLayout({
                       >
                         <Icon className="size-5 shrink-0" />
                         <span>{item.label}</span>
-                      </a>
+                      </Link>
                     );
                   })}
                 </nav>
@@ -170,7 +176,11 @@ export default function LandlordLayout({
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto relative">
+          <div className="p-4 md:p-6 pb-24 md:pb-20 min-h-full flex flex-col">
+            {children}
+          </div>
+        </main>
 
         {/* Mobile Bottom Navigation Bar */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-border px-2 py-1.5 flex items-center justify-around">
@@ -178,7 +188,7 @@ export default function LandlordLayout({
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
                 className={cn(
@@ -190,7 +200,7 @@ export default function LandlordLayout({
               >
                 <Icon className={cn("size-5 transition-transform", isActive && "scale-110 text-[rgb(var(--ml-accent))]")} />
                 <span className="truncate max-w-[72px] tracking-tight">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </nav>

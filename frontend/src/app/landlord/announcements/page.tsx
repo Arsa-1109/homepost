@@ -88,8 +88,15 @@ export default function LandlordAnnouncementsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-balance">Announcements</h1>
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          Announcements
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
+          Broadcast notices and updates to tenants across your properties.
+        </p>
+      </div>
 
       <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-xl space-y-4 shadow-sm animate-fadeIn">
         <h2 className="text-xl font-semibold mb-4 text-balance">Post New Announcement</h2>
@@ -102,14 +109,14 @@ export default function LandlordAnnouncementsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Property</label>
                 <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val || "")}>
-                  <SelectTrigger>
-                    <span className="flex flex-1 text-left line-clamp-1 truncate">
+                  <SelectTrigger className="bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl">
+                    <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-sm">
                       {selectedProperty ? properties.find(p => p.id === selectedProperty)?.name : "Select Property"}
                     </span>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl">
                     {properties.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id} className="font-semibold text-sm">{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -118,15 +125,15 @@ export default function LandlordAnnouncementsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] select-none">Select Unit (Optional)</label>
                 <Select value={selectedUnit || "all"} onValueChange={(val) => setSelectedUnit(val === "all" ? "" : val || "")}>
-                  <SelectTrigger>
-                    <span className="flex flex-1 text-left line-clamp-1 truncate">
+                  <SelectTrigger className="bg-[rgb(var(--ml-bg-primary))]/80 border-border/40 rounded-xl">
+                    <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-sm">
                       {selectedUnit === "all" || !selectedUnit ? "All Units (Property-wide)" : units.find(u => u.id === selectedUnit)?.unit_label ? `Unit ${units.find(u => u.id === selectedUnit)?.unit_label}` : "Select Unit"}
                     </span>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Units (Property-wide)</SelectItem>
+                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/30 rounded-xl">
+                    <SelectItem value="all" className="font-semibold text-sm">All Units (Property-wide)</SelectItem>
                     {units.map(u => (
-                      <SelectItem key={u.id} value={u.id}>Unit {u.unit_label}</SelectItem>
+                      <SelectItem key={u.id} value={u.id} className="font-semibold text-sm">Unit {u.unit_label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -138,15 +145,15 @@ export default function LandlordAnnouncementsPage() {
               value={title} 
               onChange={e => setTitle(e.target.value)} 
               placeholder="Announcement Title" 
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+              className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40"
             />
             <textarea 
               required 
-              rows={4}
               value={body} 
               onChange={e => setBody(e.target.value)} 
-              placeholder="What do you want to tell your tenants?" 
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all resize-none"
+              placeholder="Write your announcement details here..." 
+              rows={4}
+              className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 rounded-xl p-3 text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40 resize-y"
             />
             <Button 
               type="submit"

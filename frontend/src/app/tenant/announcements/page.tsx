@@ -10,6 +10,8 @@ type Announcement = {
   created_at: string;
 };
 
+import { Megaphone } from "lucide-react";
+
 export default function TenantAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,8 +31,15 @@ export default function TenantAnnouncementsPage() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold">Property Announcements</h1>
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          Property Announcements
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
+          Stay updated with important broadcasts and notices from your landlord.
+        </p>
+      </div>
 
       {loading ? (
         <div className="text-center py-12 text-[rgb(var(--ml-text-secondary))] animate-pulse">

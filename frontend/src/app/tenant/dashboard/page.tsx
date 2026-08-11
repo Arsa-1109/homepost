@@ -55,7 +55,7 @@ function daysUntilRent(dueDay: number): number {
   return Math.round((thisMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-import { Wrench, Megaphone, FileText } from "lucide-react";
+import { Wrench, Megaphone, FileText, Home } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
   open: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -77,24 +77,24 @@ function CountdownCard({
 }) {
   return (
     <div
-      className={`p-6 rounded-2xl border flex flex-col items-center text-center justify-center gap-1 transition-all ${
+      className={`p-6 rounded-2xl border flex flex-col items-center text-center justify-center gap-1 transition-all shadow-sm ${
         urgent
-          ? "bg-red-500/10 border-red-500/40"
-          : "bg-[rgb(var(--ml-bg-secondary))] border-border"
+          ? "bg-red-500/10 border-red-500/40 text-red-400"
+          : "bg-[rgb(var(--ml-bg-secondary))] border-border/50"
       }`}
     >
-      <span className="text-xs font-medium uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
+      <span className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
         {label}
       </span>
       <span
-        className={`text-5xl font-extrabold my-2 ${
+        className={`text-5xl font-extrabold my-2 tracking-tight ${
           urgent ? "text-red-400" : "text-[rgb(var(--ml-accent))]"
         }`}
       >
         {value}
       </span>
       {sublabel && (
-        <span className="text-sm text-[rgb(var(--ml-text-secondary))]">{sublabel}</span>
+        <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">{sublabel}</span>
       )}
     </div>
   );
@@ -155,7 +155,7 @@ export default function TenantDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6 max-w-7xl mx-auto">
         <div className="space-y-2">
           <div className="skeleton h-8 w-48 rounded-xl" />
           <div className="skeleton h-4 w-36 rounded-md" />
@@ -216,13 +216,15 @@ export default function TenantDashboard() {
   const rentUrgent = rentDays !== null && rentDays <= 3;
 
   return (
-    <div ref={gridRef} className="space-y-6 max-w-4xl mx-auto">
+    <div ref={gridRef} className="space-y-6 max-w-7xl mx-auto animate-fade-slide-up">
 
       {/* Welcome header */}
-      <div>
-        <h1 className="text-2xl font-bold">Welcome Home</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          Welcome Home
+        </h1>
         {profile && (
-          <p className="text-[rgb(var(--ml-text-secondary))] mt-1 text-sm">
+          <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
             {profile.unit_label} · {profile.property_name}
             {profile.property_city ? `, ${profile.property_city}` : ""}
           </p>

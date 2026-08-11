@@ -104,7 +104,7 @@ export default function UnitDetailsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen">
+      <div className="p-6 md:p-8 max-w-7xl mx-auto">
         {/* Back link + title row */}
         <div className="mb-8 flex flex-col gap-2">
           <div className="skeleton h-4 w-32 rounded-lg mb-2" />
@@ -302,7 +302,7 @@ export default function UnitDetailsPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto min-h-screen relative">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto relative">
       <div className="mb-8 flex flex-col gap-2 relative z-10">
         <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-muted))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
           <ChevronLeft className="w-4 h-4" /> Back to Dashboard

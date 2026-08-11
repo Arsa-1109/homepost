@@ -1,14 +1,19 @@
 "use client";
 
+import { Settings } from "lucide-react";
 import { UserProfile } from "@clerk/nextjs";
 
 export default function LandlordSettingsPage() {
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Settings</h1>
-      <p className="text-[rgb(var(--ml-text-secondary))] -mt-4">
-        Manage your account settings, security options, and personal profile.
-      </p>
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+          Settings
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
+          Manage your account settings, security options, and personal profile.
+        </p>
+      </div>
       
       <div className="border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))] p-1 md:p-6 overflow-hidden flex justify-center">
         <UserProfile 

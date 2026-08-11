@@ -433,19 +433,16 @@ export default function LandlordMaintenancePage() {
   }, []);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto relative">
+    <div className="space-y-6 max-w-4xl mx-auto relative">
       {/* Background orbs */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[rgb(var(--ml-accent))]/5 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-zinc-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="mb-8 flex flex-col gap-2 relative z-10">
-        <h1 className="text-3xl font-bold text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-          <div className="p-2.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl shadow-inner border border-[rgb(var(--ml-accent))]/20">
-            <Wrench className="w-6 h-6" />
-          </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
           Maintenance Requests
         </h1>
-        <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] pl-1">
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
           Review and resolve property repair issues reported by tenants.
         </p>
       </div>

@@ -31,7 +31,7 @@ export default function RootLayout({
         outfit.variable
       )}
     >
-      <body>
+      <body suppressHydrationWarning>
         <ClerkProvider>
           <UserSync />
           <ThemeProvider
