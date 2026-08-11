@@ -17,7 +17,7 @@ export function RootHeader() {
   if (isPortal) return null;
 
   return (
-    <header className="p-4 flex justify-between items-center border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]">
+    <header className="p-4 flex justify-between items-center border-b border-border bg-[rgb(var(--ml-bg-secondary))]">
       <div className="flex items-center gap-2 font-bold text-lg text-[rgb(var(--ml-text-primary))]">
         <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
         <span>Homepost</span>

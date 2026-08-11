@@ -23,7 +23,7 @@ export default function TenantLayout({
   return (
     <div className="flex flex-col min-h-screen">
       {/* Tenant Portal Top Header */}
-      <header className="p-4 flex justify-between items-center border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-80">
+      <header className="p-4 flex justify-between items-center border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-80">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg text-[rgb(var(--ml-text-primary))] hover:opacity-80 transition-opacity">
           <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
           <span>Homepost</span>
@@ -38,7 +38,7 @@ export default function TenantLayout({
       <main className="flex-1 p-4 pb-24">{children}</main>
 
       {/* Bottom Tab Bar — always visible */}
-      <nav className="fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 border-t border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md z-50">
+      <nav className="fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 border-t border-border bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md z-50">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");

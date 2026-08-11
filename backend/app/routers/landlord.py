@@ -58,6 +58,21 @@ async def create_unit(
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
     
+    # Check for duplicate unit_label in the same property
+    from sqlalchemy import func
+    existing_result = await session.execute(
+        select(Unit).where(
+            Unit.property_id == unit_in.property_id,
+            func.lower(func.trim(Unit.unit_label)) == func.lower(func.trim(unit_in.unit_label))
+        )
+    )
+    existing_unit = existing_result.scalars().first()
+    if existing_unit:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A unit with label '{unit_in.unit_label}' already exists in this property."
+        )
+    
     unit = Unit(**unit_in.model_dump())
     session.add(unit)
     await session.commit()
@@ -162,8 +177,96 @@ async def get_unit_details(
         "unit": resp,
         "property_name": prop.name,
         "tenant_name": tenant_name,
-        "tenant_email": tenant_email
+        "tenant_email": tenant_email,
+        "lease_start": tenant_profile.lease_start.isoformat() if tenant_profile and tenant_profile.lease_start else None,
+        "lease_end": tenant_profile.lease_end.isoformat() if tenant_profile and tenant_profile.lease_end else None
     }
+
+@router.put("/units/{unit_id}", response_model=Unit)
+async def update_unit(
+    unit_id: uuid.UUID,
+    unit_in: UnitUpdate,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    unit = await session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+        
+    prop = await session.get(Property, unit.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Access denied.")
+        
+    # If label changes, check for duplicates in the same property
+    if unit_in.unit_label and unit_in.unit_label.strip().lower() != unit.unit_label.strip().lower():
+        from sqlalchemy import func
+        existing_result = await session.execute(
+            select(Unit).where(
+                Unit.property_id == unit.property_id,
+                Unit.id != unit.id,
+                func.lower(func.trim(Unit.unit_label)) == func.lower(func.trim(unit_in.unit_label))
+            )
+        )
+        existing_unit = existing_result.scalars().first()
+        if existing_unit:
+            raise HTTPException(
+                status_code=400,
+                detail=f"A unit with label '{unit_in.unit_label}' already exists in this property."
+            )
+            
+    # Update fields
+    if unit_in.unit_label is not None:
+        unit.unit_label = unit_in.unit_label
+    if unit_in.rent_due_day is not None:
+        unit.rent_due_day = unit_in.rent_due_day
+        
+    session.add(unit)
+    await session.commit()
+    await session.refresh(unit)
+    return unit
+
+@router.delete("/units/{unit_id}", status_code=status.HTTP_200_OK)
+async def delete_unit(
+    unit_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    unit = await session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+        
+    prop = await session.get(Property, unit.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Access denied.")
+        
+    # Check if there is an active tenant in this unit
+    from app.models.tenant_profile import TenantProfile
+    tenant_res = await session.execute(
+        select(TenantProfile).where(
+            TenantProfile.unit_id == unit.id,
+            TenantProfile.is_active == True
+        )
+    )
+    if tenant_res.scalars().first():
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete an occupied unit. Please remove the tenant first."
+        )
+        
+    # Delete associated data
+    from app.models.invite import Invite
+    from app.models.maintenance_request import MaintenanceRequest
+    from app.models.document import Document
+    from sqlalchemy import delete
+    
+    await session.execute(delete(Invite).where(Invite.unit_id == unit.id))
+    await session.execute(delete(MaintenanceRequest).where(MaintenanceRequest.unit_id == unit.id))
+    await session.execute(delete(Document).where(Document.unit_id == unit.id))
+    await session.execute(delete(TenantProfile).where(TenantProfile.unit_id == unit.id))
+    
+    await session.delete(unit)
+    await session.commit()
+    return {"message": "Unit deleted successfully"}
 
 # ---------------------------------------------------------------------------
 # Maintenance Requests
@@ -553,6 +656,8 @@ async def list_unit_documents(
 # ---------------------------------------------------------------------------
 # Onboarding & Invites (Phase 4)
 # ---------------------------------------------------------------------------
+from datetime import date
+from typing import Optional
 from pydantic import BaseModel
 from app.models.invite import Invite
 from app.models.tenant_profile import TenantProfile
@@ -565,6 +670,8 @@ class GenerateInvitePayload(BaseModel):
 class ApproveTenantPayload(BaseModel):
     user_id: uuid.UUID
     unit_id: uuid.UUID
+    lease_start: Optional[date] = None
+    lease_end: Optional[date] = None
 
 class DenyTenantPayload(BaseModel):
     user_id: uuid.UUID
@@ -634,11 +741,48 @@ async def approve_tenant(
     profile = TenantProfile(
         user_id=tenant.id,
         unit_id=unit.id,
+        lease_start=payload.lease_start,
+        lease_end=payload.lease_end,
         is_active=True
     )
     session.add(profile)
     await session.commit()
     return {"status": "success", "message": "Tenant approved."}
+
+class UpdateLeasePayload(BaseModel):
+    lease_start: Optional[date] = None
+    lease_end: Optional[date] = None
+
+@router.put("/units/{unit_id}/lease")
+async def update_lease(
+    unit_id: uuid.UUID,
+    payload: UpdateLeasePayload,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session)
+):
+    unit = await session.get(Unit, unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
+    prop = await session.get(Property, unit.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Unit access denied.")
+
+    # Get active tenant profile
+    occ_res = await session.execute(
+        select(TenantProfile).where(
+            TenantProfile.unit_id == unit.id,
+            TenantProfile.is_active == True,
+        )
+    )
+    tenant_profile = occ_res.scalars().first()
+    if not tenant_profile:
+        raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
+
+    tenant_profile.lease_start = payload.lease_start
+    tenant_profile.lease_end = payload.lease_end
+    session.add(tenant_profile)
+    await session.commit()
+    return {"status": "success", "message": "Lease dates updated."}
 
 @router.post("/deny-tenant")
 async def deny_tenant(
@@ -741,6 +885,11 @@ async def get_dashboard_summary(
 
     # Build unit_label lookup for maintenance display
     unit_label_map = {str(u.id): u.unit_label for u in all_units}
+    prop_name_map = {str(p.id): p.name for p in properties}
+    unit_property_name_map = {
+        str(u.id): prop_name_map.get(str(u.property_id), "Unknown Property")
+        for u in all_units
+    }
 
     # --- Pending Tenants ---
     pending_result = await session.execute(
@@ -809,8 +958,6 @@ async def get_dashboard_summary(
         activity_list.sort(key=lambda x: x.timestamp, reverse=True)
         activity_list = activity_list[:5]
 
-    prop_name_map = {str(p.id): p.name for p in properties}
-
     return {
         "property_stats": {
             "total_properties": len(properties),
@@ -836,6 +983,7 @@ async def get_dashboard_summary(
                 "priority": r.priority.value if hasattr(r.priority, 'value') else str(r.priority),
                 "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
                 "unit_label": unit_label_map.get(str(r.unit_id), "—"),
+                "property_name": unit_property_name_map.get(str(r.unit_id), "—"),
                 "created_at": r.created_at.isoformat(),
             }
             for r in urgent_requests

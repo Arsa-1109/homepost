@@ -10,7 +10,7 @@ export default function LandlordSettingsPage() {
         Manage your account settings, security options, and personal profile.
       </p>
       
-      <div className="border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] p-1 md:p-6 overflow-hidden flex justify-center">
+      <div className="border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))] p-1 md:p-6 overflow-hidden flex justify-center">
         <UserProfile 
           routing="hash"
           appearance={{
@@ -22,8 +22,8 @@ export default function LandlordSettingsPage() {
             },
             elements: {
               card: "shadow-none w-full border-0 bg-transparent",
-              navbar: "border-r border-[var(--ml-border)]",
-              navbarMobileMenuRow: "border-b border-[var(--ml-border)]",
+              navbar: "border-r border-border",
+              navbarMobileMenuRow: "border-b border-border",
               pageScrollable: "bg-transparent",
               profileSectionTitleText: "text-[rgb(var(--ml-text-primary))]",
             }

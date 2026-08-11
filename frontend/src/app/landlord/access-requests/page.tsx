@@ -110,7 +110,7 @@ function AccessRequestCard({
   const hasNoVacantUnits = Boolean(propertyId && !loadingUnits && vacantUnits.length === 0);
 
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-[var(--ml-border)]/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 p-4 md:p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
+    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-border/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 p-4 md:p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
       
       {/* Top / Left: Tenant Profile Info + Mobile Disclosure Trigger */}
       <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
@@ -149,12 +149,12 @@ function AccessRequestCard({
         <div className="w-full sm:w-48">
           <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Property</span>
           <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[var(--ml-border)]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
+            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
               <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
                 {propertyId ? properties.find(p => p.id === propertyId)?.name : "Select Property"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
               {properties.map(p => (
                 <SelectItem key={p.id} value={p.id} className="rounded-lg">{p.name}</SelectItem>
               ))}
@@ -169,12 +169,12 @@ function AccessRequestCard({
             onValueChange={(val) => setUnitId(val || "")} 
             disabled={!propertyId || loadingUnits}
           >
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-[var(--ml-border)]/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
+            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
               <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
                 {loadingUnits ? "Loading..." : unitId ? (units.find(u => u.id === unitId)?.unit_label ? `Unit ${units.find(u => u.id === unitId)?.unit_label}` : "Select Unit") : "Select Unit"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
               {vacantUnits.map(u => (
                 <SelectItem key={u.id} value={u.id} className="rounded-lg">Unit {u.unit_label}</SelectItem>
               ))}
@@ -189,7 +189,7 @@ function AccessRequestCard({
       </div>
 
       {/* Right / Bottom: Actions (Sticky bottom action bar on mobile inside card) */}
-      <div className="sticky bottom-0 md:static z-10 flex items-center gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-4 bg-[rgb(var(--ml-bg-secondary))]/95 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-2 -mx-2 md:p-0 md:mx-0 rounded-2xl md:rounded-none border-t border-[var(--ml-border)]/40 md:border-t-0">
+      <div className="sticky bottom-0 md:static z-10 flex items-center gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-4 bg-[rgb(var(--ml-bg-secondary))]/95 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-2 -mx-2 md:p-0 md:mx-0 rounded-2xl md:rounded-none border-t border-border/40 md:border-t-0">
         <Button
           variant="destructive"
           onClick={handleDeny}
@@ -274,7 +274,7 @@ export default function AccessRequestsPage() {
             className="space-y-6"
           >
             {[1, 2].map(i => (
-              <div key={i} className="p-6 rounded-3xl border border-[var(--ml-border)]/50 bg-[rgb(var(--ml-bg-secondary))]/40 flex flex-col md:flex-row gap-6 animate-pulse">
+              <div key={i} className="p-6 rounded-3xl border border-border/50 bg-[rgb(var(--ml-bg-secondary))]/40 flex flex-col md:flex-row gap-6 animate-pulse">
                 <div className="flex-1 space-y-4">
                   <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
                   <div className="h-4 w-1/2 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>

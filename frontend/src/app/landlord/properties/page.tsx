@@ -6,7 +6,6 @@ import { fetchAPI } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Building2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 type Property = {
   id: string;
@@ -60,61 +59,55 @@ export default function LandlordPropertiesPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-balance">Properties</h1>
+    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up">
+      <div className="mb-6">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
+          <div className="p-2.5 bg-blue-500/10 text-blue-500 rounded-2xl border border-blue-500/10 shadow-inner">
+            <Building2 className="w-6 h-6" />
+          </div>
+          Properties
+        </h1>
+        <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] pl-1 mt-2">
+          Manage your real estate catalog and view general property settings.
+        </p>
       </div>
 
-      <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+      <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border/50 rounded-2xl space-y-5 shadow-[0_4px_12px_rgba(0,0,0,0.03)]">
         <div>
-          <h2 className="text-xl font-semibold text-[rgb(var(--ml-text-primary))] text-balance">Add New Property</h2>
-          <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1">Enter the details of your new building to start managing its units.</p>
+          <h2 className="text-lg font-bold text-[rgb(var(--ml-text-primary))] tracking-tight">Add New Property</h2>
+          <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">Enter the details of your new building to start managing its units.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label htmlFor="property-name" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Property Name</label>
-            <input 
-              id="property-name"
-              required 
-              value={name} 
-              onChange={e => setName(e.target.value)} 
-              placeholder="Name (e.g. Sunset Apartments)" 
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all placeholder-[rgb(var(--ml-text-muted))]"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="property-address" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">Street Address</label>
-            <input 
-              id="property-address"
-              required 
-              value={address} 
-              onChange={e => setAddress(e.target.value)} 
-              placeholder="Address (e.g. 123 Main St)" 
-              autoComplete="street-address"
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all placeholder-[rgb(var(--ml-text-muted))]"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="property-city" className="text-xs font-medium text-[rgb(var(--ml-text-secondary))]">City</label>
-            <input 
-              id="property-city"
-              required 
-              value={city} 
-              onChange={e => setCity(e.target.value)} 
-              placeholder="City" 
-              autoComplete="address-level2"
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all placeholder-[rgb(var(--ml-text-muted))]"
-            />
-          </div>
+          <input 
+            required 
+            value={name} 
+            onChange={e => setName(e.target.value)} 
+            placeholder="Name (e.g. Sunset Apartments)" 
+            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/50"
+          />
+          <input 
+            required 
+            value={address} 
+            onChange={e => setAddress(e.target.value)} 
+            placeholder="Address (e.g. 123 Main St)" 
+            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/50"
+          />
+          <input 
+            required 
+            value={city} 
+            onChange={e => setCity(e.target.value)} 
+            placeholder="City" 
+            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/50"
+          />
         </div>
-        <div className="flex justify-end pt-2 border-t border-[var(--ml-border)]">
-          <Button 
+        <div className="flex justify-end pt-3 border-t border-border/15">
+          <button 
+            disabled={isSubmitting}
             type="submit" 
-            isLoading={isSubmitting}
-            className="bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white font-medium px-6 py-3 rounded-lg cursor-pointer transition-opacity disabled:opacity-50 w-full sm:w-auto mt-2"
+            className="bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-6 py-2.5 text-sm rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] hover-lift transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer"
           >
-            Add Property
-          </Button>
+            {isSubmitting ? "Creating..." : "Add Property"}
+          </button>
         </div>
       </form>
 
@@ -122,16 +115,16 @@ export default function LandlordPropertiesPage() {
         {loading ? (
           <motion.div 
             key="loading"
-            initial={false}
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
           >
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-3">
-                <div className="skeleton h-6 w-1/2 rounded-lg" />
-                <div className="skeleton h-4 w-3/4 rounded-md" />
-                <div className="skeleton h-4 w-1/4 rounded-md" />
+            {[1, 2].map((i) => (
+              <div key={i} className="p-6 border border-border/50 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] animate-pulse shadow-sm">
+                <div className="h-7 w-1/2 bg-[rgb(var(--ml-border))]/60 rounded mb-4"></div>
+                <div className="h-5 w-3/4 bg-[rgb(var(--ml-border))]/60 rounded mb-2"></div>
+                <div className="h-5 w-1/4 bg-[rgb(var(--ml-border))]/60 rounded"></div>
               </div>
             ))}
           </motion.div>
@@ -161,7 +154,7 @@ export default function LandlordPropertiesPage() {
                 transition: { staggerChildren: 0.1 }
               }
             }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
           >
             {properties.map(p => (
               <motion.div 
@@ -170,16 +163,16 @@ export default function LandlordPropertiesPage() {
                   show: { opacity: 1, y: 0 }
                 }}
                 key={p.id} 
-                className="flex flex-col p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] hover:shadow-md hover:-translate-y-1 transition-all duration-300 group"
+                className="flex flex-col p-6 border border-border/50 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover-lift transition-all duration-300 group shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-[rgb(var(--ml-accent))]/40"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-[rgb(var(--ml-bg-tertiary))] rounded-lg border border-[var(--ml-border)] group-hover:border-[rgb(var(--ml-accent))] group-hover:bg-[rgba(var(--ml-accent),0.1)] transition-colors">
+                  <div className="p-3 bg-[rgb(var(--ml-bg-primary))] rounded-xl border border-border/60 group-hover:border-[rgb(var(--ml-accent))]/30 group-hover:bg-[rgb(var(--ml-accent))]/10 transition-all duration-300 shadow-sm">
                     <Building2 className="w-6 h-6 text-[rgb(var(--ml-text-secondary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-[rgb(var(--ml-text-primary))]">{p.name}</h3>
-                    <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1">{p.address}</p>
-                    <p className="text-sm text-[rgb(var(--ml-text-secondary))]">{p.city}</p>
+                    <h3 className="font-extrabold text-lg text-[rgb(var(--ml-text-primary))] tracking-tight">{p.name}</h3>
+                    <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-1">{p.address}</p>
+                    <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))]/80">{p.city}</p>
                   </div>
                 </div>
               </motion.div>

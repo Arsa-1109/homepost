@@ -91,7 +91,7 @@ export default function LandlordAnnouncementsPage() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-balance">Announcements</h1>
 
-      <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+      <form onSubmit={handleCreate} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-xl space-y-4 shadow-sm animate-fadeIn">
         <h2 className="text-xl font-semibold mb-4 text-balance">Post New Announcement</h2>
         
         {properties.length === 0 ? (
@@ -138,7 +138,7 @@ export default function LandlordAnnouncementsPage() {
               value={title} 
               onChange={e => setTitle(e.target.value)} 
               placeholder="Announcement Title" 
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
             />
             <textarea 
               required 
@@ -146,7 +146,7 @@ export default function LandlordAnnouncementsPage() {
               value={body} 
               onChange={e => setBody(e.target.value)} 
               placeholder="What do you want to tell your tenants?" 
-              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all resize-none"
+              className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all resize-none"
             />
             <Button 
               type="submit"
@@ -160,11 +160,11 @@ export default function LandlordAnnouncementsPage() {
       </form>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold border-b border-[var(--ml-border)] pb-2 text-balance">Recent Announcements</h2>
+        <h2 className="text-xl font-bold border-b border-border pb-2 text-balance">Recent Announcements</h2>
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
-              <div key={i} className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-4">
+              <div key={i} className="p-6 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-4">
                 <div className="flex justify-between items-start mb-2">
                   <div className="h-6 w-48 rounded-lg skeleton" />
                   <div className="h-4 w-20 rounded-md skeleton" />
@@ -173,7 +173,7 @@ export default function LandlordAnnouncementsPage() {
                   <div className="h-4 w-full rounded-md skeleton" />
                   <div className="h-4 w-5/6 rounded-md skeleton" />
                 </div>
-                <div className="mt-4 pt-4 border-t border-[var(--ml-border)]">
+                <div className="mt-4 pt-4 border-t border-border">
                   <div className="h-3.5 w-36 rounded-md skeleton" />
                 </div>
               </div>
@@ -186,7 +186,7 @@ export default function LandlordAnnouncementsPage() {
           </div>
         ) : (
           announcements.map(ann => (
-            <div key={ann.id} className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all">
+            <div key={ann.id} className="p-6 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-lg text-balance">{ann.title}</h3>
                 <span className="text-xs text-[rgb(var(--ml-text-secondary))] tabular-nums">
@@ -194,7 +194,7 @@ export default function LandlordAnnouncementsPage() {
                 </span>
               </div>
               <p className="text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap text-pretty">{ann.body}</p>
-              <div className="mt-4 pt-4 border-t border-[var(--ml-border)] text-xs text-[rgb(var(--ml-text-secondary))]">
+              <div className="mt-4 pt-4 border-t border-border text-xs text-[rgb(var(--ml-text-secondary))]">
                 Property: {properties.find(p => p.id === ann.property_id)?.name || "Unknown"}
               </div>
             </div>

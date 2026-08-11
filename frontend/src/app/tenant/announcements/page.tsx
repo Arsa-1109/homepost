@@ -43,7 +43,7 @@ export default function TenantAnnouncementsPage() {
       ) : (
         <div className="space-y-6">
           {announcements.map(ann => (
-            <div key={ann.id} className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm hover:border-purple-500/30 hover:shadow-[0_8px_25px_rgba(167,139,250,0.05)] transition-all">
+            <div key={ann.id} className="p-6 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm hover:border-purple-500/30 hover:shadow-[0_8px_25px_rgba(167,139,250,0.05)] transition-all">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-xl">{ann.title}</h3>
                 <span className="text-xs text-[rgb(var(--ml-text-secondary))]">

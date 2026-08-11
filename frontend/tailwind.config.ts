@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: "var(--border)",
-        input: "var(--input)",
+        border: "rgb(var(--ml-border) / <alpha-value>)",
+        input: "rgb(var(--ml-border) / <alpha-value>)",
         ring: "var(--ring)",
         background: "var(--background)",
         foreground: "var(--foreground)",

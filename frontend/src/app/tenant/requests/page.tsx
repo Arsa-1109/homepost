@@ -53,7 +53,7 @@ function AttachmentGrid({ urls, label, onViewImage }: { urls: string[]; label: s
           <button
             key={idx}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onViewImage(url); }}
-            className="p-1 rounded-lg border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-tertiary))] text-xs flex items-center gap-1.5 hover:border-[rgb(var(--ml-accent))] transition-colors cursor-pointer"
+            className="p-1 rounded-lg border border-border bg-[rgb(var(--ml-bg-tertiary))] text-xs flex items-center gap-1.5 hover:border-[rgb(var(--ml-accent))] transition-colors cursor-pointer"
           >
             <Paperclip className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
             <span className="max-w-[120px] truncate">{getFriendlyFileName(url)}</span>
@@ -92,7 +92,7 @@ function CompactRequestCard({
       className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
         isExpanded
           ? "border-[rgb(var(--ml-accent))]/40 bg-[rgb(var(--ml-bg-secondary))]"
-          : "border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/80 hover:border-[var(--ml-border)]"
+          : "border-border bg-[rgb(var(--ml-bg-secondary))]/80 hover:border-border"
       }`}
     >
       <button
@@ -131,7 +131,7 @@ function CompactRequestCard({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-[var(--ml-border)]/50 space-y-4">
+            <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-border/50 space-y-4">
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/60 block mb-1">Description</span>
                 <p className="text-sm text-[rgb(var(--ml-text-primary))] leading-relaxed whitespace-pre-wrap">
@@ -176,7 +176,7 @@ function CompactRequestCard({
                   Resolved over 14 days ago — reopen window has expired
                 </p>
               )}
-              <div className="border-t border-[var(--ml-border)]/50 pt-4">
+              <div className="border-t border-border/50 pt-4">
                 <MaintenanceTimeline requestId={req.id} userType="tenant" onViewImage={onViewImage} />
               </div>
             </div>
@@ -282,7 +282,7 @@ function TenantRequestsContent() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="px-5 py-4 border border-[var(--ml-border)] rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between gap-4">
+              <div key={i} className="px-5 py-4 border border-border rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-2.5 h-2.5 rounded-full skeleton shrink-0" />
                   <div className="flex-1 space-y-2 min-w-0">

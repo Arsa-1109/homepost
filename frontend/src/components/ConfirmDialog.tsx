@@ -91,7 +91,7 @@ export function ConfirmDialog({
             aria-labelledby="confirm-title"
             aria-describedby="confirm-desc"
           >
-            <div className="w-full max-w-sm rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] shadow-2xl p-6 flex flex-col gap-4 pointer-events-auto">
+            <div className="w-full max-w-sm rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-2xl p-6 flex flex-col gap-4 pointer-events-auto">
               {/* Icon + Title */}
               <div className="flex items-start gap-4">
                 <div className={`p-2.5 rounded-xl shrink-0 ${cfg.iconBg}`}>

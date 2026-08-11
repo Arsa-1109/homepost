@@ -100,7 +100,7 @@ export default function TenantDocumentsPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60">
+            <div key={i} className="flex gap-4 p-4 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60">
               <div className="w-20 h-20 rounded-lg skeleton shrink-0" />
               <div className="flex-1 space-y-2 py-1">
                 <div className="skeleton h-4 w-3/4 rounded-md" />
@@ -119,10 +119,10 @@ export default function TenantDocumentsPage() {
           {documents.map((doc) => (
             <div 
               key={doc.id} 
-              className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all group shadow-sm"
+              className="flex gap-4 p-4 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all group shadow-sm"
             >
               {/* Preview Thumbnail */}
-              <div className="relative w-20 h-20 border border-[var(--ml-border)] rounded-lg overflow-hidden shrink-0">
+              <div className="relative w-20 h-20 border border-border rounded-lg overflow-hidden shrink-0">
                 {renderPreview(doc)}
               </div>
 
@@ -135,7 +135,7 @@ export default function TenantDocumentsPage() {
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] font-medium uppercase">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] font-medium uppercase">
                       {getFileBadge(doc.file_type)}
                     </span>
                     <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">

@@ -24,7 +24,7 @@ export async function apiFetch<T = unknown>(
   options: RequestInit = {},
   token: string | null = null
 ): Promise<T> {
-  let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
   // Ensure the base URL always has a protocol scheme
   if (!baseUrl.startsWith("http")) {
     baseUrl = `https://${baseUrl}`;
@@ -141,5 +141,10 @@ export const api = {
   post: (path: string, body?: any, token: string | null = null) => apiFetch(path, { 
     method: "POST", 
     body: body ? JSON.stringify(body) : undefined 
-  }, token)
+  }, token),
+  put: (path: string, body?: any, token: string | null = null) => apiFetch(path, { 
+    method: "PUT", 
+    body: body ? JSON.stringify(body) : undefined 
+  }, token),
+  delete: (path: string, token: string | null = null) => apiFetch(path, { method: "DELETE" }, token)
 };

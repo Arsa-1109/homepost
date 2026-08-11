@@ -55,13 +55,13 @@ export default function LandlordLayout({
     <div className="flex min-h-screen">
       {/* Sidebar — Desktop */}
       <aside className={cn(
-        "hidden md:flex flex-col border-r border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 relative py-6",
+        "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 relative py-6",
         isCollapsed ? "w-16" : "w-64"
       )}>
         {/* Toggle Button */}
         <button
           onClick={toggleCollapse}
-          className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] p-1 rounded-full text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] shadow-sm transition-colors z-50 hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer"
+          className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-border p-1 rounded-full text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] shadow-sm transition-colors z-50 hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -102,7 +102,7 @@ export default function LandlordLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Top Control Bar — Desktop */}
-        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
+        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
           <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))] capitalize">
             {(() => {
               const parts = pathname.split("/");
@@ -120,7 +120,7 @@ export default function LandlordLayout({
         </header>
 
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between p-4 border-b border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40">
+        <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold text-[rgb(var(--ml-text-primary))] hover:opacity-80 transition-opacity">
             <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
             <span>Homepost</span>
@@ -173,7 +173,7 @@ export default function LandlordLayout({
         <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 overflow-auto">{children}</main>
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-[var(--ml-border)] px-2 py-1.5 flex items-center justify-around">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-border px-2 py-1.5 flex items-center justify-around">
           {NAV_ITEMS.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");

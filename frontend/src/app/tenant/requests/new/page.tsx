@@ -63,7 +63,7 @@ export default function NewRequestPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-[rgb(var(--ml-bg-secondary))] p-6 rounded-xl border border-[var(--ml-border)]">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-[rgb(var(--ml-bg-secondary))] p-6 rounded-xl border border-border">
         <div className="space-y-2">
           <label htmlFor="issue-title" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Issue Title</label>
           <input 
@@ -74,7 +74,7 @@ export default function NewRequestPage() {
             onChange={e => setTitle(e.target.value)}
             type="text" 
             placeholder="e.g. Leaking faucet in kitchen" 
-            className="w-full bg-transparent border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
+            className="w-full bg-transparent border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors"
           />
         </div>
 
@@ -88,14 +88,14 @@ export default function NewRequestPage() {
             onChange={e => setDescription(e.target.value)}
             rows={4} 
             placeholder="Please provide details about the issue..." 
-            className="w-full bg-transparent border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors resize-none"
+            className="w-full bg-transparent border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] transition-colors resize-none"
           />
         </div>
 
         <div className="space-y-2">
           <label htmlFor="issue-priority" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">Priority</label>
           <Select value={priority} onValueChange={(val) => setPriority(val || "medium")}>
-            <SelectTrigger id="issue-priority" className="w-full bg-transparent border border-[var(--ml-border)] rounded-lg h-11 transition-colors">
+            <SelectTrigger id="issue-priority" className="w-full bg-transparent border border-border rounded-lg h-11 transition-colors">
               <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
                 {priority === "low"
                   ? "Low (Cosmetic, non-urgent)"
@@ -106,7 +106,7 @@ export default function NewRequestPage() {
                   : "Emergency (Immediate threat)"}
               </span>
             </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)] rounded-xl">
+            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
               <SelectItem value="low" className="rounded-lg">Low (Cosmetic, non-urgent)</SelectItem>
               <SelectItem value="medium" className="rounded-lg">Medium (Standard issue)</SelectItem>
               <SelectItem value="high" className="rounded-lg">High (Needs attention soon)</SelectItem>

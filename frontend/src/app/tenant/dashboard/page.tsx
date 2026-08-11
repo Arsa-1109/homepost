@@ -80,7 +80,7 @@ function CountdownCard({
       className={`p-6 rounded-2xl border flex flex-col items-center text-center justify-center gap-1 transition-all ${
         urgent
           ? "bg-red-500/10 border-red-500/40"
-          : "bg-[rgb(var(--ml-bg-secondary))] border-[var(--ml-border)]"
+          : "bg-[rgb(var(--ml-bg-secondary))] border-border"
       }`}
     >
       <span className="text-xs font-medium uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
@@ -162,13 +162,13 @@ export default function TenantDashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-          <div className="p-6 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col items-center justify-center space-y-3 h-[170px]">
+          <div className="p-6 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col items-center justify-center space-y-3 h-[170px]">
             <div className="skeleton h-3 w-24 rounded" />
             <div className="skeleton h-12 w-20 rounded-xl" />
             <div className="skeleton h-3 w-40 rounded" />
           </div>
 
-          <div className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col justify-between space-y-3 h-[170px]">
+          <div className="p-5 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))]/60 flex flex-col justify-between space-y-3 h-[170px]">
             <div className="skeleton h-3 w-28 rounded" />
             <div className="grid grid-cols-3 gap-3">
               <div className="skeleton h-20 rounded-xl" />
@@ -185,7 +185,7 @@ export default function TenantDashboard() {
           </div>
           <div className="space-y-2">
             {[1, 2].map(i => (
-              <div key={i} className="p-4 rounded-xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between">
+              <div key={i} className="p-4 rounded-xl border border-border bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between">
                 <div className="space-y-1.5 flex-1">
                   <div className="skeleton h-4 w-44 rounded" />
                   <div className="skeleton h-3 w-28 rounded" />
@@ -242,28 +242,28 @@ export default function TenantDashboard() {
           urgent={rentUrgent}
         />
 
-        <div className="p-5 rounded-2xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between space-y-3">
+        <div className="p-5 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-widest text-[rgb(var(--ml-text-secondary))]">
             Quick Actions
           </h2>
           <div className="grid grid-cols-3 gap-3">
             <Link
               href="/tenant/requests/new"
-              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-[var(--ml-border)] hover:border-orange-500/40 hover:bg-orange-500/10 transition-all text-center group"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-border hover:border-orange-500/40 hover:bg-orange-500/10 transition-all text-center group"
             >
               <Wrench className="size-6 text-orange-400 group-hover:scale-110 transition-transform" />
               <span className="text-xs font-medium">New Request</span>
             </Link>
             <Link
               href="/tenant/announcements"
-              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-[var(--ml-border)] hover:border-purple-500/40 hover:bg-purple-500/10 transition-all text-center group"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-border hover:border-purple-500/40 hover:bg-purple-500/10 transition-all text-center group"
             >
               <Megaphone className="size-6 text-purple-400 group-hover:scale-110 transition-transform" />
               <span className="text-xs font-medium">Announcements</span>
             </Link>
             <Link
               href="/tenant/documents"
-              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-[var(--ml-border)] hover:border-blue-500/40 hover:bg-blue-500/10 transition-all text-center group"
+              className="flex flex-col items-center justify-center gap-1.5 p-3.5 rounded-xl border border-border hover:border-blue-500/40 hover:bg-blue-500/10 transition-all text-center group"
             >
               <FileText className="size-6 text-blue-400 group-hover:scale-110 transition-transform" />
               <span className="text-xs font-medium">Documents</span>
@@ -302,7 +302,7 @@ export default function TenantDashboard() {
               <Link
                 key={req.id}
                 href={`/tenant/requests?requestId=${req.id}`}
-                className="flex items-center justify-between p-4 rounded-xl border border-[var(--ml-border)] bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors cursor-pointer block"
+                className="flex items-center justify-between p-4 rounded-xl border border-border bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/50 transition-colors cursor-pointer block"
               >
                 <div className="min-w-0">
                   <p className="font-medium truncate">{req.title}</p>

@@ -146,7 +146,7 @@ export default function LandlordDocumentsPage() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-[rgb(var(--ml-text-primary))]">Documents</h1>
       <div className="space-y-6">
-        <div className="p-6 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-4">
+        <div className="p-6 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60 space-y-4">
           <div className="skeleton h-6 w-48 rounded-lg" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="skeleton h-10 w-full rounded-lg" />
@@ -165,7 +165,7 @@ export default function LandlordDocumentsPage() {
       <h1 className="text-3xl font-bold">Documents</h1>
 
       {properties.length === 0 ? (
-        <div className="text-center py-12 border border-[var(--ml-border)] rounded-xl">
+        <div className="text-center py-12 border border-border rounded-xl">
           Please add a property first before uploading documents.
         </div>
       ) : (
@@ -188,7 +188,7 @@ export default function LandlordDocumentsPage() {
             </div>
           </div>
 
-          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-[var(--ml-border)] rounded-xl space-y-4 shadow-sm animate-fadeIn">
+          <form onSubmit={handleUpload} className="p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-xl space-y-4 shadow-sm animate-fadeIn">
             <h2 className="text-xl font-semibold mb-4 text-balance">Upload New Document</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -199,7 +199,7 @@ export default function LandlordDocumentsPage() {
                   value={title} 
                   onChange={e => setTitle(e.target.value)} 
                   placeholder="Document Title (e.g. Lease Agreement 2026)" 
-                  className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
+                  className="w-full bg-[rgb(var(--ml-bg-tertiary))] border border-border rounded-lg p-3 outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -250,7 +250,7 @@ export default function LandlordDocumentsPage() {
                 className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-4"
               >
                 {[1, 2].map((i) => (
-                  <div key={i} className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60">
+                  <div key={i} className="flex gap-4 p-4 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))]/60">
                     <div className="w-20 h-20 rounded-lg skeleton shrink-0" />
                     <div className="flex-1 space-y-2 py-1">
                       <div className="skeleton h-4 w-3/4 rounded-md" />
@@ -293,10 +293,10 @@ export default function LandlordDocumentsPage() {
                         hidden: { opacity: 0, y: 20 },
                         show: { opacity: 1, y: 0 }
                       }}
-                      className="flex gap-4 p-4 border border-[var(--ml-border)] rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all group shadow-sm"
+                      className="flex gap-4 p-4 border border-border rounded-xl bg-[rgb(var(--ml-bg-secondary))] hover:border-blue-500/40 hover:shadow-[0_8px_30px_rgba(96,165,250,0.06)] transition-all group shadow-sm"
                     >
                       {/* Preview Thumbnail */}
-                      <div className="relative w-20 h-20 border border-[var(--ml-border)] rounded-lg overflow-hidden shrink-0">
+                      <div className="relative w-20 h-20 border border-border rounded-lg overflow-hidden shrink-0">
                         {isImage && doc.file_url ? (
                           <div className="relative w-full h-full bg-muted flex items-center justify-center">
                             <img 

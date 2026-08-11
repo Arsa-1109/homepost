@@ -116,7 +116,7 @@ export default function LandlordDashboard() {
           />
 
           {data.property_stats.total_properties === 0 && (
-            <div className="bg-[rgb(var(--ml-bg-tertiary))] border border-[var(--ml-border)] p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="bg-[rgb(var(--ml-bg-tertiary))] border border-border p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <h4 className="font-semibold text-[rgb(var(--ml-text-primary))]">Chose Landlord by mistake?</h4>
                 <p className="text-sm text-[rgb(var(--ml-text-secondary))]">You currently have no properties. You can reset your account and switch to a tenant role.</p>
