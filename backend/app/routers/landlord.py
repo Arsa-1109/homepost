@@ -551,6 +551,40 @@ async def list_announcements(
     )
     return result.scalars().all()
 
+@router.put("/announcements/{announcement_id}", response_model=Announcement)
+async def update_announcement(
+    announcement_id: uuid.UUID,
+    ann_in: AnnouncementUpdate,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    ann = await session.get(Announcement, announcement_id)
+    if not ann or ann.author_id != user.id:
+        raise HTTPException(status_code=404, detail="Announcement not found or access denied.")
+
+    update_data = ann_in.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(ann, key, value)
+
+    session.add(ann)
+    await session.commit()
+    await session.refresh(ann)
+    return ann
+
+@router.delete("/announcements/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_announcement(
+    announcement_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    ann = await session.get(Announcement, announcement_id)
+    if not ann or ann.author_id != user.id:
+        raise HTTPException(status_code=404, detail="Announcement not found or access denied.")
+
+    await session.delete(ann)
+    await session.commit()
+    return None
+
 # ---------------------------------------------------------------------------
 # Documents
 # ---------------------------------------------------------------------------
