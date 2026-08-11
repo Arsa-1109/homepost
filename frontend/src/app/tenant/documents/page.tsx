@@ -273,7 +273,7 @@ export default function TenantDocumentsPage() {
                     variant="default"
                     size="sm"
                     onClick={() => handleDownload(doc.file_key, doc.title)}
-                    className={`h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90 transition-all shadow-sm cursor-pointer active:scale-95 ${
+                    className={`h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all shadow-sm cursor-pointer active:scale-95 ${
                       !doc.file_url ? "w-full" : "flex-1"
                     }`}
                   >
