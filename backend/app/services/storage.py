@@ -129,3 +129,18 @@ def hydrate_maintenance_request(db_req, resp_model) -> None:
             except Exception:
                 pass
     resp_model.landlord_image_urls = landlord_urls
+
+
+def hydrate_announcement(db_ann, resp_model) -> None:
+    """
+    Populates attachment_urls on the response model
+    by generating presigned download URLs for all attachment keys.
+    """
+    urls = []
+    if db_ann.attachment_keys:
+        for key in db_ann.attachment_keys:
+            try:
+                urls.append(generate_presigned_download_url(key))
+            except Exception:
+                pass
+    resp_model.attachment_urls = urls

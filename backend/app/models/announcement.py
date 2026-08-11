@@ -8,7 +8,9 @@ Tenants see announcements scoped to their assigned property.
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime
+from typing import Optional
+from sqlalchemy import Column, DateTime
+from sqlalchemy.types import JSON
 from sqlmodel import Field, SQLModel
 
 
@@ -21,4 +23,8 @@ class Announcement(SQLModel, table=True):
     author_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
     title: str = Field(max_length=255)
     body: str = Field(max_length=5000)
+    attachment_keys: Optional[list[str]] = Field(
+        default=None,
+        sa_column=Column(JSON, nullable=True),
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))

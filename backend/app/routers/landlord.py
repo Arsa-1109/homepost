@@ -14,10 +14,10 @@ from app.models.announcement import Announcement
 from app.schemas.property import PropertyCreate, PropertyUpdate
 from app.schemas.unit import UnitCreate, UnitUpdate, UnitResponse
 from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequestResponse
-from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate
+from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate, AnnouncementResponse
 from app.schemas.document import DocumentCreate, DocumentResponse
 from app.services.email import send_status_update
-from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request
+from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request, hydrate_announcement
 
 router = APIRouter(prefix="/landlord", tags=["Landlord"])
 
@@ -525,7 +525,7 @@ async def list_maintenance_events(
 # ---------------------------------------------------------------------------
 # Announcements
 # ---------------------------------------------------------------------------
-@router.post("/announcements", response_model=Announcement)
+@router.post("/announcements", response_model=AnnouncementResponse)
 async def create_announcement(
     ann_in: AnnouncementCreate,
     user: User = Depends(get_current_landlord),
@@ -539,9 +539,12 @@ async def create_announcement(
     session.add(ann)
     await session.commit()
     await session.refresh(ann)
-    return ann
 
-@router.get("/announcements", response_model=list[Announcement])
+    resp = AnnouncementResponse.model_validate(ann)
+    hydrate_announcement(ann, resp)
+    return resp
+
+@router.get("/announcements", response_model=list[AnnouncementResponse])
 async def list_announcements(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -549,9 +552,15 @@ async def list_announcements(
     result = await session.execute(
         select(Announcement).where(Announcement.author_id == user.id).order_by(Announcement.created_at.desc())
     )
-    return result.scalars().all()
+    anns = result.scalars().all()
+    out = []
+    for ann in anns:
+        resp = AnnouncementResponse.model_validate(ann)
+        hydrate_announcement(ann, resp)
+        out.append(resp)
+    return out
 
-@router.put("/announcements/{announcement_id}", response_model=Announcement)
+@router.put("/announcements/{announcement_id}", response_model=AnnouncementResponse)
 async def update_announcement(
     announcement_id: uuid.UUID,
     ann_in: AnnouncementUpdate,
@@ -569,7 +578,10 @@ async def update_announcement(
     session.add(ann)
     await session.commit()
     await session.refresh(ann)
-    return ann
+
+    resp = AnnouncementResponse.model_validate(ann)
+    hydrate_announcement(ann, resp)
+    return resp
 
 @router.delete("/announcements/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_announcement(

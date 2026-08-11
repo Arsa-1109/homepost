@@ -14,9 +14,10 @@ from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
 from app.models.document import Document
 from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse
+from app.schemas.announcement import AnnouncementResponse
 from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
-from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request
+from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request, hydrate_announcement
 from app.core.limiter import limiter
 from fastapi import Request
 
@@ -251,7 +252,7 @@ async def get_maintenance_request(
 # ---------------------------------------------------------------------------
 # Announcements
 # ---------------------------------------------------------------------------
-@router.get("/announcements", response_model=list[Announcement])
+@router.get("/announcements", response_model=list[AnnouncementResponse])
 async def list_property_announcements(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
@@ -270,7 +271,13 @@ async def list_property_announcements(
         )
         .order_by(Announcement.created_at.desc())
     )
-    return result.scalars().all()
+    anns = result.scalars().all()
+    out = []
+    for ann in anns:
+        resp = AnnouncementResponse.model_validate(ann)
+        hydrate_announcement(ann, resp)
+        out.append(resp)
+    return out
 
 # ---------------------------------------------------------------------------
 # Documents
