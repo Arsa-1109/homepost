@@ -50,7 +50,7 @@ export default function LandlordDocumentsPage() {
   const [showUploadForm, setShowUploadForm] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "PDF" | "IMAGE" | "OTHER">("ALL");
+  const [selectedFilter, setSelectedFilter] = useState<string>("ALL");
 
   useEffect(() => {
     async function loadProps() {
@@ -160,13 +160,14 @@ export default function LandlordDocumentsPage() {
     return documents.filter((doc) => {
       const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const isImage = doc.file_type.startsWith("image/");
-      const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
+      let matchesFilter = true;
+      if (selectedFilter === "PROPERTY_WIDE") {
+        matchesFilter = !doc.unit_id;
+      } else if (selectedFilter !== "ALL") {
+        matchesFilter = doc.unit_id === selectedFilter;
+      }
 
-      if (selectedFilter === "PDF") return matchesSearch && isPdf;
-      if (selectedFilter === "IMAGE") return matchesSearch && isImage;
-      if (selectedFilter === "OTHER") return matchesSearch && !isPdf && !isImage;
-      return matchesSearch;
+      return matchesSearch && matchesFilter;
     });
   }, [documents, searchQuery, selectedFilter]);
 
@@ -285,24 +286,58 @@ export default function LandlordDocumentsPage() {
 
         {/* Search & Filter Controls Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
-          {/* Filter Pills */}
+          {/* Filter Pills & Select */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {(["ALL", "PDF", "IMAGE", "OTHER"] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
-                  selectedFilter === filter
-                    ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
-                    : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
-                }`}
-              >
-                {filter === "ALL" && "All Files"}
-                {filter === "PDF" && "PDFs"}
-                {filter === "IMAGE" && "Images"}
-                {filter === "OTHER" && "Other Docs"}
-              </button>
-            ))}
+            <button
+              onClick={() => setSelectedFilter("ALL")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+                selectedFilter === "ALL"
+                  ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
+                  : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+              }`}
+            >
+              All Documents
+            </button>
+            <button
+              onClick={() => setSelectedFilter("PROPERTY_WIDE")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+                selectedFilter === "PROPERTY_WIDE"
+                  ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
+                  : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+              }`}
+            >
+              Property-Wide
+            </button>
+
+            {units.length > 0 && (
+              <div className="min-w-[140px]">
+                <Select 
+                  value={selectedFilter !== "ALL" && selectedFilter !== "PROPERTY_WIDE" ? selectedFilter : ""} 
+                  onValueChange={(val) => setSelectedFilter(val as string)}
+                >
+                  <SelectTrigger 
+                    className={`h-8 rounded-xl text-xs font-semibold border transition-all ${
+                      selectedFilter !== "ALL" && selectedFilter !== "PROPERTY_WIDE"
+                        ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
+                        : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40"
+                    }`}
+                  >
+                    <span className="truncate">
+                      {selectedFilter !== "ALL" && selectedFilter !== "PROPERTY_WIDE"
+                        ? `Unit ${units.find(u => u.id === selectedFilter)?.unit_label || ""}`
+                        : "Specific Unit..."}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
+                    {units.map((unit) => (
+                      <SelectItem key={unit.id} value={unit.id} className="font-semibold text-xs cursor-pointer">
+                        Unit {unit.unit_label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {/* Search Input */}
