@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronDown, Paperclip, MessageSquare, Clock, RefreshCcw, Wrench } from "lucide-react";
+import { 
+  ChevronDown, 
+  MessageSquare, 
+  Clock, 
+  RefreshCcw, 
+  Wrench, 
+  Search, 
+  Plus, 
+  FileText, 
+  Eye, 
+  DownloadIcon 
+} from "lucide-react";
 import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { LightboxModal } from "@/components/LightboxModal";
+import { LightboxModal, getFriendlyFileName } from "@/components/LightboxModal";
 import { toast } from "sonner";
 
 type MaintenanceRequest = {
@@ -24,41 +34,104 @@ type MaintenanceRequest = {
   landlord_image_urls?: string[];
 };
 
-const getFriendlyFileName = (url: string) => {
-  const parts = url.split("/");
-  return parts[parts.length - 1].split("?")[0].substring(0, 15) + "...";
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  open: { label: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+  in_progress: { label: "In Progress", color: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+  resolved: { label: "Resolved", color: "bg-lime-500/10 text-lime-400 border-lime-500/20" },
+  closed: { label: "Closed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  open: { label: "Open", color: "bg-blue-500/10 text-blue-400 border-blue-500/20", dot: "bg-blue-400" },
-  in_progress: { label: "In Progress", color: "bg-amber-500/10 text-amber-400 border-amber-500/20", dot: "bg-amber-400" },
-  resolved: { label: "Resolved", color: "bg-lime-500/10 text-lime-400 border-lime-500/20", dot: "bg-lime-400" },
-  closed: { label: "Closed", color: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20", dot: "bg-zinc-500" },
-};
+function AttachmentThumbnail({ 
+  url, 
+  onViewImage 
+}: { 
+  url: string; 
+  onViewImage: (url: string) => void; 
+}) {
+  const pathOnly = url.split("?")[0];
+  const isImage = pathOnly.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+  const friendlyName = getFriendlyFileName(url);
+  const rawFileName = pathOnly.split("/").pop() || "Attachment";
 
-const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  low: { label: "Low", color: "text-zinc-400" },
-  medium: { label: "Medium", color: "text-amber-400" },
-  high: { label: "High", color: "text-orange-400 font-medium" },
-  urgent: { label: "Emergency", color: "text-red-400 font-bold animate-pulse" },
-};
+  const handleView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isImage) {
+      onViewImage(url);
+    } else {
+      window.open(url, "_blank");
+    }
+  };
 
-function AttachmentGrid({ urls, label, onViewImage }: { urls: string[]; label: string; onViewImage: (url: string) => void }) {
-  if (!urls || urls.length === 0) return null;
-  return (
-    <div className="space-y-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/60">{label}</span>
-      <div className="flex flex-wrap gap-2">
-        {urls.map((url, idx) => (
-          <button
-            key={idx}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onViewImage(url); }}
-            className="p-1 rounded-lg border border-border bg-[rgb(var(--ml-bg-tertiary))] text-xs flex items-center gap-1.5 hover:border-[rgb(var(--ml-accent))] transition-colors cursor-pointer"
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  if (isImage) {
+    return (
+      <div 
+        onClick={handleView}
+        className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-border/60 overflow-hidden bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-text-primary))]/30 transition-all cursor-pointer flex-shrink-0 shadow-sm"
+      >
+        <img 
+          src={url} 
+          alt={friendlyName} 
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+        />
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
+          <button 
+            onClick={handleView}
+            className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
+            title="View full size"
           >
-            <Paperclip className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
-            <span className="max-w-[120px] truncate">{getFriendlyFileName(url)}</span>
+            <Eye className="w-3.5 h-3.5" />
           </button>
-        ))}
+          <a 
+            href={url} 
+            download 
+            onClick={handleDownload}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
+            title="Download"
+          >
+            <DownloadIcon className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={handleView}
+      className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-text-primary))]/30 transition-all flex flex-col items-center justify-between p-2.5 cursor-pointer flex-shrink-0 select-none shadow-sm"
+    >
+      <div className="flex-1 flex items-center justify-center">
+        <FileText className="w-6 h-6 text-[rgb(var(--ml-accent))]" />
+      </div>
+      <span className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-semibold truncate w-full text-center" title={rawFileName}>
+        {friendlyName}
+      </span>
+      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-xl z-10">
+        <button 
+          onClick={handleView}
+          className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
+          title="Open file"
+        >
+          <Eye className="w-3.5 h-3.5" />
+        </button>
+        <a 
+          href={url} 
+          download 
+          onClick={handleDownload}
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
+          title="Download"
+        >
+          <DownloadIcon className="w-3.5 h-3.5" />
+        </a>
       </div>
     </div>
   );
@@ -78,9 +151,6 @@ function CompactRequestCard({
   onViewImage: (url: string) => void;
 }) {
   const statusCfg = STATUS_CONFIG[req.status] ?? STATUS_CONFIG.closed;
-  const priorityCfg = PRIORITY_CONFIG[req.priority] ?? PRIORITY_CONFIG.low;
-  const hasNotes = Boolean(req.landlord_notes);
-  const hasAttachments = (req.image_urls?.length || 0) + (req.landlord_image_urls?.length || 0);
 
   const canReopen = req.status === "resolved" && (
     !req.updated_at ||
@@ -89,94 +159,135 @@ function CompactRequestCard({
 
   return (
     <div
-      className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-        isExpanded
-          ? "border-[rgb(var(--ml-accent))]/40 bg-[rgb(var(--ml-bg-secondary))]"
-          : "border-border bg-[rgb(var(--ml-bg-secondary))]/80 hover:border-border"
-      }`}
+      className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/20 hover:shadow-[0_12px_36px_rgba(0,0,0,0.08)] transition-all duration-300 hover-lift flex flex-col overflow-hidden group/card"
     >
-      <button
+      {/* Collapsed Card Header */}
+      <div
+        className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none relative z-10"
         onClick={onToggle}
-        className="w-full p-4 flex items-center gap-3 text-left focus:outline-none cursor-pointer"
       >
-        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusCfg.dot}`} />
-        <span className="font-semibold text-sm text-[rgb(var(--ml-text-primary))] truncate flex-1">
-          {req.title}
-        </span>
-        <span className={`hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${statusCfg.color}`}>
-          {statusCfg.label}
-        </span>
-        <span className={`hidden sm:inline-flex text-xs font-medium shrink-0 ${priorityCfg.color}`}>
-          {priorityCfg.label}
-        </span>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {hasNotes && (
-            <span className="w-5 h-5 rounded-full bg-[rgb(var(--ml-accent))]/10 flex items-center justify-center" title="Landlord note">
-              <MessageSquare className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
-            </span>
-          )}
-          {hasAttachments > 0 && (
-            <span className="w-5 h-5 rounded-full bg-zinc-500/10 flex items-center justify-center" title={`${hasAttachments} attachment(s)`}>
-              <Paperclip className="w-3 h-3 text-zinc-400" />
-            </span>
-          )}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="p-3 bg-orange-500/10 text-orange-400 rounded-2xl border border-orange-500/20 shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-300">
+            <Wrench className="w-5.5 h-5.5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-1 flex-wrap">
+              <h3 className="text-lg font-bold truncate text-[rgb(var(--ml-text-primary))] group-hover/card:text-orange-400 transition-colors">
+                {req.title}
+              </h3>
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-full border uppercase tracking-wider font-bold shrink-0 ${statusCfg.color}`}>
+                {statusCfg.label}
+              </span>
+            </div>
+            <div className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] flex items-center gap-2">
+              <span>Reported on {new Date(req.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</span>
+            </div>
+          </div>
         </div>
-      </button>
 
-      <AnimatePresence>
+        <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full border-t sm:border-t-0 border-border/40 pt-4 sm:pt-0">
+          <div className="flex items-center gap-3 text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+            <span className={`px-2 py-0.5 rounded-md uppercase tracking-wider text-[9px] border ${
+              req.priority === "urgent"
+                ? "bg-red-500/10 text-red-500 border-red-500/25 animate-pulse"
+                : req.priority === "high"
+                ? "bg-orange-500/15 text-orange-400 border-orange-500/30 font-bold"
+                : req.priority === "medium"
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                : "bg-zinc-500/10 text-zinc-400 border-zinc-500/25"
+            }`}>
+              {req.priority === "urgent" ? "Emergency" : req.priority}
+            </span>
+          </div>
+          <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-border/30 cursor-pointer">
+            <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded Details */}
+      <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden border-t border-border/40 bg-[rgb(var(--ml-bg-tertiary))]/30"
           >
-            <div className="px-4 sm:px-5 pb-5 pt-2 border-t border-border/50 space-y-4">
+            <div className="p-6 sm:p-8 space-y-6">
               <div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/60 block mb-1">Description</span>
-                <p className="text-sm text-[rgb(var(--ml-text-primary))] leading-relaxed whitespace-pre-wrap">
+                <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider mb-2.5">
+                  Request Description
+                </h4>
+                <div className="text-xs sm:text-sm text-[rgb(var(--ml-text-primary))] leading-relaxed bg-[rgb(var(--ml-bg-secondary))] p-5 rounded-2xl border border-border/50 whitespace-pre-wrap font-medium shadow-sm">
                   {req.description}
-                </p>
+                </div>
               </div>
 
               {req.landlord_notes && (
-                <div className="p-3 rounded-lg bg-[rgb(var(--ml-accent))]/5 border border-[rgb(var(--ml-accent))]/20 border-l-2 border-l-[rgb(var(--ml-accent))]">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--ml-accent))] block mb-1">
-                    <MessageSquare className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-                    Landlord Note
-                  </span>
-                  <p className="text-sm text-[rgb(var(--ml-text-primary))]/90 whitespace-pre-wrap italic">
+                <div className="p-4 rounded-xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/40 border-l-2 border-l-[rgb(var(--ml-accent))]/80 shadow-xs">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[rgb(var(--ml-accent))] mb-1.5 uppercase tracking-wider">
+                    <MessageSquare className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
+                    <span>Landlord Note</span>
+                  </div>
+                  <p className="text-xs text-[rgb(var(--ml-text-primary))]/95 font-medium leading-relaxed whitespace-pre-wrap italic">
                     &quot;{req.landlord_notes}&quot;
                   </p>
                 </div>
               )}
-              {(req.image_urls?.length || req.landlord_image_urls?.length) ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <AttachmentGrid urls={req.image_urls || []} label="Your Attachments" onViewImage={onViewImage} />
-                  <AttachmentGrid urls={req.landlord_image_urls || []} label="Landlord Attachments" onViewImage={onViewImage} />
+
+              {req.image_urls && req.image_urls.length > 0 && (
+                <div className="space-y-2.5">
+                  <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
+                    Your Attachments
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {req.image_urls.map((url, idx) => (
+                      <AttachmentThumbnail key={idx} url={url} onViewImage={onViewImage} />
+                    ))}
+                  </div>
                 </div>
-              ) : null}
+              )}
+
+              {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
+                <div className="space-y-2.5">
+                  <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
+                    Landlord Attachments
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {req.landlord_image_urls.map((url, idx) => (
+                      <AttachmentThumbnail key={idx} url={url} onViewImage={onViewImage} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {canReopen && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-lime-500/10 border border-lime-500/20">
-                  <RefreshCcw className="w-4 h-4 text-lime-400 shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Not satisfied with the resolution? You can reopen this within 14 days.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-lime-500/10 border border-lime-500/20 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <RefreshCcw className="w-4 h-4 text-lime-400 shrink-0" />
+                    <p className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium">
+                      Not satisfied with the resolution? You can reopen this request within 14 days.
+                    </p>
                   </div>
                   <button
                     onClick={(e) => onReopen(req.id, e)}
-                    className="px-3 py-1.5 text-xs font-semibold text-black bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] rounded-lg transition-colors shrink-0 cursor-pointer"
+                    className="px-4 py-2 text-xs font-bold text-black bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] rounded-xl transition-all shrink-0 cursor-pointer shadow-sm active:scale-[0.98]"
                   >
-                    Reopen
+                    Reopen Request
                   </button>
                 </div>
               )}
+
               {req.status === "resolved" && !canReopen && (
-                <p className="text-xs text-[rgb(var(--ml-text-secondary))]/50 italic flex items-center gap-1.5">
-                  <Clock className="w-3 h-3" />
-                  Resolved over 14 days ago — reopen window has expired
+                <p className="text-xs text-[rgb(var(--ml-text-secondary))]/60 italic flex items-center gap-1.5 font-medium">
+                  <Clock className="w-3.5 h-3.5" />
+                  Resolved over 14 days ago — reopen window has expired.
                 </p>
               )}
-              <div className="border-t border-border/50 pt-4">
+
+              <div className="border-t border-border/30 pt-4">
                 <MaintenanceTimeline requestId={req.id} userType="tenant" onViewImage={onViewImage} />
               </div>
             </div>
@@ -194,6 +305,9 @@ function TenantRequestsContent() {
   const [confirmReopen, setConfirmReopen] = useState<{ id: string } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "open" | "in_progress" | "resolved" | "closed">("ALL");
 
   useEffect(() => {
     async function loadAll() {
@@ -232,13 +346,26 @@ function TenantRequestsContent() {
     }
   };
 
-  const canReopen = (req: MaintenanceRequest) => {
-    if (req.status !== "resolved") return false;
-    const resolvedDate = new Date(req.updated_at || req.created_at);
-    const today = new Date();
-    const diffDays = (today.getTime() - resolvedDate.getTime()) / (1000 * 60 * 60 * 24);
-    return diffDays <= 14;
-  };
+  const filteredRequests = useMemo(() => {
+    return requests.filter((req) => {
+      // Status filter
+      if (selectedFilter !== "ALL" && req.status !== selectedFilter) {
+        return false;
+      }
+
+      // Search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = req.title.toLowerCase().includes(query);
+        const matchesDesc = req.description.toLowerCase().includes(query);
+        if (!matchesTitle && !matchesDesc) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [requests, selectedFilter, searchQuery]);
 
   return (
     <>
@@ -259,64 +386,187 @@ function TenantRequestsContent() {
         onCancel={() => setConfirmReopen(null)}
       />
 
-      <div className="w-full min-w-0 space-y-6 max-w-4xl mx-auto animate-fade-slide-up">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
-              Maintenance Requests
-            </h1>
-            <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-2">
-              Track repair progress, view landlord updates, and submit new requests.
-            </p>
+      <div className="space-y-8 max-w-5xl mx-auto pb-16">
+        {/* Header Section Card */}
+        <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+                Maintenance & Repairs
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
+                Maintenance Requests
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] font-bold border border-border flex items-center justify-center min-w-[28px] min-h-[24px]">
+                  {loading ? (
+                    <span className="skeleton h-3 w-4 rounded-full inline-block" />
+                  ) : (
+                    requests.length
+                  )}
+                </span>
+              </h1>
+              <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                Track repair progress, view landlord updates, and submit new requests.
+              </p>
+            </div>
+
+            {profile?.is_active && (
+              <Link
+                href="/tenant/requests/new"
+                className="bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold px-6 h-11 rounded-xl hover:opacity-90 transition-all shadow-sm flex items-center justify-center gap-2 text-xs shrink-0 cursor-pointer active:scale-[0.98]"
+              >
+                <Plus className="w-4 h-4" />
+                New Request
+              </Link>
+            )}
           </div>
-          {profile?.is_active && (
-            <Link
-              href="/tenant/requests/new"
-              className="self-start sm:self-auto bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-5 py-2.5 text-xs rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] hover-lift transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] whitespace-nowrap cursor-pointer"
-            >
-              + New Request
-            </Link>
-          )}
+
+          {/* Search & Filter Controls Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+              {[
+                { id: "ALL", label: "All Requests" },
+                { id: "open", label: "Open" },
+                { id: "in_progress", label: "In Progress" },
+                { id: "resolved", label: "Resolved" },
+                { id: "closed", label: "Closed" }
+              ].map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setSelectedFilter(filter.id as any)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+                    selectedFilter === filter.id
+                      ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
+                      : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-64 sm:flex-initial">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--ml-text-secondary))]" />
+              <input
+                type="text"
+                placeholder="Search requests..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
+              />
+            </div>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="px-5 py-4 border border-border rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/80 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-2.5 h-2.5 rounded-full skeleton shrink-0" />
-                  <div className="flex-1 space-y-2 min-w-0">
-                    <div className="h-4 w-44 rounded-md skeleton" />
-                    <div className="h-3 w-36 rounded-md skeleton" />
+        <div className="space-y-4">
+          {requests.length > 0 && (
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                Request Feed ({filteredRequests.length})
+              </h2>
+            </div>
+          )}
+
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div 
+                key="loading"
+                initial={false}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                className="space-y-4"
+              >
+                {[1, 2, 3, 4].map(i => (
+                  <div
+                    key={i}
+                    className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className="w-12 h-12 rounded-2xl skeleton shrink-0" />
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <div className="h-5 w-44 sm:w-56 rounded-lg skeleton" />
+                          <div className="h-5 w-20 rounded-full skeleton" />
+                        </div>
+                        <div className="h-4 w-36 rounded-md skeleton" />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-border/40">
+                      <div className="h-5 w-16 rounded-md skeleton" />
+                      <div className="w-8 h-8 rounded-xl skeleton shrink-0" />
+                    </div>
                   </div>
+                ))}
+              </motion.div>
+            ) : requests.length === 0 ? (
+              <motion.div 
+                key="empty-all"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-4"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border flex items-center justify-center mx-auto text-[rgb(var(--ml-text-secondary))]">
+                  <Wrench className="w-7 h-7" />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="h-5 w-20 rounded-full skeleton hidden sm:block" />
-                  <div className="h-4 w-14 rounded-md skeleton hidden sm:block" />
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">No maintenance requests</h3>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-xs mx-auto">
+                    Submit a request whenever something in your unit needs maintenance or repair.
+                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="text-center py-16 border border-orange-500/20 shadow-[0_0_25px_rgba(251,146,60,0.04)] rounded-2xl bg-[rgb(var(--ml-bg-secondary))]/60">
-            <Wrench className="w-10 h-10 mx-auto text-orange-400/40 mb-3" />
-            <p className="text-[rgb(var(--ml-text-primary))] font-semibold">No maintenance requests yet</p>
-            <p className="text-sm text-[rgb(var(--ml-text-secondary))] mt-1">Submit a request when something needs fixing</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {requests.map(req => (
-              <CompactRequestCard
-                key={req.id}
-                req={req}
-                isExpanded={expandedId === req.id}
-                onToggle={() => setExpandedId(expandedId === req.id ? null : req.id)}
-                onReopen={handleReopen}
-                onViewImage={setPreviewUrl}
-              />
-            ))}
-          </div>
-        )}
+              </motion.div>
+            ) : filteredRequests.length === 0 ? (
+              <motion.div
+                key="empty-search"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3"
+              >
+                <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
+                <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No matching requests</p>
+                <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Try adjusting your search or filter.</p>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="content"
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0 }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.08 }
+                  }
+                }}
+                className="space-y-4"
+              >
+                {filteredRequests.map(req => (
+                  <motion.div 
+                    key={req.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 15 },
+                      show: { opacity: 1, y: 0 }
+                    }}
+                  >
+                    <CompactRequestCard
+                      req={req}
+                      isExpanded={expandedId === req.id}
+                      onToggle={() => setExpandedId(expandedId === req.id ? null : req.id)}
+                      onReopen={handleReopen}
+                      onViewImage={setPreviewUrl}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </>
   );
