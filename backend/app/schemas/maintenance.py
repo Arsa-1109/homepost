@@ -16,6 +16,10 @@ class MaintenanceRequestUpdate(BaseModel):
     landlord_notes: str | None = None
     landlord_image_keys: Optional[List[str]] = Field(default=None)
 
+class MaintenanceRequestReopen(BaseModel):
+    notes: str = Field(..., min_length=1, max_length=2000)
+    image_keys: Optional[List[str]] = Field(default=None)
+
 class MaintenanceRequestResponse(BaseModel):
     id: uuid.UUID
     tenant_id: uuid.UUID

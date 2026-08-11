@@ -14,7 +14,8 @@ import {
   Clock,
   History,
   ChevronDown,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -209,12 +210,16 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                         
                         {/* Landlord Note Container */}
                         {event.payload?.notes && (
-                          <div className="mt-3 p-3.5 rounded-xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/40 border-l-2 border-l-[rgb(var(--ml-accent))]/80 shadow-xs">
-                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[rgb(var(--ml-accent))] mb-1.5 uppercase tracking-wider">
-                              <MessageSquare className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
-                              <span>Note</span>
+                          <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-[rgb(var(--ml-bg-tertiary))]/40 border border-border/60 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-md bg-[rgb(var(--ml-accent))]/10 border border-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] flex items-center justify-center shrink-0">
+                                <Building2 className="w-3 h-3" />
+                              </div>
+                              <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">
+                                {event.event_type === "reopened" ? "Tenant Reopen Note" : "Landlord Note"}
+                              </span>
                             </div>
-                            <p className="text-xs text-[rgb(var(--ml-text-primary))]/95 font-medium leading-relaxed whitespace-pre-wrap">
+                            <p className="text-xs sm:text-[13px] text-[rgb(var(--ml-text-secondary))] font-medium leading-relaxed whitespace-pre-wrap">
                               {event.payload.notes}
                             </p>
                           </div>

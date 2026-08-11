@@ -14,11 +14,18 @@ import {
   Plus, 
   FileText, 
   Eye, 
-  DownloadIcon 
+  DownloadIcon,
+  Building2,
+  Paperclip,
+  X,
+  CheckCircle2
 } from "lucide-react";
 import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LightboxModal, getFriendlyFileName } from "@/components/LightboxModal";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { uploadFiles } from "@/lib/upload";
 import { toast } from "sonner";
 
 type MaintenanceRequest = {
@@ -142,12 +149,16 @@ function CompactRequestCard({
   isExpanded,
   onToggle,
   onReopen,
+  onCloseRequest,
+  isClosing,
   onViewImage,
 }: {
   req: MaintenanceRequest;
   isExpanded: boolean;
   onToggle: () => void;
   onReopen: (id: string, e: React.MouseEvent) => void;
+  onCloseRequest: (id: string, e: React.MouseEvent) => void;
+  isClosing: boolean;
   onViewImage: (url: string) => void;
 }) {
   const statusCfg = STATUS_CONFIG[req.status] ?? STATUS_CONFIG.closed;
@@ -226,13 +237,17 @@ function CompactRequestCard({
               </div>
 
               {req.landlord_notes && (
-                <div className="p-4 rounded-xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/40 border-l-2 border-l-[rgb(var(--ml-accent))]/80 shadow-xs">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-[rgb(var(--ml-accent))] mb-1.5 uppercase tracking-wider">
-                    <MessageSquare className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
-                    <span>Landlord Note</span>
+                <div className="p-3.5 sm:p-4 rounded-xl bg-[rgb(var(--ml-bg-tertiary))]/40 border border-border/60 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-md bg-[rgb(var(--ml-accent))]/10 border border-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] flex items-center justify-center shrink-0">
+                      <Building2 className="w-3 h-3" />
+                    </div>
+                    <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">
+                      Landlord Note
+                    </span>
                   </div>
-                  <p className="text-xs text-[rgb(var(--ml-text-primary))]/95 font-medium leading-relaxed whitespace-pre-wrap italic">
-                    &quot;{req.landlord_notes}&quot;
+                  <p className="text-xs sm:text-[13px] text-[rgb(var(--ml-text-secondary))] font-medium leading-relaxed whitespace-pre-wrap">
+                    {req.landlord_notes}
                   </p>
                 </div>
               )}
@@ -263,20 +278,33 @@ function CompactRequestCard({
                 </div>
               )}
 
-              {canReopen && (
+              {req.status === "resolved" && (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-lime-500/10 border border-lime-500/20 shadow-xs">
                   <div className="flex items-center gap-3">
-                    <RefreshCcw className="w-4 h-4 text-lime-400 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-lime-400 shrink-0" />
                     <p className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium">
-                      Not satisfied with the resolution? You can reopen this request within 14 days.
+                      Landlord marked this request as resolved. Confirm resolution by closing, or reopen if needed.
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => onReopen(req.id, e)}
-                    className="px-4 py-2 text-xs font-bold text-black bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] rounded-xl transition-all shrink-0 cursor-pointer shadow-sm active:scale-[0.98]"
-                  >
-                    Reopen Request
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={(e) => onCloseRequest(req.id, e)}
+                      disabled={isClosing}
+                      className="px-3.5 py-2 text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-secondary))]/80 dark:bg-[rgb(var(--ml-bg-tertiary))]/60 border border-black/10 dark:border-white/15 hover:bg-[rgb(var(--ml-bg-tertiary))] rounded-xl transition-all cursor-pointer shadow-xs active:scale-[0.98] flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" />
+                      {isClosing ? "Closing..." : "Close Request"}
+                    </button>
+                    {canReopen && (
+                      <button
+                        onClick={(e) => onReopen(req.id, e)}
+                        className="px-3.5 py-2 text-xs font-bold text-black bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] rounded-xl transition-all shrink-0 cursor-pointer shadow-sm active:scale-[0.98] flex items-center gap-1.5"
+                      >
+                        <RefreshCcw className="w-3 h-3" />
+                        Reopen Request
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -295,6 +323,178 @@ function CompactRequestCard({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+type ReopenModalProps = {
+  open: boolean;
+  requestId: string | null;
+  onClose: () => void;
+  onSuccess: (updatedRequest: MaintenanceRequest) => void;
+};
+
+function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) {
+  const [notes, setNotes] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setNotes("");
+      setFiles([]);
+    }
+  }, [open]);
+
+  if (!open || !requestId) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selected = Array.from(e.target.files);
+      if (files.length + selected.length > 3) {
+        toast.error("You can upload a maximum of 3 attachments.");
+        return;
+      }
+      setFiles((prev) => [...prev, ...selected].slice(0, 3));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notes.trim()) {
+      toast.error("Please provide a reason/comment for reopening this request.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let image_keys: string[] | undefined = undefined;
+      if (files.length > 0) {
+        image_keys = await uploadFiles(files, "maintenance");
+      }
+
+      const updatedReq = await fetchAPI<MaintenanceRequest>(
+        `/api/v1/tenant/maintenance/${requestId}/reopen`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            notes: notes.trim(),
+            image_keys,
+          }),
+        }
+      );
+
+      toast.success("Maintenance request reopened successfully.");
+      onSuccess(updatedReq);
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reopen request.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(val) => !val && !submitting && onClose()}>
+      <DialogContent 
+        overlayClassName="bg-black/40 dark:bg-black/75 backdrop-blur-md"
+        className="sm:max-w-md bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-primary))]/85 backdrop-blur-xl border border-black/10 dark:border-white/15 ring-0 p-6 rounded-2xl shadow-2xl"
+      >
+        <DialogHeader>
+          <DialogTitle className="text-base font-bold text-[rgb(var(--ml-text-primary))] flex items-center gap-2">
+            <RefreshCcw className="w-4 h-4 text-lime-400" />
+            Reopen Maintenance Request
+          </DialogTitle>
+          <DialogDescription className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium">
+            Please explain why this request needs to be reopened and optionally attach photos.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 mt-3">
+          <div>
+            <label className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+              Reason / Comment <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={submitting}
+              required
+              placeholder="Detail what remains unresolved or any new issue..."
+              className="w-full bg-[rgb(var(--ml-bg-primary))]/50 dark:bg-[rgb(var(--ml-bg-secondary))]/60 border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-accent))] dark:focus:border-[rgb(var(--ml-accent))] transition-all min-h-[90px] resize-none placeholder:text-[rgb(var(--ml-text-secondary))]/50 text-[rgb(var(--ml-text-primary))]"
+            />
+          </div>
+
+          <div>
+            <label className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+              Attach Photos/Files (Optional, Max 3)
+            </label>
+            <div className="flex items-center gap-2">
+              <label className="px-3 py-2 bg-[rgb(var(--ml-bg-primary))]/50 dark:bg-[rgb(var(--ml-bg-secondary))]/60 border border-black/10 dark:border-white/10 hover:bg-[rgb(var(--ml-bg-tertiary))] text-xs font-medium text-[rgb(var(--ml-text-primary))] rounded-xl cursor-pointer transition-all flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))]" />
+                Choose Files
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                  disabled={submitting || files.length >= 3}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-[11px] text-[rgb(var(--ml-text-secondary))]">
+                {files.length}/3 selected
+              </span>
+            </div>
+
+            {files.length > 0 && (
+              <div className="mt-2 space-y-1.5">
+                {files.map((file, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2 rounded-lg bg-[rgb(var(--ml-bg-primary))]/50 dark:bg-[rgb(var(--ml-bg-secondary))]/60 border border-black/10 dark:border-white/10 text-xs"
+                  >
+                    <span className="truncate max-w-[220px] text-[rgb(var(--ml-text-primary))] font-medium">
+                      {file.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(idx)}
+                      disabled={submitting}
+                      className="text-red-400 hover:text-red-300 transition-colors p-0.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-2 flex gap-2 sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={submitting}
+              className="text-xs border-black/10 dark:border-white/10 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 text-[rgb(var(--ml-text-primary))]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting || !notes.trim()}
+              className="text-xs font-bold bg-[rgb(var(--ml-accent))] text-black hover:bg-[rgb(var(--ml-accent-light))]"
+            >
+              {submitting ? "Reopening..." : "Submit & Reopen"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -327,22 +527,32 @@ function TenantRequestsContent() {
     loadAll();
   }, []);
 
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [confirmClose, setConfirmClose] = useState<{ id: string } | null>(null);
+
   const handleReopen = (requestId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     setConfirmReopen({ id: requestId });
   };
 
-  const doReopen = async (requestId: string) => {
+  const handleCloseRequest = (requestId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setConfirmClose({ id: requestId });
+  };
+
+  const executeCloseRequest = async (requestId: string) => {
+    setClosingId(requestId);
     try {
-      const updatedReq = await fetchAPI<MaintenanceRequest>(`/api/v1/tenant/maintenance/${requestId}/reopen`, {
-        method: "POST"
-      });
-      setRequests(prev => prev.map(r => r.id === requestId ? updatedReq : r));
-      toast.success("Maintenance request reopened.");
+      const updatedReq = await fetchAPI<MaintenanceRequest>(
+        `/api/v1/tenant/maintenance/${requestId}/close`,
+        { method: "POST" }
+      );
+      toast.success("Maintenance request closed successfully.");
+      setRequests((prev) => prev.map((r) => (r.id === updatedReq.id ? updatedReq : r)));
     } catch (err: any) {
-      toast.error(err.message || "Failed to reopen request.");
+      toast.error(err.message || "Failed to close request.");
     } finally {
-      setConfirmReopen(null);
+      setClosingId(null);
     }
   };
 
@@ -375,15 +585,30 @@ function TenantRequestsContent() {
         )}
       </AnimatePresence>
 
-      <ConfirmDialog
+      <ReopenModal
         open={!!confirmReopen}
-        title="Reopen Maintenance Request?"
-        description="This will reopen the request and notify your landlord. You can only reopen a resolved request within 14 days."
-        confirmLabel="Yes, Reopen"
+        requestId={confirmReopen?.id || null}
+        onClose={() => setConfirmReopen(null)}
+        onSuccess={(updatedReq) => {
+          setRequests((prev) => prev.map((r) => (r.id === updatedReq.id ? updatedReq : r)));
+        }}
+      />
+
+      <ConfirmDialog
+        open={!!confirmClose}
+        title="Close Maintenance Request"
+        description="Are you sure you want to mark this request as closed? This confirms that your maintenance issue has been resolved to your satisfaction."
+        confirmLabel="Yes, Close Request"
         cancelLabel="Cancel"
-        variant="warning"
-        onConfirm={() => confirmReopen && doReopen(confirmReopen.id)}
-        onCancel={() => setConfirmReopen(null)}
+        variant="info"
+        onCancel={() => setConfirmClose(null)}
+        onConfirm={() => {
+          if (confirmClose) {
+            const reqId = confirmClose.id;
+            setConfirmClose(null);
+            executeCloseRequest(reqId);
+          }
+        }}
       />
 
       <div className="space-y-8 max-w-5xl mx-auto pb-16">
@@ -559,6 +784,8 @@ function TenantRequestsContent() {
                       isExpanded={expandedId === req.id}
                       onToggle={() => setExpandedId(expandedId === req.id ? null : req.id)}
                       onReopen={handleReopen}
+                      onCloseRequest={handleCloseRequest}
+                      isClosing={closingId === req.id}
                       onViewImage={setPreviewUrl}
                     />
                   </motion.div>

@@ -13,7 +13,7 @@ from app.models.maintenance_request import MaintenanceRequest, RequestStatus
 from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
 from app.models.document import Document
-from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse
+from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequestResponse, MaintenanceRequestReopen
 from app.schemas.announcement import AnnouncementResponse
 from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
@@ -168,6 +168,7 @@ async def list_my_maintenance_requests(
 async def reopen_maintenance_request(
     request: Request,
     request_id: uuid.UUID,
+    payload_in: MaintenanceRequestReopen,
     background_tasks: BackgroundTasks,
     profile: TenantProfile = Depends(get_active_tenant_profile),
     session: AsyncSession = Depends(get_session),
@@ -184,8 +185,9 @@ async def reopen_maintenance_request(
     from app.core.config import get_settings
     
     settings = get_settings()
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    time_since_resolution = now - req.updated_at
+    now = datetime.now(timezone.utc)
+    updated_at = req.updated_at.replace(tzinfo=timezone.utc) if req.updated_at.tzinfo is None else req.updated_at
+    time_since_resolution = now - updated_at
     if time_since_resolution.days > settings.max_reopen_days:
         raise HTTPException(
             status_code=400, 
@@ -195,13 +197,23 @@ async def reopen_maintenance_request(
     req.status = RequestStatus.OPEN
     req.updated_at = now
     
+    event_payload = {
+        "previous_status": "resolved",
+        "notes": payload_in.notes
+    }
+    desc_parts = ["Tenant reopened the maintenance request."]
+    if payload_in.image_keys:
+        event_payload["image_keys"] = payload_in.image_keys
+        event_payload["image_count"] = len(payload_in.image_keys)
+        desc_parts.append(f"Attached {len(payload_in.image_keys)} file(s).")
+
     # Log the reopening event
     event = MaintenanceEvent(
         maintenance_request_id=req.id,
         actor_id=profile.user_id,
         event_type="reopened",
-        description="Tenant reopened the maintenance request.",
-        payload={"previous_status": "resolved"}
+        description=" ".join(desc_parts),
+        payload=event_payload
     )
     session.add(event)
     
@@ -226,6 +238,49 @@ async def reopen_maintenance_request(
                     request_title=req.title
                 )
 
+    resp = MaintenanceRequestResponse.model_validate(req)
+    hydrate_maintenance_request(req, resp)
+    return resp
+
+
+@router.post("/maintenance/{request_id}/close", response_model=MaintenanceRequestResponse)
+@limiter.limit("5/minute")
+async def close_maintenance_request(
+    request: Request,
+    request_id: uuid.UUID,
+    profile: TenantProfile = Depends(get_active_tenant_profile),
+    session: AsyncSession = Depends(get_session),
+):
+    req = await session.get(MaintenanceRequest, request_id)
+    if not req or req.unit_id != profile.unit_id:
+        raise HTTPException(status_code=404, detail="Maintenance request not found.")
+        
+    if req.status != RequestStatus.RESOLVED:
+        raise HTTPException(status_code=400, detail="Only resolved requests can be closed.")
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    
+    old_status = req.status.value if hasattr(req.status, "value") else str(req.status)
+    req.status = RequestStatus.CLOSED
+    req.updated_at = now
+    
+    event = MaintenanceEvent(
+        maintenance_request_id=req.id,
+        actor_id=profile.user_id,
+        event_type="status_changed",
+        description="Tenant confirmed resolution and closed the request.",
+        payload={
+            "old_status": old_status,
+            "new_status": "closed",
+            "closed_by": "tenant"
+        }
+    )
+    session.add(event)
+    
+    await session.commit()
+    await session.refresh(req)
+    
     resp = MaintenanceRequestResponse.model_validate(req)
     hydrate_maintenance_request(req, resp)
     return resp
