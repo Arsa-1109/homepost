@@ -21,6 +21,7 @@ import {
   Copy,
   ChevronLeft,
   ChevronRight,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
@@ -185,57 +186,67 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               <UserCheck className="w-3.5 h-3.5" />
               <span>Invite Tenant</span>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl">
-              <div className="bg-[rgb(var(--ml-accent))]/10 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/20">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] mb-4 ring-8 ring-[rgb(var(--ml-accent))]/5">
-                  <DoorOpen className="h-7 w-7" />
-                </div>
-                <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
-                    Invite Tenant
-                  </DialogTitle>
-                  <DialogDescription className="text-center mt-2 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                    Generate a unique, secure invite link for your new tenant
-                    moving into{" "}
-                    <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-                      Unit {u.unit_label}
-                    </span>
-                    .
-                  </DialogDescription>
-                </DialogHeader>
-              </div>
-
-              <div className="bg-[rgb(var(--ml-bg-primary))]/40">
-                <div className="px-6 py-5 border-b border-border/20">
-                  <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] cursor-pointer hover:border-[rgb(var(--ml-accent))]/40 transition-all group">
-                    <div className="mt-0.5">
-                      <input
-                        type="checkbox"
-                        checked={keepData}
-                        onChange={(e) => setKeepData(e.target.checked)}
-                        className="w-4 h-4 rounded border-border text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer accent-[rgb(var(--ml-accent))]"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">
-                        Retain Previous Data
-                      </p>
-                      <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] mt-0.5">
-                        Keep the previous tenant's documents and history
-                        attached to this unit.
-                      </p>
-                    </div>
-                  </label>
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
+              <div className="p-6 sm:p-7 space-y-6">
+                {/* Header */}
+                <div className="flex items-start gap-4">
+                  <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner ring-4 ring-[rgb(var(--ml-accent))]/5">
+                    <DoorOpen className="h-6 w-6 text-[rgb(var(--ml-accent))]" />
+                  </div>
+                  <div>
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
+                        Invite Tenant
+                      </DialogTitle>
+                      <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                        Generate a unique, secure invite link for your new tenant moving into{" "}
+                        <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                          Unit {u.unit_label}
+                        </span>
+                        .
+                      </DialogDescription>
+                    </DialogHeader>
+                  </div>
                 </div>
 
-                <div className="px-6 py-4 flex gap-3 justify-end items-center">
+                {/* Custom Glassmorphic Checkbox Card for Retain Data */}
+                <label className="flex items-start gap-3.5 p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/30 hover:border-[rgb(var(--ml-accent))]/40 transition-all cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    checked={keepData}
+                    onChange={(e) => setKeepData(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <div
+                    className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-200 shrink-0 ${
+                      keepData
+                        ? "bg-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] shadow-[0_2px_10px_rgba(var(--ml-accent),0.3)] scale-100"
+                        : "bg-[rgb(var(--ml-bg-primary))] border-border/80 text-transparent group-hover:border-[rgb(var(--ml-accent))]/50"
+                    }`}
+                  >
+                    <Check className={`w-3.5 h-3.5 stroke-[3] transition-all duration-200 ${keepData ? "scale-100 opacity-100" : "scale-50 opacity-0"}`} />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-bold text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+                      Retain Previous Data
+                    </p>
+                    <p className="text-[11px] font-medium text-[rgb(var(--ml-text-secondary))] leading-normal">
+                      Keep the previous tenant's documents and history attached to this unit.
+                    </p>
+                  </div>
+                </label>
+
+                {/* Actions Footer */}
+                <div className="pt-4 border-t border-border/30 flex gap-3 justify-end items-center">
                   <button
+                    type="button"
                     onClick={() => setIsDialogOpen(false)}
-                    className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                    className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer flex-1 sm:flex-initial shadow-sm"
                   >
                     Cancel
                   </button>
                   <button
+                    type="button"
                     onClick={async () => {
                       try {
                         const res = await fetchAPI<{ token: string }>(
@@ -257,7 +268,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                         toast.error("Failed to generate invite.");
                       }
                     }}
-                    className="px-5 py-2.5 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
+                    className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.2)] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>Generate Link</span>
@@ -375,15 +386,22 @@ export default function LandlordUnitsPage() {
     properties.find((p) => p.id === selectedProperty)?.name || "Property";
 
   const filteredUnits = useMemo(() => {
-    return units.filter((u) => {
-      const matchesSearch = u.unit_label
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      if (!matchesSearch) return false;
-      if (selectedFilter === "OCCUPIED") return u.is_occupied;
-      if (selectedFilter === "VACANT") return !u.is_occupied;
-      return true;
-    });
+    return units
+      .filter((u) => {
+        const matchesSearch = u.unit_label
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        if (!matchesSearch) return false;
+        if (selectedFilter === "OCCUPIED") return u.is_occupied;
+        if (selectedFilter === "VACANT") return !u.is_occupied;
+        return true;
+      })
+      .sort((a, b) =>
+        a.unit_label.localeCompare(b.unit_label, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        })
+      );
   }, [units, searchQuery, selectedFilter]);
 
   const totalPages = Math.ceil(filteredUnits.length / ITEMS_PER_PAGE) || 1;
