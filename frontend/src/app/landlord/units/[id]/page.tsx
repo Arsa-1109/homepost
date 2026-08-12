@@ -104,121 +104,115 @@ export default function UnitDetailsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-7xl mx-auto">
-        {/* Back link + title row */}
-        <div className="mb-8 flex flex-col gap-2">
-          <div className="skeleton h-4 w-32 rounded-lg mb-2" />
+      <div className="space-y-8 max-w-5xl mx-auto pb-16">
+        {/* Header Hero Skeleton */}
+        <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm space-y-4">
+          <div className="skeleton h-5 w-32 rounded-full" />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="skeleton h-9 w-40 rounded-xl" />
-              <div className="skeleton h-5 w-16 rounded-full" />
+              <div className="skeleton h-9 w-44 rounded-xl" />
+              <div className="skeleton h-6 w-20 rounded-full" />
             </div>
-            <div className="skeleton h-9 w-40 rounded-xl" />
+            <div className="flex items-center gap-2">
+              <div className="skeleton h-9 w-24 rounded-xl" />
+              <div className="skeleton h-9 w-24 rounded-xl" />
+              <div className="skeleton h-9 w-36 rounded-xl" />
+            </div>
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="skeleton h-4 w-4 rounded-sm" />
-            <div className="skeleton h-4 w-36 rounded-lg" />
-          </div>
+          <div className="skeleton h-4 w-32 rounded-lg" />
         </div>
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
-
-          {/* LEFT: Unified floating card */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT: Unified floating card skeleton */}
           <div className="lg:col-span-1">
-            <div className="rounded-3xl p-6 md:p-8 border border-border/40 bg-[rgb(var(--ml-bg-secondary))] shadow-[0_20px_40px_rgba(0,0,0,0.06)] space-y-6">
-
-              {/* Rent details header */}
+            <div className="rounded-3xl p-6 sm:p-8 border border-border/60 bg-[rgb(var(--ml-bg-secondary))] shadow-sm space-y-6">
               <div className="flex items-center gap-3">
-                <div className="skeleton h-12 w-12 rounded-2xl" />
-                <div className="skeleton h-6 w-32 rounded-lg" />
+                <div className="skeleton h-11 w-11 rounded-2xl" />
+                <div className="space-y-1.5">
+                  <div className="skeleton h-5 w-28 rounded-lg" />
+                  <div className="skeleton h-3 w-36 rounded" />
+                </div>
               </div>
 
-              {/* Rent due date block */}
-              <div className="rounded-2xl p-4 border border-border/30 bg-[rgb(var(--ml-bg-primary))]/40 space-y-2">
+              <div className="rounded-2xl p-4 border border-border/40 bg-[rgb(var(--ml-bg-primary))]/50 space-y-2">
                 <div className="skeleton h-3 w-24 rounded" />
-                <div className="skeleton h-6 w-36 rounded-lg" />
+                <div className="skeleton h-5 w-40 rounded-lg" />
               </div>
 
-              {/* Divider */}
               <div className="skeleton h-px w-full rounded" />
 
-              {/* Tenant info header */}
               <div className="flex items-center gap-3">
-                <div className="skeleton h-12 w-12 rounded-2xl" />
-                <div className="skeleton h-6 w-40 rounded-lg" />
+                <div className="skeleton h-11 w-11 rounded-2xl" />
+                <div className="space-y-1.5">
+                  <div className="skeleton h-5 w-36 rounded-lg" />
+                  <div className="skeleton h-3 w-40 rounded" />
+                </div>
               </div>
 
-              {/* Tenant name + email block */}
-              <div className="rounded-2xl p-5 border border-border/30 bg-[rgb(var(--ml-bg-primary))]/40 space-y-4">
+              <div className="rounded-2xl p-5 border border-border/40 bg-[rgb(var(--ml-bg-primary))]/50 space-y-4">
                 <div className="space-y-2">
-                  <div className="skeleton h-3 w-16 rounded" />
-                  <div className="skeleton h-6 w-44 rounded-lg" />
+                  <div className="skeleton h-3 w-20 rounded" />
+                  <div className="skeleton h-5 w-36 rounded-lg" />
                 </div>
                 <div className="pt-3 border-t border-border/20 space-y-2">
                   <div className="skeleton h-3 w-24 rounded" />
-                  <div className="skeleton h-5 w-52 rounded-lg" />
+                  <div className="skeleton h-4 w-48 rounded-lg" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: Maintenance + Documents */}
-          <div className="lg:col-span-2 space-y-12">
-
-            {/* Maintenance section */}
+          {/* RIGHT: Maintenance + Documents skeleton */}
+          <div className="lg:col-span-2 space-y-8">
             <section>
-              <div className="flex items-center justify-between mb-6 px-1">
+              <div className="flex items-center justify-between mb-4 px-1">
                 <div className="flex items-center gap-3">
-                  <div className="skeleton h-9 w-9 rounded-xl" />
-                  <div className="skeleton h-7 w-48 rounded-xl" />
+                  <div className="skeleton h-8 w-8 rounded-xl" />
+                  <div className="skeleton h-6 w-44 rounded-xl" />
                 </div>
-                <div className="skeleton h-6 w-8 rounded-full" />
+                <div className="skeleton h-5 w-8 rounded-full" />
               </div>
 
               <div className="space-y-4">
-                {[0, 1, 2].map((i) => (
+                {[0, 1].map((i) => (
                   <div
                     key={i}
-                    className="p-5 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] space-y-3"
-                    style={{ animationDelay: `${i * 80}ms` }}
+                    className="p-5 rounded-3xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] space-y-3"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="skeleton h-9 w-9 rounded-xl" />
-                        <div className="skeleton h-5 w-44 rounded-lg" />
+                        <div className="skeleton h-8 w-8 rounded-xl" />
+                        <div className="skeleton h-5 w-40 rounded-lg" />
                       </div>
                       <div className="skeleton h-5 w-16 rounded-full" />
                     </div>
                     <div className="skeleton h-4 w-full rounded" />
-                    <div className="skeleton h-4 w-3/4 rounded" />
                     <div className="skeleton h-3 w-24 rounded" />
                   </div>
                 ))}
               </div>
             </section>
 
-            {/* Documents section */}
             <section>
-              <div className="flex items-center justify-between mb-6 px-1">
+              <div className="flex items-center justify-between mb-4 px-1">
                 <div className="flex items-center gap-3">
-                  <div className="skeleton h-9 w-9 rounded-xl" />
-                  <div className="skeleton h-7 w-32 rounded-xl" />
+                  <div className="skeleton h-8 w-8 rounded-xl" />
+                  <div className="skeleton h-6 w-32 rounded-xl" />
                 </div>
-                <div className="skeleton h-6 w-8 rounded-full" />
+                <div className="skeleton h-5 w-8 rounded-full" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[0, 1].map((i) => (
                   <div
                     key={i}
-                    className="p-5 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4"
-                    style={{ animationDelay: `${i * 80}ms` }}
+                    className="p-5 rounded-3xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4"
                   >
-                    <div className="skeleton h-11 w-11 rounded-xl shrink-0" />
+                    <div className="skeleton h-10 w-10 rounded-2xl shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="skeleton h-5 w-full rounded-lg" />
-                      <div className="skeleton h-3 w-28 rounded" />
+                      <div className="skeleton h-4 w-full rounded-lg" />
+                      <div className="skeleton h-3 w-24 rounded" />
                       <div className="skeleton h-4 w-20 rounded-lg" />
                     </div>
                   </div>
@@ -234,8 +228,8 @@ export default function UnitDetailsPage() {
 
   if (error || !unitData) {
     return (
-      <div className="p-6 md:p-8">
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 dark:bg-red-900/10 dark:border-red-900/30">
+      <div className="max-w-5xl mx-auto py-12 px-6">
+        <div className="bg-red-500/10 text-red-600 dark:text-red-400 p-6 rounded-3xl border border-red-500/20 text-center font-bold text-sm">
           {error || "Unit not found."}
         </div>
       </div>
@@ -302,107 +296,125 @@ export default function UnitDetailsPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto relative">
-      <div className="mb-8 flex flex-col gap-2 relative z-10">
-        <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-muted))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
-          <ChevronLeft className="w-4 h-4" /> Back to Dashboard
-        </Link>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">Unit {unit_label}</h1>
-            {is_occupied ? (
-              <Badge variant="success" className="uppercase tracking-widest text-[10px] font-bold py-1 px-2">Occupied</Badge>
-            ) : (
-              <Badge variant="outline" className="uppercase tracking-widest text-[10px] font-bold py-1 px-2 border-dashed">Vacant</Badge>
-            )}
+    <div className="space-y-8 max-w-5xl mx-auto pb-16 relative">
+      {/* Header Hero Section */}
+      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+              <Building className="w-3.5 h-3.5" /> {property_name}
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
+              Unit {unit_label}
+              {is_occupied ? (
+                <Badge variant="outline" className="uppercase tracking-wider text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Occupied
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="uppercase tracking-wider text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Vacant
+                </Badge>
+              )}
+            </h1>
+            <Link href="/landlord/units" className="text-xs font-bold text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors inline-flex items-center gap-1 pt-1">
+              <ChevronLeft className="w-3.5 h-3.5" /> Back to Units List
+            </Link>
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2.5 flex-wrap">
             <button
               onClick={() => {
                 setEditLabel(unit_label);
                 setEditRentDay(String(rent_due_day));
                 setIsEditDialogOpen(true);
               }}
-              className="px-4 py-2 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] text-sm font-semibold rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover-lift"
+              className="px-3.5 py-2 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] text-xs font-bold rounded-xl hover:bg-[rgb(var(--ml-bg-secondary))] transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
             >
-              <Pencil className="w-4 h-4" /> Edit Unit
+              <Pencil className="w-3.5 h-3.5" /> Edit Unit
             </button>
             <button
               onClick={() => setIsDeleteDialogOpen(true)}
-              className="px-4 py-2 bg-red-500/5 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-semibold rounded-xl hover:bg-red-500/10 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover-lift"
+              className="px-3.5 py-2 bg-red-500/5 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl hover:bg-red-500/10 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
             >
-              <Trash2 className="w-4 h-4" /> Delete Unit
+              <Trash2 className="w-3.5 h-3.5" /> Delete Unit
             </button>
-            <Link href="/landlord/requests" className="px-4 py-2 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 text-[rgb(var(--ml-text-primary))] text-sm font-semibold rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-all shadow-sm flex items-center gap-1.5 hover-lift">
+            <Link href="/landlord/requests" className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all shadow-sm flex items-center gap-1.5 active:scale-[0.98]">
               View All Maintenance
             </Link>
           </div>
         </div>
-        <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5">
-          <Building className="w-4 h-4" /> {property_name}
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
 
         {/* LEFT COLUMN: Unit & Tenant Profile Floating Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           className="lg:col-span-1"
         >
-          <div className="rounded-3xl p-6 md:p-8 bg-[rgb(var(--ml-bg-secondary))] border border-border/50 shadow-[0_20px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex flex-col relative overflow-hidden group">
-            {/* Decorative gradient orb */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-[rgb(var(--ml-accent))]/10 rounded-full blur-[3xl] transform translate-x-1/2 -translate-y-1/3 transition-transform duration-700 group-hover:scale-110 pointer-events-none" />
+          <div className="rounded-3xl p-6 sm:p-8 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 shadow-sm flex flex-col relative overflow-hidden group space-y-6">
+            {/* Background Accent Mesh Effect */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-[rgb(var(--ml-accent))]/5 rounded-full blur-2xl group-hover:bg-[rgb(var(--ml-accent))]/15 transition-all duration-500 pointer-events-none" />
 
-            <div className="flex items-center gap-3 mb-8 relative z-10">
-              <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl shadow-inner border border-indigo-500/10">
-                <Home className="w-6 h-6" />
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20">
+                <Home className="w-5 h-5" />
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Rent Details</h2>
-            </div>
-
-            <div className="space-y-6 relative z-10">
-              <div className="flex flex-col p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/50 border border-border/30">
-                <span className="text-xs uppercase tracking-wider font-semibold text-[rgb(var(--ml-text-muted))] mb-2 flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5" /> Rent Due Date
-                </span>
-                <span className="text-[rgb(var(--ml-text-primary))] font-medium text-lg">Day {rent_due_day} of month</span>
+              <div>
+                <h2 className="text-lg font-black tracking-tight text-[rgb(var(--ml-text-primary))]">Rent Details</h2>
+                <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">Schedule & collection info</p>
               </div>
             </div>
 
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-[rgb(var(--ml-border))] to-transparent my-8 relative z-10" />
-
-            <div className="flex items-center gap-3 mb-6 relative z-10">
-              <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl shadow-inner border border-emerald-500/10">
-                <UserIcon className="w-6 h-6" />
+            <div className="relative z-10">
+              <div className="p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3 text-[rgb(var(--ml-accent))]" /> Rent Due Date
+                  </span>
+                  <p className="text-sm font-extrabold text-[rgb(var(--ml-text-primary))]">Day {rent_due_day} of every month</p>
+                </div>
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Tenant Information</h2>
+            </div>
+
+            <div className="h-px w-full bg-border/40 relative z-10" />
+
+            <div className="flex items-center gap-3 relative z-10">
+              <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-500/20">
+                <UserIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black tracking-tight text-[rgb(var(--ml-text-primary))]">Tenant Information</h2>
+                <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">Active lease holder details</p>
+              </div>
             </div>
 
             <div className="relative z-10">
               {is_occupied ? (
-                <div className="space-y-4 p-5 rounded-2xl bg-gradient-to-br from-[rgb(var(--ml-bg-primary))]/50 to-transparent border border-border/30">
+                <div className="p-5 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 space-y-4">
                   <div className="flex flex-col">
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-[rgb(var(--ml-text-muted))] mb-1">Full Name</span>
-                    <span className="text-[rgb(var(--ml-text-primary))] font-semibold text-lg">{tenant_name || "N/A"}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-[rgb(var(--ml-text-secondary))] mb-1">Full Name</span>
+                    <span className="text-base font-extrabold text-[rgb(var(--ml-text-primary))]">{tenant_name || "N/A"}</span>
                   </div>
                   <div className="flex flex-col pt-3 border-t border-border/30">
-                    <span className="text-[10px] uppercase tracking-widest font-bold text-[rgb(var(--ml-text-muted))] mb-1">Email Address</span>
-                    <span className="text-[rgb(var(--ml-text-primary))] font-medium">{tenant_email || "N/A"}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-extrabold text-[rgb(var(--ml-text-secondary))] mb-1">Email Address</span>
+                    <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">{tenant_email || "N/A"}</span>
                   </div>
                   <div className="flex flex-col pt-3 border-t border-border/30">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-[rgb(var(--ml-text-muted))] mb-1 block">Lease Period</span>
-                        <span className="text-[rgb(var(--ml-text-primary))] font-semibold text-sm">
-                          {lease_start && lease_end ? `${new Date(lease_start).toLocaleDateString()} to ${new Date(lease_end).toLocaleDateString()}` : "Not Set"}
+                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-[rgb(var(--ml-text-secondary))] mb-1 block">Lease Period</span>
+                        <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">
+                          {lease_start && lease_end ? `${new Date(lease_start).toLocaleDateString()} – ${new Date(lease_end).toLocaleDateString()}` : "Not Set"}
                         </span>
                       </div>
                       <button 
                         onClick={() => setIsEditLeaseOpen(true)}
-                        className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/15 transition-all cursor-pointer"
+                        className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/20 transition-all cursor-pointer shrink-0 active:scale-[0.98]"
                       >
                         {lease_start || lease_end ? "Edit" : "Set Lease"}
                       </button>
@@ -410,11 +422,14 @@ export default function UnitDetailsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="py-8 flex flex-col items-center justify-center text-center rounded-2xl bg-slate-500/5 border border-dashed border-border">
-                  <div className="w-12 h-12 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border/50 flex items-center justify-center mb-4 shadow-sm">
-                    <UserIcon className="w-5 h-5 text-[rgb(var(--ml-text-muted))]" />
+                <div className="py-10 px-4 flex flex-col items-center justify-center text-center rounded-2xl bg-[rgb(var(--ml-bg-primary))]/40 border border-dashed border-border/60">
+                  <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border/50 flex items-center justify-center mb-3 shadow-inner">
+                    <UserIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))]" />
                   </div>
-                  <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))]">This unit is currently vacant.</p>
+                  <p className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">This unit is currently vacant.</p>
+                  <p className="text-[11px] font-medium text-[rgb(var(--ml-text-secondary))] mt-0.5 max-w-[200px]">
+                    Generate an invite link from the main Units page to onboard a tenant.
+                  </p>
                 </div>
               )}
             </div>
@@ -423,31 +438,33 @@ export default function UnitDetailsPage() {
 
         {/* RIGHT COLUMN: Maintenance & Documents */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-          className="lg:col-span-2 space-y-12"
+          transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
+          className="lg:col-span-2 space-y-8"
         >
           {/* Maintenance Section */}
           <section>
-            <div className="flex items-center justify-between mb-6 px-1">
-              <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-[rgb(var(--ml-text-primary))]">
-                <div className="p-2 bg-orange-500/10 text-orange-500 rounded-xl shadow-inner border border-orange-500/10">
-                  <Wrench className="w-5 h-5" />
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h2 className="text-xl font-black tracking-tight flex items-center gap-2.5 text-[rgb(var(--ml-text-primary))]">
+                <div className="p-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20">
+                  <Wrench className="w-4 h-4" />
                 </div>
                 Maintenance Requests
               </h2>
-              <Badge variant="secondary" className="rounded-full px-3 py-1 font-semibold text-sm">{maintenanceRequests.length}</Badge>
+              <Badge variant="outline" className="rounded-full px-2.5 py-0.5 font-extrabold text-xs bg-[rgb(var(--ml-bg-secondary))] border-border/60 text-[rgb(var(--ml-text-primary))]">
+                {maintenanceRequests.length}
+              </Badge>
             </div>
 
             <div className="space-y-4">
               {maintenanceRequests.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-border/60">
-                  <div className="w-14 h-14 rounded-full bg-[rgb(var(--ml-bg-tertiary))] flex items-center justify-center mb-4 shadow-inner">
-                    <Wrench className="w-6 h-6 text-[rgb(var(--ml-text-muted))]" />
+                <div className="py-12 px-6 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-border/60">
+                  <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--ml-bg-primary))] flex items-center justify-center mb-3 shadow-inner border border-border/40">
+                    <Wrench className="w-5 h-5 text-[rgb(var(--ml-text-secondary))]" />
                   </div>
-                  <p className="text-base font-semibold text-[rgb(var(--ml-text-primary))] mb-1">No Active Requests</p>
-                  <p className="text-sm text-[rgb(var(--ml-text-secondary))]">This unit is well-maintained with no recorded issues.</p>
+                  <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No Active Requests</p>
+                  <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">This unit is well-maintained with no recorded issues.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -475,43 +492,45 @@ export default function UnitDetailsPage() {
 
           {/* Documents Section */}
           <section>
-            <div className="flex items-center justify-between mb-6 px-1">
-              <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3 text-[rgb(var(--ml-text-primary))]">
-                <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl shadow-inner border border-blue-500/10">
-                  <FileText className="w-5 h-5" />
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h2 className="text-xl font-black tracking-tight flex items-center gap-2.5 text-[rgb(var(--ml-text-primary))]">
+                <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-500/20">
+                  <FileText className="w-4 h-4" />
                 </div>
                 Documents
               </h2>
-              <Badge variant="secondary" className="rounded-full px-3 py-1 font-semibold text-sm">{documents.length}</Badge>
+              <Badge variant="outline" className="rounded-full px-2.5 py-0.5 font-extrabold text-xs bg-[rgb(var(--ml-bg-secondary))] border-border/60 text-[rgb(var(--ml-text-primary))]">
+                {documents.length}
+              </Badge>
             </div>
 
             <div>
               {documents.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-border/60">
-                  <div className="w-14 h-14 rounded-full bg-[rgb(var(--ml-bg-tertiary))] flex items-center justify-center mb-4 shadow-inner">
-                    <FileText className="w-6 h-6 text-[rgb(var(--ml-text-muted))]" />
+                <div className="py-12 px-6 flex flex-col items-center justify-center text-center rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-dashed border-border/60">
+                  <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--ml-bg-primary))] flex items-center justify-center mb-3 shadow-inner border border-border/40">
+                    <FileText className="w-5 h-5 text-[rgb(var(--ml-text-secondary))]" />
                   </div>
-                  <p className="text-base font-semibold text-[rgb(var(--ml-text-primary))] mb-1">No Documents Found</p>
-                  <p className="text-sm text-[rgb(var(--ml-text-secondary))]">Upload leases or important files for this unit.</p>
+                  <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No Documents Found</p>
+                  <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">Upload leases or important files for this unit.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {documents.map((doc, idx) => (
                     <motion.div
                       key={doc.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
+                      initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      className="p-5 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 transition-all duration-300 hover:border-[rgb(var(--ml-accent))]/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.05)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] group"
+                      className="p-5 rounded-3xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 transition-all duration-300 hover:border-[rgb(var(--ml-accent))]/40 hover:shadow-sm group relative overflow-hidden"
                     >
-                      <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl shrink-0 group-hover:scale-110 transition-transform duration-300">
+                      <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl border border-blue-500/20 shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[rgb(var(--ml-text-primary))] truncate mb-1">
+                        <p className="font-extrabold text-sm text-[rgb(var(--ml-text-primary))] truncate mb-0.5">
                           {doc.title}
                         </p>
-                        <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] mb-3">
+                        <p className="text-[11px] font-semibold text-[rgb(var(--ml-text-secondary))] mb-3">
                           Added {new Date(doc.created_at).toLocaleDateString()}
                         </p>
                         {doc.file_url && (
@@ -519,7 +538,7 @@ export default function UnitDetailsPage() {
                             href={doc.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:text-opacity-80 transition-opacity"
+                            className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[rgb(var(--ml-accent))] hover:text-[rgb(var(--ml-accent-dark))] transition-colors"
                           >
                             <DownloadIcon className="w-3.5 h-3.5" /> DOWNLOAD FILE
                           </a>
@@ -545,7 +564,7 @@ export default function UnitDetailsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsEditLeaseOpen(false)}
-              className="absolute inset-0 bg-black/60"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             {/* Modal Content */}
             <motion.div
@@ -553,18 +572,23 @@ export default function UnitDetailsPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="bg-[rgb(var(--ml-bg-secondary))] border border-border/50 rounded-3xl w-full max-w-md p-6 shadow-2xl relative z-10"
+              className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl w-full max-w-md p-6 shadow-2xl relative z-10 space-y-4"
             >
-              <h3 className="text-xl font-bold text-[rgb(var(--ml-text-primary))] mb-2 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[rgb(var(--ml-accent))]" /> Set Lease Dates
-              </h3>
-              <p className="text-sm text-[rgb(var(--ml-text-secondary))] mb-6">
-                Specify the start and end dates for Unit {unit_label}&apos;s lease contract.
-              </p>
-
-              <form onSubmit={handleUpdateLease} className="space-y-5">
+              <div className="flex items-center gap-3 border-b border-border/20 pb-4">
+                <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20">
+                  <Calendar className="w-5 h-5" />
+                </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest block mb-2">
+                  <h3 className="text-lg font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Set Lease Dates</h3>
+                  <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+                    Contract range for Unit {unit_label}
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleUpdateLease} className="space-y-4 pt-1">
+                <div>
+                  <label className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-1.5">
                     Lease Start Date
                   </label>
                   <DatePicker
@@ -575,7 +599,7 @@ export default function UnitDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-widest block mb-2">
+                  <label className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-1.5">
                     Lease End Date
                   </label>
                   <DatePicker
@@ -585,18 +609,18 @@ export default function UnitDetailsPage() {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 pt-3">
+                <div className="flex items-center gap-3 pt-3 border-t border-border/30">
                   <button
                     type="button"
                     onClick={() => setIsEditLeaseOpen(false)}
-                    className="flex-1 h-11 rounded-xl border border-border hover:bg-[rgb(var(--ml-bg-tertiary))]/40 text-sm font-semibold transition-colors cursor-pointer text-[rgb(var(--ml-text-primary))]"
+                    className="flex-1 h-11 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] text-xs font-bold transition-colors cursor-pointer text-[rgb(var(--ml-text-primary))]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isUpdatingLease}
-                    className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/90 text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md shadow-[rgb(var(--ml-accent))]/10 hover:shadow-[rgb(var(--ml-accent))]/25 cursor-pointer"
+                    className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-dark))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer"
                   >
                     {isUpdatingLease ? "Saving..." : "Save Dates"}
                   </button>
@@ -609,56 +633,56 @@ export default function UnitDetailsPage() {
 
       {/* Edit Unit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))] rounded-2xl animate-fade-in">
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl">
           <form onSubmit={handleUpdateUnit}>
-            <div className="bg-[rgba(var(--ml-accent),0.03)] dark:bg-[rgba(var(--ml-accent),0.05)] px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/15">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(var(--ml-accent),0.12)] dark:bg-[rgba(var(--ml-accent),0.15)] mb-4 ring-8 ring-[rgba(var(--ml-accent),0.03)] dark:ring-[rgba(var(--ml-accent),0.05)]">
+            <div className="bg-[rgb(var(--ml-accent))]/10 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/20">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] mb-4 ring-8 ring-[rgb(var(--ml-accent))]/5">
                 <Pencil className="h-6 w-6 text-[rgb(var(--ml-accent))]" />
               </div>
               <DialogHeader>
-                <DialogTitle className="text-center text-xl font-extrabold text-[rgb(var(--ml-text-primary))] tracking-tight">Edit Unit</DialogTitle>
+                <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Edit Unit</DialogTitle>
                 <DialogDescription className="text-center mt-2 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
                   Update the unit label or monthly rent due date.
                 </DialogDescription>
               </DialogHeader>
             </div>
             
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 bg-[rgb(var(--ml-bg-primary))]/40">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Unit Label</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Unit Label</label>
                 <input 
                   required 
                   value={editLabel} 
                   onChange={e => setEditLabel(e.target.value)} 
                   placeholder="e.g. Apt 101, Basement, etc." 
-                  className="w-full bg-[rgb(var(--ml-bg-secondary))]/55 border border-border/30 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all placeholder-[rgb(var(--ml-text-secondary))]/40 text-[rgb(var(--ml-text-primary))]"
+                  className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder-[rgb(var(--ml-text-secondary))]/50 text-[rgb(var(--ml-text-primary))]"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Rent Due Day</label>
+                <label className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Rent Due Day</label>
                 <input 
                   required 
                   type="number"
                   min="1" max="31"
                   value={editRentDay} 
                   onChange={e => setEditRentDay(e.target.value)} 
-                  className="w-full bg-[rgb(var(--ml-bg-secondary))]/55 border border-border/30 rounded-xl p-3 text-sm outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/25 transition-all tabular-nums text-[rgb(var(--ml-text-primary))]"
+                  className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all tabular-nums text-[rgb(var(--ml-text-primary))]"
                 />
               </div>
             </div>
             
-            <div className="bg-[rgb(var(--ml-bg-tertiary))]/50 px-6 py-4 flex gap-3 justify-end items-center border-t border-border/15">
+            <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex gap-3 justify-end items-center border-t border-border/20">
               <button 
                 type="button"
                 onClick={() => setIsEditDialogOpen(false)}
-                className="px-5 py-2.5 text-xs font-bold border border-border/30 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+                className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isUpdatingUnit}
-                className="px-5 py-2.5 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer hover-lift"
+                className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer"
               >
                 {isUpdatingUnit ? "Saving..." : "Save Changes"}
               </button>
@@ -669,13 +693,13 @@ export default function UnitDetailsPage() {
 
       {/* Delete Unit Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-0 shadow-xl bg-[rgb(var(--ml-bg-secondary))] rounded-2xl animate-fade-in">
-          <div className="bg-red-50 dark:bg-red-950/40 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/30">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900 mb-4 ring-8 ring-red-50 dark:ring-red-950">
-              <AlertTriangle className="h-7 w-7 text-red-600 dark:text-red-400" />
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl">
+          <div className="bg-red-500/10 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/30">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/20 text-red-600 dark:text-red-400 mb-4 ring-8 ring-red-500/5">
+              <AlertTriangle className="h-7 w-7" />
             </div>
             <DialogHeader>
-              <DialogTitle className="text-center text-xl font-extrabold text-[rgb(var(--ml-text-primary))] tracking-tight">Delete Unit</DialogTitle>
+              <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Delete Unit</DialogTitle>
               <DialogDescription className="text-center mt-3 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
                 Are you sure you want to delete <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {unit_label}</span>? All lease history, invitations, and related documents will be permanently removed. This action cannot be undone.
               </DialogDescription>
@@ -684,7 +708,7 @@ export default function UnitDetailsPage() {
           <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
             <button 
               onClick={() => setIsDeleteDialogOpen(false)}
-              className="px-5 py-2.5 text-xs font-bold border border-border/30 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
+              className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
             >
               Cancel
             </button>

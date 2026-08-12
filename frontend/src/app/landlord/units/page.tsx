@@ -232,7 +232,7 @@ export default function LandlordUnitsPage() {
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [unitsLoading, setUnitsLoading] = useState(false);
+  const [unitsLoading, setUnitsLoading] = useState(true);
   
   const [unitLabel, setUnitLabel] = useState("");
   const [rentDay, setRentDay] = useState("1");
@@ -257,9 +257,12 @@ export default function LandlordUnitsPage() {
         setProperties(data);
         if (data.length > 0) {
           setSelectedProperty(data[0].id);
+        } else {
+          setUnitsLoading(false);
         }
       } catch (err) {
         console.error(err);
+        setUnitsLoading(false);
       } finally {
         setLoading(false);
       }
