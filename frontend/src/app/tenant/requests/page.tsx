@@ -2,10 +2,13 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ChevronDown, 
+  ChevronLeft,
+  ChevronRight,
   MessageSquare, 
   Clock, 
   RefreshCcw, 
@@ -498,7 +501,116 @@ function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) 
   );
 }
 
+function PaginationControls({
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalItems === 0) return null;
+
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
+  const getPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/40 text-xs select-none">
+      <div className="flex items-center gap-3 text-[rgb(var(--ml-text-secondary))] font-medium">
+        <span>
+          Showing <strong className="text-[rgb(var(--ml-text-primary))] font-bold">{startItem}–{endItem}</strong> of <strong className="text-[rgb(var(--ml-text-primary))] font-bold">{totalItems}</strong> requests
+        </span>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          aria-label="Previous Page"
+          className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] font-semibold hover:bg-[rgb(var(--ml-bg-tertiary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer flex items-center gap-1 text-xs"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Previous</span>
+        </button>
+
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map((page, idx) => {
+            if (page === "...") {
+              return (
+                <span
+                  key={`ellipsis-${idx}`}
+                  className="px-2 py-1 text-[rgb(var(--ml-text-secondary))]/60 font-bold"
+                >
+                  ...
+                </span>
+              );
+            }
+
+            const isCurrent = page === currentPage;
+            return (
+              <button
+                key={page}
+                onClick={() => onPageChange(page as number)}
+                aria-current={isCurrent ? "page" : undefined}
+                className={`min-w-[32px] h-8 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer border ${
+                  isCurrent
+                    ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-xs"
+                    : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+                }`}
+              >
+                {page}
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          aria-label="Next Page"
+          className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] font-semibold hover:bg-[rgb(var(--ml-bg-tertiary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer flex items-center gap-1 text-xs"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TenantRequestsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -506,8 +618,42 @@ function TenantRequestsContent() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "open" | "in_progress" | "resolved" | "closed">("ALL");
+  const initialStatus = (searchParams.get("status") as any) || "ALL";
+  const initialSearch = searchParams.get("q") || "";
+  const initialPage = parseInt(searchParams.get("page") || "1", 10);
+
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "open" | "in_progress" | "resolved" | "closed">(initialStatus);
+  const [currentPage, setCurrentPage] = useState(isNaN(initialPage) ? 1 : initialPage);
+  const [pageSize, setPageSize] = useState(5);
+
+  const updateUrlParams = (newPage: number, newFilter: string, newSearch: string) => {
+    const params = new URLSearchParams();
+    if (newPage > 1) params.set("page", newPage.toString());
+    if (newFilter !== "ALL") params.set("status", newFilter);
+    if (newSearch.trim()) params.set("q", newSearch.trim());
+
+    const queryString = params.toString();
+    router.replace(queryString ? `?${queryString}` : "/tenant/requests", { scroll: false });
+  };
+
+  const handleFilterChange = (filter: "ALL" | "open" | "in_progress" | "resolved" | "closed") => {
+    setSelectedFilter(filter);
+    setCurrentPage(1);
+    updateUrlParams(1, filter, searchQuery);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+    updateUrlParams(1, selectedFilter, query);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateUrlParams(page, selectedFilter, searchQuery);
+    document.getElementById("request-feed-top")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     async function loadAll() {
@@ -576,6 +722,19 @@ function TenantRequestsContent() {
       return true;
     });
   }, [requests, selectedFilter, searchQuery]);
+
+  const totalPages = Math.ceil(filteredRequests.length / pageSize) || 1;
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedRequests = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredRequests.slice(start, start + pageSize);
+  }, [filteredRequests, currentPage, pageSize]);
 
   return (
     <>
@@ -658,7 +817,7 @@ function TenantRequestsContent() {
               ].map((filter) => (
                 <button
                   key={filter.id}
-                  onClick={() => setSelectedFilter(filter.id as any)}
+                  onClick={() => handleFilterChange(filter.id as any)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                     selectedFilter === filter.id
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
@@ -677,14 +836,14 @@ function TenantRequestsContent() {
                 type="text"
                 placeholder="Search requests..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
               />
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div id="request-feed-top" className="space-y-4">
           {requests.length > 0 && (
             <div className="flex items-center justify-between px-1">
               <h2 className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
@@ -758,7 +917,7 @@ function TenantRequestsContent() {
               </motion.div>
             ) : (
               <motion.div 
-                key="content"
+                key={`content-page-${currentPage}`}
                 initial="hidden"
                 animate="show"
                 exit={{ opacity: 0 }}
@@ -771,7 +930,7 @@ function TenantRequestsContent() {
                 }}
                 className="space-y-4"
               >
-                {filteredRequests.map(req => (
+                {paginatedRequests.map(req => (
                   <motion.div 
                     key={req.id}
                     variants={{
@@ -793,6 +952,16 @@ function TenantRequestsContent() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {filteredRequests.length > 0 && !loading && (
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredRequests.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+            />
+          )}
         </div>
       </div>
     </>
