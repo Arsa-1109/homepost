@@ -2,25 +2,25 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  AlertTriangle, 
-  DoorOpen, 
-  Search, 
-  Plus, 
-  X, 
-  Home, 
-  Calendar, 
-  CheckCircle2, 
-  Clock, 
-  Sparkles, 
-  ExternalLink, 
-  ShieldAlert, 
-  UserCheck, 
+import {
+  AlertTriangle,
+  DoorOpen,
+  Search,
+  Plus,
+  X,
+  Home,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  ExternalLink,
+  ShieldAlert,
+  UserCheck,
   UserX,
   Building2,
   Copy,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
@@ -35,7 +35,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Property = {
   id: string;
@@ -60,7 +66,9 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   const handleRemoveTenant = async () => {
     setIsRemoving(true);
     try {
-      await fetchAPI(`/api/v1/landlord/units/${u.id}/tenant`, { method: "DELETE" });
+      await fetchAPI(`/api/v1/landlord/units/${u.id}/tenant`, {
+        method: "DELETE",
+      });
       toast.success("Tenant removed successfully.");
       setIsRemoveDialogOpen(false);
       onRefresh();
@@ -80,8 +88,8 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
         {/* Header Row: Label & Status Badge */}
         <div className="flex justify-between items-start gap-3">
           <div className="space-y-1">
-            <Link 
-              href={`/landlord/units/${u.id}`} 
+            <Link
+              href={`/landlord/units/${u.id}`}
               className="font-black text-lg sm:text-xl tracking-tight text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors truncate block max-w-[180px]"
               title={`Unit ${u.unit_label}`}
             >
@@ -93,24 +101,26 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
             </div>
           </div>
 
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className={`capitalize tracking-wider text-[10px] font-extrabold px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1 border ${
-              u.is_occupied 
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+              u.is_occupied
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                 : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
             }`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${u.is_occupied ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${u.is_occupied ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
+            />
             {u.is_occupied ? "Occupied" : "Vacant"}
           </Badge>
         </div>
       </div>
-      
+
       {/* Card Footer Actions */}
       <div className="mt-6 pt-4 border-t border-border/40 flex flex-col gap-2">
-        <Link 
-          href={`/landlord/units/${u.id}`} 
+        <Link
+          href={`/landlord/units/${u.id}`}
           className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 hover:bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/30 px-3.5 py-2.5 rounded-xl transition-all w-full flex items-center justify-center gap-2 cursor-pointer shadow-sm group/btn"
         >
           <span>View Details</span>
@@ -118,7 +128,10 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
         </Link>
 
         {u.is_occupied ? (
-          <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
+          <Dialog
+            open={isRemoveDialogOpen}
+            onOpenChange={setIsRemoveDialogOpen}
+          >
             <DialogTrigger className="text-xs text-center font-bold text-red-600 dark:text-red-400 border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 px-3.5 py-2.5 rounded-xl transition-all w-full cursor-pointer flex items-center justify-center gap-2">
               <UserX className="w-3.5 h-3.5" />
               <span>Remove Tenant</span>
@@ -129,20 +142,27 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                   <AlertTriangle className="h-7 w-7" />
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Remove Tenant</DialogTitle>
+                  <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
+                    Remove Tenant
+                  </DialogTitle>
                   <DialogDescription className="text-center mt-3 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                    Are you sure you want to remove the tenant from <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>? This action is permanent and clears their active residency.
+                    Are you sure you want to remove the tenant from{" "}
+                    <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                      Unit {u.unit_label}
+                    </span>
+                    ? This action is permanent and clears their active
+                    residency.
                   </DialogDescription>
                 </DialogHeader>
               </div>
               <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
-                <button 
+                <button
                   onClick={() => setIsRemoveDialogOpen(false)}
                   className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   disabled={isRemoving}
                   onClick={handleRemoveTenant}
                   className="px-5 py-2.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-sm shadow-red-600/20 active:scale-[0.98]"
@@ -164,33 +184,45 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                   <DoorOpen className="h-7 w-7" />
                 </div>
                 <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Invite Tenant</DialogTitle>
+                  <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
+                    Invite Tenant
+                  </DialogTitle>
                   <DialogDescription className="text-center mt-2 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                    Generate a unique, secure invite link for your new tenant moving into <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {u.unit_label}</span>.
+                    Generate a unique, secure invite link for your new tenant
+                    moving into{" "}
+                    <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                      Unit {u.unit_label}
+                    </span>
+                    .
                   </DialogDescription>
                 </DialogHeader>
               </div>
-              
+
               <div className="bg-[rgb(var(--ml-bg-primary))]/40">
                 <div className="px-6 py-5 border-b border-border/20">
                   <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] cursor-pointer hover:border-[rgb(var(--ml-accent))]/40 transition-all group">
                     <div className="mt-0.5">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={keepData}
                         onChange={(e) => setKeepData(e.target.checked)}
                         className="w-4 h-4 rounded border-border text-[rgb(var(--ml-accent))] focus:ring-[rgb(var(--ml-accent))] cursor-pointer accent-[rgb(var(--ml-accent))]"
                       />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">Retain Previous Data</p>
-                      <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] mt-0.5">Keep the previous tenant's documents and history attached to this unit.</p>
+                      <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">
+                        Retain Previous Data
+                      </p>
+                      <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] mt-0.5">
+                        Keep the previous tenant's documents and history
+                        attached to this unit.
+                      </p>
                     </div>
                   </label>
                 </div>
-                
+
                 <div className="px-6 py-4 flex gap-3 justify-end items-center">
-                  <button 
+                  <button
                     onClick={() => setIsDialogOpen(false)}
                     className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
                   >
@@ -199,10 +231,16 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                   <button
                     onClick={async () => {
                       try {
-                        const res = await fetchAPI<{ token: string }>("/api/v1/landlord/generate-invite", {
-                          method: "POST",
-                          body: JSON.stringify({ unit_id: u.id, clear_data: !keepData })
-                        });
+                        const res = await fetchAPI<{ token: string }>(
+                          "/api/v1/landlord/generate-invite",
+                          {
+                            method: "POST",
+                            body: JSON.stringify({
+                              unit_id: u.id,
+                              clear_data: !keepData,
+                            }),
+                          },
+                        );
                         const link = `${window.location.origin}/join/${res.token}`;
                         navigator.clipboard.writeText(link);
                         toast.success("Invite link copied to clipboard!");
@@ -233,14 +271,16 @@ export default function LandlordUnitsPage() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [unitsLoading, setUnitsLoading] = useState(true);
-  
+
   const [unitLabel, setUnitLabel] = useState("");
   const [rentDay, setRentDay] = useState("1");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "OCCUPIED" | "VACANT">("ALL");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "ALL" | "OCCUPIED" | "VACANT"
+  >("ALL");
 
   const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
@@ -256,7 +296,16 @@ export default function LandlordUnitsPage() {
         const data = await fetchAPI<Property[]>("/api/v1/landlord/properties");
         setProperties(data);
         if (data.length > 0) {
-          setSelectedProperty(data[0].id);
+          const urlParams = new URLSearchParams(window.location.search);
+          const initialPropertyId = urlParams.get("property_id");
+          if (
+            initialPropertyId &&
+            data.some((p) => p.id === initialPropertyId)
+          ) {
+            setSelectedProperty(initialPropertyId);
+          } else {
+            setSelectedProperty(data[0].id);
+          }
         } else {
           setUnitsLoading(false);
         }
@@ -274,7 +323,9 @@ export default function LandlordUnitsPage() {
     if (!selectedProperty) return;
     setUnitsLoading(true);
     try {
-      const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
+      const data = await fetchAPI<Unit[]>(
+        `/api/v1/landlord/properties/${selectedProperty}/units`,
+      );
       setUnits(data);
     } catch (err) {
       console.error(err);
@@ -290,18 +341,18 @@ export default function LandlordUnitsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProperty) return;
-    
+
     setIsSubmitting(true);
     try {
       const newUnit = await fetchAPI<Unit>("/api/v1/landlord/units", {
         method: "POST",
-        body: JSON.stringify({ 
-          property_id: selectedProperty, 
-          unit_label: unitLabel, 
-          rent_due_day: parseInt(rentDay) 
+        body: JSON.stringify({
+          property_id: selectedProperty,
+          unit_label: unitLabel,
+          rent_due_day: parseInt(rentDay),
         }),
       });
-      setUnits(prev => [...prev, newUnit]);
+      setUnits((prev) => [...prev, newUnit]);
       setUnitLabel("");
       setRentDay("1");
       setShowAddForm(false);
@@ -313,11 +364,14 @@ export default function LandlordUnitsPage() {
     }
   };
 
-  const selectedPropertyName = properties.find(p => p.id === selectedProperty)?.name || "Property";
+  const selectedPropertyName =
+    properties.find((p) => p.id === selectedProperty)?.name || "Property";
 
   const filteredUnits = useMemo(() => {
     return units.filter((u) => {
-      const matchesSearch = u.unit_label.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = u.unit_label
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
       if (selectedFilter === "OCCUPIED") return u.is_occupied;
       if (selectedFilter === "VACANT") return !u.is_occupied;
@@ -332,8 +386,14 @@ export default function LandlordUnitsPage() {
     return filteredUnits.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredUnits, currentPage]);
 
-  const occupiedCount = useMemo(() => units.filter(u => u.is_occupied).length, [units]);
-  const vacantCount = useMemo(() => units.filter(u => !u.is_occupied).length, [units]);
+  const occupiedCount = useMemo(
+    () => units.filter((u) => u.is_occupied).length,
+    [units],
+  );
+  const vacantCount = useMemo(
+    () => units.filter((u) => !u.is_occupied).length,
+    [units],
+  );
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
@@ -351,7 +411,8 @@ export default function LandlordUnitsPage() {
               </span>
             </h1>
             <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] leading-relaxed">
-              Set up property units, manage occupancy status, and generate secure tenant onboarding invite links.
+              Set up property units, manage occupancy status, and generate
+              secure tenant onboarding invite links.
             </p>
           </div>
 
@@ -364,7 +425,10 @@ export default function LandlordUnitsPage() {
                   <div className="skeleton h-4 w-32 rounded-md" />
                 </div>
               ) : properties.length > 0 ? (
-                <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
+                <Select
+                  value={selectedProperty}
+                  onValueChange={(val) => setSelectedProperty(val as string)}
+                >
                   <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/90 border-border/60 rounded-xl h-11">
                     <span className="flex items-center gap-2 font-bold text-xs text-[rgb(var(--ml-text-primary))] truncate">
                       <Building2 className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
@@ -372,8 +436,14 @@ export default function LandlordUnitsPage() {
                     </span>
                   </SelectTrigger>
                   <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
-                    {properties.map(p => (
-                      <SelectItem key={p.id} value={p.id} className="font-semibold text-xs">{p.name}</SelectItem>
+                    {properties.map((p) => (
+                      <SelectItem
+                        key={p.id}
+                        value={p.id}
+                        className="font-semibold text-xs"
+                      >
+                        {p.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -383,10 +453,14 @@ export default function LandlordUnitsPage() {
             {/* Toggle Add Unit Form Button */}
             {properties.length > 0 && (
               <Button
-                onClick={() => setShowAddForm(prev => !prev)}
+                onClick={() => setShowAddForm((prev) => !prev)}
                 className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
               >
-                {showAddForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {showAddForm ? (
+                  <X className="w-4 h-4" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
                 <span>{showAddForm ? "Hide Form" : "Add Unit"}</span>
               </Button>
             )}
@@ -430,10 +504,12 @@ export default function LandlordUnitsPage() {
         )}
       </div>
 
-      {(!loading && properties.length === 0) ? (
+      {!loading && properties.length === 0 ? (
         <div className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3">
           <Building2 className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
-          <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">No Properties Found</h3>
+          <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
+            No Properties Found
+          </h3>
           <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed">
             Please add a property first before setting up and managing units.
           </p>
@@ -445,30 +521,47 @@ export default function LandlordUnitsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-4 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Total Units</p>
-                  <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">{units.length}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                    Total Units
+                  </p>
+                  <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
+                    {units.length}
+                  </p>
                 </div>
                 <Home className="w-5 h-5 text-[rgb(var(--ml-accent))]" />
               </div>
               <div className="p-4 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Occupied</p>
-                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{occupiedCount}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                    Occupied
+                  </p>
+                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                    {occupiedCount}
+                  </p>
                 </div>
                 <UserCheck className="w-5 h-5 text-emerald-500" />
               </div>
               <div className="p-4 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Vacant</p>
-                  <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{vacantCount}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                    Vacant
+                  </p>
+                  <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">
+                    {vacantCount}
+                  </p>
                 </div>
                 <UserX className="w-5 h-5 text-amber-500" />
               </div>
               <div className="p-4 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Occupancy Rate</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                    Occupancy Rate
+                  </p>
                   <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
-                    {units.length ? Math.round((occupiedCount / units.length) * 100) : 0}%
+                    {units.length
+                      ? Math.round((occupiedCount / units.length) * 100)
+                      : 0}
+                    %
                   </p>
                 </div>
                 <Sparkles className="w-5 h-5 text-[rgb(var(--ml-accent))]" />
@@ -486,8 +579,8 @@ export default function LandlordUnitsPage() {
                 transition={{ duration: 0.25 }}
                 className="overflow-hidden"
               >
-                <form 
-                  onSubmit={handleCreate} 
+                <form
+                  onSubmit={handleCreate}
                   className="p-6 sm:p-8 bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-3xl space-y-5 shadow-md mb-8"
                 >
                   <div>
@@ -496,7 +589,12 @@ export default function LandlordUnitsPage() {
                       Add New Unit
                     </h2>
                     <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">
-                      Define a unit identifier and select the monthly rent due day for <span className="font-bold text-[rgb(var(--ml-text-primary))]">{selectedPropertyName}</span>.
+                      Define a unit identifier and select the monthly rent due
+                      day for{" "}
+                      <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                        {selectedPropertyName}
+                      </span>
+                      .
                     </p>
                   </div>
 
@@ -505,11 +603,11 @@ export default function LandlordUnitsPage() {
                       <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
                         Unit Label / Name
                       </label>
-                      <input 
-                        required 
-                        value={unitLabel} 
-                        onChange={e => setUnitLabel(e.target.value)} 
-                        placeholder="e.g. Apt 101, Penthouse, Unit B" 
+                      <input
+                        required
+                        value={unitLabel}
+                        onChange={(e) => setUnitLabel(e.target.value)}
+                        placeholder="e.g. Apt 101, Penthouse, Unit B"
                         className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50"
                       />
                     </div>
@@ -518,13 +616,20 @@ export default function LandlordUnitsPage() {
                       <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
                         Monthly Rent Due Day
                       </label>
-                      <Select value={rentDay} onValueChange={(val) => setRentDay(val || "1")}>
+                      <Select
+                        value={rentDay}
+                        onValueChange={(val) => setRentDay(val || "1")}
+                      >
                         <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
                           <SelectValue placeholder="Select Day" />
                         </SelectTrigger>
                         <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
                           {Array.from({ length: 31 }, (_, i) => (
-                            <SelectItem key={i + 1} value={(i + 1).toString()} className="font-semibold text-xs cursor-pointer">
+                            <SelectItem
+                              key={i + 1}
+                              value={(i + 1).toString()}
+                              className="font-semibold text-xs cursor-pointer"
+                            >
                               Day {i + 1} of every month
                             </SelectItem>
                           ))}
@@ -542,9 +647,9 @@ export default function LandlordUnitsPage() {
                     >
                       Cancel
                     </Button>
-                    <Button 
+                    <Button
                       disabled={isSubmitting}
-                      type="submit" 
+                      type="submit"
                       className="px-6 py-2 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer"
                     >
                       {isSubmitting ? "Creating Unit..." : "Save Unit"}
@@ -558,7 +663,7 @@ export default function LandlordUnitsPage() {
           {/* Units Content Area */}
           <AnimatePresence mode="wait">
             {unitsLoading ? (
-              <motion.div 
+              <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -566,7 +671,10 @@ export default function LandlordUnitsPage() {
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
               >
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-56 w-full bg-[rgb(var(--ml-bg-secondary))]/40 border border-border/30 rounded-3xl p-6 flex flex-col justify-between animate-pulse">
+                  <div
+                    key={i}
+                    className="h-56 w-full bg-[rgb(var(--ml-bg-secondary))]/40 border border-border/30 rounded-3xl p-6 flex flex-col justify-between animate-pulse"
+                  >
                     <div>
                       <div className="flex justify-between items-start">
                         <div className="h-6 w-28 bg-[rgb(var(--ml-border))]/40 rounded-lg"></div>
@@ -582,7 +690,7 @@ export default function LandlordUnitsPage() {
                 ))}
               </motion.div>
             ) : filteredUnits.length === 0 ? (
-              <motion.div 
+              <motion.div
                 key="empty"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -591,15 +699,17 @@ export default function LandlordUnitsPage() {
               >
                 <Home className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                 <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
-                  {searchQuery ? "No matching units found" : "No units in this property"}
+                  {searchQuery
+                    ? "No matching units found"
+                    : "No units in this property"}
                 </h3>
                 <p className="text-xs text-[rgb(var(--ml-text-secondary))] max-w-sm mx-auto">
-                  {searchQuery 
-                    ? `No units match your search query "${searchQuery}". Try clearing the search or filter.` 
+                  {searchQuery
+                    ? `No units match your search query "${searchQuery}". Try clearing the search or filter.`
                     : "Get started by adding your first unit to this property above."}
                 </p>
                 {!searchQuery && (
-                  <Button 
+                  <Button
                     onClick={() => setShowAddForm(true)}
                     className="mt-2 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl px-4 py-2"
                   >
@@ -608,23 +718,23 @@ export default function LandlordUnitsPage() {
                 )}
               </motion.div>
             ) : (
-              <motion.div 
+              <motion.div
                 key={`page-${currentPage}`}
                 initial="hidden"
                 animate="show"
                 exit={{ opacity: 0 }}
                 variants={{
                   hidden: { opacity: 0 },
-                  show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+                  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
                 }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
               >
-                {paginatedUnits.map(u => (
-                  <motion.div 
+                {paginatedUnits.map((u) => (
+                  <motion.div
                     key={u.id}
                     variants={{
                       hidden: { opacity: 0, y: 16 },
-                      show: { opacity: 1, y: 0 }
+                      show: { opacity: 1, y: 0 },
                     }}
                   >
                     <UnitCard u={u} onRefresh={loadUnits} />
@@ -638,14 +748,24 @@ export default function LandlordUnitsPage() {
           {!unitsLoading && filteredUnits.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
               <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-                Showing <span className="font-bold text-[rgb(var(--ml-text-primary))]">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span>–
-                <span className="font-bold text-[rgb(var(--ml-text-primary))]">{Math.min(currentPage * ITEMS_PER_PAGE, filteredUnits.length)}</span> of{" "}
-                <span className="font-bold text-[rgb(var(--ml-text-primary))]">{filteredUnits.length}</span> units
+                Showing{" "}
+                <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                  {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+                </span>
+                –
+                <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                  {Math.min(currentPage * ITEMS_PER_PAGE, filteredUnits.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                  {filteredUnits.length}
+                </span>{" "}
+                units
               </p>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
                   className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
                   title="Previous Page"
@@ -654,23 +774,27 @@ export default function LandlordUnitsPage() {
                 </button>
 
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
-                        currentPage === pageNum
-                          ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
-                          : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
+                          currentPage === pageNum
+                            ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                            : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ),
+                  )}
                 </div>
 
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(p + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages || totalPages === 0}
                   className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
                   title="Next Page"
