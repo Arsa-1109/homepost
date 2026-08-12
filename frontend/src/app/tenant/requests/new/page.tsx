@@ -108,7 +108,7 @@ export default function NewRequestPage() {
             onChange={e => setTitle(e.target.value)}
             type="text" 
             placeholder="e.g. Leaking faucet in kitchen" 
-            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3.5 text-xs sm:text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:[rgb(var(--ml-text-secondary))]/50 font-medium"
+            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3.5 text-xs sm:text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:[rgb(var(--ml-text-secondary))]/50 font-medium"
           />
         </div>
 
@@ -124,7 +124,7 @@ export default function NewRequestPage() {
             onChange={e => setDescription(e.target.value)}
             rows={5} 
             placeholder="Please provide details about the issue (what is wrong, when it started, location in unit)..." 
-            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3.5 text-xs sm:text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:[rgb(var(--ml-text-secondary))]/50 resize-none font-medium leading-relaxed"
+            className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3.5 text-xs sm:text-sm text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:[rgb(var(--ml-text-secondary))]/50 resize-none font-medium leading-relaxed"
           />
         </div>
 
@@ -133,7 +133,7 @@ export default function NewRequestPage() {
             Priority Level
           </label>
           <Select value={priority} onValueChange={(val) => setPriority(val || "medium")}>
-            <SelectTrigger id="issue-priority" className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-[46px] text-xs sm:text-sm font-medium focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] focus:border-[rgb(var(--ml-text-primary))]">
+            <SelectTrigger id="issue-priority" className="w-full bg-[rgb(var(--ml-bg-primary))] border-border/60 rounded-xl h-[46px] text-xs sm:text-sm font-medium focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] focus:border-[rgb(var(--ml-text-primary))]">
               <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold">
                 {priority === "low"
                   ? "Low (Cosmetic, non-urgent)"
@@ -169,7 +169,7 @@ export default function NewRequestPage() {
             {images.length > 0 && (
               <div className="grid gap-3">
                 {images.map((img, index) => (
-                  <div key={index} className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div key={index} className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))] border border-border/60 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="p-2 sm:p-2.5 rounded-xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] shrink-0">
                         <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -198,7 +198,7 @@ export default function NewRequestPage() {
 
             {/* Dropzone (Only show if less than 3 images) */}
             {images.length < 3 && (
-              <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))]/30 hover:bg-[rgb(var(--ml-bg-primary))]/60 p-6 sm:p-8 rounded-2xl text-center cursor-pointer transition-all group">
+              <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] p-6 sm:p-8 rounded-2xl text-center cursor-pointer transition-all group">
                 <input 
                   id="issue-photos"
                   type="file" 

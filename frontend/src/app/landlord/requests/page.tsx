@@ -342,7 +342,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                     </h4>
                     <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">Status</span>
                     <Select value={status} onValueChange={(val: any) => setStatus(val)} disabled={req.status === "closed"}>
-                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 transition-colors h-11 rounded-xl">
+                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 transition-colors h-11 rounded-xl">
                         <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
                       <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
@@ -365,7 +365,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                       onChange={(e) => setNotes(e.target.value)}
                       disabled={req.status === "closed"}
                       placeholder="Add an internal note or message to tenant..."
-                      className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3.5 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all min-h-[96px] resize-none placeholder:text-[rgb(var(--ml-text-secondary))]/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3.5 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all min-h-[96px] resize-none placeholder:text-[rgb(var(--ml-text-secondary))]/60 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
         
@@ -380,7 +380,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                         disabled={req.status === "closed"}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
                       />
-                      <div className="w-full border border-dashed border-border/70 bg-[rgb(var(--ml-bg-primary))]/40 group-hover/upload:border-[rgb(var(--ml-text-primary))]/40 rounded-xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
+                      <div className="w-full border border-dashed border-border/70 bg-[rgb(var(--ml-bg-primary))] group-hover/upload:border-[rgb(var(--ml-text-primary))]/40 rounded-xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
                         <ImageIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))] group-hover/upload:text-[rgb(var(--ml-text-primary))] transition-colors" />
                         <span className="text-xs font-semibold text-[rgb(var(--ml-text-primary))] mt-1">Upload Files</span>
                         <span className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))]">PDF or Images</span>

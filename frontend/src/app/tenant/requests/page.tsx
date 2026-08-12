@@ -424,7 +424,7 @@ function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) 
               disabled={submitting}
               required
               placeholder="Detail what remains unresolved or any new issue..."
-              className="w-full bg-[rgb(var(--ml-bg-primary))]/50 dark:bg-[rgb(var(--ml-bg-secondary))]/60 border border-black/10 dark:border-white/10 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-accent))] dark:focus:border-[rgb(var(--ml-accent))] transition-all min-h-[90px] resize-none placeholder:text-[rgb(var(--ml-text-secondary))]/50 text-[rgb(var(--ml-text-primary))]"
+              className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all min-h-[90px] resize-none placeholder:text-[rgb(var(--ml-text-secondary))]/50 text-[rgb(var(--ml-text-primary))]"
             />
           </div>
 
@@ -433,7 +433,7 @@ function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) 
               Attach Photos/Files (Optional, Max 3)
             </label>
             <div className="flex items-center gap-2">
-              <label className="px-3 py-2 bg-[rgb(var(--ml-bg-primary))]/50 dark:bg-[rgb(var(--ml-bg-secondary))]/60 border border-black/10 dark:border-white/10 hover:bg-[rgb(var(--ml-bg-tertiary))] text-xs font-medium text-[rgb(var(--ml-text-primary))] rounded-xl cursor-pointer transition-all flex items-center gap-1.5">
+              <label className="px-3 py-2 bg-[rgb(var(--ml-bg-primary))] border border-border/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-xs font-medium text-[rgb(var(--ml-text-primary))] rounded-xl cursor-pointer transition-all flex items-center gap-1.5">
                 <Paperclip className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))]" />
                 Choose Files
                 <input
@@ -455,7 +455,7 @@ function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) 
                 {files.map((file, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2 rounded-lg bg-[rgb(var(--ml-bg-primary))]/50 dark:bg-[rgb(var(--ml-bg-secondary))]/60 border border-black/10 dark:border-white/10 text-xs"
+                    className="flex items-center justify-between p-2 rounded-lg bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-xs"
                   >
                     <span className="truncate max-w-[220px] text-[rgb(var(--ml-text-primary))] font-medium">
                       {file.name}
