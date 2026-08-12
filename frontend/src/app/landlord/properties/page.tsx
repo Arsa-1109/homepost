@@ -211,10 +211,21 @@ export default function LandlordPropertiesPage() {
     }
   };
 
-  // Unique list of cities for filtering
+  // Unique list of cities for filtering (case-insensitive deduplication)
   const uniqueCities = useMemo(() => {
-    const cities = properties.map((p) => p.city).filter(Boolean);
-    return Array.from(new Set(cities));
+    const cityMap = new Map<string, { key: string; displayName: string }>();
+    properties.forEach((p) => {
+      if (!p.city) return;
+      const key = p.city.trim().toLowerCase();
+      if (!cityMap.has(key)) {
+        // Format nicely to Title Case (e.g. "vizag" -> "Vizag")
+        const displayName = p.city
+          .trim()
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+        cityMap.set(key, { key, displayName });
+      }
+    });
+    return Array.from(cityMap.values());
   }, [properties]);
 
   const filteredProperties = useMemo(() => {
@@ -225,8 +236,12 @@ export default function LandlordPropertiesPage() {
         p.city.toLowerCase().includes(searchQuery.toLowerCase());
 
       if (!matchesSearch) return false;
-      if (selectedCityFilter !== "ALL" && p.city !== selectedCityFilter)
+      if (
+        selectedCityFilter !== "ALL" &&
+        (!p.city || p.city.trim().toLowerCase() !== selectedCityFilter.toLowerCase())
+      ) {
         return false;
+      }
       return true;
     });
   }, [properties, searchQuery, selectedCityFilter]);
@@ -298,17 +313,17 @@ export default function LandlordPropertiesPage() {
                   >
                     All Cities ({properties.length})
                   </SelectItem>
-                  {uniqueCities.map((cityName) => {
+                  {uniqueCities.map((cityObj) => {
                     const count = properties.filter(
-                      (p) => p.city === cityName,
+                      (p) => p.city && p.city.trim().toLowerCase() === cityObj.key,
                     ).length;
                     return (
                       <SelectItem
-                        key={cityName}
-                        value={cityName}
+                        key={cityObj.key}
+                        value={cityObj.key}
                         className="font-semibold text-xs cursor-pointer"
                       >
-                        {cityName} ({count})
+                        {cityObj.displayName} ({count})
                       </SelectItem>
                     );
                   })}
