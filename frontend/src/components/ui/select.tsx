@@ -41,7 +41,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-xl border border-border/40 bg-[rgb(var(--ml-bg-primary))]/40 dark:bg-[rgb(var(--ml-bg-primary))]/40 backdrop-blur-md px-4 min-h-[44px] text-sm font-medium text-slate-800 dark:text-slate-200 shadow-sm transition-all hover:bg-[rgb(var(--ml-bg-primary))]/70 dark:hover:bg-[rgb(var(--ml-bg-primary))]/70 outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))]/50 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-full items-center justify-between gap-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-primary))]/80 px-3.5 min-h-[44px] h-11 text-xs font-medium text-[rgb(var(--ml-text-primary))] shadow-sm transition-all hover:bg-[rgb(var(--ml-bg-primary))] outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -120,7 +120,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-pointer items-center gap-2 rounded-lg py-2.5 pr-8 pl-3 text-sm font-medium outline-hidden select-none hover:bg-indigo-50/80 focus:bg-indigo-50/80 dark:hover:bg-white/10 dark:focus:bg-white/10 text-slate-600 dark:text-slate-300 hover:text-indigo-900 focus:text-indigo-900 dark:hover:text-white dark:focus:text-white transition-all data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-pointer items-center gap-2 rounded-lg py-2.5 pr-8 pl-3 text-sm font-medium outline-hidden select-none hover:bg-[rgb(var(--ml-bg-primary))] focus:bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] focus:text-[rgb(var(--ml-text-primary))] transition-all data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}

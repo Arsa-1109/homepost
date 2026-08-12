@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { fetchAPI, api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Home, User as UserIcon, Calendar, Wrench, FileText, DownloadIcon, ChevronLeft, Building, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Home, User as UserIcon, Calendar, Wrench, FileText, DownloadIcon, ChevronLeft, ChevronRight, Building, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import Link from "next/link";
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type UnitDetail = {
   unit: {
@@ -55,6 +62,15 @@ export default function UnitDetailsPage() {
   const [unitData, setUnitData] = useState<UnitDetail | null>(null);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
+
+  const MAINTENANCE_ITEMS_PER_PAGE = 3;
+  const [maintenancePage, setMaintenancePage] = useState(1);
+
+  const totalMaintenancePages = Math.ceil(maintenanceRequests.length / MAINTENANCE_ITEMS_PER_PAGE);
+  const currentMaintenanceRequests = maintenanceRequests.slice(
+    (maintenancePage - 1) * MAINTENANCE_ITEMS_PER_PAGE,
+    maintenancePage * MAINTENANCE_ITEMS_PER_PAGE
+  );
 
   const [isEditLeaseOpen, setIsEditLeaseOpen] = useState(false);
   const [editLeaseStart, setEditLeaseStart] = useState("");
@@ -468,7 +484,7 @@ export default function UnitDetailsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {maintenanceRequests.map((req, idx) => (
+                  {currentMaintenanceRequests.map((req, idx) => (
                     <motion.div
                       key={req.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -485,6 +501,64 @@ export default function UnitDetailsPage() {
                       />
                     </motion.div>
                   ))}
+
+                  {maintenanceRequests.length > MAINTENANCE_ITEMS_PER_PAGE && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/40">
+                      <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+                        Showing{" "}
+                        <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                          {(maintenancePage - 1) * MAINTENANCE_ITEMS_PER_PAGE + 1}
+                        </span>
+                        –
+                        <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                          {Math.min(maintenancePage * MAINTENANCE_ITEMS_PER_PAGE, maintenanceRequests.length)}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                          {maintenanceRequests.length}
+                        </span>{" "}
+                        requests
+                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setMaintenancePage((p) => Math.max(p - 1, 1))}
+                          disabled={maintenancePage === 1}
+                          className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
+                          title="Previous Page"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalMaintenancePages }, (_, i) => i + 1).map(
+                            (pageNum) => (
+                              <button
+                                key={pageNum}
+                                onClick={() => setMaintenancePage(pageNum)}
+                                className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 ${
+                                  maintenancePage === pageNum
+                                    ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                                    : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            ),
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => setMaintenancePage((p) => Math.min(p + 1, totalMaintenancePages))}
+                          disabled={maintenancePage === totalMaintenancePages || totalMaintenancePages === 0}
+                          className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
+                          title="Next Page"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -494,7 +568,7 @@ export default function UnitDetailsPage() {
           <section>
             <div className="flex items-center justify-between mb-4 px-1">
               <h2 className="text-xl font-black tracking-tight flex items-center gap-2.5 text-[rgb(var(--ml-text-primary))]">
-                <div className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-500/20">
+                <div className="p-2 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-xl border border-[rgb(var(--ml-accent))]/20">
                   <FileText className="w-4 h-4" />
                 </div>
                 Documents
@@ -523,7 +597,7 @@ export default function UnitDetailsPage() {
                       transition={{ duration: 0.3, delay: idx * 0.05 }}
                       className="p-5 rounded-3xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 transition-all duration-300 hover:border-[rgb(var(--ml-accent))]/40 hover:shadow-sm group relative overflow-hidden"
                     >
-                      <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl border border-blue-500/20 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                      <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <FileText className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -633,59 +707,77 @@ export default function UnitDetailsPage() {
 
       {/* Edit Unit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl">
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
           <form onSubmit={handleUpdateUnit}>
-            <div className="bg-[rgb(var(--ml-accent))]/10 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/20">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] mb-4 ring-8 ring-[rgb(var(--ml-accent))]/5">
-                <Pencil className="h-6 w-6 text-[rgb(var(--ml-accent))]" />
+            <div className="p-6 sm:p-7 space-y-6">
+              {/* Header */}
+              <div className="flex items-start gap-4">
+                <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner">
+                  <Pencil className="h-6 w-6 text-[rgb(var(--ml-accent))]" />
+                </div>
+                <div>
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Edit Unit</DialogTitle>
+                    <DialogDescription className="mt-1 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                      Update the unit label or monthly rent due date.
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
               </div>
-              <DialogHeader>
-                <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Edit Unit</DialogTitle>
-                <DialogDescription className="text-center mt-2 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                  Update the unit label or monthly rent due date.
-                </DialogDescription>
-              </DialogHeader>
-            </div>
-            
-            <div className="p-6 space-y-4 bg-[rgb(var(--ml-bg-primary))]/40">
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Unit Label</label>
-                <input 
-                  required 
-                  value={editLabel} 
-                  onChange={e => setEditLabel(e.target.value)} 
-                  placeholder="e.g. Apt 101, Basement, etc." 
-                  className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder-[rgb(var(--ml-text-secondary))]/50 text-[rgb(var(--ml-text-primary))]"
-                />
+
+              {/* Form Fields */}
+              <div className="space-y-4 pt-1">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Unit Label</label>
+                  <input 
+                    required 
+                    value={editLabel} 
+                    onChange={e => setEditLabel(e.target.value)} 
+                    placeholder="e.g. Apt 101, Basement, etc." 
+                    className="w-full h-11 px-3.5 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-xs font-medium outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all placeholder:[rgb(var(--ml-text-secondary))]/50 text-[rgb(var(--ml-text-primary))]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Rent Due Day</label>
+                  <Select
+                    value={editRentDay}
+                    onValueChange={(val) => setEditRentDay(val || "1")}
+                  >
+                    <SelectTrigger className="w-full h-11 px-3.5 bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl text-xs font-medium outline-none focus:border-[rgb(var(--ml-accent))] focus:ring-1 focus:ring-[rgb(var(--ml-accent))] transition-all">
+                      <SelectValue placeholder="Select Day" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto z-[100]">
+                      {Array.from({ length: 31 }, (_, i) => (
+                        <SelectItem
+                          key={i + 1}
+                          value={(i + 1).toString()}
+                          className="font-semibold text-xs cursor-pointer"
+                        >
+                          Day {i + 1} of every month
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">Rent Due Day</label>
-                <input 
-                  required 
-                  type="number"
-                  min="1" max="31"
-                  value={editRentDay} 
-                  onChange={e => setEditRentDay(e.target.value)} 
-                  className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all tabular-nums text-[rgb(var(--ml-text-primary))]"
-                />
+
+              {/* Actions Footer */}
+              <div className="pt-3 border-t border-border/30 flex gap-3 justify-end items-center">
+                <button 
+                  type="button"
+                  onClick={() => setIsEditDialogOpen(false)}
+                  className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer flex-1 sm:flex-initial shadow-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingUnit}
+                  className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer"
+                >
+                  {isUpdatingUnit ? "Saving..." : "Save Changes"}
+                </button>
               </div>
-            </div>
-            
-            <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex gap-3 justify-end items-center border-t border-border/20">
-              <button 
-                type="button"
-                onClick={() => setIsEditDialogOpen(false)}
-                className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isUpdatingUnit}
-                className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all w-full sm:w-auto shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer"
-              >
-                {isUpdatingUnit ? "Saving..." : "Save Changes"}
-              </button>
             </div>
           </form>
         </DialogContent>
@@ -693,32 +785,40 @@ export default function UnitDetailsPage() {
 
       {/* Delete Unit Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl">
-          <div className="bg-red-500/10 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/30">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/20 text-red-600 dark:text-red-400 mb-4 ring-8 ring-red-500/5">
-              <AlertTriangle className="h-7 w-7" />
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
+          <div className="p-6 sm:p-7 space-y-6">
+            {/* Header */}
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/20 shrink-0 shadow-inner">
+                <AlertTriangle className="h-6 w-6 text-red-500" />
+              </div>
+              <div>
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Delete Unit</DialogTitle>
+                  <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                    Are you sure you want to delete <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {unit_label}</span>? All lease history, invitations, and related documents will be permanently removed.
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
             </div>
-            <DialogHeader>
-              <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Delete Unit</DialogTitle>
-              <DialogDescription className="text-center mt-3 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                Are you sure you want to delete <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {unit_label}</span>? All lease history, invitations, and related documents will be permanently removed. This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
-            <button 
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
-            >
-              Cancel
-            </button>
-            <button 
-              disabled={isDeletingUnit}
-              onClick={handleDeleteUnit}
-              className="px-5 py-2.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-sm shadow-red-600/20 active:scale-[0.98]"
-            >
-              {isDeletingUnit ? "Deleting..." : "Yes, delete unit"}
-            </button>
+
+            {/* Actions Footer */}
+            <div className="pt-4 border-t border-border/30 flex gap-3 justify-end items-center">
+              <button 
+                type="button"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer flex-1 sm:flex-initial shadow-sm"
+              >
+                Cancel
+              </button>
+              <button 
+                disabled={isDeletingUnit}
+                onClick={handleDeleteUnit}
+                className="px-5 py-2.5 text-xs font-extrabold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer flex-1 sm:flex-initial shadow-sm shadow-red-600/20 active:scale-[0.98]"
+              >
+                {isDeletingUnit ? "Deleting..." : "Yes, delete unit"}
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

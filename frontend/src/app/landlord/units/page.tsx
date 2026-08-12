@@ -136,39 +136,46 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               <UserX className="w-3.5 h-3.5" />
               <span>Remove Tenant</span>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl">
-              <div className="bg-red-500/10 px-6 pt-8 pb-6 flex flex-col items-center border-b border-border/30">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/20 text-red-600 dark:text-red-400 mb-4 ring-8 ring-red-500/5">
-                  <AlertTriangle className="h-7 w-7" />
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
+              <div className="p-6 sm:p-7 space-y-6">
+                {/* Header */}
+                <div className="flex items-start gap-4">
+                  <div className="p-3.5 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/20 shrink-0 shadow-inner">
+                    <AlertTriangle className="h-6 w-6 text-red-500" />
+                  </div>
+                  <div>
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
+                        Remove Tenant
+                      </DialogTitle>
+                      <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                        Are you sure you want to remove the tenant from{" "}
+                        <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                          Unit {u.unit_label}
+                        </span>
+                        ? This action is permanent and clears their active residency.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </div>
                 </div>
-                <DialogHeader>
-                  <DialogTitle className="text-center text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
-                    Remove Tenant
-                  </DialogTitle>
-                  <DialogDescription className="text-center mt-3 text-pretty text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-[320px] mx-auto">
-                    Are you sure you want to remove the tenant from{" "}
-                    <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-                      Unit {u.unit_label}
-                    </span>
-                    ? This action is permanent and clears their active
-                    residency.
-                  </DialogDescription>
-                </DialogHeader>
-              </div>
-              <div className="bg-[rgb(var(--ml-bg-secondary))] px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end items-center">
-                <button
-                  onClick={() => setIsRemoveDialogOpen(false)}
-                  className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer w-full sm:w-auto shadow-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  disabled={isRemoving}
-                  onClick={handleRemoveTenant}
-                  className="px-5 py-2.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer w-full sm:w-auto shadow-sm shadow-red-600/20 active:scale-[0.98]"
-                >
-                  {isRemoving ? "Removing..." : "Yes, remove tenant"}
-                </button>
+
+                {/* Actions Footer */}
+                <div className="pt-4 border-t border-border/30 flex gap-3 justify-end items-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsRemoveDialogOpen(false)}
+                    className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer flex-1 sm:flex-initial shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={isRemoving}
+                    onClick={handleRemoveTenant}
+                    className="px-5 py-2.5 text-xs font-extrabold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all disabled:opacity-50 cursor-pointer flex-1 sm:flex-initial shadow-sm shadow-red-600/20 active:scale-[0.98]"
+                  >
+                    {isRemoving ? "Removing..." : "Yes, remove tenant"}
+                  </button>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
