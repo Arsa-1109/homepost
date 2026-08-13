@@ -109,7 +109,13 @@ function LandlordDocumentsContent() {
         const data = await fetchAPI<Unit[]>(
           `/api/v1/landlord/properties/${selectedProperty}/units`,
         );
-        setUnits(data);
+        const sorted = (data || []).slice().sort((a, b) =>
+          (a.unit_label || "").localeCompare(b.unit_label || "", undefined, {
+            numeric: true,
+            sensitivity: "base",
+          })
+        );
+        setUnits(sorted);
       } catch (err) {
         console.error(err);
       }
@@ -131,6 +137,7 @@ function LandlordDocumentsContent() {
     }
 
     setSelectedUnit(""); // Reset unit selection when property changes
+    setSelectedFilter("ALL"); // Reset filter when property changes
     loadUnits();
     loadDocs();
   }, [selectedProperty]);
@@ -214,7 +221,7 @@ function LandlordDocumentsContent() {
   const getUnitLabel = (unitId: string | null | undefined) => {
     if (!unitId) return "Property-Wide";
     const unit = units.find((u) => u.id === unitId);
-    return unit ? `Unit ${unit.unit_label}` : "Unknown Unit";
+    return unit ? unit.unit_label : "Unknown Unit";
   };
 
   const renderPreview = (doc: Document) => {
@@ -392,36 +399,31 @@ function LandlordDocumentsContent() {
               <div className="min-w-[140px]">
                 <Select
                   value={
-                    selectedFilter !== "ALL" &&
-                    selectedFilter !== "PROPERTY_WIDE"
+                    units.some((u) => u.id === selectedFilter)
                       ? selectedFilter
                       : ""
                   }
                   onValueChange={(val) => setSelectedFilter(val as string)}
                 >
                   <SelectTrigger
-                    className={`h-8 rounded-xl text-xs font-semibold border transition-all ${
-                      selectedFilter !== "ALL" &&
-                      selectedFilter !== "PROPERTY_WIDE"
-                        ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
-                        : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40"
+                    className={`min-h-0 h-8 rounded-xl text-xs font-semibold border px-3 transition-colors cursor-pointer ${
+                      units.some((u) => u.id === selectedFilter)
+                        ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-primary))] border-border/80 shadow-xs font-bold hover:bg-[rgb(var(--ml-bg-tertiary))]/90"
+                        : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] border-border/40"
                     }`}
                   >
-                    <span className="truncate">
-                      {selectedFilter !== "ALL" &&
-                      selectedFilter !== "PROPERTY_WIDE"
-                        ? `Unit ${units.find((u) => u.id === selectedFilter)?.unit_label || ""}`
-                        : "Specific Unit..."}
+                    <span className="flex-1 text-left truncate">
+                      {units.find((u) => u.id === selectedFilter)?.unit_label || "Filter by Unit"}
                     </span>
                   </SelectTrigger>
-                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
+                  <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-56 overflow-y-auto min-w-[150px] w-(--anchor-width) p-1 shadow-xl">
                     {units.map((unit) => (
                       <SelectItem
                         key={unit.id}
                         value={unit.id}
-                        className="font-semibold text-xs cursor-pointer"
+                        className="font-semibold text-xs py-1.5 px-2.5 rounded-lg cursor-pointer text-[rgb(var(--ml-text-primary))]"
                       >
-                        Unit {unit.unit_label}
+                        {unit.unit_label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -534,7 +536,7 @@ function LandlordDocumentsContent() {
                           <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-xs text-[rgb(var(--ml-text-primary))]">
                             {selectedUnit === "all" || !selectedUnit
                               ? "Assign to: All Units (Property-wide)"
-                              : `Assign to: Unit ${units.find((u) => u.id === selectedUnit)?.unit_label}`}
+                              : `Assign to: ${units.find((u) => u.id === selectedUnit)?.unit_label}`}
                           </span>
                         </SelectTrigger>
                         <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
@@ -550,7 +552,7 @@ function LandlordDocumentsContent() {
                               value={u.id}
                               className="font-semibold text-xs"
                             >
-                              Assign to: Unit {u.unit_label}
+                              Assign to: {u.unit_label}
                             </SelectItem>
                           ))}
                         </SelectContent>

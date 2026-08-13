@@ -199,7 +199,13 @@ function LandlordAnnouncementsContent() {
     async function loadUnits() {
       try {
         const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
-        setUnits(data);
+        const sorted = (data || []).slice().sort((a, b) =>
+          (a.unit_label || "").localeCompare(b.unit_label || "", undefined, {
+            numeric: true,
+            sensitivity: "base",
+          })
+        );
+        setUnits(sorted);
       } catch (err) {
         console.error(err);
       }
@@ -311,6 +317,11 @@ function LandlordAnnouncementsContent() {
 
   const filteredAnnouncements = useMemo(() => {
     return announcements.filter((ann) => {
+      // Property Filter
+      if (selectedProperty && ann.property_id !== selectedProperty) {
+        return false;
+      }
+
       // ID Filter
       if (idParam && ann.id !== idParam) {
         return false;
@@ -335,7 +346,7 @@ function LandlordAnnouncementsContent() {
       }
       return true;
     });
-  }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam]);
+  }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam, selectedProperty]);
 
   const selectedPropertyName = properties.find(p => p.id === selectedProperty)?.name || "Property";
 
