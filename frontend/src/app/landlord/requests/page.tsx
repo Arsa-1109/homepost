@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI } from "@/lib/api";
 import { 
@@ -176,13 +177,13 @@ function AttachmentThumbnail({
   );
 }
 
-export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpdate: () => void }) {
+export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: MaintenanceRequest, onUpdate: () => void, defaultExpanded?: boolean }) {
   const [status, setStatus] = useState(req.status);
   const [notes, setNotes] = useState(req.landlord_notes || "");
   const [files, setFiles] = useState<File[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
 
@@ -434,6 +435,18 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
 }
 
 export default function LandlordMaintenancePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">Loading...</div>}>
+      <LandlordMaintenanceContent />
+    </Suspense>
+  );
+}
+
+function LandlordMaintenanceContent() {
+  const searchParams = useSearchParams();
+  const idParam = searchParams.get("id");
+  const router = useRouter();
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -491,6 +504,11 @@ export default function LandlordMaintenancePage() {
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
+      // ID filter
+      if (idParam && req.id !== idParam) {
+        return false;
+      }
+
       // Property filter
       if (selectedProperty && selectedProperty !== "all") {
         const propObj = properties.find(p => p.id === selectedProperty);
@@ -528,7 +546,7 @@ export default function LandlordMaintenancePage() {
 
       return true;
     });
-  }, [requests, properties, selectedProperty, selectedUnit, units, selectedFilter, searchQuery]);
+  }, [requests, properties, selectedProperty, selectedUnit, selectedFilter, searchQuery, idParam]);
 
   const selectedPropertyName = selectedProperty === "all" || !selectedProperty
     ? "All Properties"
@@ -615,7 +633,7 @@ export default function LandlordMaintenancePage() {
         {/* Search & Filter Controls Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
           {/* Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+          <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
             {[
               { id: "ALL", label: "All Requests" },
               { id: "open", label: "Open" },
@@ -649,6 +667,18 @@ export default function LandlordMaintenancePage() {
             />
           </div>
         </div>
+        
+        {idParam && (
+          <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
+            <span>Showing a specific request.</span>
+            <button 
+              onClick={() => router.replace('/landlord/requests')}
+              className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
+            >
+              Clear Filter
+            </button>
+          </div>
+        )}
       </div>
 
       {!loading && requests.length >= 50 && (
@@ -766,7 +796,7 @@ export default function LandlordMaintenancePage() {
                       show: { opacity: 1, y: 0 }
                     }}
                   >
-                    <RequestCard req={req} onUpdate={loadData} />
+                    <RequestCard req={req} onUpdate={loadData} defaultExpanded={req.id === idParam} />
                   </motion.div>
                 ))}
               </motion.div>

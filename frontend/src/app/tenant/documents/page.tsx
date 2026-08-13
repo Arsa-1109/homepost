@@ -172,7 +172,7 @@ export default function TenantDocumentsPage() {
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-2 mt-6 pt-6 border-t border-border/40 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 mt-6 pt-6 border-t border-border/40 flex-wrap">
             {(["ALL", "PDF", "IMAGE", "OTHER"] as const).map((filter) => (
               <button
                 key={filter}

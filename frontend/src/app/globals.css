@@ -18,7 +18,7 @@
 @layer base {
   :root {
     /* Light Mode (default) */
-    --ml-bg-primary: 248 249 250;     /* off-white, low-glare */
+    --ml-bg-primary: 240 242 245;     /* slightly darker off-white for better card contrast */
     --ml-bg-secondary: 255 255 255;   /* pure white cards */
     --ml-bg-tertiary: 241 243 245;    /* subtle elevation */
     --ml-text-primary: 15 18 25;      /* near-black */

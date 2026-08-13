@@ -22,7 +22,7 @@ export default function TenantAnnouncementsLoading() {
 
         {/* Search & Filter Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+          <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
             {["All Notices", "Last 7 Days", "Property-Wide", "Unit-Specific"].map((filter, i) => (
               <div
                 key={filter}

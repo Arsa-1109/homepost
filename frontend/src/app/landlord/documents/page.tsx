@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
 import { uploadFile } from "@/lib/upload";
@@ -41,6 +42,18 @@ type Document = {
 };
 
 export default function LandlordDocumentsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">Loading...</div>}>
+      <LandlordDocumentsContent />
+    </Suspense>
+  );
+}
+
+function LandlordDocumentsContent() {
+  const searchParams = useSearchParams();
+  const idParam = searchParams.get("id");
+  const router = useRouter();
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [units, setUnits] = useState<Unit[]>([]);
@@ -177,6 +190,11 @@ export default function LandlordDocumentsPage() {
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
+      // ID Filter
+      if (idParam && doc.id !== idParam) {
+        return false;
+      }
+
       const matchesSearch = doc.title
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -190,7 +208,7 @@ export default function LandlordDocumentsPage() {
 
       return matchesSearch && matchesFilter;
     });
-  }, [documents, searchQuery, selectedFilter]);
+  }, [documents, searchQuery, selectedFilter, idParam]);
 
   // Helper to find unit label
   const getUnitLabel = (unitId: string | null | undefined) => {
@@ -348,7 +366,7 @@ export default function LandlordDocumentsPage() {
         {/* Search & Filter Controls Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
           {/* Filter Pills & Select */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setSelectedFilter("ALL")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
@@ -424,6 +442,18 @@ export default function LandlordDocumentsPage() {
             />
           </div>
         </div>
+        
+        {idParam && (
+          <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
+            <span>Showing a specific document.</span>
+            <button 
+              onClick={() => router.replace('/landlord/documents')}
+              className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
+            >
+              Clear Filter
+            </button>
+          </div>
+        )}
       </div>
 
       {!loading && properties.length === 0 ? (

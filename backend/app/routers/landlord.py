@@ -24,12 +24,39 @@ router = APIRouter(prefix="/landlord", tags=["Landlord"])
 # ---------------------------------------------------------------------------
 # Properties
 # ---------------------------------------------------------------------------
+
+def format_address(address: str) -> str:
+    if not address:
+        return ""
+    words = address.split(' ')
+    formatted_words = []
+    for word in words:
+        if not word:
+            continue
+        w = word.lower()
+        if w == 'drives':
+            w = 'drive'
+        elif w == 'streets':
+            w = 'street'
+        elif w == 'avenues':
+            w = 'avenue'
+        formatted_words.append(w[0].upper() + w[1:])
+    return ' '.join(formatted_words)
+
+
 @router.post("/properties", response_model=Property)
 async def create_property(
     prop_in: PropertyCreate,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    if prop_in.name:
+        prop_in.name = format_address(prop_in.name)
+    if prop_in.address:
+        prop_in.address = format_address(prop_in.address)
+    if prop_in.city:
+        prop_in.city = format_address(prop_in.city)
+        
     prop = Property(**prop_in.model_dump(), owner_id=user.id)
     session.add(prop)
     await session.commit()
@@ -56,6 +83,13 @@ async def update_property(
         raise HTTPException(status_code=404, detail="Property not found")
     
     update_data = prop_in.model_dump(exclude_unset=True)
+    if "name" in update_data and update_data["name"]:
+        update_data["name"] = format_address(update_data["name"])
+    if "address" in update_data and update_data["address"]:
+        update_data["address"] = format_address(update_data["address"])
+    if "city" in update_data and update_data["city"]:
+        update_data["city"] = format_address(update_data["city"])
+        
     for field, value in update_data.items():
         if value is not None:
             setattr(prop, field, value)
@@ -148,6 +182,9 @@ async def create_unit(
             detail=f"A unit with label '{unit_in.unit_label}' already exists in this property."
         )
     
+    if unit_in.unit_label:
+        unit_in.unit_label = format_address(unit_in.unit_label)
+
     unit = Unit(**unit_in.model_dump())
     session.add(unit)
     await session.commit()
@@ -299,7 +336,7 @@ async def update_unit(
             
     # Update fields
     if unit_in.unit_label is not None:
-        unit.unit_label = unit_in.unit_label
+        unit.unit_label = format_address(unit_in.unit_label)
     if unit_in.rent_due_day is not None:
         unit.rent_due_day = unit_in.rent_due_day
     if unit_in.lease_start is not None:
@@ -969,14 +1006,19 @@ async def get_dashboard_summary(
     unit_ids = [u.id for u in all_units]
 
     # Occupied = units that have an active tenant profile
+    unit_tenant_map = {}
     if unit_ids:
-        occupied_result = await session.execute(
-            select(TenantProfile.unit_id).where(
+        tenant_profile_result = await session.execute(
+            select(TenantProfile.unit_id, User.full_name, User.email)
+            .join(User, TenantProfile.user_id == User.id)
+            .where(
                 TenantProfile.unit_id.in_(unit_ids),
                 TenantProfile.is_active == True,
             )
         )
-        occupied_unit_ids = {str(uid) for uid in occupied_result.scalars().all()}
+        for uid, full_name, email in tenant_profile_result.all():
+            unit_tenant_map[str(uid)] = full_name or email
+        occupied_unit_ids = set(unit_tenant_map.keys())
     else:
         occupied_unit_ids = set()
 
@@ -1013,11 +1055,13 @@ async def get_dashboard_summary(
                 MaintenanceRequest.unit_id.in_(unit_ids),
                 MaintenanceRequest.status.in_(["open", "in_progress"]),
             )
-            .order_by(priority_order, MaintenanceRequest.created_at.desc())
+            .order_by(priority_order, MaintenanceRequest.updated_at.desc(), MaintenanceRequest.created_at.desc())
         )
         urgent_requests = urgent_result.scalars().all()
+        units_with_pending_maint = {str(r.unit_id) for r in urgent_requests}
     else:
         urgent_requests = []
+        units_with_pending_maint = set()
 
     # Build unit_label lookup for maintenance display
     unit_label_map = {str(u.id): u.unit_label for u in all_units}
@@ -1050,28 +1094,46 @@ async def get_dashboard_summary(
     if unit_ids and prop_ids:
         from datetime import datetime, timedelta, timezone
         from app.models.document import Document
+        from app.models.maintenance_event import MaintenanceEvent
+        from app.models.announcement import Announcement
         from app.schemas.activity import ActivityItem
         
         thirty_days_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
         
-        recent_maint_result = await session.execute(
-            select(MaintenanceRequest)
+        # Fetch maintenance events (landlord actions OR tenant reopens/closures)
+        maint_events_result = await session.execute(
+            select(MaintenanceEvent, MaintenanceRequest)
+            .join(MaintenanceRequest, MaintenanceEvent.maintenance_request_id == MaintenanceRequest.id)
             .where(
                 MaintenanceRequest.unit_id.in_(unit_ids),
-                MaintenanceRequest.updated_at >= thirty_days_ago
+                MaintenanceEvent.created_at >= thirty_days_ago,
+                (MaintenanceEvent.actor_id == user.id) | (MaintenanceEvent.event_type.in_(["reopened", "status_changed"]))
             )
-            .order_by(MaintenanceRequest.updated_at.desc())
+            .order_by(MaintenanceEvent.created_at.desc())
             .limit(10)
         )
-        recent_maint = recent_maint_result.scalars().all()
+        maint_events = maint_events_result.all()
         
-        for r in recent_maint:
+        for event, r in maint_events:
+            event_meta = r.status.value if hasattr(r.status, 'value') else str(r.status)
+            if event.event_type == "reopened":
+                event_meta = "reopened"
+            
+            actor = "landlord" if event.actor_id == user.id else "tenant"
+            
+            # Exclude status changes to closed if performed by landlord
+            if event_meta == "closed" and actor == "landlord":
+                continue
+
             activity_list.append(ActivityItem(
                 type="maintenance_update",
                 id=r.id,
                 title=r.title,
-                timestamp=r.updated_at,
-                meta=r.status.value if hasattr(r.status, 'value') else str(r.status)
+                timestamp=event.created_at,
+                meta=event_meta,
+                actor=actor,
+                property_name=unit_property_name_map.get(str(r.unit_id), "Unknown Property"),
+                unit_label=unit_label_map.get(str(r.unit_id), "—")
             ))
             
         recent_docs_result = await session.execute(
@@ -1088,7 +1150,30 @@ async def get_dashboard_summary(
                 id=d.id,
                 title=d.title,
                 timestamp=d.created_at,
-                meta=d.file_type
+                meta=d.file_type,
+                actor="landlord",
+                property_name=prop_name_map.get(str(d.property_id), "Unknown Property"),
+                unit_label=unit_label_map.get(str(d.unit_id)) if d.unit_id else "All units"
+            ))
+            
+        recent_anns_result = await session.execute(
+            select(Announcement)
+            .where(Announcement.property_id.in_(prop_ids))
+            .order_by(Announcement.created_at.desc())
+            .limit(10)
+        )
+        recent_anns = recent_anns_result.scalars().all()
+        
+        for a in recent_anns:
+            activity_list.append(ActivityItem(
+                type="announcement_posted",
+                id=a.id,
+                title=a.title,
+                timestamp=a.created_at,
+                meta="",
+                actor="landlord",
+                property_name=prop_name_map.get(str(a.property_id), "Unknown Property"),
+                unit_label=unit_label_map.get(str(a.unit_id)) if a.unit_id else "All units"
             ))
             
         activity_list.sort(key=lambda x: x.timestamp, reverse=True)
@@ -1108,7 +1193,9 @@ async def get_dashboard_summary(
                 "property_name": prop_name_map.get(str(u.property_id), "Unknown Property"),
                 "unit_label": u.unit_label,
                 "is_occupied": str(u.id) in occupied_unit_ids,
-                "has_pending": str(u.id) in pending_unit_ids,
+                "tenant_name": unit_tenant_map.get(str(u.id)),
+                "has_pending_maintenance": str(u.id) in units_with_pending_maint,
+                "has_pending": str(u.id) in pending_unit_ids or str(u.id) in units_with_pending_maint,
             }
             for u in all_units
         ],

@@ -203,7 +203,7 @@ export default function TenantAnnouncementsPage() {
           {/* Search & Filter Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
             {/* Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+            <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
               {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
                 <button
                   key={filter}

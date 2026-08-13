@@ -17,7 +17,7 @@ export default function TenantRequestsLoading() {
 
         {/* Search & Filter Bar Skeleton */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
-          <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex items-center gap-2 flex-wrap">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="skeleton h-8 w-20 rounded-xl shrink-0" />
             ))}

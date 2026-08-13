@@ -23,6 +23,8 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   Select,
   SelectContent,
@@ -285,11 +287,10 @@ function PropertyCard({
             </div>
             {!loadingUnits && unitSummary && unitSummary.totalUnits > 0 && (
               <span
-                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                  unitSummary.occupiedUnits === unitSummary.totalUnits
+                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${unitSummary.occupiedUnits === unitSummary.totalUnits
                     ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                     : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                }`}
+                  }`}
               >
                 {unitSummary.occupiedUnits}/{unitSummary.totalUnits} Occupied
               </span>
@@ -356,7 +357,7 @@ function PropertyCard({
   );
 }
 
-export default function LandlordPropertiesPage() {
+function LandlordPropertiesContent() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalUnitsCount, setTotalUnitsCount] = useState<number | null>(null);
@@ -368,6 +369,13 @@ export default function LandlordPropertiesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      setShowAddForm(true);
+    }
+  }, [searchParams]);
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("ALL");
 
   const ITEMS_PER_PAGE = 6;
@@ -516,8 +524,12 @@ export default function LandlordPropertiesPage() {
                 value={selectedCityFilter}
                 onValueChange={(val) => setSelectedCityFilter(val as string)}
               >
-                <SelectTrigger className="w-full sm:w-[200px] bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-[38px] text-xs font-semibold">
-                  <SelectValue placeholder="Filter by City" />
+                <SelectTrigger className="w-full sm:w-[200px] bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-[38px] text-xs font-semibold capitalize">
+                  <SelectValue placeholder="Filter by City">
+                    {selectedCityFilter === "ALL"
+                      ? `All Cities (${properties.length})`
+                      : (uniqueCities.find((c) => c.key === selectedCityFilter)?.displayName || selectedCityFilter)}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
                   <SelectItem
@@ -649,7 +661,7 @@ export default function LandlordPropertiesPage() {
                     required
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="e.g. 123 Main St"
+                    placeholder="e.g. #25, 3rd cross"
                     className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50"
                   />
                 </div>
@@ -662,7 +674,7 @@ export default function LandlordPropertiesPage() {
                     required
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. San Francisco"
+                    placeholder="e.g. Varanasi"
                     className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50"
                   />
                 </div>
@@ -823,11 +835,10 @@ export default function LandlordPropertiesPage() {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
-                      currentPage === pageNum
+                    className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${currentPage === pageNum
                         ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
                         : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
-                    }`}
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -847,5 +858,13 @@ export default function LandlordPropertiesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LandlordPropertiesPage() {
+  return (
+    <Suspense fallback={<div className="flex h-[calc(100vh-4rem)] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[rgb(var(--ml-accent))]" /></div>}>
+      <LandlordPropertiesContent />
+    </Suspense>
   );
 }

@@ -4,7 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { AlertCircle, Activity, Home, FileText, Wrench, Zap, Key, Droplets, LucideIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AlertCircle, Activity, Home, FileText, Wrench, Zap, Key, Droplets, Plus, LucideIcon } from "lucide-react"
 
 function formatStatusText(str: string) {
   if (!str) return "Unknown";
@@ -52,6 +53,20 @@ const getUnitInitials = (label: string): string => {
 };
 
 
+function formatAddress(str: string) {
+  if (!str) return "";
+  return str
+    .split(' ')
+    .map((word) => {
+      let w = word.toLowerCase();
+      if (w === 'drives') w = 'drive';
+      if (w === 'streets') w = 'street';
+      if (w === 'avenues') w = 'avenue';
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    })
+    .join(' ');
+}
+
 export type DashboardData = {
   property_stats: {
     total_properties: number;
@@ -65,6 +80,8 @@ export type DashboardData = {
     property_name: string;
     unit_label: string;
     is_occupied: boolean;
+    tenant_name?: string;
+    has_pending_maintenance?: boolean;
     has_pending?: boolean;
   }>;
   urgent_maintenance: Array<{
@@ -77,11 +94,14 @@ export type DashboardData = {
     created_at: string;
   }>;
   recent_activity: Array<{
-    type: "maintenance_update" | "document_upload";
+    type: "maintenance_update" | "document_upload" | "announcement_posted";
     id: string;
     title: string;
     timestamp: string;
     meta?: string;
+    actor?: string;
+    property_name?: string;
+    unit_label?: string;
   }>;
 };
 
@@ -127,8 +147,28 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
     .sort((a, b) => {
       const weightA = priorityWeight[a.priority.toLowerCase()] || 99;
       const weightB = priorityWeight[b.priority.toLowerCase()] || 99;
-      return weightA - weightB;
+      if (weightA !== weightB) return weightA - weightB;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
+
+  const displayedRequests = activeRequests.slice(0, 4);
+  const hasMoreRequests = activeRequests.length > 4;
+
+  const occupiedAndPendingUnits = [...data.units]
+    .filter(u => u.is_occupied || u.has_pending_maintenance || u.has_pending)
+    .sort((a, b) => {
+      const isPendingA = a.has_pending_maintenance || a.has_pending;
+      const isPendingB = b.has_pending_maintenance || b.has_pending;
+
+      const scoreA = isPendingA ? 1 : (a.is_occupied ? 2 : 3);
+      const scoreB = isPendingB ? 1 : (b.is_occupied ? 2 : 3);
+
+      if (scoreA !== scoreB) return scoreA - scoreB;
+      return (a.unit_label || '').localeCompare(b.unit_label || '', undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+  const displayedUnits = occupiedAndPendingUnits.slice(0, 6);
+  const hasMoreUnits = occupiedAndPendingUnits.length > 6;
 
   // Calculate occupancy percentage
   const totalUnits = data.property_stats.total_units || 0;
@@ -144,238 +184,325 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
       <div className="md:col-span-7 flex flex-col gap-5">
         
         {/* Card 1 (Active Maintenance) */}
-        <Card className="flex flex-col bg-card border-border/60 hover:border-border transition-colors rounded-2xl shadow-sm">
-          <CardHeader className="pb-4 px-6 pt-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#84CC16]" />
-                Active maintenance
+        <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm">
+          <div className="flex items-center justify-between px-6 pb-4">
+            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
+              Active maintenance
+            </span>
+            {activeRequests.length > 0 && (
+              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border/40">
+                {activeRequests.length} open
               </span>
-              {activeRequests.length > 0 && (
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/40">
-                  {activeRequests.length} open
-                </span>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto max-h-[350px] px-6 pb-4">
+            )}
+          </div>
+          <div className="flex-1 flex flex-col justify-between">
             {activeRequests.length === 0 ? (
               <EmptyState 
                 icon={AlertCircle}
                 title="All Caught Up"
                 description="No active maintenance requests."
-                className="border-none bg-transparent shadow-none py-6"
+                className="border-none bg-transparent shadow-none py-6 mx-6"
               />
             ) : (
-              <ul className="divide-y divide-border/40">
-                {activeRequests.map((req) => {
-                  const MaintIcon = getMaintenanceIcon(req.title);
-                  return (
-                    <li key={req.id} className="-mx-6">
-                      <Link href={`/landlord/requests?id=${req.id}`}>
-                        <div className={cn(
-                          "flex items-center justify-between py-3 px-6 hover:bg-muted/50 transition-all cursor-pointer group",
-                          getPriorityLeftBorder(req.priority)
-                        )}>
-                          <div className="flex items-center gap-3.5 min-w-0">
-                            <div className={cn(
-                              "w-10 h-10 rounded-lg flex items-center justify-center text-[15px] flex-shrink-0",
-                              getPriorityIconClass(req.priority)
-                            )}>
-                              <MaintIcon className="w-4 h-4" />
+              <div>
+                <ul className="divide-y divide-border/40">
+                  {displayedRequests.map((req) => {
+                    const MaintIcon = getMaintenanceIcon(req.title);
+                    return (
+                      <li key={req.id}>
+                        <Link href={`/landlord/requests?id=${req.id}`}>
+                          <div className={cn(
+                            "flex items-center justify-between py-3 px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group",
+                            getPriorityLeftBorder(req.priority)
+                          )}>
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <div className={cn(
+                                "w-10 h-10 rounded-2xl flex items-center justify-center text-[15px] flex-shrink-0",
+                                getPriorityIconClass(req.priority)
+                              )}>
+                                <MaintIcon className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="text-[14px] font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+                                  {req.title}
+                                </div>
+                                <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
+                                  {formatAddress(req.property_name || "Unknown Property")} · Unit {req.unit_label}
+                                </div>
+                              </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-[15px] font-semibold text-foreground leading-snug truncate">
-                                {req.title}
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                              <div className="flex flex-col items-end justify-center">
+                                <span className={cn('text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider', getPriorityPillClass(req.priority))}>
+                                  {req.priority}
+                                </span>
+                                <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium mt-1">
+                                  Reported {new Date(req.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
                               </div>
-                              <div className="text-[13px] text-muted-foreground font-medium mt-0.5 truncate">
-                                {req.property_name || "Unknown Property"} · Unit {req.unit_label}
-                              </div>
+                              <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg leading-none select-none">&rsaquo;</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 flex-shrink-0">
-                            <div className="flex flex-col items-end justify-center">
-                              <span className={cn('text-xs font-bold px-2.5 py-0.5 rounded-full capitalize', getPriorityPillClass(req.priority))}>
-                                {req.priority}
-                              </span>
-                              <span className="text-[11px] text-muted-foreground font-medium mt-1">
-                                Reported {new Date(req.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </span>
-                            </div>
-                            <span className="text-muted-foreground group-hover:translate-x-1 group-hover:text-foreground transition-all text-lg leading-none select-none">›</span>
-                          </div>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {hasMoreRequests && (
+                  <div className="px-6 pt-3 pb-1 border-t border-border/40 text-center">
+                    <Link 
+                      href="/landlord/requests"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
+                    >
+                      View all active requests ({activeRequests.length}) &rarr;
+                    </Link>
+                  </div>
+                )}
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Card 2 (Recent Activity) */}
-        <Card className="flex flex-col bg-card border-border/60 hover:border-border transition-colors rounded-2xl shadow-sm">
-          <CardHeader className="pb-4 px-6 pt-5">
-            <span className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#84CC16]" />
+        <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm overflow-hidden">
+          <div className="px-6 pb-4">
+            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
               Recent activity
             </span>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto max-h-[350px] px-6 pb-4">
-            {data.recent_activity.length === 0 ? (
-              <EmptyState 
-                icon={Activity}
-                title="No Activity Yet"
-                description="Recent updates will appear here."
-                className="border-none bg-transparent shadow-none py-6"
-              />
-            ) : (
-              <ul className="divide-y divide-border/40">
-                {data.recent_activity.map((act) => {
-                  const isClosed = act.type === "maintenance_update" && (act.meta === 'closed' || act.meta === 'resolved');
-                  const linkHref = act.type === "maintenance_update" 
-                    ? `/landlord/requests?id=${act.id}` 
-                    : `/landlord/documents`;
-                  const MaintIcon = getMaintenanceIcon(act.title);
-                  return (
-                    <li key={act.id} className="-mx-6">
-                      <Link href={linkHref}>
-                        <div className="py-2.5 px-6 hover:bg-muted/30 flex gap-3.5 items-start transition-colors cursor-pointer group">
-                          <div className={cn(
-                            "w-7 h-7 rounded-lg flex items-center justify-center text-[13px] flex-shrink-0 mt-0.5",
-                            isClosed ? "bg-muted text-muted-foreground border border-border/40" : "bg-teal-500/10 text-teal-600 dark:bg-[rgba(45,212,191,0.12)] dark:text-[#2DD4BF]"
-                          )}>
-                            {act.type === "maintenance_update" ? (
-                              <MaintIcon className="w-3.5 h-3.5" />
-                            ) : (
-                              <FileText className="w-3.5 h-3.5" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-foreground leading-snug truncate">
-                              {act.title}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-medium mt-1">
+          </div>
+          <div className="flex-1 overflow-x-hidden">
+            {(() => {
+              const filteredActivity = data.recent_activity.filter(act => {
+                if (act.meta === 'closed' && act.actor !== 'tenant') return false;
+                return true;
+              });
+              if (filteredActivity.length === 0) {
+                return (
+                  <EmptyState 
+                    icon={Activity}
+                    title="No Activity Yet"
+                    description="Recent updates will appear here."
+                    className="border-none bg-transparent shadow-none py-6 mx-6"
+                  />
+                );
+              }
+              const displayedActivity = filteredActivity.slice(0, 5);
+              return (
+                <ul className="divide-y divide-border/40">
+                  {displayedActivity.map((act, idx) => {
+                    const isReopened = act.meta === 'reopened';
+                    const isClosedByTenant = act.meta === 'closed' && act.actor === 'tenant';
+                    const isResolved = act.type === "maintenance_update" && (act.meta === 'resolved' || isClosedByTenant);
+                    let linkHref = `/landlord/requests?id=${act.id}`;
+                    if (act.type === "document_upload") {
+                      linkHref = `/landlord/documents?id=${act.id}`;
+                    } else if (act.type === "announcement_posted") {
+                      linkHref = `/landlord/announcements?id=${act.id}`;
+                    }
+                    const MaintIcon = getMaintenanceIcon(act.title);
+                    return (
+                      <li key={`${act.type}-${act.id}-${act.timestamp}-${idx}`}>
+                        <Link href={linkHref}>
+                          <div className="py-3 px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 flex gap-3.5 items-start transition-all duration-200 cursor-pointer group">
+                            <div className={cn(
+                              "w-8 h-8 rounded-xl flex items-center justify-center text-[13px] flex-shrink-0 mt-0.5",
+                              isReopened ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" :
+                              isResolved ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20"
+                            )}>
                               {act.type === "maintenance_update" ? (
-                                <>Status changed to <span className={cn("font-bold", getStatusColor(act.meta || ""))}>{formatStatusText(act.meta || "")}</span></>
+                                <MaintIcon className="w-4 h-4" />
+                              ) : act.type === "document_upload" ? (
+                                <FileText className="w-4 h-4" />
                               ) : (
-                                <>Document uploaded</>
+                                <AlertCircle className="w-4 h-4" />
                               )}
-                              {' · '}{new Date(act.timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                             </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+                                {act.title}
+                              </div>
+                              <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5">
+                                {act.property_name && (
+                                  <span className="font-semibold text-[rgb(var(--ml-text-primary))]">
+                                    {formatAddress(act.property_name)}{act.unit_label ? ` · Unit ${act.unit_label}` : ''}
+                                    {' · '}
+                                  </span>
+                                )}
+                                {act.type === "maintenance_update" ? (
+                                  isReopened ? (
+                                    <span className="font-bold text-amber-600 dark:text-amber-400">Case reopened by tenant</span>
+                                  ) : isClosedByTenant ? (
+                                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Case closed by tenant</span>
+                                  ) : (
+                                    <>Status changed to <span className={cn("font-bold", getStatusColor(act.meta || ""))}>{formatStatusText(act.meta || "")}</span></>
+                                  )
+                                ) : act.type === "document_upload" ? (
+                                  <>Document uploaded</>
+                                ) : (
+                                  <>Announcement posted</>
+                                )}
+                                {' · '}{new Date(act.timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </div>
+                            </div>
+                            <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg self-center select-none ml-2">&rsaquo;</span>
                           </div>
-                          <span className="text-muted-foreground group-hover:translate-x-1 group-hover:text-foreground transition-all text-lg self-center select-none ml-2">›</span>
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              );
+            })()}
+          </div>
+        </div>
       </div>
 
       {/* RIGHT COLUMN: Overview & Units */}
       <div className="md:col-span-5 flex flex-col gap-5">
         
         {/* Card 3 (Property Overview) */}
-        <Card className="bg-card border-border/60 hover:border-border transition-colors rounded-2xl shadow-sm">
-          <CardHeader className="pb-4 px-6 pt-5">
-            <span className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#84CC16]" />
+        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl p-6 shadow-sm">
+          <div className="pb-4">
+            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
               Overview
             </span>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 px-6 pb-4">
-            <div className="flex bg-muted/40 border border-border/40 rounded-xl">
-              <div className="flex-1 p-3.5">
-                <div className="text-xs text-muted-foreground font-semibold mb-2 uppercase tracking-wider">Properties</div>
-                <div className="text-3xl font-extrabold tracking-tight text-foreground leading-none tabular-nums">{data.property_stats.total_properties}</div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-2xl overflow-hidden">
+              <div className="flex-1 p-4">
+                <div className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-extrabold mb-1.5 uppercase tracking-wider">Properties</div>
+                <div className="text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] leading-none tabular-nums">{data.property_stats.total_properties}</div>
               </div>
-              <div className="flex-1 p-3.5 border-l border-border/40">
-                <div className="text-xs text-muted-foreground font-semibold mb-2 uppercase tracking-wider">Total units</div>
-                <div className="text-3xl font-extrabold tracking-tight text-foreground leading-none tabular-nums">{data.property_stats.total_units}</div>
+              <div className="flex-1 p-4 border-l border-border/60">
+                <div className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-extrabold mb-1.5 uppercase tracking-wider">Total units</div>
+                <div className="text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] leading-none tabular-nums">{data.property_stats.total_units}</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 py-0.5">
+            <div className="flex items-center gap-4 py-1">
               <svg width="60" height="60" viewBox="0 0 64 64" className="flex-shrink-0">
                 <circle cx="32" cy="32" r="26" fill="none" className="stroke-zinc-200 dark:stroke-[#1E2731]" strokeWidth="8"/>
-                <circle cx="32" cy="32" r="26" fill="none" className="stroke-[#4ADE80] dark:stroke-[#34D399]" strokeWidth="8"
+                <circle cx="32" cy="32" r="26" fill="none" className="stroke-[rgb(var(--ml-accent))]" strokeWidth="8"
                   strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round"
                   transform="rotate(-90 32 32)"/>
               </svg>
-              <div className="text-[13px] text-zinc-500 dark:text-zinc-400 font-medium leading-tight select-none">
-                <span className="text-foreground text-base font-bold">{occupancyPercent}%</span> occupancy<br />across your portfolio
+              <div className="text-[13px] text-[rgb(var(--ml-text-secondary))] font-semibold leading-tight select-none">
+                <span className="text-[rgb(var(--ml-text-primary))] text-base font-black">{occupancyPercent}%</span> occupancy<br />across your portfolio
               </div>
             </div>
 
-            <div className="border-t border-border/40 pt-1">
-              <div className="flex justify-between items-center py-2.5 border-b border-border/40">
-                <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground/80">
-                  <span className="w-2 h-2 rounded-full bg-[#4ADE80] shadow-[0_0_8px_rgba(74,222,128,0.12)]"></span>
-                  Occupied
+            {data.property_stats.vacant_units === 0 && data.property_stats.total_units > 0 && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-xs text-emerald-600 dark:text-emerald-400">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <div>
+                  <span className="font-extrabold uppercase tracking-wider block">100% Occupied</span>
+                  <span className="font-medium opacity-90 text-[11px]">All {data.property_stats.total_units} unit{data.property_stats.total_units > 1 ? 's' : ''} have active tenants.</span>
                 </div>
-                <div className="text-base font-extrabold text-foreground tabular-nums">{data.property_stats.occupied_units}</div>
-              </div>
-              <div className="flex justify-between items-center py-2.5">
-                <div className="flex items-center gap-2.5 text-sm font-semibold text-foreground/80">
-                  <span className="w-2 h-2 rounded-full bg-[#F59E0B] shadow-[0_0_8px_rgba(245,158,11,0.12)]"></span>
-                  Vacant
-                </div>
-                <div className="text-base font-extrabold text-foreground tabular-nums">{data.property_stats.vacant_units}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4 (My Units List) */}
-        <Card className="flex flex-col flex-1 bg-card border-border/60 hover:border-border transition-colors rounded-2xl shadow-sm">
-          <CardHeader className="pb-4 px-6 pt-5">
-            <span className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#84CC16]" />
-              My units
-            </span>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto max-h-[385px] px-6 pb-4">
-            {data.units.length === 0 ? (
-              <EmptyState 
-                icon={Home}
-                title="No Units"
-                description="Add a property to see units here."
-                className="border-none bg-transparent shadow-none py-10"
-              />
-            ) : (
-              <div className="space-y-2">
-                {data.units.map((unit) => (
-                  <Link href={`/landlord/units/${unit.id}`} key={unit.id} className="block">
-                    <div className="flex items-center gap-3 p-2.5 px-3 bg-muted/40 border border-border/40 rounded-xl hover:border-border transition-all group cursor-pointer">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-[#2A2A2A] dark:to-[#141414] border border-border/40 flex items-center justify-center font-extrabold text-sm text-foreground flex-shrink-0 overflow-hidden px-1">
-                        {getUnitInitials(unit.unit_label)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-foreground truncate">{unit.unit_label}</div>
-                        <div className="text-xs text-muted-foreground font-medium truncate">{unit.property_name}</div>
-                      </div>
-                      <div className="flex items-center gap-2.5 flex-shrink-0">
-                        {unit.is_occupied ? (
-                          <span className="text-[10px] font-extrabold bg-green-500/10 text-green-600 dark:bg-[rgba(74,222,128,0.12)] dark:text-[#4ADE80] px-2.5 py-1 rounded-full uppercase tracking-wider">Occupied</span>
-                        ) : unit.has_pending ? (
-                          <span className="text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:bg-[rgba(245,158,11,0.12)] dark:text-[#F59E0B] px-2.5 py-1 rounded-full uppercase tracking-wider">Pending</span>
-                        ) : (
-                          <span className="text-[10px] font-extrabold bg-muted text-muted-foreground border border-border/20 px-2.5 py-1 rounded-full uppercase tracking-wider">Vacant</span>
-                        )}
-                        <span className="text-muted-foreground group-hover:translate-x-1 group-hover:text-foreground transition-all text-lg leading-none select-none">›</span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+
+            <div className="border-t border-border/40 pt-2 space-y-1">
+              <div className="flex justify-between items-center py-2 border-b border-border/30">
+                <div className="flex items-center gap-2.5 text-xs font-bold text-[rgb(var(--ml-text-primary))]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></span>
+                  Occupied
+                </div>
+                <div className="text-sm font-black text-[rgb(var(--ml-text-primary))] tabular-nums">{data.property_stats.occupied_units}</div>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <div className="flex items-center gap-2.5 text-xs font-bold text-[rgb(var(--ml-text-primary))]">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]"></span>
+                  Vacant
+                </div>
+                <div className="text-sm font-black text-[rgb(var(--ml-text-primary))] tabular-nums">{data.property_stats.vacant_units}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4 (My Units List) */}
+        <div className="flex flex-col flex-1 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm">
+          <div className="px-6 pb-4">
+            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
+              Occupied Units
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col justify-between">
+            {data.property_stats.total_properties === 0 ? (
+              <EmptyState 
+                icon={Home}
+                title="Portfolio Hasn't Been Created"
+                description="Add your first property to start managing units."
+                className="border-none bg-transparent shadow-none py-10 mx-6"
+                action={
+                  <Link href="/landlord/properties?add=true">
+                    <Button className="rounded-full px-6 font-bold flex items-center gap-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90">
+                      <Plus className="w-4 h-4" /> Add Property
+                    </Button>
+                  </Link>
+                }
+              />
+            ) : displayedUnits.length === 0 ? (
+              <EmptyState 
+                icon={Home}
+                title="No Active Tenants Yet"
+                description="Units with active tenants or pending maintenance will appear here."
+                className="border-none bg-transparent shadow-none py-10 mx-6"
+              />
+            ) : (
+              <div>
+                <ul className="divide-y divide-border/40">
+                  {displayedUnits.map((unit) => {
+                    const isPending = unit.has_pending_maintenance || unit.has_pending;
+                    return (
+                      <li key={unit.id}>
+                        <Link href={`/landlord/units/${unit.id}`} className="block">
+                          <div className="flex items-center gap-3.5 py-3 px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group">
+                            <div className="w-10 h-10 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border/40 flex items-center justify-center font-black text-xs text-[rgb(var(--ml-text-primary))] flex-shrink-0 px-1">
+                              {getUnitInitials(unit.unit_label)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[14px] font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+                                Unit {unit.unit_label}
+                              </div>
+                              <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
+                                {unit.tenant_name ? `${unit.tenant_name} · ` : ''}{formatAddress(unit.property_name)}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                              {unit.is_occupied ? (
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Occupied</span>
+                              ) : isPending ? (
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Pending Maint.</span>
+                              ) : (
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-muted text-[rgb(var(--ml-text-secondary))] border border-border/40">Vacant</span>
+                              )}
+                              <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg leading-none select-none">&rsaquo;</span>
+                            </div>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {hasMoreUnits && (
+                  <div className="px-6 pt-3 pb-1 border-t border-border/40 text-center">
+                    <Link 
+                      href="/landlord/units"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
+                    >
+                      View all units ({occupiedAndPendingUnits.length}) &rarr;
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
     </div>
@@ -387,16 +514,16 @@ export function DashboardBentoSkeleton() {
     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
       {/* LEFT COLUMN */}
       <div className="md:col-span-7 flex flex-col gap-5">
-        <Card className="bg-card border-border/60 rounded-2xl">
-          <CardHeader className="pb-4 px-6 pt-5">
+        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl p-6 shadow-sm">
+          <div className="pb-4">
             <Skeleton className="h-3 w-36" />
-          </CardHeader>
-          <CardContent className="px-6 pb-4">
+          </div>
+          <div>
             <div className="space-y-3">
               {Array.from({ length: 2 }).map((_, i) => (
                 <div key={i} className="flex justify-between items-center py-3 border-b border-border/40 last:border-0">
                   <div className="flex items-center gap-3.5">
-                    <Skeleton className="w-10 h-10 rounded-lg" />
+                    <Skeleton className="w-10 h-10 rounded-2xl" />
                     <div className="space-y-2">
                       <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-3 w-20" />
@@ -409,18 +536,18 @@ export function DashboardBentoSkeleton() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="bg-card border-border/60 rounded-2xl">
-          <CardHeader className="pb-4 px-6 pt-5">
+        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl p-6 shadow-sm">
+          <div className="pb-4">
             <Skeleton className="h-3 w-32" />
-          </CardHeader>
-          <CardContent className="px-6 pb-4">
+          </div>
+          <div>
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex gap-3.5 items-start py-2.5 border-b border-border/40 last:border-0">
-                  <Skeleton className="w-7 h-7 rounded-lg" />
+                  <Skeleton className="w-8 h-8 rounded-xl" />
                   <div className="space-y-2 flex-1">
                     <Skeleton className="h-4 w-40" />
                     <Skeleton className="h-3 w-28" />
@@ -428,23 +555,23 @@ export function DashboardBentoSkeleton() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* RIGHT COLUMN */}
       <div className="md:col-span-5 flex flex-col gap-5">
-        <Card className="bg-card border-border/60 rounded-2xl">
-          <CardHeader className="pb-4 px-6 pt-5">
+        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl p-6 shadow-sm">
+          <div className="pb-4">
             <Skeleton className="h-3 w-24" />
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 px-6 pb-4">
-            <div className="flex bg-muted/40 border border-border/40 rounded-xl">
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-2xl">
               <div className="flex-1 p-3.5">
                 <Skeleton className="h-3 w-16 mb-2" />
                 <Skeleton className="h-8 w-8" />
               </div>
-              <div className="flex-1 p-3.5 border-l border-border/40">
+              <div className="flex-1 p-3.5 border-l border-border/60">
                 <Skeleton className="h-3 w-16 mb-2" />
                 <Skeleton className="h-8 w-8" />
               </div>
@@ -468,18 +595,18 @@ export function DashboardBentoSkeleton() {
                 <Skeleton className="h-4 w-6" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         
-        <Card className="bg-card border-border/60 rounded-2xl">
-          <CardHeader className="pb-4 px-6 pt-5">
+        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl p-6 shadow-sm">
+          <div className="pb-4">
             <Skeleton className="h-3 w-20" />
-          </CardHeader>
-          <CardContent className="px-6 pb-4">
+          </div>
+          <div>
             <div className="space-y-2.5">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-2.5 px-3 border border-border/40 rounded-xl bg-muted/40">
-                  <Skeleton className="w-10 h-10 rounded-lg" />
+                <div key={i} className="flex items-center gap-3 p-3 border border-border/40 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/80">
+                  <Skeleton className="w-10 h-10 rounded-xl" />
                   <div className="space-y-2 flex-1">
                     <Skeleton className="h-4 w-20" />
                     <Skeleton className="h-3 w-16" />
@@ -488,8 +615,8 @@ export function DashboardBentoSkeleton() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

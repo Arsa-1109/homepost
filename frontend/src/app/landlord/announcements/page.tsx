@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
@@ -135,6 +136,18 @@ function AttachmentThumbnail({
 }
 
 export default function LandlordAnnouncementsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">Loading...</div>}>
+      <LandlordAnnouncementsContent />
+    </Suspense>
+  );
+}
+
+function LandlordAnnouncementsContent() {
+  const searchParams = useSearchParams();
+  const idParam = searchParams.get("id");
+  const router = useRouter();
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -298,6 +311,11 @@ export default function LandlordAnnouncementsPage() {
 
   const filteredAnnouncements = useMemo(() => {
     return announcements.filter((ann) => {
+      // ID Filter
+      if (idParam && ann.id !== idParam) {
+        return false;
+      }
+
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
         ann.title.toLowerCase().includes(query) || 
@@ -317,7 +335,7 @@ export default function LandlordAnnouncementsPage() {
       }
       return true;
     });
-  }, [announcements, searchQuery, selectedFilter, nowTimestamp]);
+  }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam]);
 
   const selectedPropertyName = properties.find(p => p.id === selectedProperty)?.name || "Property";
 
@@ -392,7 +410,7 @@ export default function LandlordAnnouncementsPage() {
           {/* Search & Filter Controls Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
             {/* Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
+            <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
               {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
                 <button
                   key={filter}
@@ -423,6 +441,18 @@ export default function LandlordAnnouncementsPage() {
               />
             </div>
           </div>
+          
+          {idParam && (
+            <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
+              <span>Showing a specific announcement.</span>
+              <button 
+                onClick={() => router.replace('/landlord/announcements')}
+                className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
+              >
+                Clear Filter
+              </button>
+            </div>
+          )}
         </div>
 
         {!loading && properties.length === 0 ? (

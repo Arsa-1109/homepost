@@ -184,7 +184,7 @@ export default function LandlordLayout({
 
         {/* Mobile Bottom Navigation Bar */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-border px-2 py-1.5 flex items-center justify-around">
-          {NAV_ITEMS.slice(0, 5).map((item) => {
+          {NAV_ITEMS.slice(0, 6).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
