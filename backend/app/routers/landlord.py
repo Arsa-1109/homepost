@@ -44,6 +44,81 @@ async def list_properties(
     result = await session.execute(select(Property).where(Property.owner_id == user.id))
     return result.scalars().all()
 
+@router.put("/properties/{property_id}", response_model=Property)
+async def update_property(
+    property_id: uuid.UUID,
+    prop_in: PropertyUpdate,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    prop = await session.get(Property, property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=404, detail="Property not found")
+    
+    update_data = prop_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if value is not None:
+            setattr(prop, field, value)
+            
+    session.add(prop)
+    await session.commit()
+    await session.refresh(prop)
+    return prop
+
+@router.delete("/properties/{property_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_property(
+    property_id: uuid.UUID,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    prop = await session.get(Property, property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=404, detail="Property not found")
+        
+    # Check for active tenants in any unit
+    from app.models.tenant_profile import TenantProfile
+    from app.models.unit import Unit
+    from sqlalchemy import select, delete
+    
+    units_res = await session.execute(select(Unit.id).where(Unit.property_id == property_id))
+    unit_ids = units_res.scalars().all()
+    
+    if unit_ids:
+        tenant_res = await session.execute(
+            select(TenantProfile).where(
+                TenantProfile.unit_id.in_(unit_ids),
+                TenantProfile.is_active == True
+            )
+        )
+        if tenant_res.scalars().first():
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete a property with occupied units. Please remove the tenants first."
+            )
+            
+        # Delete associated data for all units
+        from app.models.invite import Invite
+        from app.models.maintenance_request import MaintenanceRequest
+        from app.models.document import Document
+        
+        await session.execute(delete(Invite).where(Invite.unit_id.in_(unit_ids)))
+        await session.execute(delete(MaintenanceRequest).where(MaintenanceRequest.unit_id.in_(unit_ids)))
+        await session.execute(delete(Document).where(Document.unit_id.in_(unit_ids)))
+        await session.execute(delete(TenantProfile).where(TenantProfile.unit_id.in_(unit_ids)))
+        
+        # Delete the units
+        await session.execute(delete(Unit).where(Unit.property_id == property_id))
+        
+    # Delete property-level data
+    from app.models.announcement import Announcement
+    from app.models.document import Document
+    await session.execute(delete(Announcement).where(Announcement.property_id == property_id))
+    await session.execute(delete(Document).where(Document.property_id == property_id))
+    
+    await session.delete(prop)
+    await session.commit()
+    return None
+
 # ---------------------------------------------------------------------------
 # Units
 # ---------------------------------------------------------------------------

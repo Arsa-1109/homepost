@@ -9,13 +9,16 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
-  ...(useMockAuth ? {
-    turbopack: {
+  turbopack: {
+    root: path.resolve(process.cwd()),
+    ...(useMockAuth ? {
       resolveAlias: {
         "@clerk/nextjs": "./src/lib/clerk-mock.tsx",
         "@clerk/nextjs/server": "./src/lib/clerk-server-mock.ts",
       }
-    },
+    } : {})
+  },
+  ...(useMockAuth ? {
     webpack: (config) => {
       console.log("Using Mock Clerk Auth (offline mode)...");
       config.resolve.alias["@clerk/nextjs$"] = path.resolve(process.cwd(), "src/lib/clerk-mock.tsx");

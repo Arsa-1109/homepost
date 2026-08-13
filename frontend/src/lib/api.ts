@@ -119,6 +119,9 @@ export async function apiFetch<T = unknown>(
 
   // Helper: safely parse JSON, throw readable error if HTML/non-JSON returned
   const safeJson = async () => {
+    if (response.status === 204) {
+      return null;
+    }
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.includes("application/json")) {
       const text = await response.text().catch(() => "(unreadable body)");

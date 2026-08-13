@@ -61,8 +61,7 @@ auth.getToken = async () => {
   const mockUserName = cookieStore.get("mock_user_name")?.value || null;
   if (!mockUserEmail) return null;
   const encodeBase64Url = (str: string) => {
-    return Buffer.from(str)
-      .toString("base64")
+    return btoa(str)
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
@@ -128,8 +127,7 @@ export function clerkMiddleware(handler: any) {
       getToken: async () => {
         if (!mockUserEmail) return null;
         const encodeBase64Url = (str: string) => {
-          return Buffer.from(str)
-            .toString("base64")
+          return btoa(str)
             .replace(/\+/g, "-")
             .replace(/\//g, "_")
             .replace(/=+$/, "");

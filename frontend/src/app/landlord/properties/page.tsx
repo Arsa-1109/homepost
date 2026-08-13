@@ -15,6 +15,10 @@ import {
   Home,
   FileText,
   Sparkles,
+  Pencil,
+  Trash2,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,6 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from "next/link";
 
 export type Property = {
@@ -40,11 +52,28 @@ export type PropertyUnitSummary = {
   occupiedUnits: number;
 };
 
-function PropertyCard({ p }: { p: Property }) {
+function PropertyCard({
+  p,
+  onUpdate,
+  onDelete,
+}: {
+  p: Property;
+  onUpdate: (updatedProperty: Property) => void;
+  onDelete: (propertyId: string) => void;
+}) {
   const [unitSummary, setUnitSummary] = useState<PropertyUnitSummary | null>(
     null,
   );
   const [loadingUnits, setLoadingUnits] = useState(true);
+
+  // Inline Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(p.name);
+  const [editAddress, setEditAddress] = useState(p.address);
+  const [editCity, setEditCity] = useState(p.city);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -74,81 +103,255 @@ function PropertyCard({ p }: { p: Property }) {
     };
   }, [p.id]);
 
+  const handleSave = async () => {
+    if (!editName.trim() || !editAddress.trim() || !editCity.trim()) {
+      toast.error("All fields (Name, Address, City) are required");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const updated = await fetchAPI<Property>(
+        `/api/v1/landlord/properties/${p.id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            name: editName.trim(),
+            address: editAddress.trim(),
+            city: editCity.trim(),
+          }),
+        },
+      );
+      onUpdate(updated);
+      setIsEditing(false);
+      toast.success("Property updated successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update property");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await fetchAPI(`/api/v1/landlord/properties/${p.id}`, {
+        method: "DELETE",
+      });
+      onDelete(p.id);
+      toast.success("Property deleted successfully");
+      setShowDeleteDialog(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete property");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card min-h-[250px] shadow-sm relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
-
-
+    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card min-h-[260px] shadow-sm relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
       <div>
-        {/* Top Row: Property Icon & City Badge */}
+        {/* Top Row: Property Icon & Actions / City Badge */}
         <div className="flex justify-between items-start gap-3 mb-4">
           <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-300">
             <Building2 className="w-6 h-6" />
           </div>
-          <Badge
-            variant="outline"
-            className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border bg-[rgb(var(--ml-bg-primary))]/80 text-[rgb(var(--ml-text-secondary))] border-border/60"
-          >
-            {p.city}
-          </Badge>
-        </div>
 
-        {/* Property Name & Address */}
-        <div className="space-y-1.5">
-          <h3
-            className="font-black text-xl tracking-tight text-[rgb(var(--ml-text-primary))] group-hover/card:text-[rgb(var(--ml-accent))] transition-colors truncate"
-            title={p.name}
-          >
-            {p.name}
-          </h3>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-            <MapPin className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))] shrink-0" />
-            <span className="truncate">{p.address}</span>
+          <div className="flex items-center gap-1.5">
+            {!isEditing ? (
+              <>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border bg-[rgb(var(--ml-bg-primary))]/80 text-[rgb(var(--ml-text-secondary))] border-border/60"
+                >
+                  {p.city}
+                </Badge>
+                <div className="flex items-center gap-1 opacity-80 group-hover/card:opacity-100 transition-opacity ml-1">
+                  <button
+                    onClick={() => {
+                      setEditName(p.name);
+                      setEditAddress(p.address);
+                      setEditCity(p.city);
+                      setIsEditing(true);
+                    }}
+                    title="Edit Property"
+                    className="p-1.5 rounded-xl hover:bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors cursor-pointer border border-transparent hover:border-border/40"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteDialog(true)}
+                    disabled={isDeleting}
+                    title="Delete Property"
+                    className="p-1.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-600 transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  title="Save Changes"
+                  className="p-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-colors cursor-pointer"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                  title="Cancel Edit"
+                  className="p-1.5 rounded-xl bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border/60 transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Property Name & Address or Edit Controls */}
+        {!isEditing ? (
+          <div className="space-y-1.5">
+            <h3
+              className="font-black text-xl tracking-tight text-[rgb(var(--ml-text-primary))] group-hover/card:text-[rgb(var(--ml-accent))] transition-colors truncate"
+              title={p.name}
+            >
+              {p.name}
+            </h3>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+              <MapPin className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))] shrink-0" />
+              <span className="truncate">{p.address}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] block mb-1">
+                Property Name
+              </label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Property Name"
+                className="w-full text-xs font-bold px-3 py-1.5 rounded-xl border border-border/80 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] focus:outline-none focus:border-[rgb(var(--ml-accent))]"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] block mb-1">
+                Address
+              </label>
+              <input
+                type="text"
+                value={editAddress}
+                onChange={(e) => setEditAddress(e.target.value)}
+                placeholder="Address"
+                className="w-full text-xs font-semibold px-3 py-1.5 rounded-xl border border-border/80 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] focus:outline-none focus:border-[rgb(var(--ml-accent))]"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] block mb-1">
+                City
+              </label>
+              <input
+                type="text"
+                value={editCity}
+                onChange={(e) => setEditCity(e.target.value)}
+                placeholder="City"
+                className="w-full text-xs font-semibold px-3 py-1.5 rounded-xl border border-border/80 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] focus:outline-none focus:border-[rgb(var(--ml-accent))]"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Units Stats Pill */}
-        <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-            <Home className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))]" />
-            <span>
-              {loadingUnits ? (
-                <span className="skeleton h-3 w-16 rounded inline-block" />
-              ) : (
-                `${unitSummary?.totalUnits || 0} ${unitSummary?.totalUnits === 1 ? "Unit" : "Units"}`
-              )}
-            </span>
+        {!isEditing && (
+          <div className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+              <Home className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))]" />
+              <span>
+                {loadingUnits ? (
+                  <span className="skeleton h-3 w-16 rounded inline-block" />
+                ) : (
+                  `${unitSummary?.totalUnits || 0} ${unitSummary?.totalUnits === 1 ? "Unit" : "Units"}`
+                )}
+              </span>
+            </div>
+            {!loadingUnits && unitSummary && unitSummary.totalUnits > 0 && (
+              <span
+                className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                  unitSummary.occupiedUnits === unitSummary.totalUnits
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                }`}
+              >
+                {unitSummary.occupiedUnits}/{unitSummary.totalUnits} Occupied
+              </span>
+            )}
           </div>
-          {!loadingUnits && unitSummary && unitSummary.totalUnits > 0 && (
-            <span
-              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                unitSummary.occupiedUnits === unitSummary.totalUnits
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                  : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-              }`}
-            >
-              {unitSummary.occupiedUnits}/{unitSummary.totalUnits} Occupied
-            </span>
-          )}
-        </div>
+        )}
       </div>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Property</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;{p.name}&quot;? All of its units will be deleted too. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Card Footer Quick Actions */}
-      <div className="mt-6 pt-4 border-t border-border/40 grid grid-cols-2 gap-2">
-        <Link
-          href={`/landlord/units?property_id=${p.id}`}
-          className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group/btn transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
-        >
-          <Home className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
-          <span>Units</span>
-        </Link>
-        <Link
-          href={`/landlord/documents?property_id=${p.id}`}
-          className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group/btn transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
-        >
-          <FileText className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
-          <span>Docs</span>
-        </Link>
-      </div>
+      {!isEditing && (
+        <div className="mt-6 pt-4 border-t border-border/40 grid grid-cols-2 gap-2">
+          <Link
+            href={`/landlord/units?property_id=${p.id}`}
+            className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group/btn transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+          >
+            <Home className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+            <span>Units</span>
+          </Link>
+          <Link
+            href={`/landlord/documents?property_id=${p.id}`}
+            className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 px-3 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shadow-sm group/btn transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+          >
+            <FileText className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+            <span>Docs</span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
@@ -550,7 +753,17 @@ export default function LandlordPropertiesPage() {
                   show: { opacity: 1, y: 0 },
                 }}
               >
-                <PropertyCard p={p} />
+                <PropertyCard
+                  p={p}
+                  onUpdate={(updated) => {
+                    setProperties((prev) =>
+                      prev.map((item) => (item.id === updated.id ? updated : item)),
+                    );
+                  }}
+                  onDelete={(id) => {
+                    setProperties((prev) => prev.filter((item) => item.id !== id));
+                  }}
+                />
               </motion.div>
             ))}
           </motion.div>
