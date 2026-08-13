@@ -81,7 +81,7 @@ export function DatePicker({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex items-center justify-between bg-[rgb(var(--ml-bg-primary))]/60 border border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/80 focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/30 focus:outline-none transition-all px-4 h-11 rounded-xl text-sm font-medium cursor-pointer shadow-inner",
+          "w-full flex items-center justify-between bg-[rgb(var(--ml-bg-primary))]/60 focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/30 focus:outline-none px-4 h-11 rounded-xl text-sm font-medium cursor-pointer shadow-inner transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]",
           selectedDate ? "text-[rgb(var(--ml-text-primary))]" : "text-[rgb(var(--ml-text-secondary))]/60",
           className
         )}
@@ -116,14 +116,14 @@ export function DatePicker({
               <button
                 type="button"
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                className="p-1.5 rounded-lg hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                className="p-1.5 rounded-lg hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

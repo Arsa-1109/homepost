@@ -173,7 +173,7 @@ function CompactRequestCard({
 
   return (
     <div
-      className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/20 hover:shadow-[0_12px_36px_rgba(0,0,0,0.08)] transition-all duration-300 hover-lift flex flex-col overflow-hidden group/card"
+      className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
     >
       {/* Collapsed Card Header */}
       <div
@@ -213,7 +213,7 @@ function CompactRequestCard({
               {req.priority === "urgent" ? "Emergency" : req.priority}
             </span>
           </div>
-          <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-border/30 cursor-pointer">
+          <button className="p-2 rounded-xl group/btn border border-border/30 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]">
             <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
           </button>
         </div>
@@ -301,7 +301,7 @@ function CompactRequestCard({
                     {canReopen && (
                       <button
                         onClick={(e) => onReopen(req.id, e)}
-                        className="px-3.5 py-2 text-xs font-bold text-black bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] rounded-xl transition-all shrink-0 cursor-pointer shadow-sm active:scale-[0.98] flex items-center gap-1.5"
+                        className="px-3.5 py-2 text-xs font-bold text-black bg-[rgb(var(--ml-accent))] rounded-xl shrink-0 cursor-pointer shadow-sm flex items-center gap-1.5 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                       >
                         <RefreshCcw className="w-3 h-3" />
                         Reopen Request

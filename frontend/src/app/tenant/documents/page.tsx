@@ -238,7 +238,7 @@ export default function TenantDocumentsPage() {
               return (
                 <div 
                   key={doc.id} 
-                  className="group relative flex flex-col justify-between p-4 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:shadow-[0_12px_36px_rgba(0,0,0,0.08)] transition-all duration-300 hover-lift overflow-hidden"
+                  className="group relative flex flex-col justify-between p-4 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
                 >
                   <div className="flex gap-4 items-start">
                     {/* Thumbnail Preview Container */}
@@ -286,7 +286,7 @@ export default function TenantDocumentsPage() {
                             window.open(doc.file_url, "_blank");
                           }
                         }}
-                        className="flex-1 h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl border-border/60 hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))] transition-all cursor-pointer"
+                        className="flex-1 h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
                       >
                         <Eye className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />
                         View
@@ -296,7 +296,7 @@ export default function TenantDocumentsPage() {
                       variant="default"
                       size="sm"
                       onClick={() => handleDownload(doc.file_key, doc.title)}
-                      className={`h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all shadow-sm cursor-pointer active:scale-95 ${
+                      className={`h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] shadow-sm cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] ${
                         !doc.file_url ? "w-full" : "flex-1"
                       }`}
                     >

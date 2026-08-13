@@ -64,7 +64,7 @@ export default function LandlordLayout({
         {/* Toggle Button — child of aside (overflow-visible), never clipped */}
         <button
           onClick={toggleCollapse}
-          className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-border p-1 rounded-full text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] shadow-sm transition-colors z-50 hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer"
+          className="absolute top-8 right-[-14px] bg-[rgb(var(--ml-bg-secondary))] border border-border p-1 rounded-full text-[rgb(var(--ml-text-secondary))] shadow-sm z-50 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

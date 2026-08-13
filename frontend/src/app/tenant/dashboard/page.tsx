@@ -253,7 +253,7 @@ export default function TenantDashboard() {
       <Button
         asChild
         size="lg"
-        className="w-full h-14 rounded-2xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90 transition-all font-bold text-sm shadow-md hover:shadow-lg active:scale-[0.99] cursor-pointer"
+        className="w-full h-14 rounded-2xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-sm shadow-md cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
       >
         <Link href="/tenant/requests/new" className="flex items-center justify-center gap-2">
           <Wrench className="w-5 h-5" />
@@ -293,7 +293,7 @@ export default function TenantDashboard() {
               <Link
                 key={req.id}
                 href={`/tenant/requests?requestId=${req.id}`}
-                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] hover:border-border transition-all duration-200 shadow-sm hover:shadow-md gap-3"
+                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] gap-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
               >
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-2">

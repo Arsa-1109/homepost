@@ -110,7 +110,7 @@ function AccessRequestCard({
   const hasNoVacantUnits = Boolean(propertyId && !loadingUnits && vacantUnits.length === 0);
 
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-border/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 p-4 md:p-6 transition-all hover:border-[rgb(var(--ml-accent))]/30 group">
+    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-border/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 p-4 md:p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 group">
       
       {/* Top / Left: Tenant Profile Info + Mobile Disclosure Trigger */}
       <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
@@ -204,7 +204,7 @@ function AccessRequestCard({
           onClick={handleApprove}
           isLoading={isSubmitting}
           disabled={!unitId}
-          className="flex-1 md:flex-initial h-10 px-5 rounded-xl font-semibold gap-1.5 bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black cursor-pointer"
+          className="flex-1 md:flex-initial h-10 px-5 rounded-xl font-semibold gap-1.5 bg-[rgb(var(--ml-accent))] text-black cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
         >
           <Check className="w-4 h-4" /> Approve
         </Button>

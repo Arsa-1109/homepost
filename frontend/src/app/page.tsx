@@ -527,7 +527,7 @@ export default function LandingPage() {
               <h2 className="text-3xl font-bold">Welcome back!</h2>
               <Button
                 onClick={() => router.push("/dashboard")}
-                className="px-10 py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent"
+                className="px-10 py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
               >
                 Go to Dashboard <ArrowRight className="w-6 h-6" />
               </Button>
@@ -567,7 +567,7 @@ export default function LandingPage() {
                         type="button"
                         onClick={handleLandlordSelect}
                         isLoading={isSubmitting && roleSelection === 'none'}
-                        className="w-full py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity"
+                        className="w-full py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
                       >
                         Enter Owner Portal
                       </Button>
@@ -592,7 +592,7 @@ export default function LandingPage() {
                         type="button"
                         variant="outline"
                         onClick={() => setRoleSelection("tenant")}
-                        className="w-full py-4 h-auto rounded-lg text-foreground font-semibold text-base mt-auto"
+                        className="w-full py-4 h-auto rounded-lg text-foreground font-semibold text-base mt-auto hover:bg-muted hover:border-border"
                       >
                         Access Tenant Portal
                       </Button>
@@ -635,14 +635,14 @@ export default function LandingPage() {
                         type="button"
                         variant="outline"
                         onClick={() => setRoleSelection("none")}
-                        className="px-8 py-4 h-auto rounded-lg font-semibold"
+                        className="px-8 py-4 h-auto rounded-lg font-semibold hover:bg-muted hover:border-border"
                       >
                         Back
                       </Button>
                       <Button
                         type="submit"
                         isLoading={isSubmitting}
-                        className="flex-1 px-8 py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold"
+                        className="flex-1 px-8 py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold hover:text-white hover:shadow-none hover:translate-y-0"
                       >
                         Request Access
                       </Button>

@@ -81,9 +81,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   };
 
   return (
-    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between hover:border-[rgb(var(--ml-accent))]/40 transition-all duration-300 group/card min-h-[220px] shadow-sm relative overflow-hidden">
-      {/* Background Accent Mesh Effect on Hover */}
-      <div className="absolute -top-12 -right-12 w-24 h-24 bg-[rgb(var(--ml-accent))]/5 rounded-full blur-2xl group-hover/card:bg-[rgb(var(--ml-accent))]/15 transition-all duration-500 pointer-events-none" />
+    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card min-h-[220px] shadow-sm relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
 
       <div>
         {/* Header Row: Label & Status Badge */}
@@ -122,7 +120,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
       <div className="mt-6 pt-4 border-t border-border/40 flex flex-col gap-2">
         <Link
           href={`/landlord/units/${u.id}`}
-          className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 hover:bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/30 px-3.5 py-2.5 rounded-xl transition-all w-full flex items-center justify-center gap-2 cursor-pointer shadow-sm group/btn"
+          className="text-xs font-bold text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-primary))]/80 px-3.5 py-2.5 rounded-xl w-full flex items-center justify-center gap-2 cursor-pointer shadow-sm group/btn transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
         >
           <span>View Details</span>
           <ExternalLink className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))] group-hover/btn:translate-x-0.5 transition-transform" />
@@ -182,7 +180,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
           </Dialog>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="text-xs text-center bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3.5 py-2.5 rounded-xl hover:bg-[rgb(var(--ml-accent-dark))] transition-all w-full cursor-pointer flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] active:scale-[0.98]">
+            <DialogTrigger className="text-xs text-center bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3.5 py-2.5 rounded-xl w-full cursor-pointer flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]">
               <UserCheck className="w-3.5 h-3.5" />
               <span>Invite Tenant</span>
             </DialogTrigger>
@@ -210,7 +208,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                 </div>
 
                 {/* Custom Glassmorphic Checkbox Card for Retain Data */}
-                <label className="flex items-start gap-3.5 p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/30 hover:border-[rgb(var(--ml-accent))]/40 transition-all cursor-pointer group select-none">
+                <label className="flex items-start gap-3.5 p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/30 hover:border-[rgb(var(--ml-text-primary))]/40 transition-all cursor-pointer group select-none">
                   <input
                     type="checkbox"
                     checked={keepData}
@@ -221,7 +219,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                     className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-200 shrink-0 ${
                       keepData
                         ? "bg-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] shadow-[0_2px_10px_rgba(var(--ml-accent),0.3)] scale-100"
-                        : "bg-[rgb(var(--ml-bg-primary))] border-border/80 text-transparent group-hover:border-[rgb(var(--ml-accent))]/50"
+                        : "bg-[rgb(var(--ml-bg-primary))] border-border/80 text-transparent group-hover:border-[rgb(var(--ml-text-primary))]/40"
                     }`}
                   >
                     <Check className={`w-3.5 h-3.5 stroke-[3] transition-all duration-200 ${keepData ? "scale-100 opacity-100" : "scale-50 opacity-0"}`} />
@@ -268,7 +266,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                         toast.error("Failed to generate invite.");
                       }
                     }}
-                    className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.2)] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                    className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.2)] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>Generate Link</span>
@@ -479,7 +477,7 @@ export default function LandlordUnitsPage() {
             {properties.length > 0 && (
               <Button
                 onClick={() => setShowAddForm((prev) => !prev)}
-                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
+                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
               >
                 {showAddForm ? (
                   <X className="w-4 h-4" />
@@ -675,7 +673,7 @@ export default function LandlordUnitsPage() {
                     <Button
                       disabled={isSubmitting}
                       type="submit"
-                      className="px-6 py-2 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer"
+                      className="px-6 py-2 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                     >
                       {isSubmitting ? "Creating Unit..." : "Save Unit"}
                     </Button>
@@ -736,7 +734,7 @@ export default function LandlordUnitsPage() {
                 {!searchQuery && (
                   <Button
                     onClick={() => setShowAddForm(true)}
-                    className="mt-2 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl px-4 py-2"
+                    className="mt-2 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl px-4 py-2 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                   >
                     Add Unit Now
                   </Button>
@@ -792,7 +790,7 @@ export default function LandlordUnitsPage() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
+                  className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
                   title="Previous Page"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -821,7 +819,7 @@ export default function LandlordUnitsPage() {
                     setCurrentPage((p) => Math.min(p + 1, totalPages))
                   }
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
+                  className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
                   title="Next Page"
                 >
                   <ChevronRight className="w-4 h-4" />

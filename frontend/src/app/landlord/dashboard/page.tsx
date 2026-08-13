@@ -124,7 +124,7 @@ export default function LandlordDashboard() {
               <button 
                 onClick={() => setConfirmReset(true)}
                 disabled={resetting}
-                className="px-4 py-2 bg-secondary hover:bg-muted text-foreground border border-border text-sm font-medium rounded-lg transition-all active:scale-[0.98] disabled:opacity-50 shrink-0 cursor-pointer"
+                className="px-4 py-2 bg-secondary text-foreground border border-border/60 text-sm font-medium rounded-lg disabled:opacity-50 shrink-0 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
               >
                 {resetting ? "Resetting..." : "Switch to Tenant"}
               </button>
@@ -144,7 +144,7 @@ export default function LandlordDashboard() {
               </div>
               <button 
                 onClick={() => router.push('/landlord/access-requests')}
-                className="px-4 py-2 bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black text-sm font-semibold rounded-lg transition-all active:scale-[0.98] whitespace-nowrap cursor-pointer"
+                className="px-4 py-2 bg-[rgb(var(--ml-accent))] text-black text-sm font-semibold rounded-lg whitespace-nowrap cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
               >
                 Review Requests
               </button>

@@ -198,7 +198,7 @@ export default function NewRequestPage() {
 
             {/* Dropzone (Only show if less than 3 images) */}
             {images.length < 3 && (
-              <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] p-6 sm:p-8 rounded-2xl text-center cursor-pointer transition-all group">
+              <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))]/30 hover:bg-[rgb(var(--ml-bg-primary))]/60 p-6 sm:p-8 rounded-2xl text-center cursor-pointer group transition-all duration-200 ease-out">
                 <input 
                   id="issue-photos"
                   type="file" 
@@ -229,7 +229,7 @@ export default function NewRequestPage() {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold py-3.5 px-6 text-xs sm:text-sm rounded-xl hover:opacity-90 transition-all shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
+            className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold py-3.5 px-6 text-xs sm:text-sm rounded-xl shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
           >
             {loading ? (
               <>

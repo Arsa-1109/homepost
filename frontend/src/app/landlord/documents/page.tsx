@@ -330,7 +330,7 @@ export default function LandlordDocumentsPage() {
             {properties.length > 0 && (
               <Button
                 onClick={() => setShowUploadForm((prev) => !prev)}
-                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90 transition-all font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
+                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
               >
                 {showUploadForm ? (
                   <FolderOpen className="w-4 h-4" />
@@ -535,7 +535,7 @@ export default function LandlordDocumentsPage() {
                     >
                       Select File
                     </label>
-                    <div className="relative border border-dashed border-border/80 rounded-2xl p-4 bg-[rgb(var(--ml-bg-primary))]/40 hover:bg-[rgb(var(--ml-bg-primary))]/80 transition-colors text-center">
+                    <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))]/30 hover:bg-[rgb(var(--ml-bg-primary))]/60 transition-all duration-200 ease-out rounded-2xl p-4 text-center">
                       <input
                         id="doc-file"
                         required
@@ -559,7 +559,7 @@ export default function LandlordDocumentsPage() {
                       disabled={!file}
                       isLoading={isSubmitting}
                       type="submit"
-                      className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-6 py-2.5 hover:opacity-90 transition-opacity cursor-pointer"
+                      className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-6 py-2.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                     >
                       Upload Document
                     </Button>
@@ -637,7 +637,7 @@ export default function LandlordDocumentsPage() {
                   return (
                     <div
                       key={doc.id}
-                      className="group relative flex flex-col justify-between p-4 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:shadow-[0_12px_36px_rgba(0,0,0,0.08)] transition-all duration-300 hover-lift overflow-hidden"
+                      className="group relative flex flex-col justify-between p-4 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
                     >
                       <div className="flex gap-4 items-start">
                         {/* Thumbnail Preview Container */}
@@ -692,7 +692,7 @@ export default function LandlordDocumentsPage() {
                             asChild
                             variant="outline"
                             size="sm"
-                            className="w-full h-9 rounded-xl border-border/80 hover:border-border hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-primary))] font-semibold text-xs gap-1.5 transition-all"
+                            className="w-full h-9 rounded-xl text-[rgb(var(--ml-text-primary))] font-semibold text-xs gap-1.5 transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
                           >
                             <a
                               href={doc.file_url}
@@ -713,7 +713,7 @@ export default function LandlordDocumentsPage() {
                           onClick={() =>
                             handleDownload(doc.file_key, doc.title)
                           }
-                          className="w-full h-9 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black font-bold text-xs gap-1.5 transition-all cursor-pointer shadow-sm"
+                          className="w-full h-9 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs gap-1.5 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                         >
                           <Download className="w-3.5 h-3.5" />
                           Download

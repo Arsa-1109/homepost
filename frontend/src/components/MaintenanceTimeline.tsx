@@ -246,7 +246,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                                       window.open(url, "_blank");
                                     }
                                   }}
-                                  className="group/img block p-0 overflow-hidden rounded-2xl border border-border/60 hover:border-[rgb(var(--ml-accent))] transition-all bg-[rgb(var(--ml-bg-primary))] cursor-pointer shadow-sm hover:shadow-md"
+                                  className="group/img block p-0 overflow-hidden rounded-2xl border border-border/60 bg-[rgb(var(--ml-bg-primary))] cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
                                 >
                                   <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden">
                                     <img 

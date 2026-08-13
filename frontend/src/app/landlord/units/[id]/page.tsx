@@ -356,7 +356,7 @@ export default function UnitDetailsPage() {
             >
               <Trash2 className="w-3.5 h-3.5" /> Delete Unit
             </button>
-            <Link href="/landlord/requests" className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all shadow-sm flex items-center gap-1.5 active:scale-[0.98]">
+            <Link href="/landlord/requests" className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]">
               View All Maintenance
             </Link>
           </div>
@@ -373,8 +373,7 @@ export default function UnitDetailsPage() {
           className="lg:col-span-1"
         >
           <div className="rounded-3xl p-6 sm:p-8 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 shadow-sm flex flex-col relative overflow-hidden group space-y-6">
-            {/* Background Accent Mesh Effect */}
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-[rgb(var(--ml-accent))]/5 rounded-full blur-2xl group-hover:bg-[rgb(var(--ml-accent))]/15 transition-all duration-500 pointer-events-none" />
+
 
             <div className="flex items-center gap-3 relative z-10">
               <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20">
@@ -524,7 +523,7 @@ export default function UnitDetailsPage() {
                         <button
                           onClick={() => setMaintenancePage((p) => Math.max(p - 1, 1))}
                           disabled={maintenancePage === 1}
-                          className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
+                          className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 transition-all duration-200 ease-out hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
                           title="Previous Page"
                         >
                           <ChevronLeft className="w-4 h-4" />
@@ -551,7 +550,7 @@ export default function UnitDetailsPage() {
                         <button
                           onClick={() => setMaintenancePage((p) => Math.min(p + 1, totalMaintenancePages))}
                           disabled={maintenancePage === totalMaintenancePages || totalMaintenancePages === 0}
-                          className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0"
+                          className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm active:scale-[0.98] outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 transition-all duration-200 ease-out hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
                           title="Next Page"
                         >
                           <ChevronRight className="w-4 h-4" />
@@ -595,7 +594,7 @@ export default function UnitDetailsPage() {
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: idx * 0.05 }}
-                      className="p-5 rounded-3xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 transition-all duration-300 hover:border-[rgb(var(--ml-accent))]/40 hover:shadow-sm group relative overflow-hidden"
+                      className="p-5 rounded-3xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 group relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
                     >
                       <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 group-hover:scale-105 transition-transform duration-300">
                         <FileText className="w-5 h-5" />
@@ -694,7 +693,7 @@ export default function UnitDetailsPage() {
                   <button
                     type="submit"
                     disabled={isUpdatingLease}
-                    className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-dark))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer"
+                    className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] disabled:opacity-50"
                   >
                     {isUpdatingLease ? "Saving..." : "Save Dates"}
                   </button>
@@ -773,7 +772,7 @@ export default function UnitDetailsPage() {
                 <button
                   type="submit"
                   disabled={isUpdatingUnit}
-                  className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent-dark))] rounded-xl transition-all flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.15)] active:scale-[0.98] cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.15)] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                 >
                   {isUpdatingUnit ? "Saving..." : "Save Changes"}
                 </button>

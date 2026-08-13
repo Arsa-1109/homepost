@@ -381,7 +381,7 @@ export default function LandlordAnnouncementsPage() {
               {/* Toggle Post Announcement Form Button */}
               <Button
                 onClick={() => setShowUploadForm(prev => !prev)}
-                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm"
+                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
               >
                 {showUploadForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                 <span>{showUploadForm ? "Hide Form" : "Post Announcement"}</span>
@@ -567,7 +567,7 @@ export default function LandlordAnnouncementsPage() {
                         )}
 
                         {attachments.length < 3 && (
-                          <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))]/30 hover:bg-[rgb(var(--ml-bg-primary))]/60 p-5 rounded-2xl text-center cursor-pointer transition-all group">
+                          <div className="relative border-2 border-dashed border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 bg-[rgb(var(--ml-bg-primary))]/30 hover:bg-[rgb(var(--ml-bg-primary))]/60 p-5 rounded-2xl text-center cursor-pointer transition-all duration-200 ease-out group">
                             <input 
                               type="file" 
                               multiple
@@ -604,7 +604,7 @@ export default function LandlordAnnouncementsPage() {
                       <Button 
                         isLoading={isSubmitting}
                         type="submit" 
-                        className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black font-bold text-xs px-6 py-2.5 transition-all cursor-pointer shadow-sm flex items-center gap-2"
+                        className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-6 py-2.5 cursor-pointer shadow-sm flex items-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                       >
                         <span>Post Announcement</span>
                       </Button>
@@ -665,7 +665,7 @@ export default function LandlordAnnouncementsPage() {
                       </div>
                       <Button
                         onClick={() => setShowUploadForm(true)}
-                        className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black font-bold text-xs px-5 py-2 transition-all cursor-pointer inline-flex items-center gap-2"
+                        className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-5 py-2 cursor-pointer inline-flex items-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Post announcement</span>
@@ -697,7 +697,7 @@ export default function LandlordAnnouncementsPage() {
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           transition={{ duration: 0.1 }}
-                          className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-colors duration-200 space-y-3 relative group"
+                          className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative group transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -730,7 +730,7 @@ export default function LandlordAnnouncementsPage() {
                                 <button
                                   onClick={() => handleStartEdit(ann)}
                                   title="Edit Announcement"
-                                  className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] transition-all cursor-pointer"
+                                  className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
@@ -804,7 +804,7 @@ export default function LandlordAnnouncementsPage() {
                 </div>
                 <button
                   onClick={() => setEditingAnnouncement(null)}
-                  className="p-1.5 rounded-full hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -869,7 +869,7 @@ export default function LandlordAnnouncementsPage() {
                   <Button 
                     isLoading={isEditSubmitting}
                     type="submit" 
-                    className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black font-bold text-xs px-6 py-2.5 transition-all cursor-pointer shadow-sm"
+                    className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-6 py-2.5 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                   >
                     Save Changes
                   </Button>

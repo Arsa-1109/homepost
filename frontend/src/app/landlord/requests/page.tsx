@@ -240,7 +240,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
   };
 
   return (
-    <div className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/20 hover:shadow-[0_12px_36px_rgba(0,0,0,0.08)] transition-all duration-300 hover-lift flex flex-col overflow-hidden group/card">
+    <div className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
       {/* Collapsed Card Header */}
       <div 
         className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none relative z-10"
@@ -278,7 +278,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
             </span>
             <span className="text-[rgb(var(--ml-text-secondary))]">{new Date(req.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
-          <button className="p-2 rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-colors group/btn border border-border/30">
+          <button className="p-2 rounded-xl group/btn border border-border/30 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]">
             <ChevronDown className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
           </button>
         </div>
@@ -407,7 +407,7 @@ export function RequestCard({ req, onUpdate }: { req: MaintenanceRequest, onUpda
                   <button
                     onClick={handleUpdate}
                     disabled={!hasChanges || isUpdating || req.status === "closed"}
-                    className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90 text-xs font-bold h-11 rounded-xl transition-all shadow-sm active:scale-[0.98] disabled:opacity-40 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto"
+                    className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold h-11 rounded-xl shadow-sm disabled:opacity-40 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                   >
                     {isUpdating && <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>}
                     {isUpdating ? "Updating..." : "Update Request"}
