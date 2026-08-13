@@ -25,6 +25,24 @@ export function DatePicker({
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<"bottom" | "top">("bottom");
+
+  useEffect(() => {
+    if (isOpen && containerRef.current && popoverRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const popoverRect = popoverRef.current.getBoundingClientRect();
+      
+      const spaceBelow = window.innerHeight - containerRect.bottom;
+      const spaceAbove = containerRect.top;
+      
+      if (spaceBelow < popoverRect.height && spaceAbove > spaceBelow) {
+        setPosition("top");
+      } else {
+        setPosition("bottom");
+      }
+    }
+  }, [isOpen]);
 
   // Parse initial selected date
   const selectedDate = value && isValid(parse(value, "yyyy-MM-dd", new Date()))
@@ -106,7 +124,13 @@ export function DatePicker({
 
       {/* Premium Dark Glass Popover */}
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] left-0 z-50 w-[300px] p-4 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-scaleIn select-none">
+        <div 
+          ref={popoverRef}
+          className={cn(
+            "absolute left-0 z-[100] w-[300px] p-4 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-scaleIn select-none",
+            position === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"
+          )}
+        >
           {/* Calendar Header: Month + Nav */}
           <div className="flex items-center justify-between mb-4 px-1">
             <span className="text-sm font-extrabold text-[rgb(var(--ml-text-primary))] tracking-wide">

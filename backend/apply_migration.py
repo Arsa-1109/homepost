@@ -25,6 +25,9 @@ async def migrate():
     async with engine.begin() as conn:
         try:
             await conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS unit_id UUID NULL;"))
+            await conn.execute(text("ALTER TABLE units DROP COLUMN IF EXISTS lease_tenure;"))
+            await conn.execute(text("ALTER TABLE units ADD COLUMN IF NOT EXISTS lease_start DATE NULL;"))
+            await conn.execute(text("ALTER TABLE units ADD COLUMN IF NOT EXISTS lease_end DATE NULL;"))
             await conn.execute(text("""
             DO $$
             BEGIN
@@ -34,7 +37,7 @@ async def migrate():
             END;
             $$;
             """))
-            print("Successfully added unit_id to documents table.")
+            print("Successfully applied DB migrations.")
         except Exception as e:
             print("Error migrating:", e)
     await engine.dispose()

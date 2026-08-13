@@ -22,6 +22,7 @@ from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
+from app.models.unit import Unit
 from sqlalchemy import func
 
 from app.core.limiter import limiter
@@ -208,10 +209,15 @@ async def accept_invite(
     user.requested_landlord_id = None
     session.add(user)
 
+    # Fetch unit to inherit lease dates if present
+    unit = await session.get(Unit, invite.unit_id)
+
     # Create tenant profile
     profile = TenantProfile(
         user_id=user.id,
         unit_id=invite.unit_id,
+        lease_start=unit.lease_start if unit else None,
+        lease_end=unit.lease_end if unit else None,
         is_active=True
     )
     session.add(profile)

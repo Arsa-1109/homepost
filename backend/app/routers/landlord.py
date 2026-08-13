@@ -174,15 +174,18 @@ async def list_units(
     occupied_unit_ids = set()
     pending_unit_ids = set()
 
+    tenant_profile_map = {}
     if unit_ids:
         # Occupied
         occ_res = await session.execute(
-            select(TenantProfile.unit_id).where(
+            select(TenantProfile).where(
                 TenantProfile.unit_id.in_(unit_ids),
                 TenantProfile.is_active == True,
             )
         )
-        occupied_unit_ids = {uid for uid in occ_res.scalars().all()}
+        profiles = occ_res.scalars().all()
+        occupied_unit_ids = {tp.unit_id for tp in profiles}
+        tenant_profile_map = {tp.unit_id: tp for tp in profiles}
 
         # Pending
         inv_res = await session.execute(
@@ -196,6 +199,11 @@ async def list_units(
     response_data = []
     for u in units:
         resp = UnitResponse.model_validate(u)
+        tp = tenant_profile_map.get(u.id)
+        if not resp.lease_start and tp and tp.lease_start:
+            resp.lease_start = tp.lease_start
+        if not resp.lease_end and tp and tp.lease_end:
+            resp.lease_end = tp.lease_end
         resp.is_occupied = u.id in occupied_unit_ids
         resp.has_pending = u.id in pending_unit_ids
         response_data.append(resp)
@@ -253,8 +261,8 @@ async def get_unit_details(
         "property_name": prop.name,
         "tenant_name": tenant_name,
         "tenant_email": tenant_email,
-        "lease_start": tenant_profile.lease_start.isoformat() if tenant_profile and tenant_profile.lease_start else None,
-        "lease_end": tenant_profile.lease_end.isoformat() if tenant_profile and tenant_profile.lease_end else None
+        "lease_start": (unit.lease_start.isoformat() if unit.lease_start else (tenant_profile.lease_start.isoformat() if tenant_profile and tenant_profile.lease_start else None)),
+        "lease_end": (unit.lease_end.isoformat() if unit.lease_end else (tenant_profile.lease_end.isoformat() if tenant_profile and tenant_profile.lease_end else None))
     }
 
 @router.put("/units/{unit_id}", response_model=Unit)
@@ -294,6 +302,10 @@ async def update_unit(
         unit.unit_label = unit_in.unit_label
     if unit_in.rent_due_day is not None:
         unit.rent_due_day = unit_in.rent_due_day
+    if unit_in.lease_start is not None:
+        unit.lease_start = unit_in.lease_start
+    if unit_in.lease_end is not None:
+        unit.lease_end = unit_in.lease_end
         
     session.add(unit)
     await session.commit()
@@ -888,7 +900,11 @@ async def update_lease(
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Unit access denied.")
 
-    # Get active tenant profile
+    unit.lease_start = payload.lease_start
+    unit.lease_end = payload.lease_end
+    session.add(unit)
+
+    # Get active tenant profile if any
     occ_res = await session.execute(
         select(TenantProfile).where(
             TenantProfile.unit_id == unit.id,
@@ -896,12 +912,11 @@ async def update_lease(
         )
     )
     tenant_profile = occ_res.scalars().first()
-    if not tenant_profile:
-        raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
+    if tenant_profile:
+        tenant_profile.lease_start = payload.lease_start
+        tenant_profile.lease_end = payload.lease_end
+        session.add(tenant_profile)
 
-    tenant_profile.lease_start = payload.lease_start
-    tenant_profile.lease_end = payload.lease_end
-    session.add(tenant_profile)
     await session.commit()
     return {"status": "success", "message": "Lease dates updated."}
 

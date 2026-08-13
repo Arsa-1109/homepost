@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { fetchAPI, api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Home, User as UserIcon, Calendar, Wrench, FileText, DownloadIcon, ChevronLeft, ChevronRight, Building, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Home, User as UserIcon, Calendar, Wrench, FileText, DownloadIcon, ChevronLeft, ChevronRight, Building, Pencil, Trash2, AlertTriangle, Clock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -255,6 +255,8 @@ export default function UnitDetailsPage() {
   const { unit, property_name, tenant_name, tenant_email, lease_start, lease_end } = unitData;
   const { unit_label, is_occupied, rent_due_day } = unit;
 
+  const isLeaseExpired = lease_end ? new Date(new Date(lease_end).setHours(23, 59, 59, 999)) < new Date() : false;
+
   const handleUpdateLease = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUpdatingLease(true);
@@ -283,8 +285,8 @@ export default function UnitDetailsPage() {
         method: "PUT",
         body: JSON.stringify({
           unit_label: editLabel,
-          rent_due_day: parseInt(editRentDay)
-        })
+          rent_due_day: parseInt(editRentDay),
+        }),
       });
       toast.success("Unit updated successfully!");
       setIsEditDialogOpen(false);
@@ -385,7 +387,7 @@ export default function UnitDetailsPage() {
               </div>
             </div>
 
-            <div className="relative z-10">
+            <div className="relative z-10 space-y-3">
               <div className="p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 flex items-center justify-between">
                 <div className="space-y-0.5">
                   <span className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5">
@@ -393,6 +395,35 @@ export default function UnitDetailsPage() {
                   </span>
                   <p className="text-sm font-extrabold text-[rgb(var(--ml-text-primary))]">Day {rent_due_day} of every month</p>
                 </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/80 border border-border/40 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5">
+                      <Clock className="w-3 h-3 text-[rgb(var(--ml-accent))]" /> Lease Period
+                    </span>
+                    <p className="text-sm font-extrabold text-[rgb(var(--ml-text-primary))]">
+                      {lease_start && lease_end
+                        ? `${new Date(lease_start).toLocaleDateString()} – ${new Date(lease_end).toLocaleDateString()}`
+                        : "Not Set"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsEditLeaseOpen(true)}
+                    className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/20 transition-all cursor-pointer shrink-0 active:scale-[0.98]"
+                  >
+                    {lease_start || lease_end ? "Edit" : "Set Lease"}
+                  </button>
+                </div>
+                {isLeaseExpired && (
+                  <div className="w-full flex items-start gap-2.5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 mt-1 shadow-inner">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <p className="text-xs font-bold leading-snug">
+                      This lease contract has expired. Please renew the lease or update the dates.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -418,22 +449,6 @@ export default function UnitDetailsPage() {
                   <div className="flex flex-col pt-3 border-t border-border/30">
                     <span className="text-[10px] uppercase tracking-wider font-extrabold text-[rgb(var(--ml-text-secondary))] mb-1">Email Address</span>
                     <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">{tenant_email || "N/A"}</span>
-                  </div>
-                  <div className="flex flex-col pt-3 border-t border-border/30">
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider font-extrabold text-[rgb(var(--ml-text-secondary))] mb-1 block">Lease Period</span>
-                        <span className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">
-                          {lease_start && lease_end ? `${new Date(lease_start).toLocaleDateString()} – ${new Date(lease_end).toLocaleDateString()}` : "Not Set"}
-                        </span>
-                      </div>
-                      <button 
-                        onClick={() => setIsEditLeaseOpen(true)}
-                        className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent))]/20 transition-all cursor-pointer shrink-0 active:scale-[0.98]"
-                      >
-                        {lease_start || lease_end ? "Edit" : "Set Lease"}
-                      </button>
-                    </div>
                   </div>
                 </div>
               ) : (
