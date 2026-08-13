@@ -35,7 +35,7 @@ export default function TenantDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "PDF" | "IMAGE" | "OTHER">("ALL");
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
   const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,6 +72,21 @@ export default function TenantDocumentsPage() {
       document.body.removeChild(link);
     } catch (err) {
       alert("Failed to get download link");
+    }
+  };
+
+  const handleOpenPreview = async (doc: Document) => {
+    if (doc.file_url) {
+      setPreviewDoc(doc);
+      return;
+    }
+    try {
+      const { download_url } = await fetchAPI<{ download_url: string }>(
+        `/api/v1/uploads/download-url?file_key=${encodeURIComponent(doc.file_key)}`,
+      );
+      setPreviewDoc({ ...doc, file_url: download_url });
+    } catch (err) {
+      alert("Failed to load document preview");
     }
   };
 
@@ -144,8 +159,16 @@ export default function TenantDocumentsPage() {
   return (
     <>
       <AnimatePresence>
-        {previewUrl && (
-          <LightboxModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
+        {previewDoc && previewDoc.file_url && (
+          <LightboxModal
+            url={previewDoc.file_url}
+            title={previewDoc.title}
+            fileType={previewDoc.file_type}
+            onClose={() => setPreviewDoc(null)}
+            onDownload={() =>
+              handleDownload(previewDoc.file_key, previewDoc.title)
+            }
+          />
         )}
       </AnimatePresence>
 
@@ -260,14 +283,9 @@ export default function TenantDocumentsPage() {
                   <div className="flex gap-4 items-start">
                     {/* Thumbnail Preview Container */}
                     <div 
-                      onClick={() => {
-                        if (isImage && doc.file_url) {
-                          setPreviewUrl(doc.file_url);
-                        } else if (doc.file_url) {
-                          window.open(doc.file_url, "_blank");
-                        }
-                      }}
-                      className="relative w-24 h-24 rounded-xl border border-border/60 overflow-hidden shrink-0 shadow-inner bg-[rgb(var(--ml-bg-primary))] cursor-pointer"
+                      onClick={() => handleOpenPreview(doc)}
+                      className="relative w-24 h-24 rounded-xl border border-border/60 overflow-hidden shrink-0 shadow-inner bg-[rgb(var(--ml-bg-primary))] cursor-pointer group-hover:border-[rgb(var(--ml-text-primary))]/40 transition-colors"
+                      title={`Click to preview ${doc.title}`}
                     >
                       {renderPreview(doc)}
                     </div>
@@ -290,25 +308,17 @@ export default function TenantDocumentsPage() {
                     </div>
                   </div>
 
-                  {/* Interactive Actions Footer */}
+                    {/* Interactive Actions Footer */}
                   <div className="flex items-center gap-2 pt-4 mt-4 border-t border-border/40">
-                    {doc.file_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (isImage) {
-                            setPreviewUrl(doc.file_url);
-                          } else {
-                            window.open(doc.file_url, "_blank");
-                          }
-                        }}
-                        className="flex-1 h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
-                      >
-                        <Eye className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />
-                        View
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenPreview(doc)}
+                      className="flex-1 h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />
+                      View
+                    </Button>
                     <Button 
                       variant="default"
                       size="sm"

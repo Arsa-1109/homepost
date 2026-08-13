@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LightboxModal, isImageUrl } from "@/components/LightboxModal";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -72,6 +73,7 @@ function LandlordDocumentsContent() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string>("ALL");
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
   const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
@@ -206,6 +208,21 @@ function LandlordDocumentsContent() {
     }
   };
 
+  const handleOpenPreview = async (doc: Document) => {
+    if (doc.file_url) {
+      setPreviewDoc(doc);
+      return;
+    }
+    try {
+      const { download_url } = await fetchAPI<{ download_url: string }>(
+        `/api/v1/uploads/download-url?file_key=${encodeURIComponent(doc.file_key)}`,
+      );
+      setPreviewDoc({ ...doc, file_url: download_url });
+    } catch (err) {
+      toast.error("Failed to load document preview");
+    }
+  };
+
   const filteredDocuments = useMemo(() => {
     return documents.filter((doc) => {
       // ID Filter
@@ -311,7 +328,22 @@ function LandlordDocumentsContent() {
     properties.find((p) => p.id === selectedProperty)?.name || "Property";
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-16">
+    <>
+      <AnimatePresence>
+        {previewDoc && previewDoc.file_url && (
+          <LightboxModal
+            url={previewDoc.file_url}
+            title={previewDoc.title}
+            fileType={previewDoc.file_type}
+            onClose={() => setPreviewDoc(null)}
+            onDownload={() =>
+              handleDownload(previewDoc.file_key, previewDoc.title)
+            }
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="space-y-8 max-w-5xl mx-auto pb-16">
       {/* Header Section */}
       <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
@@ -691,7 +723,11 @@ function LandlordDocumentsContent() {
                     >
                       <div className="flex gap-4 items-start">
                         {/* Thumbnail Preview Container */}
-                        <div className="relative w-24 h-24 rounded-xl border border-border/60 overflow-hidden shrink-0 shadow-inner bg-[rgb(var(--ml-bg-primary))]">
+                        <div
+                          onClick={() => handleOpenPreview(doc)}
+                          className="relative w-24 h-24 rounded-xl border border-border/60 overflow-hidden shrink-0 shadow-inner bg-[rgb(var(--ml-bg-primary))] cursor-pointer group-hover:border-[rgb(var(--ml-text-primary))]/40 transition-colors"
+                          title={`Click to preview ${doc.title}`}
+                        >
                           {renderPreview(doc)}
                         </div>
 
@@ -737,25 +773,15 @@ function LandlordDocumentsContent() {
 
                       {/* Action Buttons */}
                       <div className="grid grid-cols-2 gap-2 pt-4 mt-4 border-t border-border/40">
-                        {doc.file_url ? (
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="w-full h-9 rounded-xl text-[rgb(var(--ml-text-primary))] font-semibold text-xs gap-1.5 transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
-                          >
-                            <a
-                              href={doc.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Eye className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))]" />
-                              View
-                            </a>
-                          </Button>
-                        ) : (
-                          <div />
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenPreview(doc)}
+                          className="w-full h-9 rounded-xl text-[rgb(var(--ml-text-primary))] font-semibold text-xs gap-1.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-[rgb(var(--ml-text-secondary))]" />
+                          View
+                        </Button>
 
                         <Button
                           variant="secondary"
@@ -840,5 +866,6 @@ function LandlordDocumentsContent() {
         </>
       )}
     </div>
+    </>
   );
 }
