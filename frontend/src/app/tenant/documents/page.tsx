@@ -14,7 +14,9 @@ import {
   ShieldCheck, 
   Sparkles,
   FileCode,
-  FolderOpen
+  FolderOpen,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LightboxModal, isImageUrl } from "@/components/LightboxModal";
@@ -34,6 +36,14 @@ export default function TenantDocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "PDF" | "IMAGE" | "OTHER">("ALL");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const ITEMS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFilter, searchQuery]);
 
   useEffect(() => {
     async function loadData() {
@@ -76,8 +86,15 @@ export default function TenantDocumentsPage() {
       if (selectedFilter === "IMAGE") return matchesSearch && isImage;
       if (selectedFilter === "OTHER") return matchesSearch && !isPdf && !isImage;
       return matchesSearch;
-    });
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [documents, searchQuery, selectedFilter]);
+
+  const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE) || 1;
+
+  const paginatedDocuments = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredDocuments.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredDocuments, currentPage]);
 
   const renderPreview = (doc: Document) => {
     const isImage = doc.file_type.startsWith("image/") || isImageUrl(doc.file_url || doc.file_key);
@@ -232,7 +249,7 @@ export default function TenantDocumentsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredDocuments.map((doc) => {
+            {paginatedDocuments.map((doc) => {
               const badge = getFileBadge(doc.file_type, doc.file_key);
               const isImage = doc.file_type.startsWith("image/") || isImageUrl(doc.file_url || doc.file_key);
               return (
@@ -307,6 +324,68 @@ export default function TenantDocumentsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination Controls Bar */}
+        {!loading && filteredDocuments.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
+            <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+              Showing{" "}
+              <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+              </span>
+              –
+              <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                {Math.min(
+                  currentPage * ITEMS_PER_PAGE,
+                  filteredDocuments.length,
+                )}
+              </span>{" "}
+              of{" "}
+              <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                {filteredDocuments.length}
+              </span>{" "}
+              documents
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
+                        currentPage === pageNum
+                          ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                          : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ),
+                )}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+                title="Next Page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
       </div>

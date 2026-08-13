@@ -720,7 +720,7 @@ function TenantRequestsContent() {
       }
 
       return true;
-    });
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [requests, selectedFilter, searchQuery]);
 
   const totalPages = Math.ceil(filteredRequests.length / pageSize) || 1;
