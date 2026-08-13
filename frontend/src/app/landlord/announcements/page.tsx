@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
 
 type Property = { id: string; name: string };
@@ -898,162 +899,126 @@ function LandlordAnnouncementsContent() {
       </div>
 
       {/* Edit Modal Dialog */}
-      <AnimatePresence>
-        {editingAnnouncement && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl"
+      <Dialog open={!!editingAnnouncement} onOpenChange={(val) => !val && setEditingAnnouncement(null)}>
+        <DialogContent className="sm:max-w-lg p-6 sm:p-8 space-y-5">
+          <DialogHeader className="border-b border-border/40 pb-4">
+            <DialogTitle className="text-lg font-bold text-[rgb(var(--ml-text-primary))] flex items-center gap-2">
+              <Pencil className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
+              Edit Announcement
+            </DialogTitle>
+            <DialogDescription className="text-xs text-[rgb(var(--ml-text-secondary))]">
+              Updating notice for <span className="font-semibold text-[rgb(var(--ml-text-primary))]">{properties.find(p => p.id === editingAnnouncement?.property_id)?.name || "Property"}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                Target Scope / Unit (Optional)
+              </label>
+              <Select value={editUnitId || "all"} onValueChange={(val) => setEditUnitId(val === "all" ? "" : val as string)}>
+                <SelectTrigger className="bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11">
+                  <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-xs text-[rgb(var(--ml-text-primary))]">
+                    {editUnitId === "all" || !editUnitId 
+                      ? "All Units (Property-wide)" 
+                      : `Unit ${units.find(u => u.id === editUnitId)?.unit_label || "Selected"}`}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
+                  <SelectItem value="all" className="font-semibold text-xs">All Units (Property-wide)</SelectItem>
+                  {units.map(u => (
+                    <SelectItem key={u.id} value={u.id} className="font-semibold text-xs">Unit {u.unit_label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                Announcement Title
+              </label>
+              <input 
+                required 
+                value={editTitle} 
+                onChange={e => setEditTitle(e.target.value)} 
+                className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+                Notice Details
+              </label>
+              <textarea 
+                required 
+                value={editBody} 
+                onChange={e => setEditBody(e.target.value)} 
+                rows={4}
+                className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all resize-y"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <Button 
+                type="button"
+                variant="outline"
+                onClick={() => setEditingAnnouncement(null)}
+                className="rounded-xl text-xs font-bold"
+              >
+                Cancel
+              </Button>
+              <Button 
+                isLoading={isEditSubmitting}
+                type="submit" 
+                className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-6 py-2.5 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+              >
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal Dialog */}
+      <Dialog open={!!deletingAnnouncement} onOpenChange={(val) => !val && setDeletingAnnouncement(null)}>
+        <DialogContent className="sm:max-w-md p-6 sm:p-8 space-y-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <DialogTitle className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
+                Delete Announcement
+              </DialogTitle>
+              <DialogDescription className="text-xs text-[rgb(var(--ml-text-secondary))]">
+                This action cannot be undone.
+              </DialogDescription>
+            </div>
+          </div>
+
+          <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed bg-[rgb(var(--ml-bg-primary))]/60 p-3.5 rounded-xl border border-border/40">
+            Are you sure you want to delete <span className="font-semibold text-[rgb(var(--ml-text-primary))]">"{deletingAnnouncement?.title}"</span>? Tenants will no longer be able to view this notice.
+          </p>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeletingAnnouncement(null)}
+              className="rounded-xl text-xs font-bold"
             >
-              <div className="flex items-center justify-between border-b border-border/40 pb-4">
-                <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-[rgb(var(--ml-text-primary))] flex items-center gap-2">
-                    <Pencil className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
-                    Edit Announcement
-                  </h2>
-                  <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                    Updating notice for <span className="font-semibold text-[rgb(var(--ml-text-primary))]">{properties.find(p => p.id === editingAnnouncement.property_id)?.name || "Property"}</span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => setEditingAnnouncement(null)}
-                  className="p-1.5 rounded-full text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdate} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
-                    Target Scope / Unit (Optional)
-                  </label>
-                  <Select value={editUnitId || "all"} onValueChange={(val) => setEditUnitId(val === "all" ? "" : val as string)}>
-                    <SelectTrigger className="bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11">
-                      <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-xs text-[rgb(var(--ml-text-primary))]">
-                        {editUnitId === "all" || !editUnitId 
-                          ? "All Units (Property-wide)" 
-                          : `Unit ${units.find(u => u.id === editUnitId)?.unit_label || "Selected"}`}
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
-                      <SelectItem value="all" className="font-semibold text-xs">All Units (Property-wide)</SelectItem>
-                      {units.map(u => (
-                        <SelectItem key={u.id} value={u.id} className="font-semibold text-xs">Unit {u.unit_label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
-                    Announcement Title
-                  </label>
-                  <input 
-                    required 
-                    value={editTitle} 
-                    onChange={e => setEditTitle(e.target.value)} 
-                    className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
-                    Notice Details
-                  </label>
-                  <textarea 
-                    required 
-                    value={editBody} 
-                    onChange={e => setEditBody(e.target.value)} 
-                    rows={4}
-                    className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all resize-y"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    onClick={() => setEditingAnnouncement(null)}
-                    className="rounded-xl text-xs font-bold"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    isLoading={isEditSubmitting}
-                    type="submit" 
-                    className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-6 py-2.5 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
-                  >
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Custom Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deletingAnnouncement && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl"
+              Cancel
+            </Button>
+            <Button
+              isLoading={isDeleteSubmitting}
+              onClick={confirmDelete}
+              className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 transition-all cursor-pointer shadow-sm"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 border border-red-500/20 flex items-center justify-center shrink-0">
-                  <Trash2 className="w-5 h-5" />
-                </div>
-                <div className="space-y-0.5">
-                  <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
-                    Delete Announcement
-                  </h3>
-                  <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                    This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed bg-[rgb(var(--ml-bg-primary))]/60 p-3.5 rounded-xl border border-border/40">
-                Are you sure you want to delete <span className="font-semibold text-[rgb(var(--ml-text-primary))]">"{deletingAnnouncement.title}"</span>? Tenants will no longer be able to view this notice.
-              </p>
-
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDeletingAnnouncement(null)}
-                  className="rounded-xl text-xs font-bold"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  isLoading={isDeleteSubmitting}
-                  onClick={confirmDelete}
-                  className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 py-2.5 transition-all cursor-pointer shadow-sm"
-                >
-                  Delete Notice
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Delete Notice
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

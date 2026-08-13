@@ -642,82 +642,65 @@ export default function UnitDetailsPage() {
         </motion.div>
       </div>
 
-      {/* Custom Edit Lease Modal */}
-      <AnimatePresence>
-        {isEditLeaseOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsEditLeaseOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            {/* Modal Content */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl w-full max-w-md p-6 shadow-2xl relative z-10 space-y-4"
-            >
-              <div className="flex items-center gap-3 border-b border-border/20 pb-4">
-                <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-[rgb(var(--ml-text-primary))] tracking-tight">Set Lease Dates</h3>
-                  <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-                    Contract range for Unit {unit_label}
-                  </p>
-                </div>
-              </div>
-
-              <form onSubmit={handleUpdateLease} className="space-y-4 pt-1">
-                <div>
-                  <label className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-1.5">
-                    Lease Start Date
-                  </label>
-                  <DatePicker
-                    value={editLeaseStart}
-                    onChange={setEditLeaseStart}
-                    placeholder="Select start date"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-1.5">
-                    Lease End Date
-                  </label>
-                  <DatePicker
-                    value={editLeaseEnd}
-                    onChange={setEditLeaseEnd}
-                    placeholder="Select end date"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3 pt-3 border-t border-border/30">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditLeaseOpen(false)}
-                    className="flex-1 h-11 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] text-xs font-bold transition-colors cursor-pointer text-[rgb(var(--ml-text-primary))]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdatingLease}
-                    className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] disabled:opacity-50"
-                  >
-                    {isUpdatingLease ? "Saving..." : "Save Dates"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+      {/* Edit Lease Modal Dialog */}
+      <Dialog open={isEditLeaseOpen} onOpenChange={setIsEditLeaseOpen}>
+        <DialogContent className="sm:max-w-md p-6 space-y-4">
+          <div className="flex items-center gap-3 border-b border-border/20 pb-4">
+            <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
+                Set Lease Dates
+              </DialogTitle>
+              <DialogDescription className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+                Contract range for Unit {unit_label}
+              </DialogDescription>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+
+          <form onSubmit={handleUpdateLease} className="space-y-4 pt-1">
+            <div>
+              <label className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-1.5">
+                Lease Start Date
+              </label>
+              <DatePicker
+                value={editLeaseStart}
+                onChange={setEditLeaseStart}
+                placeholder="Select start date"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-1.5">
+                Lease End Date
+              </label>
+              <DatePicker
+                value={editLeaseEnd}
+                onChange={setEditLeaseEnd}
+                placeholder="Select end date"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 pt-3 border-t border-border/30">
+              <button
+                type="button"
+                onClick={() => setIsEditLeaseOpen(false)}
+                className="flex-1 h-11 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] text-xs font-bold transition-colors cursor-pointer text-[rgb(var(--ml-text-primary))]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isUpdatingLease}
+                className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] disabled:opacity-50"
+              >
+                {isUpdatingLease ? "Saving..." : "Save Dates"}
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Unit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

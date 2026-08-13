@@ -403,7 +403,6 @@ function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) 
   return (
     <Dialog open={open} onOpenChange={(val) => !val && !submitting && onClose()}>
       <DialogContent 
-        overlayClassName="bg-black/40 dark:bg-black/75 backdrop-blur-md"
         className="sm:max-w-md bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-primary))]/85 backdrop-blur-xl border border-black/10 dark:border-white/15 ring-0 p-6 rounded-2xl shadow-2xl"
       >
         <DialogHeader>
