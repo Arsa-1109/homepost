@@ -15,7 +15,9 @@ import {
   Search,
   Building,
   InfoIcon,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -459,6 +461,14 @@ function LandlordMaintenanceContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "open" | "in_progress" | "resolved" | "closed">("ALL");
 
+  const ITEMS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProperty, selectedUnit, selectedFilter, searchQuery]);
+
   async function loadData() {
     try {
       const [propsData, reqsData] = await Promise.all([
@@ -547,6 +557,13 @@ function LandlordMaintenanceContent() {
       return true;
     });
   }, [requests, properties, selectedProperty, selectedUnit, selectedFilter, searchQuery, idParam]);
+
+  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1;
+
+  const paginatedRequests = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredRequests.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredRequests, currentPage]);
 
   const selectedPropertyName = selectedProperty === "all" || !selectedProperty
     ? "All Properties"
@@ -681,16 +698,6 @@ function LandlordMaintenanceContent() {
         )}
       </div>
 
-      {!loading && requests.length >= 50 && (
-        <Alert className="bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-text-primary))] border-[rgb(var(--ml-accent))]/20 mb-6">
-          <InfoIcon className="h-4 w-4 text-[rgb(var(--ml-accent))]" color="currentColor" />
-          <AlertTitle>Notice</AlertTitle>
-          <AlertDescription>
-            Showing the first 50 requests. Pagination coming soon.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {!loading && properties.length === 0 ? (
         <div className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3">
           <Building className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
@@ -775,7 +782,7 @@ function LandlordMaintenanceContent() {
               </motion.div>
             ) : (
               <motion.div 
-                key="content"
+                key={`page-${currentPage}`}
                 initial="hidden"
                 animate="show"
                 exit={{ opacity: 0 }}
@@ -788,7 +795,7 @@ function LandlordMaintenanceContent() {
                 }}
                 className="space-y-4"
               >
-                {filteredRequests.map(req => (
+                {paginatedRequests.map(req => (
                   <motion.div 
                     key={req.id}
                     variants={{
@@ -802,6 +809,68 @@ function LandlordMaintenanceContent() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Pagination Controls Bar */}
+          {!loading && filteredRequests.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
+              <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+                Showing{" "}
+                <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                  {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+                </span>
+                –
+                <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                  {Math.min(
+                    currentPage * ITEMS_PER_PAGE,
+                    filteredRequests.length,
+                  )}
+                </span>{" "}
+                of{" "}
+                <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                  {filteredRequests.length}
+                </span>{" "}
+                requests
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
+                          currentPage === pageNum
+                            ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                            : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ),
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

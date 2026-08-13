@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI, api } from "@/lib/api";
-import { Building, Check, X, ShieldAlert, ChevronLeft, Users, InfoIcon, ChevronDown } from "lucide-react";
+import { Building, Check, X, ShieldAlert, ChevronLeft, ChevronRight, Users, InfoIcon, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -219,6 +219,9 @@ export default function AccessRequestsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const ITEMS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
   async function loadData() {
     try {
       const [pendingRes, propsRes] = await Promise.all([
@@ -242,6 +245,19 @@ export default function AccessRequestsPage() {
   const handleRemove = (tenantId: string) => {
     setRequests(prev => prev.filter(t => t.id !== tenantId));
   };
+
+  const totalPages = Math.ceil(requests.length / ITEMS_PER_PAGE) || 1;
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedRequests = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return requests.slice(start, start + ITEMS_PER_PAGE);
+  }, [requests, currentPage]);
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto relative">
@@ -299,7 +315,7 @@ export default function AccessRequestsPage() {
           </motion.div>
         ) : (
           <motion.div 
-            key="content"
+            key={`page-${currentPage}`}
             initial="hidden"
             animate="show"
             exit={{ opacity: 0 }}
@@ -312,7 +328,7 @@ export default function AccessRequestsPage() {
             }}
             className="space-y-6"
           >
-            {requests.map(tenant => (
+            {paginatedRequests.map(tenant => (
               <motion.div 
                 key={tenant.id}
                 variants={{
@@ -331,6 +347,68 @@ export default function AccessRequestsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Pagination Controls Bar */}
+      {!loading && requests.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
+          <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+            Showing{" "}
+            <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+              {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+            </span>
+            –
+            <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+              {Math.min(
+                currentPage * ITEMS_PER_PAGE,
+                requests.length,
+              )}
+            </span>{" "}
+            of{" "}
+            <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+              {requests.length}
+            </span>{" "}
+            requests
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+              title="Previous Page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
+                      currentPage === pageNum
+                        ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                        : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ),
+              )}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+              title="Next Page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

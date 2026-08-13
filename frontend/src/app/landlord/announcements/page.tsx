@@ -20,7 +20,9 @@ import {
   FileText,
   Eye,
   DownloadIcon,
-  Paperclip
+  Paperclip,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -173,6 +175,14 @@ function LandlordAnnouncementsContent() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "RECENT" | "PROPERTY" | "UNIT">("ALL");
+
+  const ITEMS_PER_PAGE = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProperty, selectedFilter, searchQuery]);
 
   async function loadData() {
     try {
@@ -347,6 +357,13 @@ function LandlordAnnouncementsContent() {
       return true;
     });
   }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam, selectedProperty]);
+
+  const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
+
+  const paginatedAnnouncements = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAnnouncements.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAnnouncements, currentPage]);
 
   const selectedPropertyName = properties.find(p => p.id === selectedProperty)?.name || "Property";
 
@@ -726,7 +743,7 @@ function LandlordAnnouncementsContent() {
                       <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Try a different search or filter.</p>
                     </motion.div>
                   ) : (
-                    filteredAnnouncements.map((ann) => {
+                    paginatedAnnouncements.map((ann) => {
                       const propertyName = properties.find(p => p.id === ann.property_id)?.name || "Property";
                       const isUnitSpecific = !!ann.unit_id;
                       const unitLabel = getUnitLabel(ann.unit_id);
@@ -812,6 +829,68 @@ function LandlordAnnouncementsContent() {
                     })
                   )}
                 </AnimatePresence>
+
+                {/* Pagination Controls Bar */}
+                {!loading && filteredAnnouncements.length > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
+                    <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
+                      Showing{" "}
+                      <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                        {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+                      </span>
+                      –
+                      <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                        {Math.min(
+                          currentPage * ITEMS_PER_PAGE,
+                          filteredAnnouncements.length,
+                        )}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                        {filteredAnnouncements.length}
+                      </span>{" "}
+                      announcements
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+                        title="Previous Page"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                          (pageNum) => (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
+                                currentPage === pageNum
+                                  ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                                  : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          ),
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+                        title="Next Page"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </>
