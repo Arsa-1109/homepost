@@ -355,7 +355,7 @@ function LandlordAnnouncementsContent() {
         return !!ann.unit_id;
       }
       return true;
-    });
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam, selectedProperty]);
 
   const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;

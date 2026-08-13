@@ -225,7 +225,7 @@ function LandlordDocumentsContent() {
       }
 
       return matchesSearch && matchesFilter;
-    });
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [documents, searchQuery, selectedFilter, idParam]);
 
   const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE) || 1;

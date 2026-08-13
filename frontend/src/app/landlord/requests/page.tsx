@@ -555,7 +555,7 @@ function LandlordMaintenanceContent() {
       }
 
       return true;
-    });
+    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [requests, properties, selectedProperty, selectedUnit, selectedFilter, searchQuery, idParam]);
 
   const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1;
