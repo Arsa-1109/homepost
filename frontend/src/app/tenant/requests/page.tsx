@@ -24,7 +24,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
-import { LightboxModal, getFriendlyFileName } from "@/components/LightboxModal";
+import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ function AttachmentThumbnail({
   onViewImage: (url: string) => void; 
 }) {
   const pathOnly = url.split("?")[0];
-  const isImage = pathOnly.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+  const isImage = isImageUrl(url);
   const friendlyName = getFriendlyFileName(url);
   const rawFileName = pathOnly.split("/").pop() || "Attachment";
 

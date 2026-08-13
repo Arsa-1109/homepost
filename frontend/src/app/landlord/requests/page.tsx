@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 
 import { uploadFile } from "@/lib/upload";
 import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
-import { LightboxModal, getFriendlyFileName } from "@/components/LightboxModal";
+import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
 
 export type Property = { id: string; name: string };
 export type Unit = { id: string; unit_label: string };
@@ -88,7 +88,7 @@ function AttachmentThumbnail({
   onViewImage: (url: string) => void; 
 }) {
   const pathOnly = url.split('?')[0];
-  const isImage = pathOnly.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+  const isImage = isImageUrl(url);
   const friendlyName = getFriendlyFileName(url);
   const rawFileName = pathOnly.split('/').pop() || "Attachment";
 

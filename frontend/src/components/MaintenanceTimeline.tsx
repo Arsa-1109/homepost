@@ -18,6 +18,7 @@ import {
   Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isImageUrl } from "@/components/LightboxModal";
 
 export type MaintenanceEvent = {
   id: string;
@@ -239,7 +240,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    if (onViewImage) {
+                                    if (isImageUrl(url) && onViewImage) {
                                       onViewImage(url);
                                     } else {
                                       window.open(url, "_blank");

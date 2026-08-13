@@ -6,6 +6,24 @@ import { motion } from "motion/react";
 import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export function isImageUrl(url: string): boolean {
+  if (!url) return false;
+  if (url.startsWith("data:image/")) return true;
+  const pathPart = url.split('?')[0].toLowerCase();
+  
+  // Explicit non-image extension check to prevent false positives
+  if (pathPart.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|tar|gz|txt|csv|json|xml)$/i)) {
+    return false;
+  }
+  
+  // Image extension check
+  if (pathPart.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp|tiff|avif)$/i)) {
+    return true;
+  }
+  
+  return pathPart.includes("/image/") || pathPart.includes("/images/") || pathPart.includes("image=");
+}
+
 export function getFriendlyFileName(url: string) {
   try {
     const pathPart = url.split('?')[0];
@@ -30,7 +48,7 @@ export function getFriendlyFileName(url: string) {
       nameWithoutUuid = nameWithoutUuid.replace(/^[-_.]+|[-_.]+$/g, '');
       
       if (!nameWithoutUuid.trim()) {
-        const isImg = ext.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+        const isImg = isImageUrl(url);
         return isImg ? `Photo${ext}` : `Document${ext}`;
       }
       

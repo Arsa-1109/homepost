@@ -13,7 +13,7 @@ import {
   Eye,
   DownloadIcon
 } from "lucide-react";
-import { LightboxModal, getFriendlyFileName } from "@/components/LightboxModal";
+import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
 
 type Announcement = {
   id: string;
@@ -34,7 +34,7 @@ function AttachmentThumbnail({
   onViewImage: (url: string) => void; 
 }) {
   const pathOnly = url.split("?")[0];
-  const isImage = pathOnly.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i) || url.includes("image");
+  const isImage = isImageUrl(url);
   const friendlyName = getFriendlyFileName(url);
   const rawFileName = pathOnly.split("/").pop() || "Attachment";
 
