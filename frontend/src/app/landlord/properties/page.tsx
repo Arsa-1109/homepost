@@ -359,6 +359,7 @@ function PropertyCard({
 export default function LandlordPropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalUnitsCount, setTotalUnitsCount] = useState<number | null>(null);
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -376,6 +377,16 @@ export default function LandlordPropertiesPage() {
     try {
       const data = await fetchAPI<Property[]>("/api/v1/landlord/properties");
       setProperties(data);
+      if (data.length > 0) {
+        const unitPromises = data.map((p) =>
+          fetchAPI<any[]>(`/api/v1/landlord/properties/${p.id}/units`).catch(() => [])
+        );
+        const unitsResults = await Promise.all(unitPromises);
+        const total = unitsResults.reduce((acc, units) => acc + units.length, 0);
+        setTotalUnitsCount(total);
+      } else {
+        setTotalUnitsCount(0);
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to load properties.");
@@ -576,13 +587,17 @@ export default function LandlordPropertiesPage() {
           <div className="p-4 rounded-2xl border border-border/40 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between col-span-2 sm:col-span-1">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
-                Active Catalog
+                Total Units
               </p>
-              <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                Operational
+              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
+                {totalUnitsCount === null ? (
+                  <span className="skeleton h-5 w-8 rounded-md inline-block" />
+                ) : (
+                  totalUnitsCount
+                )}
               </p>
             </div>
-            <Sparkles className="w-5 h-5 text-emerald-500" />
+            <Home className="w-5 h-5 text-[rgb(var(--ml-accent))]" />
           </div>
         </div>
       )}
