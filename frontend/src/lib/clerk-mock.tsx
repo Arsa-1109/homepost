@@ -296,7 +296,7 @@ export function SignUpButton({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SignIn({ fallbackRedirectUrl }: { fallbackRedirectUrl?: string } = {}) {
+export function SignIn({ fallbackRedirectUrl, appearance }: { fallbackRedirectUrl?: string; appearance?: any } = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -352,7 +352,7 @@ export function SignIn({ fallbackRedirectUrl }: { fallbackRedirectUrl?: string }
   );
 }
 
-export function SignUp({ fallbackRedirectUrl }: { fallbackRedirectUrl?: string } = {}) {
+export function SignUp({ fallbackRedirectUrl, appearance }: { fallbackRedirectUrl?: string; appearance?: any } = {}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
