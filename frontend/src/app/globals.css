@@ -447,4 +447,68 @@ textarea:focus,
   background-color: transparent !important;
   background-image: none !important;
 }
+
+/* UserProfile Container & Navbar Overrides for Light/Dark harmony */
+.cl-userProfile-root {
+  background: transparent !important;
+  width: 100% !important;
+}
+
+.cl-userProfile-root .cl-cardBox,
+.cl-userProfile-root .cl-card,
+.cl-userProfile-root .cl-navbar,
+.cl-userProfile-root .cl-scrollBox,
+.cl-userProfile-root .cl-pageScrollable {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.cl-userProfile-root .cl-navbar {
+  border-color: rgba(var(--ml-border), 0.6) !important;
+}
+
+.cl-userProfile-root .cl-navbarButton {
+  color: rgb(var(--ml-text-secondary)) !important;
+}
+
+.cl-userProfile-root .cl-navbarButton:hover {
+  color: rgb(var(--ml-text-primary)) !important;
+  background-color: rgba(var(--ml-bg-primary), 0.8) !important;
+}
+
+.cl-userProfile-root .cl-navbarButton[data-active="true"],
+.cl-userProfile-root .cl-navbarButton.cl-active {
+  color: rgb(var(--ml-accent)) !important;
+  background-color: rgba(var(--ml-accent), 0.1) !important;
+}
+
+.cl-userProfile-root .cl-profileSection {
+  border-color: rgba(var(--ml-border), 0.5) !important;
+}
+
+.cl-userProfile-root .cl-profileSectionTitleText,
+.cl-userProfile-root .cl-headerTitle,
+.cl-userProfile-root .cl-userPreviewMainIdentifier {
+  color: rgb(var(--ml-text-primary)) !important;
+}
+
+.cl-userProfile-root .cl-profileSectionSubtitleText,
+.cl-userProfile-root .cl-headerSubtitle,
+.cl-userProfile-root .cl-userPreviewSecondaryIdentifier {
+  color: rgb(var(--ml-text-secondary)) !important;
+}
+
+.cl-userProfile-root .cl-menuList {
+  background-color: rgb(var(--ml-bg-secondary)) !important;
+  border-color: rgb(var(--ml-border)) !important;
+}
+
+.cl-userProfile-root .cl-menuItem {
+  color: rgb(var(--ml-text-primary)) !important;
+}
+
+.cl-userProfile-root .cl-menuItem:hover {
+  background-color: rgb(var(--ml-bg-primary)) !important;
+}
+
 

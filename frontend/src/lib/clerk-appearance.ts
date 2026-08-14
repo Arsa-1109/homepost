@@ -43,3 +43,58 @@ export const clerkAuthAppearance = {
     formFieldErrorText: "text-xs text-red-500 dark:text-red-400 font-medium font-sans",
   },
 };
+
+/**
+ * Shared Clerk appearance tokens and styling for Homepost UserProfile settings component.
+ * Ensures seamless background, font, and border harmony in both light and dark modes.
+ */
+export const clerkUserProfileAppearance = {
+  variables: {
+    colorPrimary: "rgb(var(--ml-accent))",
+    colorBackground: "transparent",
+    colorText: "rgb(var(--ml-text-primary))",
+    colorTextSecondary: "rgb(var(--ml-text-secondary))",
+    colorInputBackground: "rgb(var(--ml-bg-primary))",
+    colorInputText: "rgb(var(--ml-text-primary))",
+    borderRadius: "0.875rem",
+    fontFamily: "var(--font-outfit), system-ui, sans-serif",
+  },
+  elements: {
+    rootBox: "w-full mx-auto font-sans bg-transparent",
+    cardBox: "w-full !bg-transparent !shadow-none !border-0 font-sans",
+    card: "!bg-transparent !bg-none !border-none !shadow-none rounded-none p-0 font-sans",
+    navbar: "!bg-transparent border-r border-[rgb(var(--ml-border))]/60 py-4 font-sans",
+    navbarMobileMenuRow: "!bg-transparent border-b border-[rgb(var(--ml-border))]/60 font-sans",
+    navbarButton: "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:!bg-[rgb(var(--ml-bg-primary))]/80 rounded-xl transition-all duration-200 font-medium text-xs font-sans",
+    navbarButtonActive: "!text-[rgb(var(--ml-accent))] !bg-[rgb(var(--ml-accent))]/10 font-bold",
+    navbarMobileMenuButton: "text-[rgb(var(--ml-text-primary))] font-sans",
+    pageScrollable: "!bg-transparent p-4 sm:p-8 font-sans",
+    profileSection: "border-b border-[rgb(var(--ml-border))]/50 py-6 first:pt-0 last:border-b-0 font-sans",
+    profileSectionTitle: "border-b-0 pb-2 font-sans",
+    profileSectionTitleText: "text-base font-bold text-[rgb(var(--ml-text-primary))] tracking-tight font-sans",
+    profileSectionSubtitleText: "text-xs text-[rgb(var(--ml-text-secondary))] font-sans",
+    profileSectionContent: "text-[rgb(var(--ml-text-primary))] font-sans",
+    profilePage: "!bg-transparent font-sans",
+    headerTitle: "text-xl font-extrabold text-[rgb(var(--ml-text-primary))] font-sans",
+    headerSubtitle: "text-xs text-[rgb(var(--ml-text-secondary))] font-sans",
+    formButtonPrimary:
+      "bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black font-semibold shadow-md shadow-[rgb(var(--ml-accent))]/20 hover:shadow-[rgb(var(--ml-accent))]/30 py-2 px-4 rounded-xl transition-all font-sans text-xs",
+    formButtonReset:
+      "bg-[rgb(var(--ml-bg-primary))] border border-[rgb(var(--ml-border))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] py-2 px-4 rounded-xl transition-all font-sans text-xs font-semibold",
+    formFieldInput:
+      "border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))] focus:bg-[rgb(var(--ml-bg-secondary))] focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/20 rounded-xl transition-all duration-200 text-[rgb(var(--ml-text-primary))] font-sans text-xs",
+    formFieldLabel: "text-xs font-semibold text-[rgb(var(--ml-text-secondary))] font-sans",
+    badge: "bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent-dark))] dark:text-[rgb(var(--ml-accent-light))] border border-[rgb(var(--ml-accent))]/20 font-bold text-[10px] rounded-full px-2.5 py-0.5",
+    menuButton: "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg transition-colors",
+    menuList: "bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] shadow-xl rounded-xl p-1 font-sans",
+    menuItem: "text-xs text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))] rounded-lg p-2 transition-colors font-sans",
+    accordionTriggerButton: "text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] font-sans",
+    accordionContent: "text-[rgb(var(--ml-text-primary))] font-sans",
+    userPreviewMainIdentifier: "text-[rgb(var(--ml-text-primary))] font-bold text-sm font-sans",
+    userPreviewSecondaryIdentifier: "text-[rgb(var(--ml-text-secondary))] text-xs font-sans",
+    userButtonPopoverCard: "bg-[rgb(var(--ml-bg-secondary))] border border-[rgb(var(--ml-border))] shadow-2xl rounded-2xl font-sans",
+    breadcrumbsItem: "text-xs text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] font-sans",
+    breadcrumbsItemDivider: "text-[rgb(var(--ml-text-secondary))]/50",
+    breadcrumbsItemCurrent: "text-xs font-bold text-[rgb(var(--ml-text-primary))] font-sans",
+  },
+};
