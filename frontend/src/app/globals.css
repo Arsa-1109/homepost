@@ -461,14 +461,16 @@ textarea:focus,
 .cl-userProfile-root .cl-pageScrollable {
   background: transparent !important;
   background-color: transparent !important;
+  border-color: transparent !important;
 }
 
 .cl-userProfile-root .cl-navbar {
-  border-color: rgba(var(--ml-border), 0.6) !important;
+  border-right: 1px solid rgba(var(--ml-border), 0.35) !important;
 }
 
 .cl-userProfile-root .cl-navbarButton {
   color: rgb(var(--ml-text-secondary)) !important;
+  border-radius: 0.75rem !important;
 }
 
 .cl-userProfile-root .cl-navbarButton:hover {
@@ -480,35 +482,64 @@ textarea:focus,
 .cl-userProfile-root .cl-navbarButton.cl-active {
   color: rgb(var(--ml-accent)) !important;
   background-color: rgba(var(--ml-accent), 0.1) !important;
+  font-weight: 800 !important;
 }
 
 .cl-userProfile-root .cl-profileSection {
-  border-color: rgba(var(--ml-border), 0.5) !important;
+  border-bottom: 1px solid rgba(var(--ml-border), 0.25) !important;
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+.cl-userProfile-root .cl-profileSection:last-child {
+  border-bottom: none !important;
 }
 
 .cl-userProfile-root .cl-profileSectionTitleText,
 .cl-userProfile-root .cl-headerTitle,
 .cl-userProfile-root .cl-userPreviewMainIdentifier {
   color: rgb(var(--ml-text-primary)) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
 }
 
 .cl-userProfile-root .cl-profileSectionSubtitleText,
 .cl-userProfile-root .cl-headerSubtitle,
 .cl-userProfile-root .cl-userPreviewSecondaryIdentifier {
   color: rgb(var(--ml-text-secondary)) !important;
+  font-weight: 500 !important;
+}
+
+.cl-userProfile-root .cl-profileSectionPrimaryButton {
+  color: rgb(var(--ml-accent-dark)) !important;
+  font-weight: 700 !important;
+}
+.dark .cl-userProfile-root .cl-profileSectionPrimaryButton {
+  color: rgb(var(--ml-accent)) !important;
 }
 
 .cl-userProfile-root .cl-menuList {
   background-color: rgb(var(--ml-bg-secondary)) !important;
-  border-color: rgb(var(--ml-border)) !important;
+  border-color: rgba(var(--ml-border), 0.6) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2) !important;
 }
 
 .cl-userProfile-root .cl-menuItem {
   color: rgb(var(--ml-text-primary)) !important;
+  border-radius: 0.625rem !important;
 }
 
 .cl-userProfile-root .cl-menuItem:hover {
   background-color: rgb(var(--ml-bg-primary)) !important;
 }
+
+.cl-userProfile-root .cl-dividerRow,
+.cl-userProfile-root hr,
+.cl-userProfile-root .cl-separator {
+  border-color: rgba(var(--ml-border), 0.25) !important;
+  background-color: rgba(var(--ml-border), 0.25) !important;
+}
+
 
 
