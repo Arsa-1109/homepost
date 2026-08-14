@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class UnitCreate(BaseModel):
     property_id: uuid.UUID
@@ -16,6 +16,8 @@ class UnitUpdate(BaseModel):
     lease_end: date | None = None
 
 class UnitResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     property_id: uuid.UUID
     unit_label: str
@@ -26,7 +28,4 @@ class UnitResponse(BaseModel):
     created_at: datetime
     is_occupied: bool = False
     has_pending: bool = False
-
-    class Config:
-        from_attributes = True
 

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class DocumentCreate(BaseModel):
     property_id: uuid.UUID
@@ -10,6 +10,8 @@ class DocumentCreate(BaseModel):
     file_type: str = Field(..., max_length=100)
 
 class DocumentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     property_id: uuid.UUID
     unit_id: uuid.UUID | None = None
@@ -19,6 +21,3 @@ class DocumentResponse(BaseModel):
     file_type: str
     created_at: datetime
     file_url: str = ""
-
-    class Config:
-        from_attributes = True

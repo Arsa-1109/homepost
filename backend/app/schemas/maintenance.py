@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.models.maintenance_request import RequestPriority, RequestStatus
 
 class MaintenanceRequestCreate(BaseModel):
@@ -21,6 +21,8 @@ class MaintenanceRequestReopen(BaseModel):
     image_keys: Optional[List[str]] = Field(default=None)
 
 class MaintenanceRequestResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     tenant_id: uuid.UUID
     unit_id: uuid.UUID
@@ -37,6 +39,3 @@ class MaintenanceRequestResponse(BaseModel):
     landlord_image_urls: List[str] = []
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True

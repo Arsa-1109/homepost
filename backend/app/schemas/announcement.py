@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class AnnouncementCreate(BaseModel):
     property_id: uuid.UUID
@@ -16,6 +16,8 @@ class AnnouncementUpdate(BaseModel):
     attachment_keys: list[str] | None = None
 
 class AnnouncementResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: uuid.UUID
     property_id: uuid.UUID
     unit_id: uuid.UUID | None = None
@@ -25,6 +27,3 @@ class AnnouncementResponse(BaseModel):
     attachment_keys: list[str] | None = None
     attachment_urls: list[str] = Field(default_factory=list)
     created_at: datetime
-
-    class Config:
-        from_attributes = True
