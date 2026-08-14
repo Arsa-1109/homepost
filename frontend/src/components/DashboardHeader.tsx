@@ -26,7 +26,7 @@ export function DashboardHeader() {
         </Link>
         <Link 
           href="/landlord/announcements" 
-          className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-4 py-2.5 rounded-xl hover:bg-[rgb(var(--ml-bg-secondary))] hover:text-[rgb(var(--ml-text-primary))] border border-transparent hover:border-border/60 transition-all duration-200 ease-out active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+          className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-4 py-2.5 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black border border-transparent hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] transition-all duration-200 ease-out active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           <Megaphone className="h-4 w-4" />
           New Announcement

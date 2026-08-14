@@ -151,7 +151,7 @@ export default function LandlordDashboard() {
               </div>
               <button 
                 onClick={() => router.push('/landlord/access-requests')}
-                className="px-4 py-2.5 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))] border border-transparent hover:border-border/60"
+                className="px-4 py-2.5 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black border border-transparent hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"
               >
                 Review Requests
               </button>

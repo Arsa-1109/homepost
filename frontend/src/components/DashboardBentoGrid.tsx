@@ -440,7 +440,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                 className="border-none bg-transparent shadow-none py-10 mx-6"
                 action={
                   <Link href="/landlord/properties?add=true">
-                    <Button className="rounded-full px-6 font-bold flex items-center gap-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] hover:opacity-90">
+                    <Button className="rounded-full px-6 font-bold flex items-center gap-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]">
                       <Plus className="w-4 h-4" /> Add Property
                     </Button>
                   </Link>

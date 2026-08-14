@@ -795,7 +795,7 @@ function TenantRequestsContent() {
             {profile?.is_active && (
               <Link
                 href="/tenant/requests/new"
-                className="bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold px-6 h-11 rounded-xl hover:bg-[rgb(var(--ml-bg-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:border hover:border-border/60 transition-all shadow-sm flex items-center justify-center gap-2 text-xs shrink-0 cursor-pointer active:scale-[0.98]"
+                className="bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold px-6 h-11 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] transition-all duration-200 ease-out shadow-sm flex items-center justify-center gap-2 text-xs shrink-0 cursor-pointer active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4" />
                 New Request
