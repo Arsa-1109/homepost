@@ -41,17 +41,60 @@ async def test_direct_upload_file_too_large(client: AsyncClient, seed_data, monk
         app.dependency_overrides.pop(get_current_user, None)
 
 
-async def test_presigned_download_url(client: AsyncClient, seed_data, mock_storage):
-    """GET /uploads/download-url generates valid presigned URL for maintenance or documents."""
-    user = seed_data["landlord"]
-    app.dependency_overrides[get_current_user] = lambda: user
+async def test_presigned_download_url(client: AsyncClient, seed_data, db_session, mock_storage):
+    """GET /uploads/download-url generates valid presigned URL for authorized files and rejects unauthorized files."""
+    import uuid
+    from app.models.document import Document
+    from app.models.maintenance_request import MaintenanceRequest, RequestStatus, RequestPriority
+
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    unit = seed_data["unit"]
+    profile = seed_data["profile"]
+
+    # Seed a document belonging to landlord's property
+    doc = Document(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        uploaded_by=landlord.id,
+        title="House Rules",
+        file_key="documents/prop1/rules.pdf",
+        file_type="application/pdf",
+    )
+    db_session.add(doc)
+
+    # Seed a maintenance request with image key
+    req = MaintenanceRequest(
+        id=uuid.uuid4(),
+        tenant_id=profile.id,
+        unit_id=unit.id,
+        title="Broken Window",
+        description="Window cracked in bedroom.",
+        priority=RequestPriority.MEDIUM,
+        status=RequestStatus.OPEN,
+        image_keys=["maintenance/abc/test.jpg"],
+    )
+    db_session.add(req)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
 
     try:
-        # Valid key
-        res = await client.get("/api/v1/uploads/download-url?file_key=maintenance/abc/test.jpg")
-        assert res.status_code == 200
-        assert "download_url" in res.json()
-        assert res.json()["download_url"].startswith("http")
+        # Valid authorized document key
+        res_doc = await client.get("/api/v1/uploads/download-url?file_key=documents/prop1/rules.pdf")
+        assert res_doc.status_code == 200
+        assert "download_url" in res_doc.json()
+        assert res_doc.json()["download_url"].startswith("http")
+
+        # Valid authorized maintenance key
+        res_maint = await client.get("/api/v1/uploads/download-url?file_key=maintenance/abc/test.jpg")
+        assert res_maint.status_code == 200
+        assert "download_url" in res_maint.json()
+
+        # Unauthorized key (not in DB)
+        unauth_res = await client.get("/api/v1/uploads/download-url?file_key=documents/other/secret.pdf")
+        assert unauth_res.status_code == 403
+        assert "permission" in unauth_res.json()["detail"]
 
         # Invalid key path
         invalid_res = await client.get("/api/v1/uploads/download-url?file_key=system/secret.env")

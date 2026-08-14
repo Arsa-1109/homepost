@@ -137,8 +137,15 @@ async def delete_property(
         # Delete associated data for all units
         from app.models.invite import Invite
         from app.models.maintenance_request import MaintenanceRequest
+        from app.models.maintenance_event import MaintenanceEvent
         from app.models.document import Document
         
+        # Delete timeline events first to avoid FK constraint violation
+        req_res = await session.execute(select(MaintenanceRequest.id).where(MaintenanceRequest.unit_id.in_(unit_ids)))
+        req_ids = req_res.scalars().all()
+        if req_ids:
+            await session.execute(delete(MaintenanceEvent).where(MaintenanceEvent.maintenance_request_id.in_(req_ids)))
+
         await session.execute(delete(Invite).where(Invite.unit_id.in_(unit_ids)))
         await session.execute(delete(MaintenanceRequest).where(MaintenanceRequest.unit_id.in_(unit_ids)))
         await session.execute(delete(Document).where(Document.unit_id.in_(unit_ids)))
@@ -386,9 +393,16 @@ async def delete_unit(
     # Delete associated data
     from app.models.invite import Invite
     from app.models.maintenance_request import MaintenanceRequest
+    from app.models.maintenance_event import MaintenanceEvent
     from app.models.document import Document
     from sqlalchemy import delete
     
+    # Delete timeline events first to avoid FK constraint violation
+    req_res = await session.execute(select(MaintenanceRequest.id).where(MaintenanceRequest.unit_id == unit.id))
+    req_ids = req_res.scalars().all()
+    if req_ids:
+        await session.execute(delete(MaintenanceEvent).where(MaintenanceEvent.maintenance_request_id.in_(req_ids)))
+
     await session.execute(delete(Invite).where(Invite.unit_id == unit.id))
     await session.execute(delete(MaintenanceRequest).where(MaintenanceRequest.unit_id == unit.id))
     await session.execute(delete(Document).where(Document.unit_id == unit.id))

@@ -1,6 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form
 from app.dependencies.auth import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.models.property import Property
+from app.models.unit import Unit
+from app.models.tenant_profile import TenantProfile
+from app.models.document import Document
+from app.models.maintenance_request import MaintenanceRequest
+from app.models.announcement import Announcement
+from app.core.database import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 from app.services.storage import generate_object_key, upload_file_to_r2, generate_presigned_download_url
 from pydantic import BaseModel
 from app.core.limiter import limiter
@@ -43,20 +52,88 @@ async def get_presigned_download_url(
     request: Request,
     file_key: str = Query(..., description="The R2 object key to download"),
     download: bool = Query(False, description="Whether to trigger download response headers"),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     """
-    Generate a presigned GET URL to view or download a file from R2.
+    Generate an authorized presigned GET URL to view or download a file from R2.
     """
-    if (
-        (not file_key.startswith("maintenance/") and not file_key.startswith("documents/"))
-        or ".." in file_key
-    ):
+    if ".." in file_key or not any(file_key.startswith(p) for p in ["maintenance/", "documents/", "announcements/"]):
         raise HTTPException(status_code=400, detail="Invalid file key.")
-        
+
+    authorized = False
+
+    if user.role == UserRole.LANDLORD:
+        if file_key.startswith("documents/"):
+            doc_res = await session.execute(
+                select(Document)
+                .join(Property, Document.property_id == Property.id)
+                .where(Document.file_key == file_key, Property.owner_id == user.id)
+            )
+            authorized = doc_res.scalars().first() is not None
+        elif file_key.startswith("maintenance/"):
+            maint_res = await session.execute(
+                select(MaintenanceRequest)
+                .join(Unit, MaintenanceRequest.unit_id == Unit.id)
+                .join(Property, Unit.property_id == Property.id)
+                .where(Property.owner_id == user.id)
+            )
+            for req_obj in maint_res.scalars().all():
+                if (req_obj.image_keys and file_key in req_obj.image_keys) or \
+                   (req_obj.landlord_image_keys and file_key in req_obj.landlord_image_keys):
+                    authorized = True
+                    break
+        elif file_key.startswith("announcements/"):
+            ann_res = await session.execute(
+                select(Announcement)
+                .join(Property, Announcement.property_id == Property.id)
+                .where(Property.owner_id == user.id)
+            )
+            for ann_obj in ann_res.scalars().all():
+                if ann_obj.attachment_keys and file_key in ann_obj.attachment_keys:
+                    authorized = True
+                    break
+    elif user.role == UserRole.TENANT:
+        prof_res = await session.execute(
+            select(TenantProfile).where(TenantProfile.user_id == user.id, TenantProfile.is_active == True)
+        )
+        profile = prof_res.scalars().first()
+        if profile:
+            unit = await session.get(Unit, profile.unit_id)
+            if unit:
+                if file_key.startswith("documents/"):
+                    doc_res = await session.execute(
+                        select(Document).where(
+                            Document.file_key == file_key,
+                            Document.property_id == unit.property_id,
+                            (Document.unit_id == None) | (Document.unit_id == unit.id),
+                        )
+                    )
+                    authorized = doc_res.scalars().first() is not None
+                elif file_key.startswith("maintenance/"):
+                    maint_res = await session.execute(
+                        select(MaintenanceRequest).where(MaintenanceRequest.tenant_id == profile.id)
+                    )
+                    for req_obj in maint_res.scalars().all():
+                        if (req_obj.image_keys and file_key in req_obj.image_keys) or \
+                           (req_obj.landlord_image_keys and file_key in req_obj.landlord_image_keys):
+                            authorized = True
+                            break
+                elif file_key.startswith("announcements/"):
+                    ann_res = await session.execute(
+                        select(Announcement).where(
+                            Announcement.property_id == unit.property_id,
+                            (Announcement.unit_id == None) | (Announcement.unit_id == profile.unit_id),
+                        )
+                    )
+                    for ann_obj in ann_res.scalars().all():
+                        if ann_obj.attachment_keys and file_key in ann_obj.attachment_keys:
+                            authorized = True
+                            break
+
+    if not authorized:
+        raise HTTPException(status_code=403, detail="You do not have permission to access this file.")
+
     filename = file_key.split("/")[-1] if download else None
-    
-    # 1 hour expiration
     url = generate_presigned_download_url(file_key, expires=3600, filename=filename)
-    
     return DownloadURLResponse(download_url=url)
