@@ -13,8 +13,8 @@ export const clerkAuthAppearance = {
   },
   elements: {
     rootBox: "w-full max-w-[440px] mx-auto flex justify-center items-center font-sans",
-    cardBox: "w-full max-w-[440px] mx-auto flex justify-center items-center shadow-2xl rounded-2xl",
-    card: "w-full bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-secondary))]/80 backdrop-blur-2xl border border-[rgb(var(--ml-border))]/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] rounded-2xl p-6 sm:p-8 transition-all duration-300 font-sans",
+    cardBox: "w-full max-w-[440px] mx-auto flex justify-center items-center shadow-2xl rounded-2xl overflow-hidden",
+    card: "w-full bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-secondary))]/80 backdrop-blur-2xl border border-[rgb(var(--ml-border))]/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden transition-all duration-300 font-sans",
     headerTitle: "text-2xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))] font-sans",
     headerSubtitle: "text-sm text-[rgb(var(--ml-text-secondary))] mt-1 font-sans",
     formButtonPrimary:
@@ -25,9 +25,13 @@ export const clerkAuthAppearance = {
     formFieldInput:
       "border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/60 focus:bg-[rgb(var(--ml-bg-secondary))] focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/20 rounded-xl transition-all duration-200 text-[rgb(var(--ml-text-primary))] font-sans",
     formFieldLabel: "text-xs font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] font-sans",
+    footer: "bg-transparent border-t border-[rgb(var(--ml-border))]/40",
+    footerAction: "bg-transparent justify-center",
     footerActionLink:
       "text-[rgb(var(--ml-accent))] hover:text-[rgb(var(--ml-accent-light))] font-medium transition-colors font-sans",
     footerActionText: "text-[rgb(var(--ml-text-secondary))] font-sans",
+    footerPages: "bg-transparent",
+    footerPagesLink: "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] font-sans",
     dividerLine: "bg-[rgb(var(--ml-border))]/60",
     dividerText: "text-xs text-[rgb(var(--ml-text-secondary))] font-medium font-sans",
     identityPreviewText: "text-[rgb(var(--ml-text-primary))] font-medium font-sans",
