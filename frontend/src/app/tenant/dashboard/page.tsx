@@ -139,12 +139,12 @@ export default function TenantDashboard() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-slide-up pb-16">
       {/* 1. Header Section */}
-      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
+      <div className="space-y-1 pb-1">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
           Welcome Home
         </h1>
         {profile && (
-          <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-1.5">
+          <p className="text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">
             {profile.unit_label} · {profile.property_name}
             {profile.property_city ? `, ${profile.property_city}` : ""}
           </p>

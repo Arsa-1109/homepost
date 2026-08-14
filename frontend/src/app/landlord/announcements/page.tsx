@@ -384,15 +384,15 @@ function LandlordAnnouncementsContent() {
 
       <div className="space-y-8 max-w-5xl mx-auto pb-16">
         {/* Header Section */}
-        <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
                 Tenant Communications
               </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
                 Announcements
-                <span className="text-xs px-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] font-bold border border-border">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] font-bold border border-border">
                   {announcements.length}
                 </span>
               </h1>
@@ -406,12 +406,12 @@ function LandlordAnnouncementsContent() {
               {/* Property Switcher */}
               <div className="relative flex-1 sm:w-56">
                 {loading ? (
-                  <div className="w-full bg-[rgb(var(--ml-bg-primary))]/90 border border-border/60 rounded-xl h-11 flex items-center px-3">
+                  <div className="w-full bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-xl h-11 flex items-center px-3">
                     <div className="skeleton h-4 w-32 rounded-md" />
                   </div>
                 ) : properties.length > 0 ? (
                   <Select value={selectedProperty} onValueChange={(val) => setSelectedProperty(val as string)}>
-                    <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/90 border-border/60 rounded-xl h-11">
+                    <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-secondary))] border-border/60 rounded-xl h-11">
                       <span className="flex items-center gap-2 font-bold text-xs text-[rgb(var(--ml-text-primary))] truncate">
                         {selectedPropertyName}
                       </span>
@@ -428,7 +428,7 @@ function LandlordAnnouncementsContent() {
               {/* Toggle Post Announcement Form Button */}
               <Button
                 onClick={() => setShowUploadForm(prev => !prev)}
-                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:border hover:border-border/60"
               >
                 {showUploadForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                 <span>{showUploadForm ? "Hide Form" : "Post Announcement"}</span>
@@ -437,7 +437,7 @@ function LandlordAnnouncementsContent() {
           </div>
 
           {/* Search & Filter Controls Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
             {/* Filter Pills */}
             <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
               {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
@@ -447,7 +447,7 @@ function LandlordAnnouncementsContent() {
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                     selectedFilter === filter
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
-                      : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+                      : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
                   }`}
                 >
                   {filter === "ALL" && "All Notices"}
@@ -466,11 +466,11 @@ function LandlordAnnouncementsContent() {
                 placeholder="Search notices..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
+                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
               />
             </div>
           </div>
-          
+
           {idParam && (
             <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
               <span>Showing a specific announcement.</span>

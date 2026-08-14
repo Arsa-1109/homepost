@@ -4,10 +4,10 @@ export default function TenantDocumentsLoading() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-12">
       {/* Header Section Skeleton */}
-      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
               <ShieldCheck className="w-3.5 h-3.5" />
               Verified Landlord Documents
             </div>
@@ -22,8 +22,8 @@ export default function TenantDocumentsLoading() {
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="mt-8 pt-6 border-t border-border/40 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-          <div className="flex items-center gap-1.5 p-1 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-2xl w-fit">
+        <div className="pt-2 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+          <div className="flex items-center gap-1.5 p-1 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-2xl w-fit">
             <div className="skeleton h-8 w-20 rounded-xl" />
             <div className="skeleton h-8 w-16 rounded-xl" />
             <div className="skeleton h-8 w-16 rounded-xl" />

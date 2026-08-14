@@ -3,9 +3,21 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI, api } from "@/lib/api";
-import { Building, Check, X, ShieldAlert, ChevronLeft, ChevronRight, Users, InfoIcon, ChevronDown } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Building2, 
+  Check, 
+  X, 
+  ShieldAlert, 
+  ChevronLeft, 
+  ChevronRight, 
+  Users, 
+  Mail, 
+  Home, 
+  Clock 
+} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -45,7 +57,6 @@ function AccessRequestCard({
   const [units, setUnits] = useState<Unit[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   useEffect(() => {
     async function loadUnits() {
@@ -58,7 +69,7 @@ function AccessRequestCard({
       setUnitId("");
       try {
         const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${propertyId}/units`);
-        setUnits(data);
+        setUnits(data || []);
       } catch (err) {
         console.error("Failed to load units:", err);
         toast.error("Failed to load units for selected property.");
@@ -106,110 +117,133 @@ function AccessRequestCard({
     }
   };
 
-  const vacantUnits = units.filter(u => !u.is_occupied);
+  const vacantUnits = useMemo(() => units.filter(u => !u.is_occupied), [units]);
   const hasNoVacantUnits = Boolean(propertyId && !loadingUnits && vacantUnits.length === 0);
 
+  const getInitials = (name: string, email: string) => {
+    if (name && name.trim()) {
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      return name.slice(0, 2).toUpperCase();
+    }
+    return email ? email.slice(0, 2).toUpperCase() : "TR";
+  };
+
   return (
-    <div className="rounded-3xl backdrop-blur-xl bg-[rgb(var(--ml-bg-secondary))]/60 border border-border/50 shadow-[0_15px_35px_rgba(0,0,0,0.03)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 p-4 md:p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 group">
-      
-      {/* Top / Left: Tenant Profile Info + Mobile Disclosure Trigger */}
-      <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
-            <Users className="w-5.5 h-5.5" />
+    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card shadow-sm relative overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        
+        {/* Left: Applicant Information */}
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner group-hover/card:scale-105 transition-transform duration-300 flex items-center justify-center font-black text-sm size-12">
+            {getInitials(tenant.full_name, tenant.email)}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold truncate text-[rgb(var(--ml-text-primary))]">{tenant.full_name || "New Tenant"}</h3>
-              {hasNoVacantUnits && (
-                <span className="inline-flex md:hidden items-center gap-1 text-[10px] text-zinc-400 font-semibold px-2 py-0.5 rounded-full bg-zinc-500/10 border border-zinc-500/20 shrink-0">
-                  <ShieldAlert className="w-3 h-3" /> No vacant units
-                </span>
-              )}
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-black text-base sm:text-lg tracking-tight text-[rgb(var(--ml-text-primary))] break-words leading-tight">
+                {tenant.full_name || "New Applicant"}
+              </h3>
+              <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Pending
+              </Badge>
             </div>
-            <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] truncate mt-0.5">{tenant.email}</p>
+            <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] flex items-center gap-1.5 break-all">
+              <Mail className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))] shrink-0" />
+              <span>{tenant.email}</span>
+            </p>
           </div>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsMobileOpen(prev => !prev)}
-          className="md:hidden flex items-center gap-1.5 text-xs text-[rgb(var(--ml-text-secondary))] hover:text-foreground shrink-0"
-          aria-expanded={isMobileOpen}
-          aria-label="Toggle Property and Unit selection"
-        >
-          <span>{isMobileOpen ? "Hide" : "Assign"}</span>
-          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isMobileOpen ? "rotate-180" : ""}`} />
-        </Button>
-      </div>
+        {/* Middle: Property & Unit Selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full lg:w-auto lg:min-w-[400px]">
+          {/* Property Selector */}
+          <div>
+            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+              Property
+            </span>
+            <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
+              <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30 transition-all">
+                <span className="truncate text-left">
+                  {propertyId 
+                    ? properties.find(p => p.id === propertyId)?.name || "Select Property" 
+                    : "Select Property"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
+                {properties.map(p => (
+                  <SelectItem key={p.id} value={p.id} className="rounded-lg text-xs font-medium">
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {/* Middle: Selection of Property & Unit (Always visible on desktop, disclosure on mobile) */}
-      <div className={`flex-col sm:flex-row gap-4 w-full md:w-auto shrink-0 z-20 ${isMobileOpen || hasNoVacantUnits ? "flex" : "hidden md:flex"}`}>
-        <div className="w-full sm:w-48">
-          <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Property</span>
-          <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl">
-              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
-                {propertyId ? properties.find(p => p.id === propertyId)?.name : "Select Property"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
-              {properties.map(p => (
-                <SelectItem key={p.id} value={p.id} className="rounded-lg">{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Unit Selector */}
+          <div>
+            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+              Assign Unit
+            </span>
+            <Select 
+              value={unitId} 
+              onValueChange={(val) => setUnitId(val || "")} 
+              disabled={!propertyId || loadingUnits}
+            >
+              <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30 transition-all disabled:opacity-40">
+                <span className="truncate text-left">
+                  {!propertyId 
+                    ? "Select property first" 
+                    : loadingUnits 
+                    ? "Loading units..." 
+                    : unitId 
+                    ? `Unit ${units.find(u => u.id === unitId)?.unit_label || unitId}` 
+                    : vacantUnits.length > 0 
+                    ? `Choose Unit (${vacantUnits.length} vacant)` 
+                    : "No vacant units"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
+                {vacantUnits.map(u => (
+                  <SelectItem key={u.id} value={u.id} className="rounded-lg text-xs font-medium">
+                    Unit {u.unit_label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasNoVacantUnits && (
+              <p className="text-[10px] text-amber-500 font-semibold flex items-center gap-1 mt-1">
+                <ShieldAlert className="w-3 h-3 shrink-0" /> No vacant units in this building.
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="w-full sm:w-48">
-          <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-widest">Assign Unit</span>
-          <Select 
-            value={unitId} 
-            onValueChange={(val) => setUnitId(val || "")} 
-            disabled={!propertyId || loadingUnits}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2.5 pt-2 lg:pt-5 shrink-0">
+          <Button
+            variant="outline"
+            onClick={handleDeny}
+            isLoading={isSubmitting}
+            className="flex-1 sm:flex-initial h-10 px-4 rounded-xl border border-border/60 bg-transparent text-[rgb(var(--ml-text-primary))] hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 text-xs font-bold transition-all cursor-pointer"
           >
-            <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/40 border-border/40 hover:bg-[rgb(var(--ml-bg-primary))]/70 transition-colors h-10 rounded-xl disabled:opacity-40">
-              <span className="flex flex-1 text-left line-clamp-1 truncate text-sm">
-                {loadingUnits ? "Loading..." : unitId ? (units.find(u => u.id === unitId)?.unit_label ? `Unit ${units.find(u => u.id === unitId)?.unit_label}` : "Select Unit") : "Select Unit"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
-              {vacantUnits.map(u => (
-                <SelectItem key={u.id} value={u.id} className="rounded-lg">Unit {u.unit_label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {hasNoVacantUnits && (
-            <p className="text-[10px] text-zinc-400 font-semibold mt-1 px-1 flex items-center gap-1">
-              <ShieldAlert className="w-3 h-3" /> No vacant units.
-            </p>
-          )}
+            <X className="w-4 h-4" /> Deny
+          </Button>
+
+          <Button
+            variant="default"
+            onClick={handleApprove}
+            isLoading={isSubmitting}
+            disabled={!unitId}
+            className="flex-1 sm:flex-initial h-10 px-5 rounded-xl text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] dark:text-black hover:bg-[rgb(var(--ml-accent))] hover:brightness-105 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] disabled:opacity-40 transition-all duration-200 cursor-pointer active:scale-[0.98]"
+          >
+            <Check className="w-4 h-4" /> Approve
+          </Button>
         </div>
+
       </div>
-
-      {/* Right / Bottom: Actions (Sticky bottom action bar on mobile inside card) */}
-      <div className="sticky bottom-0 md:static z-10 flex items-center gap-3 w-full md:w-auto shrink-0 pt-2 md:pt-4 bg-[rgb(var(--ml-bg-secondary))]/95 md:bg-transparent backdrop-blur-md md:backdrop-blur-none p-2 -mx-2 md:p-0 md:mx-0 rounded-2xl md:rounded-none border-t border-border/40 md:border-t-0">
-        <Button
-          variant="destructive"
-          onClick={handleDeny}
-          isLoading={isSubmitting}
-          className="flex-1 md:flex-initial h-10 px-4 rounded-xl font-semibold gap-1.5 cursor-pointer"
-        >
-          <X className="w-4 h-4" /> Deny
-        </Button>
-
-        <Button
-          variant="default"
-          onClick={handleApprove}
-          isLoading={isSubmitting}
-          disabled={!unitId}
-          className="flex-1 md:flex-initial h-10 px-5 rounded-xl font-semibold gap-1.5 bg-[rgb(var(--ml-accent))] text-black cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
-        >
-          <Check className="w-4 h-4" /> Approve
-        </Button>
-      </div>
-
     </div>
   );
 }
@@ -228,8 +262,8 @@ export default function AccessRequestsPage() {
         fetchAPI<TenantRequest[]>("/api/v1/landlord/pending-tenants"),
         fetchAPI<Property[]>("/api/v1/landlord/properties")
       ]);
-      setRequests(pendingRes);
-      setProperties(propsRes);
+      setRequests(pendingRes || []);
+      setProperties(propsRes || []);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load access requests.");
@@ -260,23 +294,24 @@ export default function AccessRequestsPage() {
   }, [requests, currentPage]);
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto relative">
-      {/* Background orbs */}
-      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-[rgb(var(--ml-accent))]/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-zinc-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="mb-8 flex flex-col gap-2 relative z-10">
-        <Link href="/landlord/dashboard" className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2">
+    <div className="space-y-6 max-w-7xl mx-auto w-full">
+      {/* Page Header */}
+      <div>
+        <Link 
+          href="/landlord/dashboard" 
+          className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors flex items-center gap-1 w-fit mb-2"
+        >
           <ChevronLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
-        <h1 className="text-3xl font-extrabold tracking-tight text-[rgb(var(--ml-text-primary))]">
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
           Access Requests
         </h1>
-        <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] pl-1">
+        <p className="text-xs sm:text-sm font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">
           Review pending requests from tenants seeking access to your properties.
         </p>
       </div>
 
+      {/* Main Content */}
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div 
@@ -284,18 +319,27 @@ export default function AccessRequestsPage() {
             initial={false}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            className="space-y-6"
+            className="space-y-4"
           >
-            {[1, 2].map(i => (
-              <div key={i} className="p-6 rounded-3xl border border-border/50 bg-[rgb(var(--ml-bg-secondary))]/40 flex flex-col md:flex-row gap-6 animate-pulse">
-                <div className="flex-1 space-y-4">
-                  <div className="h-6 w-1/3 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
-                  <div className="h-4 w-1/2 bg-[rgb(var(--ml-border))]/40 rounded-md"></div>
+            {[1, 2, 3].map(i => (
+              <div 
+                key={i} 
+                className="p-6 rounded-3xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] flex flex-col lg:flex-row justify-between gap-6 animate-pulse"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="size-12 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))]"></div>
+                  <div className="space-y-2 flex-1 max-w-xs">
+                    <div className="h-5 w-3/4 bg-[rgb(var(--ml-bg-tertiary))] rounded-md"></div>
+                    <div className="h-3.5 w-1/2 bg-[rgb(var(--ml-bg-tertiary))] rounded-md"></div>
+                  </div>
                 </div>
-                <div className="flex gap-4 items-center">
-                  <div className="h-10 w-48 bg-[rgb(var(--ml-border))]/40 rounded-xl"></div>
-                  <div className="h-10 w-48 bg-[rgb(var(--ml-border))]/40 rounded-xl"></div>
-                  <div className="h-10 w-32 bg-[rgb(var(--ml-border))]/40 rounded-xl"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 lg:max-w-[400px]">
+                  <div className="h-10 bg-[rgb(var(--ml-bg-tertiary))] rounded-xl"></div>
+                  <div className="h-10 bg-[rgb(var(--ml-bg-tertiary))] rounded-xl"></div>
+                </div>
+                <div className="flex gap-2.5 shrink-0 pt-5">
+                  <div className="h-10 w-20 bg-[rgb(var(--ml-bg-tertiary))] rounded-xl"></div>
+                  <div className="h-10 w-24 bg-[rgb(var(--ml-bg-tertiary))] rounded-xl"></div>
                 </div>
               </div>
             ))}
@@ -310,7 +354,7 @@ export default function AccessRequestsPage() {
             <EmptyState
               icon={Users}
               title="No Pending Requests"
-              description="All tenant requests have been processed."
+              description="All tenant requests have been processed. New requests will appear here when tenants apply."
             />
           </motion.div>
         ) : (
@@ -323,16 +367,16 @@ export default function AccessRequestsPage() {
               hidden: { opacity: 0 },
               show: {
                 opacity: 1,
-                transition: { staggerChildren: 0.1 }
+                transition: { staggerChildren: 0.08 }
               }
             }}
-            className="space-y-6"
+            className="space-y-4"
           >
             {paginatedRequests.map(tenant => (
               <motion.div 
                 key={tenant.id}
                 variants={{
-                  hidden: { opacity: 0, y: 20 },
+                  hidden: { opacity: 0, y: 12 },
                   show: { opacity: 1, y: 0 }
                 }}
               >
@@ -350,7 +394,7 @@ export default function AccessRequestsPage() {
 
       {/* Pagination Controls Bar */}
       {!loading && requests.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/40">
           <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
             Showing{" "}
             <span className="font-bold text-[rgb(var(--ml-text-primary))]">
@@ -358,10 +402,7 @@ export default function AccessRequestsPage() {
             </span>
             –
             <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-              {Math.min(
-                currentPage * ITEMS_PER_PAGE,
-                requests.length,
-              )}
+              {Math.min(currentPage * ITEMS_PER_PAGE, requests.length)}
             </span>{" "}
             of{" "}
             <span className="font-bold text-[rgb(var(--ml-text-primary))]">
@@ -389,7 +430,7 @@ export default function AccessRequestsPage() {
                     className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
                       currentPage === pageNum
                         ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
-                        : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                        : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-border hover:text-[rgb(var(--ml-text-primary))]"
                     }`}
                   >
                     {pageNum}
@@ -412,3 +453,4 @@ export default function AccessRequestsPage() {
     </div>
   );
 }
+

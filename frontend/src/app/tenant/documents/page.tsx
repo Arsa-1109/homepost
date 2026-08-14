@@ -174,16 +174,16 @@ export default function TenantDocumentsPage() {
 
       <div className="space-y-8 max-w-5xl mx-auto pb-12">
         {/* Header Section */}
-        <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2 max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Verified Landlord Documents
               </div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
                 Shared Documents
-                <span className="text-xs px-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] font-bold border border-border flex items-center justify-center min-w-[28px] min-h-[24px]">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] font-bold border border-border flex items-center justify-center min-w-[28px] min-h-[24px]">
                   {loading ? (
                     <span className="skeleton h-3 w-4 rounded-full inline-block" />
                   ) : (
@@ -205,14 +205,14 @@ export default function TenantDocumentsPage() {
                   placeholder="Search documents..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-xs font-medium bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 text-xs font-medium bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
                 />
               </div>
             </div>
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-2 mt-6 pt-6 border-t border-border/40 flex-wrap">
+          <div className="flex items-center gap-2 pt-2 flex-wrap">
             {(["ALL", "PDF", "IMAGE", "OTHER"] as const).map((filter) => (
               <button
                 key={filter}
@@ -220,13 +220,13 @@ export default function TenantDocumentsPage() {
                 className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                   selectedFilter === filter
                     ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
-                    : "bg-[rgb(var(--ml-bg-tertiary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/40 hover:text-[rgb(var(--ml-text-primary))]"
+                    : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
                 }`}
               >
-                {filter === "ALL" && "All Files"}
+                {filter === "ALL" && "All Documents"}
                 {filter === "PDF" && "PDFs"}
                 {filter === "IMAGE" && "Images"}
-                {filter === "OTHER" && "Other Docs"}
+                {filter === "OTHER" && "Other"}
               </button>
             ))}
           </div>

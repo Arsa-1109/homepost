@@ -122,7 +122,7 @@ export default function UnitDetailsPage() {
     return (
       <div className="space-y-8 max-w-5xl mx-auto pb-16">
         {/* Header Hero Skeleton */}
-        <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm space-y-4">
+        <div className="space-y-4">
           <div className="skeleton h-5 w-32 rounded-full" />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -316,10 +316,10 @@ export default function UnitDetailsPage() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16 relative">
       {/* Header Hero Section */}
-      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
               <Building className="w-3.5 h-3.5" /> {property_name}
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
@@ -348,7 +348,7 @@ export default function UnitDetailsPage() {
                 setEditRentDay(String(rent_due_day));
                 setIsEditDialogOpen(true);
               }}
-              className="px-3.5 py-2 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] text-xs font-bold rounded-xl hover:bg-[rgb(var(--ml-bg-secondary))] transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
+              className="px-3.5 py-2 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] text-xs font-bold rounded-xl hover:bg-[rgb(var(--ml-bg-tertiary))] transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
             >
               <Pencil className="w-3.5 h-3.5" /> Edit Unit
             </button>
@@ -358,7 +358,10 @@ export default function UnitDetailsPage() {
             >
               <Trash2 className="w-3.5 h-3.5" /> Delete Unit
             </button>
-            <Link href="/landlord/requests" className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]">
+            <Link 
+              href="/landlord/requests" 
+              className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:border hover:border-border/60"
+            >
               View All Maintenance
             </Link>
           </div>

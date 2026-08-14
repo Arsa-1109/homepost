@@ -2,7 +2,7 @@ export default function TenantRequestsLoading() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
       {/* Header Shell Skeleton */}
-      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
+      <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-3 max-w-xl">
             <div className="skeleton h-5 w-36 rounded-full" />
@@ -16,7 +16,7 @@ export default function TenantRequestsLoading() {
         </div>
 
         {/* Search & Filter Bar Skeleton */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
           <div className="flex items-center gap-2 flex-wrap">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="skeleton h-8 w-20 rounded-xl shrink-0" />

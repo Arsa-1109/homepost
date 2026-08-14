@@ -132,19 +132,26 @@ export default function LandlordDashboard() {
           )}
 
           {pendingTenants.length > 0 && (
-            <div className="bg-[rgb(var(--ml-accent))]/10 border border-[rgb(var(--ml-accent))]/30 p-5 sm:p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-5 sm:p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm hover:border-border transition-all">
               <div className="flex items-center gap-3.5">
-                <div className="p-2.5 bg-[rgb(var(--ml-accent))]/20 rounded-2xl shrink-0">
-                  <Users className="w-5 h-5 text-[rgb(var(--ml-accent))]" />
+                <div className="p-2.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-2xl shrink-0">
+                  <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base text-[rgb(var(--ml-text-primary))]">Action Required</h4>
-                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">You have {pendingTenants.length} pending tenant request{pendingTenants.length > 1 ? 's' : ''} waiting for approval.</p>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-base text-[rgb(var(--ml-text-primary))]">Action Required</h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      {pendingTenants.length} Pending
+                    </span>
+                  </div>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">
+                    You have {pendingTenants.length} pending tenant request{pendingTenants.length > 1 ? 's' : ''} waiting for approval.
+                  </p>
                 </div>
               </div>
               <button 
                 onClick={() => router.push('/landlord/access-requests')}
-                className="px-4 py-2.5 bg-[rgb(var(--ml-accent))] text-black text-xs font-extrabold rounded-xl whitespace-nowrap cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"
+                className="px-4 py-2.5 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))] border border-transparent hover:border-border/60"
               >
                 Review Requests
               </button>

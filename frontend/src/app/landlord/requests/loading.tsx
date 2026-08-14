@@ -2,10 +2,10 @@ export default function LandlordRequestsLoading() {
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
       {/* Header Shell Skeleton */}
-      <div className="relative overflow-hidden p-6 sm:p-8 rounded-3xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
               Maintenance & Repairs
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
@@ -25,7 +25,7 @@ export default function LandlordRequestsLoading() {
         </div>
 
         {/* Search & Filter Controls Bar Skeleton */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-6 border-t border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
           <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
             {["All", "Open", "In Progress", "Resolved", "Closed"].map((filter, i) => (
               <div
@@ -33,7 +33,7 @@ export default function LandlordRequestsLoading() {
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border ${
                   i === 0
                     ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))]"
-                    : "bg-[rgb(var(--ml-bg-tertiary))]/60 text-[rgb(var(--ml-text-secondary))] border-border/40"
+                    : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60"
                 }`}
               >
                 {filter}
@@ -41,7 +41,7 @@ export default function LandlordRequestsLoading() {
             ))}
           </div>
           <div className="relative flex-1 sm:w-64 sm:flex-initial">
-            <div className="w-full h-9 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl" />
+            <div className="w-full h-9 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-xl" />
           </div>
         </div>
       </div>
