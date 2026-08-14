@@ -27,7 +27,6 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
                existing_nullable=False)
-    op.drop_column('announcements', 'expires_at')
     op.alter_column('documents', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
@@ -113,7 +112,6 @@ def downgrade() -> None:
                existing_type=sa.DateTime(timezone=True),
                type_=postgresql.TIMESTAMP(),
                existing_nullable=False)
-    op.add_column('announcements', sa.Column('expires_at', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True))
     op.alter_column('announcements', 'created_at',
                existing_type=sa.DateTime(timezone=True),
                type_=postgresql.TIMESTAMP(),
