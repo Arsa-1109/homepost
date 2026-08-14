@@ -17,11 +17,18 @@ export default function DashboardRedirect() {
       const token = await getToken();
       const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
       if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
-        // Route to /sync-role to ensure Clerk session metadata and cookies are synced
-        router.push("/sync-role");
+        if (user.role === "landlord") {
+          router.replace("/landlord/dashboard");
+        } else if (user.role === "tenant") {
+          router.replace("/tenant/dashboard");
+        } else if (user.role === "tenant_pending") {
+          router.replace("/sync-role");
+        } else {
+          router.replace("/");
+        }
       } else {
         // User has no role set in database yet -> send to home page to pick a role
-        router.push("/");
+        router.replace("/");
       }
     } catch (err: any) {
       console.error("Dashboard redirect failed:", err);

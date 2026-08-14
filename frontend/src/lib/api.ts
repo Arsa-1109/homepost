@@ -133,28 +133,14 @@ export async function apiFetch<T = unknown>(
 
   // Handle auth errors gracefully
   if (response.status === 401) {
-    // Token expired or invalid — sign out to prevent infinite redirect loops
-    if (typeof window !== "undefined") {
-      const clerkGlobal = (window as any).Clerk;
-      if (clerkGlobal?.signOut) {
-        clerkGlobal.signOut().then(() => {
-          window.location.href = "/sign-in";
-        });
-      } else {
-        window.location.href = "/sign-in";
-      }
-    }
     throw new Error(
-      "Your session has expired. Please sign in again to continue."
+      "Authentication required or session expired. Please verify your credentials."
     );
   }
 
   if (response.status === 403) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
     throw new Error(
-      "You don't have permission to access this resource. Redirecting..."
+      "You don't have permission to access this resource."
     );
   }
 

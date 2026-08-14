@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAPI, api } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { DashboardBentoGrid, DashboardBentoSkeleton, DashboardData } from "@/components/DashboardBentoGrid";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -50,25 +51,29 @@ export default function LandlordDashboard() {
     }
   };
 
+  const { isLoaded, getToken } = useAuth();
+
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadDashboardData() {
       try {
+        const token = await getToken();
         const [dashResult, pendingResult] = await Promise.all([
-          fetchAPI<DashboardData>("/api/v1/landlord/dashboard"),
-          fetchAPI<PendingTenant[]>("/api/v1/landlord/pending-tenants")
+          fetchAPI<DashboardData>("/api/v1/landlord/dashboard", {}, token),
+          fetchAPI<PendingTenant[]>("/api/v1/landlord/pending-tenants", {}, token)
         ]);
         setData(dashResult);
         setPendingTenants(pendingResult);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to load landlord dashboard summary:", err);
-        setError("Failed to load dashboard data. Please try again later.");
+        setError(err?.message || "Failed to load dashboard data. Please try again later.");
       } finally {
         setLoading(false);
       }
     }
 
     loadDashboardData();
-  }, []);
+  }, [isLoaded, getToken]);
 
   async function handleApproveTenant(tenantId: string) {
     const unitId = selectedUnits[tenantId];

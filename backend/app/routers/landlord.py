@@ -5,7 +5,7 @@ import uuid
 
 from app.core.database import get_session
 from app.dependencies.auth import get_current_landlord
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
 from app.models.maintenance_request import MaintenanceRequest, VALID_TRANSITIONS

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import { fetchAPI } from "@/lib/api";
 import { Wrench, Megaphone, Calendar, Plus, ArrowRight, Clock, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -77,13 +78,17 @@ export default function TenantDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { isLoaded, getToken } = useAuth();
+
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadAll() {
       try {
+        const token = await getToken();
         const [prof, reqs, anns] = await Promise.all([
-          fetchAPI<TenantProfile>("/api/v1/tenant/profile"),
-          fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance"),
-          fetchAPI<Announcement[]>("/api/v1/tenant/announcements"),
+          fetchAPI<TenantProfile>("/api/v1/tenant/profile", {}, token),
+          fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
+          fetchAPI<Announcement[]>("/api/v1/tenant/announcements", {}, token),
         ]);
         setProfile(prof);
         setRequests(reqs.slice(0, 5)); // Show up to 5 recent requests
@@ -95,7 +100,7 @@ export default function TenantDashboard() {
       }
     }
     loadAll();
-  }, []);
+  }, [isLoaded, getToken]);
 
   if (loading) {
     return (
