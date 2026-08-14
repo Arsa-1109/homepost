@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Home, Wrench, Megaphone, FileText, Building2 } from "lucide-react";
+import { Home, Wrench, Megaphone, FileText, Building2, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const TABS = [
   { label: "Home",     icon: Home,      href: "/tenant/dashboard" },
@@ -19,6 +20,7 @@ export default function TenantLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isSettingsActive = pathname === "/tenant/settings" || pathname.startsWith("/tenant/settings/");
 
   return (
     <div className="flex flex-col min-h-dvh">
@@ -28,9 +30,22 @@ export default function TenantLayout({
           <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
           <span>Homepost</span>
         </Link>
-        <div className="flex gap-4 items-center">
-          <UserButton />
+        <div className="flex gap-2.5 items-center">
+          <Link
+            href="/tenant/settings"
+            className={cn(
+              "size-9 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.97]",
+              isSettingsActive
+                ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))]/40 shadow-[0_0_12px_rgba(var(--ml-accent),0.15)]"
+                : "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border hover:text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30"
+            )}
+            title="Settings"
+            aria-label="Settings"
+          >
+            <Settings className={cn("size-4 transition-transform duration-200", isSettingsActive ? "text-[rgb(var(--ml-accent))] scale-105" : "hover:rotate-45")} />
+          </Link>
           <ThemeToggle />
+          <UserButton />
         </div>
       </header>
 
