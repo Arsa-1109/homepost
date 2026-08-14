@@ -16,6 +16,12 @@ export function RootHeader() {
 
   if (isPortal) return null;
 
+  const isAuthPage =
+    pathname === "/sign-in" ||
+    pathname === "/sign-up" ||
+    pathname?.startsWith("/sign-in/") ||
+    pathname?.startsWith("/sign-up/");
+
   return (
     <header className="p-4 flex justify-between items-center border-b border-border bg-[rgb(var(--ml-bg-secondary))]">
       <div className="flex items-center gap-2 font-bold text-lg text-[rgb(var(--ml-text-primary))]">
@@ -23,10 +29,12 @@ export function RootHeader() {
         <span>Homepost</span>
       </div>
       <div className="flex gap-4 items-center">
-        <Show when="signed-out">
-          <SignInButton />
-          <SignUpButton />
-        </Show>
+        {!isAuthPage && (
+          <Show when="signed-out">
+            <SignInButton />
+            <SignUpButton />
+          </Show>
+        )}
         <Show when="signed-in">
           <UserButton />
         </Show>
