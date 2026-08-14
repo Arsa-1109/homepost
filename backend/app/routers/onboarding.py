@@ -11,7 +11,7 @@ All endpoints require a valid Clerk JWT (get_current_user dependency).
 
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -23,6 +23,7 @@ from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
 from app.models.unit import Unit
+from app.services.email import send_pending_tenant_notification
 from sqlalchemy import func
 
 from app.core.limiter import limiter
@@ -124,6 +125,7 @@ async def reset_role(
 async def request_access(
     request: Request,
     payload: RequestAccessPayload,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
@@ -149,6 +151,16 @@ async def request_access(
     session.add(user)
     await session.commit()
     
+    if landlord.email:
+        tenant_name = user.full_name or "A tenant"
+        tenant_email = user.email or "No email provided"
+        background_tasks.add_task(
+            send_pending_tenant_notification,
+            landlord_email=landlord.email,
+            tenant_name=tenant_name,
+            tenant_email=tenant_email,
+        )
+
     return {"status": "success", "message": "Access requested. Waiting for landlord approval."}
 
 

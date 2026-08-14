@@ -16,7 +16,11 @@ from app.schemas.unit import UnitCreate, UnitUpdate, UnitResponse
 from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequestResponse
 from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate, AnnouncementResponse
 from app.schemas.document import DocumentCreate, DocumentResponse
-from app.services.email import send_status_update
+from app.services.email import (
+    send_status_update,
+    send_approval_notification,
+    send_denial_notification,
+)
 from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request, hydrate_announcement
 
 router = APIRouter(prefix="/landlord", tags=["Landlord"])
@@ -890,6 +894,7 @@ async def pending_tenants(
 @router.post("/approve-tenant")
 async def approve_tenant(
     payload: ApproveTenantPayload,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
@@ -917,6 +922,15 @@ async def approve_tenant(
     )
     session.add(profile)
     await session.commit()
+
+    if tenant.email:
+        background_tasks.add_task(
+            send_approval_notification,
+            tenant_email=tenant.email,
+            property_name=prop.name,
+            unit_label=unit.unit_label,
+        )
+
     return {"status": "success", "message": "Tenant approved."}
 
 class UpdateLeasePayload(BaseModel):
@@ -960,6 +974,7 @@ async def update_lease(
 @router.post("/deny-tenant")
 async def deny_tenant(
     payload: DenyTenantPayload,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
@@ -971,6 +986,13 @@ async def deny_tenant(
     tenant.requested_landlord_id = None
     session.add(tenant)
     await session.commit()
+
+    if tenant.email:
+        background_tasks.add_task(
+            send_denial_notification,
+            tenant_email=tenant.email,
+        )
+
     return {"status": "success", "message": "Tenant request denied."}
 
 
