@@ -13,25 +13,27 @@ export const clerkAuthAppearance = {
   },
   elements: {
     rootBox: "w-full max-w-[440px] mx-auto flex justify-center items-center font-sans",
-    cardBox: "w-full max-w-[440px] mx-auto flex justify-center items-center shadow-2xl rounded-2xl overflow-hidden",
-    card: "w-full bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-secondary))]/80 backdrop-blur-2xl border border-[rgb(var(--ml-border))]/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden transition-all duration-300 font-sans",
+    cardBox:
+      "w-full max-w-[440px] mx-auto bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-secondary))]/80 backdrop-blur-2xl border border-[rgb(var(--ml-border))]/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden transition-all duration-300 font-sans",
+    card: "w-full bg-transparent border-0 shadow-none rounded-none p-6 sm:p-8 pb-4 font-sans",
     headerTitle: "text-2xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))] font-sans",
     headerSubtitle: "text-sm text-[rgb(var(--ml-text-secondary))] mt-1 font-sans",
     formButtonPrimary:
       "w-full bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black font-semibold shadow-lg shadow-[rgb(var(--ml-accent))]/25 hover:shadow-[rgb(var(--ml-accent))]/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 py-2.5 rounded-xl border border-transparent font-sans",
     socialButtonsBlockButton:
-      "border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/60 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-primary))] rounded-xl transition-all duration-200 hover:border-[rgb(var(--ml-border))] hover:shadow-sm font-sans",
+      "w-full border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/80 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-primary))] rounded-xl transition-all duration-200 hover:border-[rgb(var(--ml-border))] hover:shadow-sm font-sans",
     socialButtonsBlockButtonText: "font-medium text-[rgb(var(--ml-text-primary))] font-sans",
     formFieldInput:
-      "border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/60 focus:bg-[rgb(var(--ml-bg-secondary))] focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/20 rounded-xl transition-all duration-200 text-[rgb(var(--ml-text-primary))] font-sans",
+      "w-full border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/80 focus:bg-[rgb(var(--ml-bg-secondary))] focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/20 rounded-xl transition-all duration-200 text-[rgb(var(--ml-text-primary))] font-sans",
     formFieldLabel: "text-xs font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] font-sans",
-    footer: "bg-transparent border-t border-[rgb(var(--ml-border))]/40",
-    footerAction: "bg-transparent justify-center",
+    footer: "w-full bg-transparent border-t border-[rgb(var(--ml-border))]/40 p-4 sm:px-8 font-sans",
+    footerAction: "w-full bg-transparent justify-center p-0 font-sans",
     footerActionLink:
-      "text-[rgb(var(--ml-accent))] hover:text-[rgb(var(--ml-accent-light))] font-medium transition-colors font-sans",
-    footerActionText: "text-[rgb(var(--ml-text-secondary))] font-sans",
-    footerPages: "bg-transparent",
-    footerPagesLink: "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] font-sans",
+      "text-xs text-[rgb(var(--ml-accent))] hover:text-[rgb(var(--ml-accent-light))] font-semibold transition-colors font-sans",
+    footerActionText: "text-xs text-[rgb(var(--ml-text-secondary))] font-sans",
+    footerPages: "w-full bg-transparent font-sans",
+    footerPagesLink:
+      "text-xs text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] transition-colors font-sans",
     dividerLine: "bg-[rgb(var(--ml-border))]/60",
     dividerText: "text-xs text-[rgb(var(--ml-text-secondary))] font-medium font-sans",
     identityPreviewText: "text-[rgb(var(--ml-text-primary))] font-medium font-sans",
