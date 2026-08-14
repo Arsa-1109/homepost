@@ -102,7 +102,14 @@ async def test_tenant_approval_and_denial_flows(
 ):
     """Test pending tenants listing, approving with email, and denying with email."""
     landlord = seed_data["landlord"]
-    unit = seed_data["unit"]
+    # Create a vacant unit for tenant approval
+    vacant_unit = Unit(
+        id=uuid.uuid4(),
+        property_id=seed_data["property"].id,
+        unit_label="Unit 2A",
+    )
+    db_session.add(vacant_unit)
+    await db_session.commit()
 
     # Create pending tenant 1 for approval
     pending_tenant_1 = User(
@@ -134,10 +141,10 @@ async def test_tenant_approval_and_denial_flows(
         assert str(pending_tenant_1.id) in pending_ids
         assert str(pending_tenant_2.id) in pending_ids
 
-        # 2. Approve tenant 1
+        # 2. Approve tenant 1 to vacant unit
         approve_res = await client.post(
             "/api/v1/landlord/approve-tenant",
-            json={"user_id": str(pending_tenant_1.id), "unit_id": str(unit.id)},
+            json={"user_id": str(pending_tenant_1.id), "unit_id": str(vacant_unit.id)},
         )
         assert approve_res.status_code == 200
         assert approve_res.json()["status"] == "success"

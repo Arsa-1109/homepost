@@ -16,6 +16,31 @@ from app.core.limiter import limiter
 from app.core.config import get_settings
 import io
 
+import os
+
+ALLOWED_MIME_TYPES = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+ALLOWED_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".heic",
+    ".heif",
+    ".pdf",
+    ".doc",
+    ".docx",
+}
+
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 
 class DirectUploadResponse(BaseModel):
@@ -28,11 +53,24 @@ class DownloadURLResponse(BaseModel):
 @limiter.limit("10/minute")
 async def upload_file_direct(
     request: Request,
-    prefix: str = Form("maintenance", description="Folder prefix (e.g., 'maintenance' or 'documents')"),
+    prefix: str = Form("maintenance", description="Folder prefix (e.g., 'maintenance', 'documents', or 'announcements')"),
     file: UploadFile = File(..., description="The file to upload"),
     user: User = Depends(get_current_user)
 ):
     settings = get_settings()
+    
+    if prefix not in ["maintenance", "documents", "announcements"]:
+        raise HTTPException(status_code=400, detail="Invalid upload prefix.")
+
+    filename = file.filename or ""
+    ext = os.path.splitext(filename)[1].lower()
+    content_type = (file.content_type or "").lower()
+
+    if ext not in ALLOWED_EXTENSIONS or content_type not in ALLOWED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file type. Allowed formats: JPEG, PNG, WEBP, HEIC, PDF, DOC, DOCX."
+        )
     
     file_bytes = await file.read()
     if len(file_bytes) > settings.max_upload_size_bytes:

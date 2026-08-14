@@ -69,6 +69,15 @@ def override_db(db_session: AsyncSession):
     app.dependency_overrides.pop(get_session, None)
 
 
+@pytest.fixture(autouse=True)
+def disable_rate_limiter():
+    """Disables slowapi rate limiting during test executions."""
+    from app.core.limiter import limiter
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
+
+
 @pytest.fixture
 def mock_storage(monkeypatch):
     """Mocks R2 storage uploads and downloads."""

@@ -174,7 +174,7 @@ async def reopen_maintenance_request(
     session: AsyncSession = Depends(get_session),
 ):
     req = await session.get(MaintenanceRequest, request_id)
-    if not req or req.unit_id != profile.unit_id:
+    if not req or req.tenant_id != profile.id:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
         
     if req.status != RequestStatus.RESOLVED:
@@ -252,7 +252,7 @@ async def close_maintenance_request(
     session: AsyncSession = Depends(get_session),
 ):
     req = await session.get(MaintenanceRequest, request_id)
-    if not req or req.unit_id != profile.unit_id:
+    if not req or req.tenant_id != profile.id:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
         
     if req.status != RequestStatus.RESOLVED:
@@ -293,10 +293,10 @@ async def get_maintenance_request(
     session: AsyncSession = Depends(get_session),
 ):
     """
-    Fetch details of a single maintenance request, ensuring it belongs to the tenant's unit.
+    Fetch details of a single maintenance request, ensuring it belongs to the tenant.
     """
     req = await session.get(MaintenanceRequest, request_id)
-    if not req or req.unit_id != profile.unit_id:
+    if not req or req.tenant_id != profile.id:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
 
     resp = MaintenanceRequestResponse.model_validate(req)

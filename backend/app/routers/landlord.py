@@ -8,6 +8,7 @@ from app.dependencies.auth import get_current_landlord
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
+from app.models.tenant_profile import TenantProfile
 from app.models.maintenance_request import MaintenanceRequest, VALID_TRANSITIONS
 from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
@@ -29,23 +30,17 @@ router = APIRouter(prefix="/landlord", tags=["Landlord"])
 # Properties
 # ---------------------------------------------------------------------------
 
+import re
+
 def format_address(address: str) -> str:
     if not address:
         return ""
-    words = address.split(' ')
-    formatted_words = []
-    for word in words:
-        if not word:
-            continue
-        w = word.lower()
-        if w == 'drives':
-            w = 'drive'
-        elif w == 'streets':
-            w = 'street'
-        elif w == 'avenues':
-            w = 'avenue'
-        formatted_words.append(w[0].upper() + w[1:])
-    return ' '.join(formatted_words)
+    formatted = address.strip()
+    formatted = re.sub(r'\bstreets\b', 'street', formatted, flags=re.IGNORECASE)
+    formatted = re.sub(r'\bdrives\b', 'drive', formatted, flags=re.IGNORECASE)
+    formatted = re.sub(r'\bavenues\b', 'avenue', formatted, flags=re.IGNORECASE)
+    words = formatted.split()
+    return ' '.join(w.capitalize() for w in words)
 
 
 @router.post("/properties", response_model=Property)
@@ -679,6 +674,11 @@ async def create_announcement(
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
         
+    if ann_in.unit_id:
+        unit = await session.get(Unit, ann_in.unit_id)
+        if not unit or unit.property_id != ann_in.property_id:
+            raise HTTPException(status_code=400, detail="Unit does not belong to the specified property.")
+
     ann = Announcement(**ann_in.model_dump(), author_id=user.id)
     session.add(ann)
     await session.commit()
@@ -716,6 +716,14 @@ async def update_announcement(
         raise HTTPException(status_code=404, detail="Announcement not found or access denied.")
 
     update_data = ann_in.model_dump(exclude_unset=True)
+    target_prop_id = update_data.get("property_id", ann.property_id)
+    target_unit_id = update_data.get("unit_id", ann.unit_id)
+
+    if target_unit_id:
+        unit = await session.get(Unit, target_unit_id)
+        if not unit or unit.property_id != target_prop_id:
+            raise HTTPException(status_code=400, detail="Unit does not belong to the specified property.")
+
     for key, value in update_data.items():
         setattr(ann, key, value)
 
@@ -925,18 +933,41 @@ async def approve_tenant(
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Unit access denied.")
 
+    # Guard: prevent double active occupancy
+    occ_res = await session.execute(
+        select(TenantProfile).where(TenantProfile.unit_id == unit.id, TenantProfile.is_active == True)
+    )
+    if occ_res.scalars().first():
+        raise HTTPException(status_code=409, detail="This unit is already occupied by an active tenant.")
+
     tenant.role = UserRole.TENANT
     tenant.requested_landlord_id = None
     session.add(tenant)
 
-    profile = TenantProfile(
-        user_id=tenant.id,
-        unit_id=unit.id,
-        lease_start=payload.lease_start,
-        lease_end=payload.lease_end,
-        is_active=True
-    )
-    session.add(profile)
+    # Re-activate existing profile if user had prior tenancy, or create new
+    user_prof_stmt = select(TenantProfile).where(TenantProfile.user_id == tenant.id)
+    user_prof_res = await session.execute(user_prof_stmt)
+    profile = user_prof_res.scalar_one_or_none()
+
+    if profile:
+        profile.unit_id = unit.id
+        profile.lease_start = payload.lease_start
+        profile.lease_end = payload.lease_end
+        profile.is_active = True
+        profile.removed_at = None
+        session.add(profile)
+    else:
+        profile = TenantProfile(
+            user_id=tenant.id,
+            unit_id=unit.id,
+            lease_start=payload.lease_start,
+            lease_end=payload.lease_end,
+            is_active=True
+        )
+        session.add(profile)
+
+    unit.status = "Occupied"
+    session.add(unit)
     await session.commit()
 
     if tenant.email:
@@ -1295,12 +1326,18 @@ async def remove_tenant(
     if not profiles:
         raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
 
-    # 3. Soft-delete the tenant profiles
+    # 3. Soft-delete the tenant profiles and reset user role to UNASSIGNED
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     for profile in profiles:
         profile.is_active = False
         profile.removed_at = now
         session.add(profile)
+
+        tenant_user = await session.get(User, profile.user_id)
+        if tenant_user:
+            tenant_user.role = UserRole.UNASSIGNED
+            tenant_user.requested_landlord_id = None
+            session.add(tenant_user)
 
     # 4. Reset unit status
     unit.status = "Vacant"

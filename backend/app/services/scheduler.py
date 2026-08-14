@@ -33,18 +33,16 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
 
 
-async def _check_reminders() -> None:
+async def _check_reminders(db_session: AsyncSession | None = None) -> None:
     """
     Daily job: check all active tenants for upcoming rent and lease dates.
     Sends email reminders as needed.
     """
     today = date.today()
 
-    async with async_session_maker() as session:
-        session: AsyncSession
-
+    async def _process(session: AsyncSession):
         # ------------------------------------------------------------------
-        # 1. Rent Reminders — due within 5 days
+        # 1. Rent Reminders — milestone days (5 and 1 days)
         # ------------------------------------------------------------------
         statement = (
             select(TenantProfile, Unit, User)
@@ -84,18 +82,18 @@ async def _check_reminders() -> None:
                     )
 
             days_until_due = (rent_due - today).days
-            if 0 < days_until_due <= 5:
+            if days_until_due in [5, 1]:
                 logger.info(
                     f"Sending rent reminder to {user.email} — due in {days_until_due} days"
                 )
                 send_rent_reminder(user.email, unit.unit_label, days_until_due)
 
             # ------------------------------------------------------------------
-            # 2. Lease Expiry Reminders — within 30 days
+            # 2. Lease Expiry Reminders — milestone days (30 and 7 days)
             # ------------------------------------------------------------------
             if profile.lease_end:
                 days_until_expiry = (profile.lease_end - today).days
-                if 0 < days_until_expiry <= 30:
+                if days_until_expiry in [30, 7]:
                     logger.info(
                         f"Sending lease expiry reminder to {user.email} — "
                         f"{days_until_expiry} days remaining"
@@ -103,6 +101,12 @@ async def _check_reminders() -> None:
                     send_lease_expiry_reminder(
                         user.email, unit.unit_label, days_until_expiry
                     )
+
+    if db_session is not None:
+        await _process(db_session)
+    else:
+        async with async_session_maker() as session:
+            await _process(session)
 
 
 def start_scheduler() -> None:
