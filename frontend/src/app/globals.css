@@ -423,10 +423,28 @@ textarea:focus,
 .animate-dune-drift-3 {
   animation: dune-drift-3 120s ease-in-out infinite;
 }
-.animate-dune-drift-4 {
-  animation: dune-drift-4 135s ease-in-out infinite;
-}
 .pin-spacer {
   z-index: 30 !important;
   pointer-events: none !important;
-}
+}
+
+/* ============================================================
+   Clerk Authentication Component Overrides
+   ============================================================ */
+.cl-cardBox {
+  background-color: rgb(var(--ml-bg-secondary)) !important;
+  border-radius: 1rem !important;
+}
+
+.cl-cardBox .cl-card,
+.cl-cardBox .cl-footer,
+.cl-cardBox .cl-footerAction,
+.cl-cardBox .cl-footerPages,
+.cl-cardBox .cl-footerPagesLink,
+.cl-cardBox .cl-internal-b3fm6y,
+.cl-cardBox .cl-internal-phfx62 {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+

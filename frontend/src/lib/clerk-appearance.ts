@@ -14,8 +14,8 @@ export const clerkAuthAppearance = {
   elements: {
     rootBox: "w-full max-w-[440px] mx-auto flex justify-center items-center font-sans",
     cardBox:
-      "w-full max-w-[440px] mx-auto bg-[rgb(var(--ml-bg-secondary))]/90 dark:bg-[rgb(var(--ml-bg-secondary))]/80 backdrop-blur-2xl border border-[rgb(var(--ml-border))]/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden transition-all duration-300 font-sans",
-    card: "w-full bg-transparent border-0 shadow-none rounded-none p-6 sm:p-8 pb-4 font-sans",
+      "w-full max-w-[440px] mx-auto !bg-[rgb(var(--ml-bg-secondary))] backdrop-blur-2xl border border-[rgb(var(--ml-border))]/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] rounded-2xl overflow-hidden transition-all duration-300 font-sans",
+    card: "!bg-transparent !bg-none !border-none !shadow-none rounded-none p-6 sm:p-8 pb-4 font-sans",
     headerTitle: "text-2xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))] font-sans",
     headerSubtitle: "text-sm text-[rgb(var(--ml-text-secondary))] mt-1 font-sans",
     formButtonPrimary:
@@ -26,12 +26,12 @@ export const clerkAuthAppearance = {
     formFieldInput:
       "w-full border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/80 focus:bg-[rgb(var(--ml-bg-secondary))] focus:border-[rgb(var(--ml-accent))] focus:ring-2 focus:ring-[rgb(var(--ml-accent))]/20 rounded-xl transition-all duration-200 text-[rgb(var(--ml-text-primary))] font-sans",
     formFieldLabel: "text-xs font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] font-sans",
-    footer: "w-full bg-transparent border-t border-[rgb(var(--ml-border))]/40 p-4 sm:px-8 font-sans",
-    footerAction: "w-full bg-transparent justify-center p-0 font-sans",
+    footer: "!bg-transparent !bg-none border-t border-[rgb(var(--ml-border))]/40 p-4 sm:px-8 font-sans",
+    footerAction: "!bg-transparent !bg-none justify-center p-0 font-sans",
     footerActionLink:
       "text-xs text-[rgb(var(--ml-accent))] hover:text-[rgb(var(--ml-accent-light))] font-semibold transition-colors font-sans",
     footerActionText: "text-xs text-[rgb(var(--ml-text-secondary))] font-sans",
-    footerPages: "w-full bg-transparent font-sans",
+    footerPages: "!bg-transparent !bg-none font-sans",
     footerPagesLink:
       "text-xs text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] transition-colors font-sans",
     dividerLine: "bg-[rgb(var(--ml-border))]/60",
