@@ -19,6 +19,7 @@ import {
   Trash2,
   Check,
   Loader2,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -499,8 +500,15 @@ function LandlordPropertiesContent() {
             </p>
           </div>
 
-          {/* Action Button: Toggle Add Form */}
+          {/* Action Buttons: Access Requests + Toggle Add Form */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+            <Link
+              href="/landlord/access-requests"
+              className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-primary))] font-bold text-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98]"
+            >
+              <Users className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
+              <span>Access Requests</span>
+            </Link>
             <Button
               onClick={() => setShowAddForm((prev) => !prev)}
               className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"

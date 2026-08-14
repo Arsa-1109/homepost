@@ -3,8 +3,6 @@
  *
  * Handles the invite token fast-track onboarding flow.
  * Extracts token from URL, validates via backend, and redirects.
- *
- * TODO (Phase 4, Task 4.7): Implement full invite acceptance logic.
  */
 
 "use client";

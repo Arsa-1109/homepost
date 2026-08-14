@@ -20,7 +20,7 @@ export default function LandlordSettingsPage() {
           routing="hash"
           appearance={{
             variables: {
-              colorPrimary: "rgb(245, 158, 11)", // match ml-accent (amber-500)
+              colorPrimary: "rgb(var(--ml-accent))",
               colorBackground: "transparent",
               colorText: "rgb(var(--ml-text-primary))",
               colorTextSecondary: "rgb(var(--ml-text-secondary))",
