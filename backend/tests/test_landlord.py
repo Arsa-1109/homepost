@@ -253,9 +253,31 @@ async def test_announcements_and_documents(client: AsyncClient, seed_data, mock_
         app.dependency_overrides.pop(get_current_user, None)
 
 
-async def test_dashboard_summary(client: AsyncClient, seed_data):
-    """Test landlord dashboard summary aggregation endpoint."""
+async def test_dashboard_summary(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """Test landlord dashboard summary aggregation endpoint and unit status flags."""
     landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    unit = seed_data["unit"]
+
+    # Add a second vacant unit with a pending invite
+    unit2 = Unit(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        unit_label="Unit 5C",
+        rent_due_day=1,
+    )
+    db_session.add(unit2)
+    from app.models.invite import Invite, InviteStatus
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="dash-invite-token",
+        unit_id=unit2.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+    )
+    db_session.add(invite)
+    await db_session.commit()
+
     app.dependency_overrides[get_current_user] = lambda: landlord
 
     try:
@@ -266,5 +288,232 @@ async def test_dashboard_summary(client: AsyncClient, seed_data):
         assert "units" in data
         assert "pending_approvals" in data
         assert "recent_activity" in data
+
+        units_by_id = {u["id"]: u for u in data["units"]}
+        # Unit 1 is occupied
+        assert units_by_id[str(unit.id)]["is_occupied"] is True
+        assert units_by_id[str(unit.id)]["has_pending_invite"] is False
+
+        # Unit 2 is vacant with pending invite
+        assert units_by_id[str(unit2.id)]["is_occupied"] is False
+        assert units_by_id[str(unit2.id)]["has_pending_invite"] is True
+        assert units_by_id[str(unit2.id)]["has_pending_maintenance"] is False
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_dashboard_multi_unit_distinct_tenants(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """Verify distinct units with distinct tenants display their respective tenant names accurately."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    unit1 = seed_data["unit"]
+    tenant1 = seed_data["tenant"]
+
+    # Create Unit 2 and Tenant 2
+    unit2 = Unit(id=uuid.uuid4(), property_id=prop.id, unit_label="Unit 2X", rent_due_day=5)
+    db_session.add(unit2)
+
+    tenant2 = User(
+        id=uuid.uuid4(),
+        clerk_id="clerk_tenant_2",
+        email="tenant2@homepost.dev",
+        full_name="David SecondTenant",
+        role=UserRole.TENANT,
+    )
+    db_session.add(tenant2)
+    await db_session.commit()
+
+    from app.models.tenant_profile import TenantProfile
+    profile2 = TenantProfile(
+        id=uuid.uuid4(),
+        user_id=tenant2.id,
+        unit_id=unit2.id,
+        is_active=True,
+    )
+    db_session.add(profile2)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    try:
+        res = await client.get("/api/v1/landlord/dashboard")
+        assert res.status_code == 200
+        data = res.json()
+
+        units_by_id = {u["id"]: u for u in data["units"]}
+        assert units_by_id[str(unit1.id)]["tenant_name"] == tenant1.full_name
+        assert units_by_id[str(unit2.id)]["tenant_name"] == tenant2.full_name
+
+        # Test remove_tenant on unit2
+        remove_res = await client.delete(f"/api/v1/landlord/units/{unit2.id}/tenant")
+        assert remove_res.status_code == 200
+
+        # After removal, dashboard summary reports unit2 as vacant
+        res_after = await client.get("/api/v1/landlord/dashboard")
+        assert res_after.status_code == 200
+        units_after = {u["id"]: u for u in res_after.json()["units"]}
+        assert units_after[str(unit2.id)]["is_occupied"] is False
+        assert units_after[str(unit2.id)]["tenant_name"] is None
+        assert units_after[str(unit1.id)]["is_occupied"] is True
+        assert units_after[str(unit1.id)]["tenant_name"] == tenant1.full_name
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_generate_invite_and_clear_data(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /landlord/generate-invite creates pending invite and optionally archives existing unit documents."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    unit = seed_data["unit"]
+
+    # Seed an existing unit document
+    doc = Document(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        unit_id=unit.id,
+        uploaded_by=landlord.id,
+        title="Prior Tenant Move-in Inspection",
+        file_key="documents/prior_inspection.pdf",
+        file_type="application/pdf",
+        is_archived=False,
+    )
+    db_session.add(doc)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        # Generate invite with clear_data=True
+        res = await client.post(
+            "/api/v1/landlord/generate-invite",
+            json={"unit_id": str(unit.id), "clear_data": True}
+        )
+        assert res.status_code == 200
+        invite_data = res.json()
+        assert invite_data["unit_id"] == str(unit.id)
+        assert invite_data["status"] == "pending"
+        assert "token" in invite_data
+
+        # Verify previous document was archived
+        await db_session.refresh(doc)
+        assert doc.is_archived is True
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_dashboard_summary_empty_portfolio(client: AsyncClient, db_session: AsyncSession):
+    """GET /landlord/dashboard returns clean zeroes and empty arrays for a landlord with no properties."""
+    new_landlord = User(
+        id=uuid.uuid4(),
+        clerk_id="clerk_empty_landlord",
+        email="empty_landlord@homepost.dev",
+        role=UserRole.LANDLORD,
+    )
+    db_session.add(new_landlord)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: new_landlord
+    try:
+        res = await client.get("/api/v1/landlord/dashboard")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["property_stats"]["total_properties"] == 0
+        assert data["property_stats"]["total_units"] == 0
+        assert data["property_stats"]["occupied_units"] == 0
+        assert data["property_stats"]["vacant_units"] == 0
+        assert data["units"] == []
+        assert data["urgent_maintenance"] == []
+        assert data["pending_approvals"] == []
+        assert data["recent_activity"] == []
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_unit_and_property_document_management(client: AsyncClient, seed_data, mock_storage):
+    """Test creating, listing by property, and listing by unit for landlord documents."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    unit = seed_data["unit"]
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        # 1. Create property-level document
+        prop_doc_res = await client.post(
+            "/api/v1/landlord/documents",
+            json={
+                "property_id": str(prop.id),
+                "title": "Community Guidelines",
+                "file_key": "documents/guidelines.pdf",
+                "file_type": "application/pdf",
+            }
+        )
+        assert prop_doc_res.status_code == 200
+        prop_doc_id = prop_doc_res.json()["id"]
+
+        # 2. Create unit-specific document
+        unit_doc_res = await client.post(
+            "/api/v1/landlord/documents",
+            json={
+                "property_id": str(prop.id),
+                "unit_id": str(unit.id),
+                "title": "Unit 4B Key Handover Receipt",
+                "file_key": "documents/unit_receipt.pdf",
+                "file_type": "application/pdf",
+            }
+        )
+        assert unit_doc_res.status_code == 200
+        unit_doc_id = unit_doc_res.json()["id"]
+
+        # 3. List by property (should contain both)
+        p_docs = await client.get(f"/api/v1/landlord/properties/{prop.id}/documents")
+        assert p_docs.status_code == 200
+        p_doc_ids = [d["id"] for d in p_docs.json()]
+        assert prop_doc_id in p_doc_ids
+        assert unit_doc_id in p_doc_ids
+
+        # 4. List by unit (should contain only unit doc)
+        u_docs = await client.get(f"/api/v1/landlord/units/{unit.id}/documents")
+        assert u_docs.status_code == 200
+        u_doc_ids = [d["id"] for d in u_docs.json()]
+        assert unit_doc_id in u_doc_ids
+        assert prop_doc_id not in u_doc_ids
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_announcement_crud_lifecycle(client: AsyncClient, seed_data):
+    """Test full CRUD lifecycle for landlord announcements."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        # 1. Create
+        create_res = await client.post(
+            "/api/v1/landlord/announcements",
+            json={
+                "property_id": str(prop.id),
+                "title": "Scheduled Power Outage",
+                "body": "Power maintenance on Saturday from 2am-4am.",
+            }
+        )
+        assert create_res.status_code == 200
+        ann_id = create_res.json()["id"]
+
+        # 2. Update
+        update_res = await client.put(
+            f"/api/v1/landlord/announcements/{ann_id}",
+            json={"title": "Updated Power Outage Time", "body": "Power maintenance rescheduled to Sunday 1am-3am."}
+        )
+        assert update_res.status_code == 200
+        assert update_res.json()["title"] == "Updated Power Outage Time"
+
+        # 3. Delete
+        del_res = await client.delete(f"/api/v1/landlord/announcements/{ann_id}")
+        assert del_res.status_code == 204
+
+        # 4. Verify gone
+        list_res = await client.get(f"/api/v1/landlord/announcements?property_id={prop.id}")
+        assert list_res.status_code == 200
+        assert not any(a["id"] == ann_id for a in list_res.json())
     finally:
         app.dependency_overrides.pop(get_current_user, None)

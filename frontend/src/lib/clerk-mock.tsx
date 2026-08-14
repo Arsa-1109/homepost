@@ -200,6 +200,14 @@ export function useAuth() {
   };
 }
 
+export function useClerk() {
+  return {
+    signOut: async () => {
+      mockLogout();
+    },
+  };
+}
+
 export function useUser() {
   const context = useContext(AuthContext);
   return {

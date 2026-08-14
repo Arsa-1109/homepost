@@ -164,6 +164,92 @@ async def request_access(
     return {"status": "success", "message": "Access requested. Waiting for landlord approval."}
 
 
+class InvitePreviewResponse(BaseModel):
+    token: str
+    property_name: str
+    property_address: str | None = None
+    property_city: str | None = None
+    unit_label: str
+    landlord_name: str | None = None
+    landlord_id: uuid.UUID
+    property_owner_id: uuid.UUID
+    status: str
+    expires_at: datetime
+
+
+@router.get("/invite/{token}", response_model=InvitePreviewResponse)
+@limiter.limit("30/minute")
+async def get_invite_preview(
+    request: Request,
+    token: str,
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Public/Authenticated Invite Preview.
+    Returns metadata about the invite without accepting or auto-assigning anything.
+    """
+    statement = select(Invite).where(Invite.token == token)
+    result = await session.execute(statement)
+    invite = result.scalar_one_or_none()
+
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="invite_not_found"
+        )
+
+    if invite.status == InviteStatus.ACCEPTED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="invite_already_used"
+        )
+
+    if invite.status == InviteStatus.EXPIRED or invite.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        if invite.status != InviteStatus.EXPIRED:
+            invite.status = InviteStatus.EXPIRED
+            session.add(invite)
+            await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="invite_expired"
+        )
+
+    if invite.status != InviteStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invite_inactive"
+        )
+
+    unit = await session.get(Unit, invite.unit_id)
+    if not unit:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unit_not_found"
+        )
+
+    prop = await session.get(Property, unit.property_id)
+    if not prop:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="property_not_found"
+        )
+
+    landlord = await session.get(User, prop.owner_id)
+
+    return InvitePreviewResponse(
+        token=invite.token,
+        property_name=prop.name,
+        property_address=prop.address,
+        property_city=prop.city,
+        unit_label=unit.unit_label,
+        landlord_name=landlord.full_name if landlord and landlord.full_name else "Property Owner",
+        landlord_id=prop.owner_id,
+        property_owner_id=prop.owner_id,
+        status=invite.status.value if hasattr(invite.status, "value") else str(invite.status),
+        expires_at=invite.expires_at,
+    )
+
+
 @router.post("/accept-invite")
 @limiter.limit("10/minute")
 async def accept_invite(
@@ -172,6 +258,12 @@ async def accept_invite(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
+    if user.role == UserRole.LANDLORD:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Landlords cannot accept tenant invites."
+        )
+
     if user.role not in [UserRole.UNASSIGNED, UserRole.TENANT_PENDING]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -212,6 +304,41 @@ async def accept_invite(
             detail="invite_inactive"
         )
 
+    # Fetch unit and property to verify hierarchy and ownership
+    unit = await session.get(Unit, invite.unit_id)
+    if not unit:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unit_not_found"
+        )
+
+    prop = await session.get(Property, unit.property_id)
+    if not prop:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="property_not_found"
+        )
+
+    # Prevent property owner or invite creator from accepting their own invite / becoming a tenant
+    if user.id == prop.owner_id or user.id == invite.created_by:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are the owner of this property and cannot accept tenant invites for your own units."
+        )
+
+    # Check if the unit is already occupied by an active tenant
+    occ_statement = select(TenantProfile).where(
+        TenantProfile.unit_id == invite.unit_id,
+        TenantProfile.is_active == True,
+    )
+    occ_res = await session.execute(occ_statement)
+    existing_unit_profile = occ_res.scalars().first()
+    if existing_unit_profile:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="unit_already_occupied"
+        )
+
     # Valid invite. Accept it!
     invite.status = InviteStatus.ACCEPTED
     session.add(invite)
@@ -221,18 +348,32 @@ async def accept_invite(
     user.requested_landlord_id = None
     session.add(user)
 
-    # Fetch unit to inherit lease dates if present
-    unit = await session.get(Unit, invite.unit_id)
+    # Update unit status
+    unit.status = "Occupied"
+    session.add(unit)
 
-    # Create tenant profile
-    profile = TenantProfile(
-        user_id=user.id,
-        unit_id=invite.unit_id,
-        lease_start=unit.lease_start if unit else None,
-        lease_end=unit.lease_end if unit else None,
-        is_active=True
-    )
-    session.add(profile)
+    # Update existing profile if user already has one, or create new TenantProfile (maintaining unique user_id)
+    user_profile_stmt = select(TenantProfile).where(TenantProfile.user_id == user.id)
+    user_profile_res = await session.execute(user_profile_stmt)
+    profile = user_profile_res.scalar_one_or_none()
+
+    if profile:
+        profile.unit_id = invite.unit_id
+        profile.lease_start = unit.lease_start if unit else None
+        profile.lease_end = unit.lease_end if unit else None
+        profile.is_active = True
+        profile.removed_at = None
+        session.add(profile)
+    else:
+        profile = TenantProfile(
+            user_id=user.id,
+            unit_id=invite.unit_id,
+            lease_start=unit.lease_start if unit else None,
+            lease_end=unit.lease_end if unit else None,
+            is_active=True
+        )
+        session.add(profile)
+
     await session.commit()
 
     return {"status": "success", "message": "Invite accepted. You are now a tenant."}

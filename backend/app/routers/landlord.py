@@ -222,11 +222,13 @@ async def list_units(
             select(TenantProfile).where(
                 TenantProfile.unit_id.in_(unit_ids),
                 TenantProfile.is_active == True,
-            )
+            ).order_by(TenantProfile.created_at.desc())
         )
         profiles = occ_res.scalars().all()
-        occupied_unit_ids = {tp.unit_id for tp in profiles}
-        tenant_profile_map = {tp.unit_id: tp for tp in profiles}
+        for tp in profiles:
+            if tp.unit_id not in tenant_profile_map:
+                tenant_profile_map[tp.unit_id] = tp
+        occupied_unit_ids = set(tenant_profile_map.keys())
 
         # Pending
         inv_res = await session.execute(
@@ -1037,9 +1039,12 @@ async def get_dashboard_summary(
                 TenantProfile.unit_id.in_(unit_ids),
                 TenantProfile.is_active == True,
             )
+            .order_by(TenantProfile.created_at.desc())
         )
         for uid, full_name, email in tenant_profile_result.all():
-            unit_tenant_map[str(uid)] = full_name or email
+            uid_str = str(uid)
+            if uid_str not in unit_tenant_map:
+                unit_tenant_map[uid_str] = full_name or email
         occupied_unit_ids = set(unit_tenant_map.keys())
     else:
         occupied_unit_ids = set()
@@ -1217,7 +1222,8 @@ async def get_dashboard_summary(
                 "is_occupied": str(u.id) in occupied_unit_ids,
                 "tenant_name": unit_tenant_map.get(str(u.id)),
                 "has_pending_maintenance": str(u.id) in units_with_pending_maint,
-                "has_pending": str(u.id) in pending_unit_ids or str(u.id) in units_with_pending_maint,
+                "has_pending_invite": str(u.id) in pending_unit_ids,
+                "has_pending": str(u.id) in units_with_pending_maint,
             }
             for u in all_units
         ],
@@ -1249,7 +1255,7 @@ async def remove_tenant(
 ):
     """
     Remove an active tenant from a unit.
-    Sets is_active=False and removed_at=now() on the TenantProfile.
+    Sets is_active=False and removed_at=now() on all active TenantProfiles for this unit.
     Sets unit.status = 'Vacant'.
     """
     from app.models.tenant_profile import TenantProfile
@@ -1264,23 +1270,27 @@ async def remove_tenant(
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
 
-    # 2. Find the active tenant profile for this unit
+    # 2. Find all active tenant profiles for this unit
     statement = select(TenantProfile).where(
         TenantProfile.unit_id == unit_id,
         TenantProfile.is_active == True
     )
     result = await session.execute(statement)
-    profile = result.scalar_one_or_none()
+    profiles = result.scalars().all()
 
-    if not profile:
+    if not profiles:
         raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
 
-    # 3. Soft-delete the tenant profile
-    profile.is_active = False
-    profile.removed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    # 3. Soft-delete the tenant profiles
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    for profile in profiles:
+        profile.is_active = False
+        profile.removed_at = now
+        session.add(profile)
 
     # 4. Reset unit status
     unit.status = "Vacant"
+    session.add(unit)
 
     # We do NOT delete or modify historical maintenance requests or documents.
     

@@ -166,3 +166,110 @@ async def test_tenant_announcements_and_documents(
         assert any(d["id"] == str(doc.id) for d in doc_res.json())
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_tenant_data_isolation_cross_property(
+    client: AsyncClient, seed_data, db_session: AsyncSession, mock_storage
+):
+    """Test tenant cannot view documents or announcements from another property or unrelated units."""
+    tenant = seed_data["tenant"]
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    unit = seed_data["unit"]
+
+    from app.models.property import Property
+    from app.models.unit import Unit
+
+    # Create another property and unit
+    other_prop = Property(id=uuid.uuid4(), owner_id=landlord.id, name="Secret Villa", address="100 Private Way", city="Bengaluru")
+    other_unit = Unit(id=uuid.uuid4(), property_id=other_prop.id, unit_label="Villa 1", rent_due_day=1)
+    sibling_unit = Unit(id=uuid.uuid4(), property_id=prop.id, unit_label="Unit 4C (Sibling)", rent_due_day=1)
+    db_session.add(other_prop)
+    db_session.add(other_unit)
+    db_session.add(sibling_unit)
+
+    # Document for other property
+    other_prop_doc = Document(
+        id=uuid.uuid4(),
+        property_id=other_prop.id,
+        unit_id=None,
+        uploaded_by=landlord.id,
+        title="Secret Villa Master Plan",
+        file_key="documents/secret.pdf",
+        file_type="application/pdf",
+    )
+    # Document for sibling unit in same property
+    sibling_unit_doc = Document(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        unit_id=sibling_unit.id,
+        uploaded_by=landlord.id,
+        title="Unit 4C Sibling Lease",
+        file_key="documents/unit_4c_lease.pdf",
+        file_type="application/pdf",
+    )
+    # Announcement for other property
+    other_ann = Announcement(
+        id=uuid.uuid4(),
+        property_id=other_prop.id,
+        unit_id=None,
+        author_id=landlord.id,
+        title="Secret Villa Gala",
+        body="Private event for Villa residents only.",
+    )
+    db_session.add(other_prop_doc)
+    db_session.add(sibling_unit_doc)
+    db_session.add(other_ann)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: tenant
+    try:
+        # Check documents - should NOT contain other_prop_doc or sibling_unit_doc
+        doc_res = await client.get("/api/v1/tenant/documents")
+        assert doc_res.status_code == 200
+        doc_ids = [d["id"] for d in doc_res.json()]
+        assert str(other_prop_doc.id) not in doc_ids
+        assert str(sibling_unit_doc.id) not in doc_ids
+
+        # Check announcements - should NOT contain other_ann
+        ann_res = await client.get("/api/v1/tenant/announcements")
+        assert ann_res.status_code == 200
+        ann_ids = [a["id"] for a in ann_res.json()]
+        assert str(other_ann.id) not in ann_ids
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_tenant_maintenance_detail_and_isolation(
+    client: AsyncClient, seed_data, db_session: AsyncSession
+):
+    """GET /tenant/maintenance/{id} returns request and isolates from other units."""
+    tenant = seed_data["tenant"]
+    profile = seed_data["profile"]
+    unit = seed_data["unit"]
+
+    req = MaintenanceRequest(
+        id=uuid.uuid4(),
+        tenant_id=profile.id,
+        unit_id=unit.id,
+        title="Bathroom Fan Noise",
+        description="Loud grinding noise when bathroom exhaust fan is turned on.",
+        priority=RequestPriority.LOW,
+        status=RequestStatus.OPEN,
+    )
+    db_session.add(req)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: tenant
+    try:
+        # Own request
+        res = await client.get(f"/api/v1/tenant/maintenance/{req.id}")
+        assert res.status_code == 200
+        assert res.json()["id"] == str(req.id)
+        assert res.json()["title"] == "Bathroom Fan Noise"
+
+        # Non-existent request -> 404
+        fake_res = await client.get(f"/api/v1/tenant/maintenance/{uuid.uuid4()}")
+        assert fake_res.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)

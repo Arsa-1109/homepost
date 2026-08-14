@@ -80,8 +80,9 @@ export type DashboardData = {
     property_name: string;
     unit_label: string;
     is_occupied: boolean;
-    tenant_name?: string;
+    tenant_name?: string | null;
     has_pending_maintenance?: boolean;
+    has_pending_invite?: boolean;
     has_pending?: boolean;
   }>;
   urgent_maintenance: Array<{
@@ -154,26 +155,21 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
   const displayedRequests = activeRequests.slice(0, 4);
   const hasMoreRequests = activeRequests.length > 4;
 
-  const occupiedAndPendingUnits = [...data.units]
-    .filter(u => u.is_occupied || u.has_pending_maintenance || u.has_pending)
+  const occupiedUnits = [...data.units]
+    .filter(u => u.is_occupied)
     .sort((a, b) => {
-      const isPendingA = a.has_pending_maintenance || a.has_pending;
-      const isPendingB = b.has_pending_maintenance || b.has_pending;
-
-      const scoreA = isPendingA ? 1 : (a.is_occupied ? 2 : 3);
-      const scoreB = isPendingB ? 1 : (b.is_occupied ? 2 : 3);
-
-      if (scoreA !== scoreB) return scoreA - scoreB;
+      if (a.has_pending_maintenance && !b.has_pending_maintenance) return -1;
+      if (!a.has_pending_maintenance && b.has_pending_maintenance) return 1;
       return (a.unit_label || '').localeCompare(b.unit_label || '', undefined, { numeric: true, sensitivity: 'base' });
     });
 
-  const displayedUnits = occupiedAndPendingUnits.slice(0, 6);
-  const hasMoreUnits = occupiedAndPendingUnits.length > 6;
+  const displayedUnits = occupiedUnits.slice(0, 6);
+  const hasMoreUnits = occupiedUnits.length > 6;
 
   // Calculate occupancy percentage
   const totalUnits = data.property_stats.total_units || 0;
-  const occupiedUnits = data.property_stats.occupied_units || 0;
-  const occupancyPercent = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+  const occupiedUnitsCount = data.property_stats.occupied_units || 0;
+  const occupancyPercent = totalUnits > 0 ? Math.round((occupiedUnitsCount / totalUnits) * 100) : 0;
   const circumference = 163.4;
   const strokeDashoffset = circumference - (occupancyPercent / 100) * circumference;
 
@@ -394,16 +390,6 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
               </div>
             </div>
 
-            {data.property_stats.vacant_units === 0 && data.property_stats.total_units > 0 && (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-xs text-emerald-600 dark:text-emerald-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <div>
-                  <span className="font-extrabold uppercase tracking-wider block">100% Occupied</span>
-                  <span className="font-medium opacity-90 text-[11px]">All {data.property_stats.total_units} unit{data.property_stats.total_units > 1 ? 's' : ''} have active tenants.</span>
-                </div>
-              </div>
-            )}
-
             <div className="border-t border-border/40 pt-2 space-y-1">
               <div className="flex justify-between items-center py-2 border-b border-border/30">
                 <div className="flex items-center gap-2.5 text-xs font-bold text-[rgb(var(--ml-text-primary))]">
@@ -423,7 +409,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
           </div>
         </div>
 
-        {/* Card 4 (My Units List) */}
+        {/* Card 4 (Occupied Units List) */}
         <div className="flex flex-col flex-1 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm">
           <div className="px-6 pb-4">
             <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
@@ -449,15 +435,21 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
             ) : displayedUnits.length === 0 ? (
               <EmptyState 
                 icon={Home}
-                title="No Active Tenants Yet"
-                description="Units with active tenants or pending maintenance will appear here."
+                title="No Occupied Units Yet"
+                description="Units with active tenants will appear here."
                 className="border-none bg-transparent shadow-none py-10 mx-6"
+                action={
+                  <Link href="/landlord/units">
+                    <Button variant="outline" className="rounded-full px-5 text-xs font-bold mt-2">
+                      Manage All Units
+                    </Button>
+                  </Link>
+                }
               />
             ) : (
               <div>
                 <ul className="divide-y divide-border/40">
                   {displayedUnits.map((unit) => {
-                    const isPending = unit.has_pending_maintenance || unit.has_pending;
                     return (
                       <li key={unit.id}>
                         <Link href={`/landlord/units/${unit.id}`} className="block">
@@ -470,16 +462,33 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                                 Unit {unit.unit_label}
                               </div>
                               <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
-                                {unit.tenant_name ? `${unit.tenant_name} · ` : ''}{formatAddress(unit.property_name)}
+                                {unit.tenant_name ? `${unit.tenant_name} · ` : ''}{formatAddress(unit.property_name || "Unknown Property")}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 flex-shrink-0">
+                            <div className="flex items-center gap-2.5 flex-shrink-0">
                               {unit.is_occupied ? (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Occupied</span>
-                              ) : isPending ? (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Pending Maint.</span>
+                                <div className="flex items-center gap-1.5">
+                                  {unit.has_pending_maintenance && (
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                      Maint.
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                    Occupied
+                                  </span>
+                                </div>
+                              ) : unit.has_pending_maintenance ? (
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                  Pending Maint.
+                                </span>
+                              ) : unit.has_pending_invite ? (
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                  Invite Sent
+                                </span>
                               ) : (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-muted text-[rgb(var(--ml-text-secondary))] border border-border/40">Vacant</span>
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-muted text-[rgb(var(--ml-text-secondary))] border border-border/40">
+                                  Vacant
+                                </span>
                               )}
                               <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg leading-none select-none">&rsaquo;</span>
                             </div>
@@ -495,7 +504,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                       href="/landlord/units"
                       className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
                     >
-                      View all units ({occupiedAndPendingUnits.length}) &rarr;
+                      View all units ({data.property_stats.total_units}) &rarr;
                     </Link>
                   </div>
                 )}

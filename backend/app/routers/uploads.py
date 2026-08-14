@@ -48,7 +48,10 @@ async def get_presigned_download_url(
     """
     Generate a presigned GET URL to view or download a file from R2.
     """
-    if not file_key.startswith("maintenance/") and not file_key.startswith("documents/"):
+    if (
+        (not file_key.startswith("maintenance/") and not file_key.startswith("documents/"))
+        or ".." in file_key
+    ):
         raise HTTPException(status_code=400, detail="Invalid file key.")
         
     filename = file_key.split("/")[-1] if download else None

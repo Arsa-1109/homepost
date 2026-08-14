@@ -57,5 +57,26 @@ async def test_presigned_download_url(client: AsyncClient, seed_data, mock_stora
         invalid_res = await client.get("/api/v1/uploads/download-url?file_key=system/secret.env")
         assert invalid_res.status_code == 400
         assert "Invalid file key" in invalid_res.json()["detail"]
+
+        # Traversal attempt
+        traversal_res = await client.get("/api/v1/uploads/download-url?file_key=maintenance/../etc/passwd")
+        assert traversal_res.status_code == 400
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_direct_upload_document_prefix(client: AsyncClient, seed_data, mock_storage):
+    """POST /uploads/ with prefix='documents' generates document file_key."""
+    user = seed_data["landlord"]
+    app.dependency_overrides[get_current_user] = lambda: user
+
+    try:
+        files = {"file": ("lease.pdf", b"%PDF-1.4 fake pdf content", "application/pdf")}
+        data = {"prefix": "documents"}
+        response = await client.post("/api/v1/uploads/", data=data, files=files)
+        assert response.status_code == 200
+        result = response.json()
+        assert "file_key" in result
+        assert result["file_key"].startswith("documents/")
     finally:
         app.dependency_overrides.pop(get_current_user, None)

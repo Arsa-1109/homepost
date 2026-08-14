@@ -10,6 +10,7 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User, UserRole
 from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
+from app.models.unit import Unit
 
 
 async def test_get_me(client: AsyncClient, seed_data):
@@ -112,10 +113,106 @@ async def test_request_access_landlord_not_found(client: AsyncClient, seed_data)
         app.dependency_overrides.pop(get_current_user, None)
 
 
-async def test_accept_invite_lifecycle(client: AsyncClient, seed_data, db_session: AsyncSession):
-    """Test full invite acceptance lifecycle (success, already used, and expired)."""
+async def test_get_invite_preview(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """GET /onboarding/invite/{token} returns invite and property metadata."""
+    unit = seed_data["unit"]
+    prop = seed_data["property"]
+    landlord = seed_data["landlord"]
+
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="preview-token-123",
+        unit_id=unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7),
+    )
+    db_session.add(invite)
+    await db_session.commit()
+
+    res = await client.get("/api/v1/onboarding/invite/preview-token-123")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["token"] == "preview-token-123"
+    assert data["property_name"] == prop.name
+    assert data["unit_label"] == unit.unit_label
+    assert data["landlord_name"] == landlord.full_name
+    assert data["property_owner_id"] == str(prop.owner_id)
+    assert data["status"] == "pending"
+
+
+async def test_accept_invite_landlord_rejected(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /onboarding/accept-invite rejects landlord users from accepting any invites."""
     unit = seed_data["unit"]
     landlord = seed_data["landlord"]
+
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="landlord-test-token",
+        unit_id=unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7),
+    )
+    db_session.add(invite)
+    await db_session.commit()
+
+    # Attempt with landlord role (same landlord)
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        res = await client.post("/api/v1/onboarding/accept-invite", json={"token": "landlord-test-token"})
+        assert res.status_code == 403
+        assert "Landlords cannot accept tenant invites" in res.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_accept_invite_owner_rejected_even_if_unassigned_state(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /onboarding/accept-invite rejects user if user ID matches the property owner ID."""
+    unit = seed_data["unit"]
+    landlord = seed_data["landlord"]
+
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="owner-unassigned-test-token",
+        unit_id=unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7),
+    )
+    db_session.add(invite)
+    await db_session.commit()
+
+    # Create an unassigned user object whose id is the property owner_id (simulating edge case or manipulated token/owner)
+    owner_as_unassigned = User(
+        id=landlord.id,
+        clerk_id="clerk_owner_edge",
+        email="owner_edge@homepost.dev",
+        role=UserRole.UNASSIGNED,
+    )
+    app.dependency_overrides[get_current_user] = lambda: owner_as_unassigned
+    try:
+        res = await client.post("/api/v1/onboarding/accept-invite", json={"token": "owner-unassigned-test-token"})
+        assert res.status_code == 403
+        assert "cannot accept tenant invites for your own units" in res.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_accept_invite_lifecycle(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """Test full invite acceptance lifecycle (success, already used, and expired)."""
+    prop = seed_data["property"]
+    landlord = seed_data["landlord"]
+
+    # Create a fresh vacant unit for invite testing
+    unit = Unit(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        unit_label="Unit 9Z",
+        rent_due_day=1,
+    )
+    db_session.add(unit)
+    await db_session.commit()
 
     # 1. Create valid pending invite
     invite = Invite(
@@ -180,6 +277,102 @@ async def test_accept_invite_lifecycle(client: AsyncClient, seed_data, db_sessio
         app.dependency_overrides.pop(get_current_user, None)
 
 
+async def test_accept_invite_already_occupied_unit(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /onboarding/accept-invite returns 409 if the unit already has an active tenant profile."""
+    unit = seed_data["unit"]
+    landlord = seed_data["landlord"]
+    # seed_data["unit"] already has an active tenant (seed_data["profile"])
+
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="occupied-unit-token",
+        unit_id=unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7),
+    )
+    db_session.add(invite)
+    await db_session.commit()
+
+    another_user = User(
+        clerk_id="clerk_occupied_test",
+        email="occupied_test@homepost.dev",
+        role=UserRole.UNASSIGNED,
+    )
+    db_session.add(another_user)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: another_user
+    try:
+        res = await client.post("/api/v1/onboarding/accept-invite", json={"token": "occupied-unit-token"})
+        assert res.status_code == 409
+        assert res.json()["detail"] == "unit_already_occupied"
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_accept_invite_deactivates_previous_user_tenancy(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /onboarding/accept-invite deactivates previous active tenant profile of user."""
+    prop = seed_data["property"]
+    landlord = seed_data["landlord"]
+
+    unit_a = Unit(id=uuid.uuid4(), property_id=prop.id, unit_label="Unit A")
+    unit_b = Unit(id=uuid.uuid4(), property_id=prop.id, unit_label="Unit B")
+    db_session.add(unit_a)
+    db_session.add(unit_b)
+    await db_session.commit()
+
+    switching_user = User(
+        id=uuid.uuid4(),
+        clerk_id="clerk_switching_tenant",
+        email="switcher@homepost.dev",
+        role=UserRole.UNASSIGNED,
+    )
+    db_session.add(switching_user)
+    await db_session.commit()
+
+    from app.models.tenant_profile import TenantProfile
+    profile_a = TenantProfile(
+        id=uuid.uuid4(),
+        user_id=switching_user.id,
+        unit_id=unit_a.id,
+        is_active=True,
+    )
+    db_session.add(profile_a)
+    await db_session.commit()
+
+    invite_b = Invite(
+        id=uuid.uuid4(),
+        token="invite-unit-b",
+        unit_id=unit_b.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7),
+    )
+    db_session.add(invite_b)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: switching_user
+    try:
+        res = await client.post("/api/v1/onboarding/accept-invite", json={"token": "invite-unit-b"})
+        assert res.status_code == 200
+
+        # Reload profile_a (which was updated to unit_b)
+        await db_session.refresh(profile_a)
+        assert profile_a.is_active is True
+        assert profile_a.unit_id == unit_b.id
+
+        # Verify switching user has exactly 1 active profile linked to unit_b
+        res_profiles = await db_session.execute(
+            select(TenantProfile).where(TenantProfile.user_id == switching_user.id, TenantProfile.is_active == True)
+        )
+        active_profiles = res_profiles.scalars().all()
+        assert len(active_profiles) == 1
+        assert active_profiles[0].unit_id == unit_b.id
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
 async def test_reset_role(client: AsyncClient, seed_data, db_session: AsyncSession):
     """POST /onboarding/reset-role handles role resets and enforces property cleanup guard."""
     landlord = seed_data["landlord"]
@@ -208,3 +401,30 @@ async def test_reset_role(client: AsyncClient, seed_data, db_session: AsyncSessi
         assert pending_user.requested_landlord_id is None
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_get_invite_preview_not_found_and_expired(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """GET /onboarding/invite/{token} returns 404 for invalid tokens and 410 for expired tokens."""
+    unit = seed_data["unit"]
+    landlord = seed_data["landlord"]
+
+    # 1. Non-existent token -> 404
+    res_404 = await client.get("/api/v1/onboarding/invite/non-existent-token-xyz")
+    assert res_404.status_code == 404
+    assert res_404.json()["detail"] == "invite_not_found"
+
+    # 2. Expired token -> 410
+    expired_invite = Invite(
+        id=uuid.uuid4(),
+        token="expired-preview-token",
+        unit_id=unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        expires_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=2),
+    )
+    db_session.add(expired_invite)
+    await db_session.commit()
+
+    res_410 = await client.get("/api/v1/onboarding/invite/expired-preview-token")
+    assert res_410.status_code == 410
+    assert res_410.json()["detail"] == "invite_expired"
