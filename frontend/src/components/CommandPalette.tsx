@@ -116,6 +116,10 @@ export function CommandPalette() {
               <FileText className="mr-2 h-4 w-4" />
               <span>Documents & Leases</span>
             </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/tenant/settings"))}>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </CommandItem>
           </CommandGroup>
         )}
 
