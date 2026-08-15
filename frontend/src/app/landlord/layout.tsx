@@ -132,9 +132,11 @@ export default function LandlordLayout({
             })()}
           </div>
           <div className="flex gap-4 items-center">
-            {isSignedIn ? (
+            {!isLoaded ? (
+              <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
+            ) : isSignedIn ? (
               <UserButton />
-            ) : (
+            ) : isDemoActive ? (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-sm">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-xs shadow-sm">
@@ -173,7 +175,7 @@ export default function LandlordLayout({
                   Exit Demo
                 </Button>
               </div>
-            )}
+            ) : null}
             <ThemeToggle />
           </div>
         </header>
@@ -185,16 +187,18 @@ export default function LandlordLayout({
             <span>Homepost</span>
           </Link>
           <div className="flex gap-2.5 items-center">
-            {isSignedIn ? (
+            {!isLoaded ? (
+              <div className="w-7 h-7 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
+            ) : isSignedIn ? (
               <UserButton />
-            ) : (
+            ) : isDemoActive ? (
               <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-0.5 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-[10px]">
                   MV
                 </div>
                 <span className="text-[10px] font-bold text-amber-500">DEMO</span>
               </div>
-            )}
+            ) : null}
             <ThemeToggle />
 
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>

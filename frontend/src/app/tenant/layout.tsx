@@ -67,9 +67,11 @@ export default function TenantLayout({
             </Link>
           )}
           <ThemeToggle />
-          {isSignedIn ? (
+          {!isLoaded ? (
+            <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
+          ) : isSignedIn ? (
             <UserButton />
-          ) : (
+          ) : isDemoActive ? (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-sm">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white font-bold flex items-center justify-center text-[10px]">
@@ -107,7 +109,7 @@ export default function TenantLayout({
                 Exit
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
       </header>
 
