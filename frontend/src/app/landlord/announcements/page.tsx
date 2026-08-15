@@ -229,8 +229,27 @@ function LandlordAnnouncementsContent() {
     const newFiles = Array.from(e.target.files || []);
     if (attachments.length + newFiles.length > 3) {
       toast.error("You can only attach a maximum of 3 files.");
+      e.target.value = "";
       return;
     }
+
+    const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf", ".doc", ".docx", ".mp4", ".mov", ".webm", ".m4v"];
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+    for (const file of newFiles) {
+      const ext = "." + file.name.split(".").pop()?.toLowerCase();
+      if (!ALLOWED_EXTS.includes(ext)) {
+        toast.error(`"${file.name}" has an unsupported format. Supported formats: Images, PDFs, Docs, and Videos.`);
+        e.target.value = "";
+        return;
+      }
+      if (file.size > MAX_SIZE) {
+        toast.error(`"${file.name}" exceeds the 10MB size limit (${(file.size / (1024 * 1024)).toFixed(1)}MB).`);
+        e.target.value = "";
+        return;
+      }
+    }
+
     setAttachments(prev => [...prev, ...newFiles]);
   };
 
@@ -266,8 +285,8 @@ function LandlordAnnouncementsContent() {
       setShowUploadForm(false);
       toast.success("Announcement posted successfully!");
       loadData();
-    } catch (err) {
-      toast.error("Failed to post announcement. Please try again.");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to post announcement. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -296,8 +315,8 @@ function LandlordAnnouncementsContent() {
       toast.success("Announcement updated successfully!");
       setEditingAnnouncement(null);
       loadData();
-    } catch (err) {
-      toast.error("Failed to update announcement. Please try again.");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update announcement. Please try again.");
     } finally {
       setIsEditSubmitting(false);
     }
@@ -630,6 +649,7 @@ function LandlordAnnouncementsContent() {
                             <input 
                               type="file" 
                               multiple
+                              accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
                               onChange={handleAttachmentChange}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
@@ -642,7 +662,7 @@ function LandlordAnnouncementsContent() {
                                   Click or drag files to attach
                                 </p>
                                 <p className="text-[10px] text-[rgb(var(--ml-text-secondary))]">
-                                  Images or documents up to 10MB (Max 3)
+                                  Photos, docs, or videos up to 10MB (Max 3)
                                 </p>
                               </div>
                             </div>

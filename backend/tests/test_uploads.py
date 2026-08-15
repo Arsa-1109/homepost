@@ -159,3 +159,38 @@ async def test_direct_upload_document_prefix(client: AsyncClient, seed_data, moc
         assert result["file_key"].startswith("documents/")
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_direct_upload_video_success(client: AsyncClient, seed_data, mock_storage):
+    """POST /uploads/ successfully accepts MP4 video files."""
+    user = seed_data["landlord"]
+    app.dependency_overrides[get_current_user] = lambda: user
+
+    try:
+        # ISO BMFF MP4 header: 4 bytes size + 'ftyp'
+        video_payload = b"\x00\x00\x00\x20ftypmp42\x00\x00\x00\x00isommp42"
+        files = {"file": ("walkthrough.mp4", video_payload, "video/mp4")}
+        data = {"prefix": "announcements"}
+        response = await client.post("/api/v1/uploads/", data=data, files=files)
+        assert response.status_code == 200
+        result = response.json()
+        assert "file_key" in result
+        assert result["file_key"].startswith("announcements/")
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_direct_upload_unsupported_type(client: AsyncClient, seed_data, mock_storage):
+    """POST /uploads/ rejects executable / unsupported file types."""
+    user = seed_data["landlord"]
+    app.dependency_overrides[get_current_user] = lambda: user
+
+    try:
+        files = {"file": ("script.exe", b"MZ\x90\x00\x03\x00\x00\x00", "application/x-msdownload")}
+        data = {"prefix": "maintenance"}
+        response = await client.post("/api/v1/uploads/", data=data, files=files)
+        assert response.status_code == 400
+        assert "Unsupported file type" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+

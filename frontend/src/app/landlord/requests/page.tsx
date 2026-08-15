@@ -67,20 +67,36 @@ function getEmpatheticErrorMessage(rawError: string): string {
     }
     return "This request status sequence is invalid. Please follow the standard workflow steps.";
   }
-  
-  if (lowercaseError.includes("invalid prefix") || lowercaseError.includes("invalid file key")) {
-    return "One of the files you attached has an invalid format or size. Please select another file and try again.";
+
+  if (lowercaseError.includes("demo accounts cannot")) {
+    return rawError;
+  }
+
+  if (lowercaseError.includes("unsupported file type") || lowercaseError.includes("invalid content") || lowercaseError.includes("corrupted file")) {
+    return rawError;
+  }
+
+  if (lowercaseError.includes("too large") || lowercaseError.includes("10mb")) {
+    return "One of the files exceeds the 10MB limit. Please select a smaller file.";
   }
   
-  if (lowercaseError.includes("access denied") || lowercaseError.includes("forbidden")) {
-    return "You do not have permission to update this maintenance request. Try logging in again.";
+  if (lowercaseError.includes("invalid prefix") || lowercaseError.includes("invalid file key")) {
+    return "One of the files you attached has an invalid format or key. Please select another file and try again.";
+  }
+  
+  if (lowercaseError.includes("access denied") || lowercaseError.includes("forbidden") || lowercaseError.includes("permission")) {
+    return "You do not have permission to perform this action.";
   }
   
   if (lowercaseError.includes("not found")) {
     return "This maintenance request could not be found. It may have been removed or updated elsewhere.";
   }
+
+  if (lowercaseError.includes("unable to connect") || lowercaseError.includes("failed to fetch") || lowercaseError.includes("network")) {
+    return "Unable to connect to the server. Please verify your internet connection or ensure the backend is running.";
+  }
   
-  return "We couldn't update the request right now. Please verify your internet connection and try again.";
+  return rawError || "We couldn't update the request right now. Please try again.";
 }
 
 function AttachmentThumbnail({ 
@@ -238,6 +254,22 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files).slice(0, 3);
+      const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf", ".doc", ".docx", ".mp4", ".mov", ".webm", ".m4v"];
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+      for (const file of selectedFiles) {
+        const ext = "." + file.name.split(".").pop()?.toLowerCase();
+        if (!ALLOWED_EXTS.includes(ext)) {
+          toast.error(`"${file.name}" has an unsupported file type. Supported formats: Images (JPG, PNG, WEBP, HEIC), Docs (PDF, DOC), and Videos (MP4, MOV, WEBM).`);
+          e.target.value = "";
+          return;
+        }
+        if (file.size > MAX_SIZE) {
+          toast.error(`"${file.name}" exceeds the 10MB size limit (${(file.size / (1024 * 1024)).toFixed(1)}MB).`);
+          e.target.value = "";
+          return;
+        }
+      }
       setFiles(selectedFiles);
     }
   };
@@ -378,7 +410,7 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
                       <input 
                         type="file" 
                         multiple
-                        accept="image/*,application/pdf"
+                        accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
                         onChange={handleFileChange}
                         disabled={req.status === "closed"}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
@@ -386,7 +418,7 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
                       <div className="w-full border border-dashed border-border/70 bg-[rgb(var(--ml-bg-primary))] group-hover/upload:border-[rgb(var(--ml-text-primary))]/40 rounded-xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
                         <ImageIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))] group-hover/upload:text-[rgb(var(--ml-text-primary))] transition-colors" />
                         <span className="text-xs font-semibold text-[rgb(var(--ml-text-primary))] mt-1">Upload Files</span>
-                        <span className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))]">PDF or Images</span>
+                        <span className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))]">Photos, docs, or videos (Max 10MB)</span>
                       </div>
                     </div>
                     {files.length > 0 && (

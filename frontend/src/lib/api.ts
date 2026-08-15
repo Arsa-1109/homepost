@@ -169,26 +169,28 @@ export async function apiFetch<T = unknown>(
     return response.json();
   };
 
-  // Handle auth errors gracefully
-  if (response.status === 401) {
-    throw new Error(
-      "Authentication required or session expired. Please verify your credentials."
-    );
-  }
-
-  if (response.status === 403) {
-    throw new Error(
-      "You don't have permission to access this resource."
-    );
-  }
-
   // Parse error responses
   if (!response.ok) {
     const errorData = await safeJson().catch(() => null);
-    const message =
-      errorData?.detail?.message ||
-      errorData?.detail ||
-      "Something went wrong. Please try again.";
+    
+    // Extract backend error message cleanly
+    let message = "";
+    if (typeof errorData?.detail === "string") {
+      message = errorData.detail;
+    } else if (typeof errorData?.detail?.message === "string") {
+      message = errorData.detail.message;
+    } else if (typeof errorData?.message === "string") {
+      message = errorData.message;
+    } else if (response.status === 401) {
+      message = "Authentication required or session expired. Please verify your credentials.";
+    } else if (response.status === 403) {
+      message = "You don't have permission to perform this action.";
+    } else if (response.status === 413) {
+      message = "File is too large. Please upload files under 10MB.";
+    } else {
+      message = "Something went wrong. Please try again.";
+    }
+    
     throw new Error(message);
   }
 

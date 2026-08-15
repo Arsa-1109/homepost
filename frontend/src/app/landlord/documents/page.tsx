@@ -185,8 +185,8 @@ function LandlordDocumentsContent() {
       setSelectedUnit("");
       setShowUploadForm(false);
       toast.success("Document uploaded successfully!");
-    } catch (err) {
-      toast.error("Failed to upload document. Please try again.");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to upload document. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -622,7 +622,27 @@ function LandlordDocumentsContent() {
                         id="doc-file"
                         required
                         type="file"
-                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                        accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
+                        onChange={(e) => {
+                          const selected = e.target.files?.[0] || null;
+                          if (selected) {
+                            const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf", ".doc", ".docx", ".mp4", ".mov", ".webm", ".m4v"];
+                            const ext = "." + selected.name.split(".").pop()?.toLowerCase();
+                            if (!ALLOWED_EXTS.includes(ext)) {
+                              toast.error(`"${selected.name}" has an unsupported format. Supported formats: Images, PDFs, Docs, and Videos.`);
+                              e.target.value = "";
+                              setFile(null);
+                              return;
+                            }
+                            if (selected.size > 10 * 1024 * 1024) {
+                              toast.error(`"${selected.name}" exceeds the 10MB size limit (${(selected.size / (1024 * 1024)).toFixed(1)}MB).`);
+                              e.target.value = "";
+                              setFile(null);
+                              return;
+                            }
+                          }
+                          setFile(selected);
+                        }}
                         className="w-full text-xs text-[rgb(var(--ml-text-secondary))] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-bold file:text-xs file:bg-[rgb(var(--ml-text-primary))] file:text-[rgb(var(--ml-bg-primary))] hover:file:opacity-90 cursor-pointer"
                       />
                     </div>

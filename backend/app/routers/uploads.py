@@ -27,6 +27,10 @@ ALLOWED_MIME_TYPES = {
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "video/mp4",
+    "video/quicktime",
+    "video/webm",
+    "video/x-m4v",
 }
 
 ALLOWED_EXTENSIONS = {
@@ -39,6 +43,10 @@ ALLOWED_EXTENSIONS = {
     ".pdf",
     ".doc",
     ".docx",
+    ".mp4",
+    ".mov",
+    ".webm",
+    ".m4v",
 }
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
@@ -93,6 +101,19 @@ def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
         if len(file_bytes) < 12 or b"ftyp" not in file_bytes[4:12]:
             raise HTTPException(status_code=400, detail="Invalid HEIC/HEIF image content or corrupted file.")
 
+    # MP4 / MOV / M4V: ISO Base Media File Format (ftyp, moov, mdat, wide)
+    elif ext in [".mp4", ".mov", ".m4v"]:
+        if len(file_bytes) < 8:
+            raise HTTPException(status_code=400, detail="Invalid video content or file too small.")
+        box_type = file_bytes[4:8]
+        if box_type not in [b"ftyp", b"moov", b"mdat", b"wide"] and b"ftyp" not in file_bytes[:32]:
+            raise HTTPException(status_code=400, detail="Invalid MP4/MOV video content or corrupted file.")
+
+    # WEBM: 1A 45 DF A3 (EBML container)
+    elif ext == ".webm":
+        if len(file_bytes) < 4 or not file_bytes.startswith(b"\x1a\x45\xdf\xa3"):
+            raise HTTPException(status_code=400, detail="Invalid WEBM video content or corrupted file.")
+
 
 @router.post("/", response_model=DirectUploadResponse)
 @limiter.limit("10/minute")
@@ -116,7 +137,7 @@ async def upload_file_direct(
     if ext not in ALLOWED_EXTENSIONS or content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="Unsupported file type. Allowed formats: JPEG, PNG, WEBP, HEIC, PDF, DOC, DOCX."
+            detail=f"Unsupported file type ({ext or 'unknown'}). Allowed formats: Images (JPEG, PNG, WEBP, HEIC), Documents (PDF, DOC, DOCX), Videos (MP4, MOV, WEBM)."
         )
     
     file_bytes = await file.read()

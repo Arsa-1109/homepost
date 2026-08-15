@@ -23,8 +23,27 @@ export default function NewRequestPage() {
     const newFiles = Array.from(e.target.files || []);
     if (images.length + newFiles.length > 3) {
       toast.error("You can only upload a maximum of 3 attachments.");
+      e.target.value = "";
       return;
     }
+
+    const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf", ".doc", ".docx", ".mp4", ".mov", ".webm", ".m4v"];
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+    for (const file of newFiles) {
+      const ext = "." + file.name.split(".").pop()?.toLowerCase();
+      if (!ALLOWED_EXTS.includes(ext)) {
+        toast.error(`"${file.name}" has an unsupported format. Supported formats: Images, PDFs, Docs, and Videos.`);
+        e.target.value = "";
+        return;
+      }
+      if (file.size > MAX_SIZE) {
+        toast.error(`"${file.name}" exceeds the 10MB size limit (${(file.size / (1024 * 1024)).toFixed(1)}MB).`);
+        e.target.value = "";
+        return;
+      }
+    }
+
     setImages((prev) => [...prev, ...newFiles]);
   };
 
@@ -202,7 +221,7 @@ export default function NewRequestPage() {
                 <input 
                   id="issue-photos"
                   type="file" 
-                  accept="image/*"
+                  accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
                   multiple
                   onChange={handleImageChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -213,10 +232,10 @@ export default function NewRequestPage() {
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-[rgb(var(--ml-text-primary))]">
-                      Click or drag photos to upload
+                      Click or drag files to upload
                     </p>
                     <p className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-medium">
-                      JPG, PNG, WEBP up to 10MB (Max 3 files)
+                      Photos, docs, or videos up to 10MB (Max 3 files)
                     </p>
                   </div>
                 </div>
