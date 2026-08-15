@@ -9,6 +9,7 @@ Handles the three onboarding paths:
 All endpoints require a valid Clerk JWT (get_current_user dependency).
 """
 
+import secrets
 import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
@@ -17,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.core.database import get_session
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, guard_demo_mutation
 from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
@@ -50,7 +51,9 @@ class SyncUserPayload(BaseModel):
 
 
 @router.post("/sync")
+@limiter.limit("15/minute")
 async def sync_user(
+    request: Request,
     payload: SyncUserPayload,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
@@ -89,6 +92,8 @@ async def reset_role(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
+    guard_demo_mutation(user, "reset roles")
+
     if user.role == UserRole.LANDLORD:
         # Check if they have any properties
         statement = select(func.count(Property.id)).where(Property.owner_id == user.id)
@@ -275,7 +280,7 @@ async def accept_invite(
     result = await session.execute(statement)
     invite = result.scalar_one_or_none()
 
-    if not invite:
+    if not invite or not secrets.compare_digest(invite.token, payload.token):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="invite_not_found"
@@ -326,10 +331,14 @@ async def accept_invite(
             detail="You are the owner of this property and cannot accept tenant invites for your own units."
         )
 
-    # Check if the unit is already occupied by an active tenant
-    occ_statement = select(TenantProfile).where(
-        TenantProfile.unit_id == invite.unit_id,
-        TenantProfile.is_active == True,
+    # Check if the unit is already occupied by an active tenant with pessimistic row locking
+    occ_statement = (
+        select(TenantProfile)
+        .where(
+            TenantProfile.unit_id == invite.unit_id,
+            TenantProfile.is_active == True,
+        )
+        .with_for_update()
     )
     occ_res = await session.execute(occ_statement)
     existing_unit_profile = occ_res.scalars().first()

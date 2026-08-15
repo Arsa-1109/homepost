@@ -94,3 +94,10 @@ yarn-error.log*
 # ========================
 *.md
 !README.md
+
+# ========================
+# Local Archive Files (Do not commit)
+# ========================
+archive/
+frontend/src/archive/
+*.archive.*

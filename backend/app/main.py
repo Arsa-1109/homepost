@@ -88,8 +88,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS — allow the Next.js frontend to make cross-origin requests
 # FRONTEND_URL can be a single URL or comma-separated list of URLs
 # Supports regex matching for local development and Vercel preview/branch deployments.
+from fastapi.responses import JSONResponse
+
 # ---------------------------------------------------------------------------
-# Security Headers
+# Security Headers & Body Size Limit Middlewares
+# ---------------------------------------------------------------------------
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
@@ -101,13 +104,32 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
 
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                length = int(content_length)
+                # Allow uploads up to max_upload_size_bytes (10MB), cap general API requests at 1MB
+                max_allowed = settings.max_upload_size_bytes if request.url.path.startswith("/api/v1/uploads") else 1_048_576
+                if length > max_allowed:
+                    return JSONResponse(
+                        status_code=413,
+                        content={"detail": "File too large: payload exceeds maximum allowed size." if request.url.path.startswith("/api/v1/uploads") else "Payload too large. Maximum allowed size is 1MB for API requests."}
+                    )
+            except ValueError:
+                pass
+        return await call_next(request)
+
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware)
 
 _raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_raw_origins,
-    allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?|https://homepost-.*\.vercel\.app|https://homepost\.vercel\.app)$",
+    allow_origin_regex=r"^(https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?|https://homepost\.vercel\.app)$",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],

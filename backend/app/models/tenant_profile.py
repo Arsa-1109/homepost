@@ -4,6 +4,10 @@ Tenant Profile Model
 Links a User (role=tenant) to a specific Unit. This is the data isolation
 anchor — every tenant query filters by the profile's unit_id.
 
+Single-occupancy guarantee:
+- Supported by a PostgreSQL partial unique index (`unique_active_unit_tenant`) on (unit_id) WHERE is_active = TRUE.
+- One active tenant per unit at any given time.
+
 Contains lease dates used by APScheduler for lease expiry reminders.
 """
 

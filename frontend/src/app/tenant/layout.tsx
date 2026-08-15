@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useAuth } from "@clerk/nextjs";
@@ -9,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { isDemoSession, clearDemoSession, startDemoSession } from "@/lib/demo-auth";
 import { cn } from "@/lib/utils";
 
-const TABS = [
+const NAV_TABS = [
   { label: "Home",     icon: Home,      href: "/tenant/dashboard" },
   { label: "Requests", icon: Wrench,    href: "/tenant/requests" },
   { label: "News",     icon: Megaphone, href: "/tenant/announcements" },
   { label: "Docs",     icon: FileText,  href: "/tenant/documents" },
+  { label: "Settings", icon: Settings,  href: "/tenant/settings" },
 ];
 
 export default function TenantLayout({
@@ -22,8 +24,23 @@ export default function TenantLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
+  const [isDemo, setIsDemo] = useState(false);
+
+  useEffect(() => {
+    setIsDemo(isDemoSession());
+  }, []);
+
+  const isDemoActive = isDemo || (isLoaded && !isSignedIn);
   const isSettingsActive = pathname === "/tenant/settings" || pathname.startsWith("/tenant/settings/");
+  const showSettings = isSignedIn && !isDemo;
+
+  const visibleTabs = NAV_TABS.filter((tab) => {
+    if (tab.href === "/tenant/settings" && isDemoActive) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="flex flex-col min-h-dvh">
@@ -34,19 +51,21 @@ export default function TenantLayout({
           <span>Homepost</span>
         </Link>
         <div className="flex gap-2.5 items-center">
-          <Link
-            href="/tenant/settings"
-            className={cn(
-              "size-9 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.97]",
-              isSettingsActive
-                ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))]/40 shadow-[0_0_12px_rgba(var(--ml-accent),0.15)]"
-                : "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border hover:text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30"
-            )}
-            title="Settings"
-            aria-label="Settings"
-          >
-            <Settings className={cn("size-4 transition-transform duration-200", isSettingsActive ? "text-[rgb(var(--ml-accent))] scale-105" : "hover:rotate-45")} />
-          </Link>
+          {showSettings && (
+            <Link
+              href="/tenant/settings"
+              className={cn(
+                "size-9 rounded-xl flex items-center justify-center border transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.97]",
+                isSettingsActive
+                  ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))]/40 shadow-[0_0_12px_rgba(var(--ml-accent),0.15)]"
+                  : "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border hover:text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30"
+              )}
+              title="Settings"
+              aria-label="Settings"
+            >
+              <Settings className={cn("size-4 transition-transform duration-200", isSettingsActive ? "text-[rgb(var(--ml-accent))] scale-105" : "hover:rotate-45")} />
+            </Link>
+          )}
           <ThemeToggle />
           {isSignedIn ? (
             <UserButton />
@@ -92,13 +111,12 @@ export default function TenantLayout({
         </div>
       </header>
 
-
       {/* Main content — extra bottom padding so content never hides behind tab bar */}
       <main className="flex-1 p-4 pb-24">{children}</main>
 
-      {/* Bottom Tab Bar — always visible */}
+      {/* Bottom Tab Bar */}
       <nav className="fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 border-t border-border bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md z-50">
-        {TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
           return (

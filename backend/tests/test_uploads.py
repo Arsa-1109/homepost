@@ -10,7 +10,7 @@ async def test_direct_upload_success(client: AsyncClient, seed_data, mock_storag
     app.dependency_overrides[get_current_user] = lambda: user
 
     try:
-        files = {"file": ("receipt.png", b"fake image bytes content", "image/png")}
+        files = {"file": ("receipt.png", b"\x89PNG\r\n\x1a\nfake image bytes content", "image/png")}
         data = {"prefix": "maintenance"}
         response = await client.post("/api/v1/uploads/", data=data, files=files)
         assert response.status_code == 200
@@ -33,10 +33,46 @@ async def test_direct_upload_file_too_large(client: AsyncClient, seed_data, monk
     monkeypatch.setattr(settings, "max_upload_size_bytes", 5)
 
     try:
-        files = {"file": ("large_file.png", b"more than 5 bytes of data", "image/png")}
+        files = {"file": ("large_file.png", b"\x89PNG\r\n\x1a\nmore than 5 bytes of data", "image/png")}
         response = await client.post("/api/v1/uploads/", files=files)
         assert response.status_code == 413
         assert "File too large" in response.json()["detail"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_direct_upload_magic_byte_spoofing_rejection(client: AsyncClient, seed_data, mock_storage):
+    """POST /uploads/ returns 400 when file content does not match the file signature for its extension."""
+    user = seed_data["landlord"]
+    app.dependency_overrides[get_current_user] = lambda: user
+
+    try:
+        # Spoofed PNG (fake text payload)
+        res_png = await client.post(
+            "/api/v1/uploads/",
+            files={"file": ("fake.png", b"this is pure text disguised as png", "image/png")},
+            data={"prefix": "maintenance"}
+        )
+        assert res_png.status_code == 400
+        assert "Invalid PNG image content" in res_png.json()["detail"]
+
+        # Spoofed PDF (fake text payload)
+        res_pdf = await client.post(
+            "/api/v1/uploads/",
+            files={"file": ("fake.pdf", b"not a real pdf content", "application/pdf")},
+            data={"prefix": "documents"}
+        )
+        assert res_pdf.status_code == 400
+        assert "Invalid PDF document content" in res_pdf.json()["detail"]
+
+        # Spoofed JPEG (fake text payload)
+        res_jpg = await client.post(
+            "/api/v1/uploads/",
+            files={"file": ("fake.jpg", b"not a real jpeg content", "image/jpeg")},
+            data={"prefix": "maintenance"}
+        )
+        assert res_jpg.status_code == 400
+        assert "Invalid JPEG image content" in res_jpg.json()["detail"]
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 

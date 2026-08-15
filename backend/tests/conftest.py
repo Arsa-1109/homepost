@@ -84,7 +84,7 @@ def mock_storage(monkeypatch):
     from app.services import storage
     from app.routers import uploads
 
-    fake_download = lambda key, expires=3600, filename=None: f"https://r2.mocked.com/{key}"
+    fake_download = lambda key, expires=900, filename=None: f"https://r2.mocked.com/{key}"
     monkeypatch.setattr(storage, "upload_file_to_r2", lambda *args, **kwargs: None)
     monkeypatch.setattr(storage, "generate_presigned_download_url", fake_download)
     monkeypatch.setattr(uploads, "upload_file_to_r2", lambda *args, **kwargs: None)

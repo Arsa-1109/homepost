@@ -40,7 +40,7 @@ export default function LandlordLayout({
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
@@ -55,6 +55,13 @@ export default function LandlordLayout({
     localStorage.setItem("landlord_sidebar_collapsed", String(nextState));
   };
 
+  const isDemoActive = isDemo || (isLoaded && !isSignedIn);
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (item.href === "/landlord/settings" && isDemoActive) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -85,7 +92,7 @@ export default function LandlordLayout({
           )}
 
           <nav className="flex-1 space-y-1 px-3">
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
@@ -205,7 +212,7 @@ export default function LandlordLayout({
                   <span>Homepost</span>
                 </Link>
                 <nav className="space-y-1 p-4">
-                  {NAV_ITEMS.map((item) => {
+                  {visibleNavItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
@@ -240,7 +247,7 @@ export default function LandlordLayout({
 
         {/* Mobile Bottom Navigation Bar */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-border px-2 py-1.5 flex items-center justify-around">
-          {NAV_ITEMS.slice(0, 6).map((item) => {
+          {visibleNavItems.slice(0, 6).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (

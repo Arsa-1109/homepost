@@ -17,13 +17,35 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from app.core.config import get_settings
 from app.core.database import get_session
-from app.core.security import verify_clerk_token
+from app.core.security import verify_clerk_token, ALLOWED_DEMO_USER_IDS
 from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 
 # Bearer token extractor — looks for "Authorization: Bearer <token>"
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def is_demo_user(user: User) -> bool:
+    """Check if the user is one of the designated shared demo accounts."""
+    return bool(user.clerk_id and user.clerk_id in ALLOWED_DEMO_USER_IDS)
+
+
+def guard_demo_mutation(user: User, action: str = "modify this resource") -> None:
+    """
+    Prevent destructive/state-modifying mutations on designated demo accounts.
+    Raises 403 Forbidden with actionable explanation.
+    """
+    if is_demo_user(user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": f"Demo accounts cannot {action}. Please create a free account to manage real properties.",
+                "code": "DEMO_MUTATION_RESTRICTED",
+                "suggestion": "Sign up for a full account to access all creation, modification, and deletion features.",
+            },
+        )
 
 
 async def get_current_user(
@@ -68,20 +90,31 @@ async def get_current_user(
             detail={"message": "Invalid authentication token."},
         )
 
+    settings = get_settings()
+
     # Look up user in our database
     statement = select(User).where(User.clerk_id == clerk_id)
     result = await session.execute(statement)
     user = result.scalar_one_or_none()
 
     if user is None and payload.get("email"):
-        statement = select(User).where(User.email == payload.get("email"))
-        result = await session.execute(statement)
-        user = result.scalar_one_or_none()
-        if user:
-            user.clerk_id = clerk_id
-            session.add(user)
-            await session.commit()
-            await session.refresh(user)
+        # Security hardening: Only link an existing user record by email if Clerk explicitly verified
+        # email ownership or during mock authentication. Prevents pre-auth account takeover.
+        is_email_verified = (
+            payload.get("email_verified") is True
+            or payload.get("email_verified") == "true"
+            or settings.mock_auth
+            or clerk_id in ALLOWED_DEMO_USER_IDS
+        )
+        if is_email_verified:
+            statement = select(User).where(User.email == payload.get("email"))
+            result = await session.execute(statement)
+            user = result.scalar_one_or_none()
+            if user:
+                user.clerk_id = clerk_id
+                session.add(user)
+                await session.commit()
+                await session.refresh(user)
 
     if user is None:
         # Auto-create on first API call (Clerk → PostgreSQL sync)

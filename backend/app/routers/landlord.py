@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+import logging
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-import uuid
 
 from app.core.database import get_session
-from app.dependencies.auth import get_current_landlord
+from app.core.limiter import limiter
+from app.dependencies.auth import get_current_landlord, guard_demo_mutation
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
@@ -25,6 +27,7 @@ from app.services.email import (
 from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request, hydrate_announcement
 
 router = APIRouter(prefix="/landlord", tags=["Landlord"])
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Properties
@@ -44,7 +47,9 @@ def format_address(address: str) -> str:
 
 
 @router.post("/properties", response_model=Property)
+@limiter.limit("10/minute")
 async def create_property(
+    request: Request,
     prop_in: PropertyCreate,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -71,7 +76,9 @@ async def list_properties(
     return result.scalars().all()
 
 @router.put("/properties/{property_id}", response_model=Property)
+@limiter.limit("20/minute")
 async def update_property(
+    request: Request,
     property_id: uuid.UUID,
     prop_in: PropertyUpdate,
     user: User = Depends(get_current_landlord),
@@ -99,11 +106,15 @@ async def update_property(
     return prop
 
 @router.delete("/properties/{property_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("10/minute")
 async def delete_property(
+    request: Request,
     property_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    guard_demo_mutation(user, "delete properties")
+
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=404, detail="Property not found")
@@ -163,7 +174,9 @@ async def delete_property(
 # Units
 # ---------------------------------------------------------------------------
 @router.post("/units", response_model=Unit)
+@limiter.limit("20/minute")
 async def create_unit(
+    request: Request,
     unit_in: UnitCreate,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -311,7 +324,9 @@ async def get_unit_details(
     }
 
 @router.put("/units/{unit_id}", response_model=Unit)
+@limiter.limit("20/minute")
 async def update_unit(
+    request: Request,
     unit_id: uuid.UUID,
     unit_in: UnitUpdate,
     user: User = Depends(get_current_landlord),
@@ -358,11 +373,15 @@ async def update_unit(
     return unit
 
 @router.delete("/units/{unit_id}", status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
 async def delete_unit(
+    request: Request,
     unit_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    guard_demo_mutation(user, "delete units")
+
     unit = await session.get(Unit, unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
@@ -443,7 +462,9 @@ async def list_maintenance_requests(
     return response_data
 
 @router.patch("/maintenance/{request_id}", response_model=MaintenanceRequestResponse)
+@limiter.limit("20/minute")
 async def update_maintenance_request(
+    request: Request,
     request_id: uuid.UUID,
     req_in: MaintenanceRequestUpdate,
     background_tasks: BackgroundTasks,
@@ -510,7 +531,11 @@ async def update_maintenance_request(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error validating maintenance request update: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while validating the maintenance request update.",
+        )
 
     # ---------------------------------------------------------------
     # Phase 2: apply mutations and commit (this MUST always succeed)
@@ -551,9 +576,10 @@ async def update_maintenance_request(
         raise
     except Exception as e:
         await session.rollback()
+        logger.error(f"Error persisting maintenance update to database: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"An unexpected error occurred while updating the database: {str(e)}",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected database error occurred while updating the maintenance request. Please try again.",
         )
 
     # ---------------------------------------------------------------
@@ -665,7 +691,9 @@ async def list_maintenance_events(
 # Announcements
 # ---------------------------------------------------------------------------
 @router.post("/announcements", response_model=AnnouncementResponse)
+@limiter.limit("10/minute")
 async def create_announcement(
+    request: Request,
     ann_in: AnnouncementCreate,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -705,7 +733,9 @@ async def list_announcements(
     return out
 
 @router.put("/announcements/{announcement_id}", response_model=AnnouncementResponse)
+@limiter.limit("15/minute")
 async def update_announcement(
+    request: Request,
     announcement_id: uuid.UUID,
     ann_in: AnnouncementUpdate,
     user: User = Depends(get_current_landlord),
@@ -736,11 +766,15 @@ async def update_announcement(
     return resp
 
 @router.delete("/announcements/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit("10/minute")
 async def delete_announcement(
+    request: Request,
     announcement_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    guard_demo_mutation(user, "delete announcements")
+
     ann = await session.get(Announcement, announcement_id)
     if not ann or ann.author_id != user.id:
         raise HTTPException(status_code=404, detail="Announcement not found or access denied.")
@@ -755,7 +789,9 @@ async def delete_announcement(
 from app.models.document import Document
 
 @router.post("/documents", response_model=DocumentResponse)
+@limiter.limit("20/minute")
 async def create_document_record(
+    request: Request,
     doc_in: DocumentCreate,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -875,11 +911,15 @@ class DenyTenantPayload(BaseModel):
     user_id: uuid.UUID
 
 @router.post("/generate-invite", response_model=Invite)
+@limiter.limit("15/minute")
 async def generate_invite(
+    request: Request,
     payload: GenerateInvitePayload,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
+    guard_demo_mutation(user, "generate tenant invites")
+
     # Ensure unit belongs to landlord
     unit = await session.get(Unit, payload.unit_id)
     if not unit:
@@ -916,12 +956,16 @@ async def pending_tenants(
     return result.scalars().all()
 
 @router.post("/approve-tenant")
+@limiter.limit("15/minute")
 async def approve_tenant(
+    request: Request,
     payload: ApproveTenantPayload,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
+    guard_demo_mutation(user, "approve tenant applications")
+
     tenant = await session.get(User, payload.user_id)
     if not tenant or tenant.requested_landlord_id != user.id or tenant.role != UserRole.TENANT_PENDING:
         raise HTTPException(status_code=404, detail="Pending tenant request not found.")
@@ -933,9 +977,11 @@ async def approve_tenant(
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Unit access denied.")
 
-    # Guard: prevent double active occupancy
+    # Guard: prevent double active occupancy with pessimistic row locking
     occ_res = await session.execute(
-        select(TenantProfile).where(TenantProfile.unit_id == unit.id, TenantProfile.is_active == True)
+        select(TenantProfile)
+        .where(TenantProfile.unit_id == unit.id, TenantProfile.is_active == True)
+        .with_for_update()
     )
     if occ_res.scalars().first():
         raise HTTPException(status_code=409, detail="This unit is already occupied by an active tenant.")
@@ -985,7 +1031,9 @@ class UpdateLeasePayload(BaseModel):
     lease_end: Optional[date] = None
 
 @router.put("/units/{unit_id}/lease")
+@limiter.limit("10/minute")
 async def update_lease(
+    request: Request,
     unit_id: uuid.UUID,
     payload: UpdateLeasePayload,
     user: User = Depends(get_current_landlord),
@@ -1019,12 +1067,16 @@ async def update_lease(
     return {"status": "success", "message": "Lease dates updated."}
 
 @router.post("/deny-tenant")
+@limiter.limit("15/minute")
 async def deny_tenant(
+    request: Request,
     payload: DenyTenantPayload,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
+    guard_demo_mutation(user, "deny tenant applications")
+
     tenant = await session.get(User, payload.user_id)
     if not tenant or tenant.requested_landlord_id != user.id or tenant.role != UserRole.TENANT_PENDING:
         raise HTTPException(status_code=404, detail="Pending tenant request not found.")
@@ -1293,7 +1345,9 @@ async def get_dashboard_summary(
 # Tenant Management
 # ---------------------------------------------------------------------------
 @router.delete("/units/{unit_id}/tenant", status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
 async def remove_tenant(
+    request: Request,
     unit_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
@@ -1303,6 +1357,8 @@ async def remove_tenant(
     Sets is_active=False and removed_at=now() on all active TenantProfiles for this unit.
     Sets unit.status = 'Vacant'.
     """
+    guard_demo_mutation(user, "remove tenants from units")
+
     from app.models.tenant_profile import TenantProfile
     from datetime import datetime, timezone
 

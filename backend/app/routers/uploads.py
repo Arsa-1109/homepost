@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, File, Form
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, guard_demo_mutation
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
@@ -49,6 +49,51 @@ class DirectUploadResponse(BaseModel):
 class DownloadURLResponse(BaseModel):
     download_url: str
 
+
+def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
+    """
+    Validate binary file headers against expected magic byte signatures.
+    Rejects spoofed extensions / polyglot payloads with HTTP 400.
+    """
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    # JPEG: FF D8 FF
+    if ext in [".jpg", ".jpeg"]:
+        if len(file_bytes) < 3 or not file_bytes.startswith(b"\xff\xd8\xff"):
+            raise HTTPException(status_code=400, detail="Invalid JPEG image content or corrupted file.")
+
+    # PNG: 89 50 4E 47 (\x89PNG)
+    elif ext == ".png":
+        if len(file_bytes) < 4 or not file_bytes.startswith(b"\x89PNG"):
+            raise HTTPException(status_code=400, detail="Invalid PNG image content or corrupted file.")
+
+    # PDF: %PDF (25 50 44 46)
+    elif ext == ".pdf":
+        if len(file_bytes) < 4 or not file_bytes.startswith(b"%PDF"):
+            raise HTTPException(status_code=400, detail="Invalid PDF document content or corrupted file.")
+
+    # WEBP: RIFF....WEBP
+    elif ext == ".webp":
+        if len(file_bytes) < 12 or not (file_bytes.startswith(b"RIFF") and file_bytes[8:12] == b"WEBP"):
+            raise HTTPException(status_code=400, detail="Invalid WEBP image content or corrupted file.")
+
+    # DOCX: PK\x03\x04 (ZIP container for Office Open XML)
+    elif ext == ".docx":
+        if len(file_bytes) < 4 or not file_bytes.startswith(b"PK\x03\x04"):
+            raise HTTPException(status_code=400, detail="Invalid DOCX document content or corrupted file.")
+
+    # DOC: D0 CF 11 E0 A1 B1 1A E1 (Legacy Microsoft Compound Document)
+    elif ext == ".doc":
+        if len(file_bytes) < 8 or not file_bytes.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+            raise HTTPException(status_code=400, detail="Invalid DOC document content or corrupted file.")
+
+    # HEIC / HEIF: ftypheic / ftypmif1 / ftypmsf1 / ftyphevc
+    elif ext in [".heic", ".heif"]:
+        if len(file_bytes) < 12 or b"ftyp" not in file_bytes[4:12]:
+            raise HTTPException(status_code=400, detail="Invalid HEIC/HEIF image content or corrupted file.")
+
+
 @router.post("/", response_model=DirectUploadResponse)
 @limiter.limit("10/minute")
 async def upload_file_direct(
@@ -57,6 +102,8 @@ async def upload_file_direct(
     file: UploadFile = File(..., description="The file to upload"),
     user: User = Depends(get_current_user)
 ):
+    guard_demo_mutation(user, "upload files directly")
+
     settings = get_settings()
     
     if prefix not in ["maintenance", "documents", "announcements"]:
@@ -75,6 +122,9 @@ async def upload_file_direct(
     file_bytes = await file.read()
     if len(file_bytes) > settings.max_upload_size_bytes:
         raise HTTPException(status_code=413, detail="File too large (exceeds 10MB limit).")
+
+    # Security validation: Validate binary magic bytes
+    validate_file_magic_bytes(file_bytes, ext)
         
     object_key = generate_object_key(prefix, file.filename)
     
@@ -173,5 +223,5 @@ async def get_presigned_download_url(
         raise HTTPException(status_code=403, detail="You do not have permission to access this file.")
 
     filename = file_key.split("/")[-1] if download else None
-    url = generate_presigned_download_url(file_key, expires=3600, filename=filename)
+    url = generate_presigned_download_url(file_key, expires=900, filename=filename)
     return DownloadURLResponse(download_url=url)

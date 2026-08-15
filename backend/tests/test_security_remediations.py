@@ -686,3 +686,184 @@ def test_format_address_word_boundary_sanitization():
     assert format_address("123 highland streets") == "123 Highland Street"
     assert format_address("456 pine drives") == "456 Pine Drive"
     assert format_address("Grand Suites & Resorts") == "Grand Suites & Resorts"
+
+
+# ===========================================================================
+# 10. Demo Account Mutation Protection & Security Hardening
+# ===========================================================================
+
+async def test_demo_landlord_mutation_protection_blocks_destructive_actions(
+    client: AsyncClient, seed_data, db_session: AsyncSession
+):
+    """
+    Ensure demo landlord accounts (e.g. user_demo_landlord_001) cannot execute destructive mutations
+    (property deletion, unit deletion, announcement deletion, invite generation, tenant removal).
+    """
+    prop = seed_data["property"]
+    unit = seed_data["unit"]
+
+    demo_landlord = User(
+        id=uuid.uuid4(),
+        clerk_id="user_demo_landlord_001",
+        email="landlord@homepost.demo",
+        full_name="Marcus Vance (Demo Landlord)",
+        role=UserRole.LANDLORD,
+    )
+    db_session.add(demo_landlord)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: demo_landlord
+
+    try:
+        # 1. Block property deletion
+        res_del_prop = await client.delete(f"/api/v1/landlord/properties/{prop.id}")
+        assert res_del_prop.status_code == 403
+        assert res_del_prop.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+
+        # 2. Block unit deletion
+        res_del_unit = await client.delete(f"/api/v1/landlord/units/{unit.id}")
+        assert res_del_unit.status_code == 403
+        assert res_del_unit.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+
+        # 3. Block invite generation
+        res_invite = await client.post(
+            "/api/v1/landlord/generate-invite",
+            json={"unit_id": str(unit.id), "clear_data": False},
+        )
+        assert res_invite.status_code == 403
+        assert res_invite.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+
+        # 4. Block tenant approval / denial
+        res_approve = await client.post(
+            "/api/v1/landlord/approve-tenant",
+            json={"user_id": str(uuid.uuid4()), "unit_id": str(unit.id)},
+        )
+        assert res_approve.status_code == 403
+        assert res_approve.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+
+        res_deny = await client.post(
+            "/api/v1/landlord/deny-tenant",
+            json={"user_id": str(uuid.uuid4())},
+        )
+        assert res_deny.status_code == 403
+        assert res_deny.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+
+        # 5. Block direct file uploads
+        res_upload = await client.post(
+            "/api/v1/uploads/",
+            files={"file": ("photo.jpg", b"\xff\xd8\xff\xe0demoimage", "image/jpeg")},
+            data={"prefix": "maintenance"},
+        )
+        assert res_upload.status_code == 403
+        assert res_upload.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+
+        # 6. Block role reset
+        res_reset = await client.post("/api/v1/onboarding/reset-role")
+        assert res_reset.status_code == 403
+        assert res_reset.json()["detail"]["code"] == "DEMO_MUTATION_RESTRICTED"
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_unverified_email_linking_prevention(client: AsyncClient, db_session: AsyncSession, monkeypatch):
+    """
+    Ensure an unverified Clerk token cannot claim a pre-existing User account with the same email.
+    """
+    import base64
+    import json
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "mock_auth", False)
+    monkeypatch.setenv("MOCK_AUTH", "false")
+
+    target_email = f"victim_{uuid.uuid4().hex[:6]}@example.com"
+    victim_user = User(
+        id=uuid.uuid4(),
+        clerk_id="clerk_original_owner",
+        email=target_email,
+        full_name="Target Owner",
+        role=UserRole.LANDLORD,
+    )
+    db_session.add(victim_user)
+    await db_session.commit()
+
+    # Attacker signs up with target_email but email_verified is False
+    attacker_clerk_id = f"clerk_attacker_{uuid.uuid4().hex[:6]}"
+    
+    # Mock verify_clerk_token to return unverified email claim
+    async def mock_verify(token: str):
+        return {
+            "sub": attacker_clerk_id,
+            "email": target_email,
+            "name": "Attacker",
+            "email_verified": False,
+        }
+
+    monkeypatch.setattr("app.dependencies.auth.verify_clerk_token", mock_verify)
+
+    # Calling /me with attacker token
+    res = await client.get("/api/v1/onboarding/me", headers={"Authorization": "Bearer fake_token"})
+    assert res.status_code == 200
+    res_data = res.json()
+
+    # Must create a separate unassigned user and NOT hijack victim's landlord account
+    assert res_data["clerk_id"] == attacker_clerk_id
+    assert res_data["role"] == "unassigned"
+
+    # Victim's record remains untouched
+    await db_session.refresh(victim_user)
+    assert victim_user.clerk_id == "clerk_original_owner"
+    assert victim_user.role == UserRole.LANDLORD
+
+
+async def test_payload_too_large_middleware_413(client: AsyncClient):
+    """Ensure requests with Content-Length exceeding 1MB on standard API routes are rejected with HTTP 413."""
+    # Send a request with a header indicating oversized body
+    res = await client.post(
+        "/api/v1/onboarding/sync",
+        headers={"Content-Length": "2000000"},  # 2MB
+        content=b"test",
+    )
+    assert res.status_code == 413
+    assert "Payload too large" in res.json()["detail"]
+
+
+async def test_presigned_download_url_reduced_ttl_900s(client: AsyncClient, seed_data, db_session, monkeypatch):
+    """Verify presigned download URL generation enforces 900-second (15-minute) TTL."""
+    from app.routers import uploads
+    from app.services import storage
+
+    captured_expires = None
+    original_generate = storage.generate_presigned_download_url
+
+    def mock_generate(object_key: str, expires: int = 900, filename: str = None):
+        nonlocal captured_expires
+        captured_expires = expires
+        return f"https://r2.mocked.com/{object_key}"
+
+    monkeypatch.setattr(storage, "generate_presigned_download_url", mock_generate)
+    monkeypatch.setattr(uploads, "generate_presigned_download_url", mock_generate)
+
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    doc = Document(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        uploaded_by=landlord.id,
+        title="Safety Policy",
+        file_key="documents/safety.pdf",
+        file_type="application/pdf",
+    )
+    db_session.add(doc)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        res = await client.get("/api/v1/uploads/download-url", params={"file_key": doc.file_key})
+        assert res.status_code == 200
+        assert captured_expires == 900
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+

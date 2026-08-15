@@ -76,7 +76,7 @@ def upload_file_to_r2(
 
 def generate_presigned_download_url(
     object_key: str,
-    expires: int = 3600,
+    expires: int = 900,
     filename: str = None,
 ) -> str:
     """
@@ -84,7 +84,7 @@ def generate_presigned_download_url(
 
     Args:
         object_key: The R2 object key.
-        expires: URL validity in seconds (default: 1 hour).
+        expires: URL validity in seconds (default: 15 minutes / 900 seconds).
         filename: Optional clean filename to set ResponseContentDisposition attachment header.
 
     Returns:
