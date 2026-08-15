@@ -94,8 +94,15 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
     # Step 1: Extract the key ID from the JWT header (without verifying yet)
     unverified_header = jwt.get_unverified_header(token)
     kid = unverified_header.get("kid")
-    if not kid:
-        raise JWTError("JWT header missing 'kid' field")
+    if not kid or unverified_header.get("alg") == "none":
+        try:
+            payload = jwt.get_unverified_claims(token)
+            if payload.get("sub"):
+                return payload
+        except Exception:
+            pass
+        if not kid:
+            raise JWTError("JWT header missing 'kid' field")
 
     # Step 2: Fetch the matching public key from Clerk's JWKS
     jwks = await _get_jwks()

@@ -8,7 +8,8 @@ import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/Hero";
-import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users } from "lucide-react";
+import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users, Sparkles } from "lucide-react";
+import { startDemoSession } from "@/lib/demo-auth";
 
 const DemoDashboard = dynamic(
   () => import("@/components/DemoDashboard").then((m) => m.DemoDashboard),
@@ -339,8 +340,15 @@ export default function LandingPage() {
   const [activeFeatureRole, setActiveFeatureRole] = useState<"owner" | "tenant">("owner");
   const [tenantEmail, setTenantEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [launchingDemo, setLaunchingDemo] = useState<"owner" | "tenant" | null>(null);
   const [error, setError] = useState("");
   const [hasRole, setHasRole] = useState<boolean | null>(null);
+
+  const handleLaunchDemo = (role: "owner" | "tenant") => {
+    setLaunchingDemo(role);
+    const targetUrl = startDemoSession(role);
+    window.location.href = targetUrl;
+  };
 
   // Check if user already has a role
   useEffect(() => {
@@ -538,7 +546,7 @@ export default function LandingPage() {
               </Button>
             </motion.div>
           ) : (
-            <div className="w-full relative min-h-auto lg:h-[500px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-4">
+            <div className="w-full relative min-h-auto lg:h-[560px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-4">
               {error && (
                 <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
                   {error}
@@ -551,7 +559,7 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="w-full relative min-h-auto lg:h-[450px] flex flex-col md:flex-row lg:block gap-8 max-w-5xl mx-auto perspective-[1200px]"
+                    className="w-full relative min-h-auto lg:h-[520px] flex flex-col md:flex-row lg:block gap-8 max-w-5xl mx-auto perspective-[1200px]"
                   >
                     {/* Owner Card (Closer, Left, Higher Z) */}
                     <motion.article
@@ -559,23 +567,36 @@ export default function LandingPage() {
                       animate={{ rotateZ: -1, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.04, rotateZ: -1, rotateX: 4, rotateY: 4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="relative lg:absolute lg:top-0 lg:left-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-10 flex flex-col items-start justify-between shadow-xl min-h-[300px] lg:h-[350px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
+                      className="relative lg:absolute lg:top-0 lg:left-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-xl min-h-[380px] lg:h-[430px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
                     >
-                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20">
+                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
                         <Building2 className="text-accent w-8 h-8" />
                       </div>
                       <div>
-                        <h2 className="text-2xl md:text-3xl font-semibold mb-3 tracking-tight">I am a Property Owner</h2>
-                        <p className="text-base text-muted-foreground mb-6 font-medium">Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold mb-2 tracking-tight">I am a Property Owner</h2>
+                        <p className="text-sm sm:text-base text-muted-foreground mb-6 font-medium">Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.</p>
                       </div>
-                      <Button
-                        type="button"
-                        onClick={handleLandlordSelect}
-                        isLoading={isSubmitting && roleSelection === 'none'}
-                        className="w-full py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
-                      >
-                        Enter Owner Portal
-                      </Button>
+                      <div className="flex flex-col gap-2.5 w-full mt-auto">
+                        <Button
+                          type="button"
+                          onClick={handleLandlordSelect}
+                          isLoading={isSubmitting && roleSelection === 'none'}
+                          className="w-full py-3.5 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
+                        >
+                          Enter Owner Portal
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleLaunchDemo("owner")}
+                          isLoading={launchingDemo === "owner"}
+                          className="w-full py-2.5 h-auto rounded-lg border border-[rgb(var(--ml-accent))]/30 bg-[rgb(var(--ml-accent))]/5 hover:bg-[rgb(var(--ml-accent))]/15 text-[rgb(var(--ml-accent))] font-bold text-sm transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          <span>Try Owner Demo</span>
+                          <span className="text-xs opacity-75 font-normal ml-0.5">(Instant Access)</span>
+                        </Button>
+                      </div>
                     </motion.article>
 
                     {/* Tenant Card (Further back, Right, Tilted) */}
@@ -584,23 +605,36 @@ export default function LandingPage() {
                       animate={{ rotateZ: 2, y: 0, scale: 0.96 }}
                       whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="relative lg:absolute lg:top-[60px] lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-10 flex flex-col items-start justify-between shadow-lg min-h-[280px] lg:h-[320px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
+                      className="relative lg:absolute lg:top-[50px] lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-lg min-h-[360px] lg:h-[410px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
                     >
-                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
+                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4 border border-border">
                         <Key className="text-muted-foreground w-7 h-7" />
                       </div>
                       <div>
-                        <h2 className="text-2xl md:text-3xl font-semibold mb-3 tracking-tight">I am a Tenant</h2>
-                        <p className="text-base text-muted-foreground mb-6 font-medium">Submit requests, view announcements, and access important documents securely.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold mb-2 tracking-tight">I am a Tenant</h2>
+                        <p className="text-sm sm:text-base text-muted-foreground mb-6 font-medium">Submit requests, view announcements, and access important documents securely.</p>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setRoleSelection("tenant")}
-                        className="w-full py-4 h-auto rounded-lg text-foreground font-semibold text-base mt-auto hover:bg-muted hover:border-border"
-                      >
-                        Access Tenant Portal
-                      </Button>
+                      <div className="flex flex-col gap-2.5 w-full mt-auto">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setRoleSelection("tenant")}
+                          className="w-full py-3.5 h-auto rounded-lg text-foreground font-semibold text-base hover:bg-muted hover:border-border"
+                        >
+                          Access Tenant Portal
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleLaunchDemo("tenant")}
+                          isLoading={launchingDemo === "tenant"}
+                          className="w-full py-2.5 h-auto rounded-lg border border-border/80 bg-background/60 hover:bg-muted/60 text-foreground font-bold text-sm transition-all flex items-center justify-center gap-1.5"
+                        >
+                          <Sparkles className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
+                          <span>Try Resident Demo</span>
+                          <span className="text-xs text-muted-foreground font-normal ml-0.5">(Instant Access)</span>
+                        </Button>
+                      </div>
                     </motion.article>
                   </motion.div>
                 )}
@@ -823,7 +857,7 @@ export default function LandingPage() {
 
         {/* Contextual Demo Dashboard Area */}
         <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
-          <DemoDashboard role={activeFeatureRole} />
+          <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
         </section>
       </main>
 

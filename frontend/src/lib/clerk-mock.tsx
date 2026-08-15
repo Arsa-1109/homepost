@@ -49,16 +49,31 @@ function generateMockJWT(email: string, name: string, sub: string): string {
   return `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}.`;
 }
 
-export function mockLogin(email: string, name: string) {
-  const userId = "mock_" + email.replace(/[^a-zA-Z0-9]/g, "");
+export function mockLogin(email: string, name: string, customUserId?: string) {
+  let userId = customUserId;
+  if (!userId) {
+    if (email === "landlord@homepost.demo") {
+      userId = "user_demo_landlord_001";
+    } else if (email === "sarah.jenkins@demo.homepost.io") {
+      userId = "user_demo_tenant_001";
+    } else if (email === "alex.rivera@demo.homepost.io") {
+      userId = "user_demo_tenant_002";
+    } else {
+      userId = "mock_" + email.replace(/[^a-zA-Z0-9]/g, "");
+    }
+  }
+
   localStorage.setItem("mock_user_email", email);
   localStorage.setItem("mock_user_name", name);
   localStorage.setItem("mock_user_id", userId);
   
   if (typeof window !== "undefined") {
-    document.cookie = `mock_user_email=${encodeURIComponent(email)}; path=/`;
-    document.cookie = `mock_user_name=${encodeURIComponent(name)}; path=/`;
-    document.cookie = `mock_user_id=${encodeURIComponent(userId)}; path=/`;
+    const role = email.includes("landlord") ? "landlord" : "tenant";
+    document.cookie = `mock_user_email=${encodeURIComponent(email)}; path=/; max-age=604800`;
+    document.cookie = `mock_user_name=${encodeURIComponent(name)}; path=/; max-age=604800`;
+    document.cookie = `mock_user_id=${encodeURIComponent(userId)}; path=/; max-age=604800`;
+    document.cookie = `mock_user_role=${role}; path=/; max-age=604800`;
+    document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800`;
     (window as any).Clerk = {
       loaded: true,
       session: {

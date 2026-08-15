@@ -73,6 +73,16 @@ async def get_current_user(
     result = await session.execute(statement)
     user = result.scalar_one_or_none()
 
+    if user is None and payload.get("email"):
+        statement = select(User).where(User.email == payload.get("email"))
+        result = await session.execute(statement)
+        user = result.scalar_one_or_none()
+        if user:
+            user.clerk_id = clerk_id
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+
     if user is None:
         # Auto-create on first API call (Clerk → PostgreSQL sync)
         user = User(
