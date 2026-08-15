@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { api, UserRoleResponse } from "@/lib/api";
@@ -10,29 +10,33 @@ export default function DashboardRedirect() {
   const { isLoaded, userId, getToken } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const redirectedRef = useRef(false);
 
   const checkRole = useCallback(async () => {
+    if (redirectedRef.current) return;
     setError(null);
     try {
       const token = await getToken();
       const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
       if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
+        redirectedRef.current = true;
         if (typeof window !== "undefined") {
           document.cookie = `mock_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
           document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax`;
         }
         if (user.role === "landlord") {
-          window.location.href = "/landlord/dashboard";
+          window.location.replace("/landlord/dashboard");
         } else if (user.role === "tenant") {
-          window.location.href = "/tenant/dashboard";
+          window.location.replace("/tenant/dashboard");
         } else if (user.role === "tenant_pending") {
-          window.location.href = "/sync-role";
+          window.location.replace("/sync-role");
         } else {
-          window.location.href = "/";
+          window.location.replace("/");
         }
       } else {
         // User has no role set in database yet -> send to home page to pick a role
-        window.location.href = "/";
+        redirectedRef.current = true;
+        window.location.replace("/");
       }
     } catch (err: any) {
       console.error("Dashboard redirect failed:", err);

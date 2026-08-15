@@ -1,12 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// Public routes — no auth required
+// Public routes — no auth required at the edge
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/dashboard(.*)",
+  "/sync-role(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/join/(.*)",
+  "/api/(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -28,7 +31,6 @@ export default clerkMiddleware(async (auth, req) => {
     demoParam === "tenant" ||
     (mockUserIdCookie && ALLOWED_DEMO_COOKIE_IDS.has(mockUserIdCookie))
   );
-
 
   // Handle demo mode bypass & auto-role provisioning
   if (isDemo) {
@@ -68,29 +70,12 @@ export default clerkMiddleware(async (auth, req) => {
     return response;
   }
 
-  // Allow public routes through
+  // Allow public routes through without edge authentication locks
   if (isPublicRoute(req)) {
-    const authState = await auth();
-    // Redirect signed-in users away from auth/landing pages
-    if (authState.userId) {
-      if (pathname.startsWith("/sign-")) {
-        // Do not redirect for sso-callback pages to allow Clerk client-side handling
-        if (pathname.endsWith("/sso-callback")) {
-          return NextResponse.next();
-        }
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
-      if (pathname === "/") {
-        const metadata = authState.sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
-        if (metadata?.onboardingComplete) {
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        }
-      }
-    }
     return NextResponse.next();
   }
 
-  // Protect all non-public routes for real users
+  // Protect all non-public routes (e.g. /landlord/*, /tenant/*)
   const { sessionClaims } = await auth.protect();
 
   // Role-Based Access Control via Clerk session claims or cookies
