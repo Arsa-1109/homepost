@@ -17,10 +17,10 @@ class MaintenanceEvent(SQLModel, table=True):
     __tablename__ = "maintenance_events"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    maintenance_request_id: uuid.UUID = Field(foreign_key="maintenance_requests.id", nullable=False)
+    maintenance_request_id: uuid.UUID = Field(foreign_key="maintenance_requests.id", index=True, nullable=False)
     
     # ID of the user (tenant or landlord) who triggered the event
-    actor_id: uuid.UUID = Field(foreign_key="users.id", nullable=False)
+    actor_id: uuid.UUID = Field(foreign_key="users.id", index=True, nullable=False)
     
     # Type of event (e.g., "created", "status_changed", "note_added", "images_attached", "reopened")
     event_type: str = Field(nullable=False)

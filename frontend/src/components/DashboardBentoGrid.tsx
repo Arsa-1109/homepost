@@ -104,6 +104,12 @@ export type DashboardData = {
     property_name?: string;
     unit_label?: string;
   }>;
+  pending_approvals?: Array<{
+    id: string;
+    name: string;
+    email: string;
+    unit_label?: string;
+  }>;
 };
 
 interface DashboardBentoGridProps {

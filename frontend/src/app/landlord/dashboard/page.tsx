@@ -58,12 +58,13 @@ export default function LandlordDashboard() {
     async function loadDashboardData() {
       try {
         const token = await getToken();
-        const [dashResult, pendingResult] = await Promise.all([
-          fetchAPI<DashboardData>("/api/v1/landlord/dashboard", {}, token),
-          fetchAPI<PendingTenant[]>("/api/v1/landlord/pending-tenants", {}, token)
-        ]);
+        const dashResult = await fetchAPI<DashboardData>("/api/v1/landlord/dashboard", {}, token);
         setData(dashResult);
-        setPendingTenants(pendingResult);
+        setPendingTenants((dashResult.pending_approvals || []).map(p => ({
+          id: p.id,
+          email: p.email,
+          full_name: p.name
+        })));
       } catch (err: any) {
         console.error("Failed to load landlord dashboard summary:", err);
         setError(err?.message || "Failed to load dashboard data. Please try again later.");

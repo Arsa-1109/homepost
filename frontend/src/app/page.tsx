@@ -5,10 +5,15 @@ import { useRouter } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/Hero";
-import { DemoDashboard } from "@/components/DemoDashboard";
 import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users } from "lucide-react";
+
+const DemoDashboard = dynamic(
+  () => import("@/components/DemoDashboard").then((m) => m.DemoDashboard),
+  { ssr: false, loading: () => <div className="w-full h-96 rounded-2xl bg-muted/20 animate-pulse" /> }
+);
 
 const FEATURE_CONTENT = {
   owner: [

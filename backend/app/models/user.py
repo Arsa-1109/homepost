@@ -34,13 +34,14 @@ class User(SQLModel, table=True):
     clerk_id: str = Field(
         sa_column=Column(String, unique=True, index=True, nullable=False),
     )
-    email: str = Field(max_length=320)
+    email: str = Field(max_length=320, index=True)
     full_name: str = Field(default="", max_length=255)
     role: UserRole = Field(
         sa_column=Column(
             String,
             default=UserRole.UNASSIGNED,
             nullable=False,
+            index=True,
         )
     )
 
@@ -48,6 +49,7 @@ class User(SQLModel, table=True):
     requested_landlord_id: Optional[uuid.UUID] = Field(
         default=None,
         foreign_key="users.id",
+        index=True,
     )
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))

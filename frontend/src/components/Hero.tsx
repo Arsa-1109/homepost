@@ -20,24 +20,24 @@ export function Hero() {
   const { contextSafe } = useGSAP({ scope: container });
 
   useGSAP(() => {
-    // 1. Entrance Animation
+    // 1. Entrance Animation (snappy & non-blocking)
     const enterTl = gsap.timeline();
 
     enterTl.fromTo(titleRef.current,
-      { y: 60, opacity: 0, rotateX: -40, scale: 0.9 },
-      { y: 0, opacity: 1, rotateX: 0, scale: 1, duration: 1.4, ease: "power4.out" }
+      { y: 30, opacity: 0.7, scale: 0.96 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }
     );
 
     enterTl.fromTo(dividerRef.current,
-      { scaleX: 0, opacity: 0 },
-      { scaleX: 1, opacity: 1, duration: 1, ease: "power3.out" },
-      "-=0.8"
+      { scaleX: 0, opacity: 0.7 },
+      { scaleX: 1, opacity: 1, duration: 0.4, ease: "power2.out" },
+      "-=0.3"
     );
 
     enterTl.fromTo(subtitleRef.current,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.2, ease: "power3.out" },
-      "-=0.8"
+      { y: 15, opacity: 0.7 },
+      { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
+      "-=0.3"
     );
 
     // 2. Continuous 3D Floating Animation
@@ -96,7 +96,7 @@ export function Hero() {
         <div ref={titleTiltRef} className="relative w-full flex flex-col items-center origin-center will-change-transform z-20">
           <h1
             ref={titleRef}
-            className="text-5xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl opacity-0"
+            className="text-5xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl"
           >
             Homepost
           </h1>
@@ -105,11 +105,11 @@ export function Hero() {
 
       {/* 2. Subtitle Area */}
       <div ref={dividerScrollRef} className="will-change-transform origin-center mt-6">
-        <div ref={dividerRef} className="w-16 h-1 bg-accent rounded-full mb-4 mx-auto opacity-0"></div>
+        <div ref={dividerRef} className="w-16 h-1 bg-accent rounded-full mb-4 mx-auto"></div>
       </div>
 
       <div ref={subtitleScrollRef} className="w-full flex justify-center will-change-transform mt-8">
-        <p ref={subtitleRef} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium px-4 opacity-0">
+        <p ref={subtitleRef} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-medium px-4">
           The radically simple portal for individual property owners. Manage requests, share documents, and communicate seamlessly.
         </p>
       </div>

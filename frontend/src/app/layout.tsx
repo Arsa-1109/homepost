@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers";
 import { UserSync } from "@/components/UserSync";
 import { Outfit } from "next/font/google";
-import { CommandPalette } from "@/components/CommandPalette";
 import { RootHeader } from "@/components/RootHeader";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
+const CommandPalette = dynamic(
+  () => import("@/components/CommandPalette").then((m) => m.CommandPalette)
+);
+
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', display: 'swap' });
 
 export const metadata: Metadata = {
   title: "Homepost — Tenant Portal",

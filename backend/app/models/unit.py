@@ -18,7 +18,7 @@ class Unit(SQLModel, table=True):
     __tablename__ = "units"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    property_id: uuid.UUID = Field(foreign_key="properties.id", nullable=False)
+    property_id: uuid.UUID = Field(foreign_key="properties.id", index=True, nullable=False)
     unit_label: str = Field(max_length=100)  # e.g., "Flat 2A", "PG Room 3"
 
     # Day of month rent is due (1–31). Used by APScheduler for reminders.

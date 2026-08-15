@@ -19,13 +19,26 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-# ---------------------------------------------------------------------------
-# Engine — manages the connection pool
-# ---------------------------------------------------------------------------
+# Configure connection pool settings for PostgreSQL
+pool_kwargs = {}
+if "sqlite" not in settings.database_url:
+    pool_kwargs = {
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_recycle": 1800,  # recycle connections after 30 minutes
+        "pool_pre_ping": True,  # automatically verify connection health
+    }
+else:
+    pool_kwargs = {
+        "pool_pre_ping": True,
+    }
+
 engine = create_async_engine(
     settings.database_url,
     echo=False,  # Set to True for SQL query logging during development
     future=True,
+    **pool_kwargs,
 )
 
 # ---------------------------------------------------------------------------

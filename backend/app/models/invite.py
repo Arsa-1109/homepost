@@ -35,8 +35,8 @@ class Invite(SQLModel, table=True):
     __tablename__ = "invites"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    unit_id: uuid.UUID = Field(foreign_key="units.id", nullable=False)
-    created_by: uuid.UUID = Field(foreign_key="users.id", nullable=False)  # landlord
+    unit_id: uuid.UUID = Field(foreign_key="units.id", index=True, nullable=False)
+    created_by: uuid.UUID = Field(foreign_key="users.id", index=True, nullable=False)  # landlord
 
     token: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
@@ -48,6 +48,7 @@ class Invite(SQLModel, table=True):
             String,
             default=InviteStatus.PENDING,
             nullable=False,
+            index=True,
         )
     )
     expires_at: datetime = Field(default_factory=_default_expires_at)

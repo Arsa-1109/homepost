@@ -20,13 +20,13 @@ class TenantProfile(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(
-        foreign_key="users.id", unique=True, nullable=False
+        foreign_key="users.id", unique=True, index=True, nullable=False
     )
-    unit_id: uuid.UUID = Field(foreign_key="units.id", nullable=False)
+    unit_id: uuid.UUID = Field(foreign_key="units.id", index=True, nullable=False)
 
     lease_start: Optional[date] = Field(default=None)
     lease_end: Optional[date] = Field(default=None)
-    is_active: bool = Field(default=True)
+    is_active: bool = Field(default=True, index=True)
     removed_at: Optional[datetime] = Field(default=None)
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))

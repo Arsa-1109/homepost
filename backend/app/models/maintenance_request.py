@@ -47,8 +47,8 @@ class MaintenanceRequest(SQLModel, table=True):
     __tablename__ = "maintenance_requests"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    tenant_id: uuid.UUID = Field(foreign_key="tenant_profiles.id", nullable=False)
-    unit_id: uuid.UUID = Field(foreign_key="units.id", nullable=False)
+    tenant_id: uuid.UUID = Field(foreign_key="tenant_profiles.id", index=True, nullable=False)
+    unit_id: uuid.UUID = Field(foreign_key="units.id", index=True, nullable=False)
 
     title: str = Field(max_length=255)
     description: str = Field(max_length=2000)
@@ -72,6 +72,7 @@ class MaintenanceRequest(SQLModel, table=True):
             String,
             default=RequestPriority.MEDIUM,
             nullable=False,
+            index=True,
         )
     )
     status: RequestStatus = Field(
@@ -79,6 +80,7 @@ class MaintenanceRequest(SQLModel, table=True):
             String,
             default=RequestStatus.OPEN,
             nullable=False,
+            index=True,
         )
     )
 

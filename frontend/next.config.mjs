@@ -7,7 +7,14 @@ const useMockAuth = isPlaceholder || process.env.MOCK_AUTH === "true";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "@radix-ui/react-icons",
+      "motion",
+      "clsx",
+      "tailwind-merge"
+    ],
   },
   turbopack: {
     root: path.resolve(process.cwd()),
