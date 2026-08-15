@@ -10,19 +10,77 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  const url = req.nextUrl;
+  const pathname = url.pathname;
+  const demoParam = url.searchParams.get("demo");
+
+  // Check for active demo session in cookies or query params
+  const ALLOWED_DEMO_COOKIE_IDS = new Set([
+    "user_demo_landlord_001",
+    "user_demo_tenant_001",
+    "user_demo_tenant_002",
+  ]);
+  const mockUserIdCookie = req.cookies.get("mock_user_id")?.value;
+  const mockUserRoleCookie = req.cookies.get("mock_user_role")?.value;
+  const isDemo = Boolean(
+    demoParam === "owner" ||
+    demoParam === "landlord" ||
+    demoParam === "tenant" ||
+    (mockUserIdCookie && ALLOWED_DEMO_COOKIE_IDS.has(mockUserIdCookie))
+  );
+
+
+  // Handle demo mode bypass & auto-role provisioning
+  if (isDemo) {
+    let activeRole = mockUserRoleCookie || (pathname.startsWith("/tenant") ? "tenant" : "landlord");
+    if (demoParam === "tenant" || pathname.startsWith("/tenant")) {
+      activeRole = "tenant";
+    } else if (demoParam === "owner" || demoParam === "landlord" || pathname.startsWith("/landlord")) {
+      activeRole = "landlord";
+    }
+
+    const isLandlord = activeRole === "landlord";
+    const demoId = isLandlord ? "user_demo_landlord_001" : "user_demo_tenant_001";
+    const demoEmail = isLandlord ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io";
+    const demoName = isLandlord ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins";
+
+    // If navigating to generic /dashboard in demo mode, redirect to appropriate role dashboard
+    if (pathname === "/dashboard") {
+      const targetDashboard = isLandlord ? "/landlord/dashboard" : "/tenant/dashboard";
+      const redirectRes = NextResponse.redirect(new URL(targetDashboard, req.url));
+      redirectRes.cookies.set("mock_user_id", demoId, { path: "/", maxAge: 604800, sameSite: "lax" });
+      redirectRes.cookies.set("mock_user_email", demoEmail, { path: "/", maxAge: 604800, sameSite: "lax" });
+      redirectRes.cookies.set("mock_user_name", demoName, { path: "/", maxAge: 604800, sameSite: "lax" });
+      redirectRes.cookies.set("mock_user_role", activeRole, { path: "/", maxAge: 604800, sameSite: "lax" });
+      redirectRes.cookies.set("mock_user_onboarding_complete", "true", { path: "/", maxAge: 604800, sameSite: "lax" });
+      return redirectRes;
+    }
+
+    const response = NextResponse.next();
+    // Ensure cookies are synchronized on response
+    if (!mockUserIdCookie || mockUserRoleCookie !== activeRole) {
+      response.cookies.set("mock_user_id", demoId, { path: "/", maxAge: 604800, sameSite: "lax" });
+      response.cookies.set("mock_user_email", demoEmail, { path: "/", maxAge: 604800, sameSite: "lax" });
+      response.cookies.set("mock_user_name", demoName, { path: "/", maxAge: 604800, sameSite: "lax" });
+      response.cookies.set("mock_user_role", activeRole, { path: "/", maxAge: 604800, sameSite: "lax" });
+      response.cookies.set("mock_user_onboarding_complete", "true", { path: "/", maxAge: 604800, sameSite: "lax" });
+    }
+    return response;
+  }
+
   // Allow public routes through
   if (isPublicRoute(req)) {
     const authState = await auth();
     // Redirect signed-in users away from auth/landing pages
     if (authState.userId) {
-      if (req.nextUrl.pathname.startsWith("/sign-")) {
+      if (pathname.startsWith("/sign-")) {
         // Do not redirect for sso-callback pages to allow Clerk client-side handling
-        if (req.nextUrl.pathname.endsWith("/sso-callback")) {
+        if (pathname.endsWith("/sso-callback")) {
           return NextResponse.next();
         }
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
-      if (req.nextUrl.pathname === "/") {
+      if (pathname === "/") {
         const metadata = authState.sessionClaims?.metadata as { onboardingComplete?: boolean } | undefined;
         if (metadata?.onboardingComplete) {
           return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -32,7 +90,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.next();
   }
 
-  // Protect all non-public routes
+  // Protect all non-public routes for real users
   const { sessionClaims } = await auth.protect();
 
   // ⚠️ Secure Onboarding Guard + Role-Based Access Control
@@ -42,7 +100,6 @@ export default clerkMiddleware(async (auth, req) => {
     role?: "landlord" | "tenant";
   } | undefined;
 
-  const pathname = req.nextUrl.pathname;
   const isSyncOrDashboard = pathname === "/dashboard" || pathname === "/sync-role";
 
   // If onboarding is not complete, only allow /dashboard and /sync-role

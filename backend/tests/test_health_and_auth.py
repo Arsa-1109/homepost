@@ -58,3 +58,72 @@ async def test_tenant_guard_missing_profile(client: AsyncClient, seed_data):
         assert response.status_code == 404
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_forged_alg_none_token_rejected(client: AsyncClient, monkeypatch):
+    """In production (MOCK_AUTH=false), unsigned alg: none tokens for non-demo users MUST be rejected with 401."""
+    import base64
+    import json
+    from app.core.config import get_settings
+
+    # Simulate production mode
+    settings = get_settings()
+    monkeypatch.setattr(settings, "mock_auth", False)
+    monkeypatch.setenv("MOCK_AUTH", "false")
+
+    header = base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode()).decode().rstrip("=")
+    payload = base64.urlsafe_b64encode(json.dumps({
+        "sub": "user_victim_real_account_999",
+        "email": "victim@example.com",
+        "name": "Victim User"
+    }).encode()).decode().rstrip("=")
+    forged_token = f"{header}.{payload}."
+
+    response = await client.get(
+        "/api/v1/onboarding/me",
+        headers={"Authorization": f"Bearer {forged_token}"}
+    )
+    assert response.status_code == 401
+
+
+async def test_demo_allowlisted_token_accepted(client: AsyncClient, db_session, monkeypatch):
+    """In production (MOCK_AUTH=false), unsigned tokens for allowlisted demo accounts should be permitted."""
+    import base64
+    import json
+    import uuid
+    from app.core.config import get_settings
+
+    # Simulate production mode
+    settings = get_settings()
+    monkeypatch.setattr(settings, "mock_auth", False)
+    monkeypatch.setenv("MOCK_AUTH", "false")
+
+    # Seed demo landlord user in test DB
+    demo_landlord = User(
+        id=uuid.uuid4(),
+        clerk_id="user_demo_landlord_001",
+        email="landlord@homepost.demo",
+        full_name="Marcus Vance",
+        role=UserRole.LANDLORD,
+    )
+    db_session.add(demo_landlord)
+    await db_session.commit()
+
+    header = base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode()).decode().rstrip("=")
+    payload = base64.urlsafe_b64encode(json.dumps({
+        "sub": "user_demo_landlord_001",
+        "email": "landlord@homepost.demo",
+        "name": "Marcus Vance"
+    }).encode()).decode().rstrip("=")
+    demo_token = f"{header}.{payload}."
+
+    response = await client.get(
+        "/api/v1/onboarding/me",
+        headers={"Authorization": f"Bearer {demo_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "landlord@homepost.demo"
+    assert data["role"] == "landlord"
+
+

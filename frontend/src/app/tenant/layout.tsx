@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Home, Wrench, Megaphone, FileText, Building2, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { isDemoSession, clearDemoSession, startDemoSession } from "@/lib/demo-auth";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -20,6 +22,7 @@ export default function TenantLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
   const isSettingsActive = pathname === "/tenant/settings" || pathname.startsWith("/tenant/settings/");
 
   return (
@@ -45,9 +48,50 @@ export default function TenantLayout({
             <Settings className={cn("size-4 transition-transform duration-200", isSettingsActive ? "text-[rgb(var(--ml-accent))] scale-105" : "hover:rotate-45")} />
           </Link>
           <ThemeToggle />
-          <UserButton />
+          {isSignedIn ? (
+            <UserButton />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-sm">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white font-bold flex items-center justify-center text-[10px]">
+                  SJ
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none text-[11px]">Sarah Jenkins</span>
+                </div>
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30">
+                  DEMO
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  startDemoSession("owner");
+                  window.location.href = "/landlord/dashboard";
+                }}
+                className="hidden sm:inline-flex text-xs h-8 rounded-lg border-border hover:border-[rgb(var(--ml-accent))] cursor-pointer px-2"
+                title="Switch to Owner Demo"
+              >
+                Owner Demo
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  clearDemoSession();
+                  window.location.href = "/";
+                }}
+                className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2 cursor-pointer"
+                title="Exit Demo Mode"
+              >
+                Exit
+              </Button>
+            </div>
+          )}
         </div>
       </header>
+
 
       {/* Main content — extra bottom padding so content never hides behind tab bar */}
       <main className="flex-1 p-4 pb-24">{children}</main>

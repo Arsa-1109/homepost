@@ -90,3 +90,50 @@ export function startDemoSession(role: "owner" | "tenant"): string {
 
   return config.dashboardUrl;
 }
+
+export function isDemoSession(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean(
+    localStorage.getItem("mock_user_id") ||
+    document.cookie.includes("mock_user_id=")
+  );
+}
+
+export function getDemoUser(): {
+  email: string;
+  name: string;
+  userId: string;
+  role: "landlord" | "tenant";
+} | null {
+  if (typeof window === "undefined") return null;
+  const email = localStorage.getItem("mock_user_email") || "";
+  const name = localStorage.getItem("mock_user_name") || "Demo User";
+  const userId = localStorage.getItem("mock_user_id") || "";
+  const isTenant = email.includes("tenant") || email.includes("sarah");
+  
+  if (!userId && !email) return null;
+  return {
+    email: email || (isTenant ? DEMO_ACCOUNTS.tenant.email : DEMO_ACCOUNTS.owner.email),
+    name: name || (isTenant ? DEMO_ACCOUNTS.tenant.name : DEMO_ACCOUNTS.owner.name),
+    userId: userId || (isTenant ? DEMO_ACCOUNTS.tenant.userId : DEMO_ACCOUNTS.owner.userId),
+    role: isTenant ? "tenant" : "landlord",
+  };
+}
+
+export function clearDemoSession(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("mock_user_email");
+  localStorage.removeItem("mock_user_name");
+  localStorage.removeItem("mock_user_id");
+
+  const deleteCookie = (name: string) => {
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0`;
+  };
+
+  deleteCookie("mock_user_email");
+  deleteCookie("mock_user_name");
+  deleteCookie("mock_user_id");
+  deleteCookie("mock_user_role");
+  deleteCookie("mock_user_onboarding_complete");
+}
+

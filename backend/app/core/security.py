@@ -61,22 +61,33 @@ def _find_signing_key(jwks: dict[str, Any], kid: str) -> dict[str, Any]:
     raise JWTError(f"No matching key found for kid: {kid}")
 
 
+# ---------------------------------------------------------------------------
+# Designated Demo Allowlist — strictly permitted for zero-friction landing preview
+# ---------------------------------------------------------------------------
+ALLOWED_DEMO_USER_IDS: set[str] = {
+    "user_demo_landlord_001",
+    "user_demo_tenant_001",
+    "user_demo_tenant_002",
+}
+
+
 async def verify_clerk_token(token: str) -> dict[str, Any]:
     """
     Verify a Clerk JWT and return the decoded payload.
+
+    Security Policy:
+    1. If MOCK_AUTH is enabled, unverified mock claims are accepted for development.
+    2. Unsigned / 'none' algorithm tokens are strictly restricted to ALLOWED_DEMO_USER_IDS.
+    3. All other tokens MUST be signed with RS256 and verified against Clerk's JWKS.
 
     Args:
         token: The raw JWT string from the Authorization header.
 
     Returns:
-        Decoded JWT payload dict containing:
-        - sub: Clerk user ID (e.g., "user_2abc123")
-        - iss: Issuer URL
-        - exp: Expiration timestamp
-        - iat: Issued-at timestamp
+        Decoded JWT payload dict.
 
     Raises:
-        JWTError: If the token is invalid, expired, or tampered with.
+        JWTError: If the token is invalid, expired, tampered with, or unverified for non-demo users.
     """
     if settings.mock_auth or os.getenv("MOCK_AUTH") == "true":
         try:
@@ -91,24 +102,31 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
                 "name": "Mock User"
             }
 
-    # Step 1: Extract the key ID from the JWT header (without verifying yet)
-    unverified_header = jwt.get_unverified_header(token)
+    # Step 1: Extract header and algorithm (without trusting claims yet)
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except Exception as exc:
+        raise JWTError(f"Malformed JWT header: {exc}") from exc
+
     kid = unverified_header.get("kid")
-    if not kid or unverified_header.get("alg") == "none":
+    alg = unverified_header.get("alg")
+
+    # Step 2: Strictly restrict unsigned / alg: "none" tokens to designated demo accounts
+    if alg == "none" or not kid:
         try:
             payload = jwt.get_unverified_claims(token)
-            if payload.get("sub"):
+            sub = payload.get("sub")
+            if sub in ALLOWED_DEMO_USER_IDS:
                 return payload
         except Exception:
             pass
-        if not kid:
-            raise JWTError("JWT header missing 'kid' field")
+        raise JWTError("Unsigned tokens are strictly restricted to designated demo accounts.")
 
-    # Step 2: Fetch the matching public key from Clerk's JWKS
+    # Step 3: Fetch matching public key from Clerk's JWKS
     jwks = await _get_jwks()
     signing_key = _find_signing_key(jwks, kid)
 
-    # Step 3: Verify and decode the JWT
+    # Step 4: Cryptographically verify and decode the JWT
     payload = jwt.decode(
         token,
         signing_key,
@@ -122,3 +140,4 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
     )
 
     return payload
+

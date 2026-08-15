@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { isDemoSession, clearDemoSession, startDemoSession } from "@/lib/demo-auth";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -39,10 +40,13 @@ export default function LandlordLayout({
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { isSignedIn } = useAuth();
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     const collapsed = localStorage.getItem("landlord_sidebar_collapsed") === "true";
     setIsCollapsed(collapsed);
+    setIsDemo(isDemoSession());
   }, []);
 
   const toggleCollapse = () => {
@@ -50,6 +54,7 @@ export default function LandlordLayout({
     setIsCollapsed(nextState);
     localStorage.setItem("landlord_sidebar_collapsed", String(nextState));
   };
+
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -120,7 +125,48 @@ export default function LandlordLayout({
             })()}
           </div>
           <div className="flex gap-4 items-center">
-            <UserButton />
+            {isSignedIn ? (
+              <UserButton />
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-sm">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-xs shadow-sm">
+                    MV
+                  </div>
+                  <div className="hidden lg:flex flex-col text-left">
+                    <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none">Marcus Vance</span>
+                    <span className="text-[10px] text-amber-500 font-medium leading-tight">Demo Owner</span>
+                  </div>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                    DEMO
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    startDemoSession("tenant");
+                    window.location.href = "/tenant/dashboard";
+                  }}
+                  className="text-xs h-8 rounded-lg border-border hover:border-[rgb(var(--ml-accent))] cursor-pointer"
+                  title="Switch to Resident Demo"
+                >
+                  Resident Demo
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    clearDemoSession();
+                    window.location.href = "/";
+                  }}
+                  className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2 cursor-pointer"
+                  title="Exit Demo Mode"
+                >
+                  Exit Demo
+                </Button>
+              </div>
+            )}
             <ThemeToggle />
           </div>
         </header>
@@ -131,9 +177,19 @@ export default function LandlordLayout({
             <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
             <span>Homepost</span>
           </Link>
-          <div className="flex gap-3 items-center">
-            <UserButton />
+          <div className="flex gap-2.5 items-center">
+            {isSignedIn ? (
+              <UserButton />
+            ) : (
+              <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-0.5 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-[10px]">
+                  MV
+                </div>
+                <span className="text-[10px] font-bold text-amber-500">DEMO</span>
+              </div>
+            )}
             <ThemeToggle />
+
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger render={
                 <Button variant="ghost" size="icon" className="md:hidden">
