@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { api, UserRoleResponse } from "@/lib/api";
@@ -11,30 +11,34 @@ export default function DashboardRedirect() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
-  const checkRole = async () => {
+  const checkRole = useCallback(async () => {
     setError(null);
     try {
       const token = await getToken();
       const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
       if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
+        if (typeof window !== "undefined") {
+          document.cookie = `mock_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax`;
+        }
         if (user.role === "landlord") {
-          router.replace("/landlord/dashboard");
+          window.location.href = "/landlord/dashboard";
         } else if (user.role === "tenant") {
-          router.replace("/tenant/dashboard");
+          window.location.href = "/tenant/dashboard";
         } else if (user.role === "tenant_pending") {
-          router.replace("/sync-role");
+          window.location.href = "/sync-role";
         } else {
-          router.replace("/");
+          window.location.href = "/";
         }
       } else {
         // User has no role set in database yet -> send to home page to pick a role
-        router.replace("/");
+        window.location.href = "/";
       }
     } catch (err: any) {
       console.error("Dashboard redirect failed:", err);
       setError(err?.message || "Unable to connect to backend server.");
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -44,7 +48,14 @@ export default function DashboardRedirect() {
     }
 
     checkRole();
-  }, [isLoaded, userId, router]);
+
+    // Fallback: If verification takes longer than 6 seconds, show error state with retry
+    const fallbackTimer = setTimeout(() => {
+      setError((prev) => prev || "Dashboard loading took longer than expected. Please retry.");
+    }, 6000);
+
+    return () => clearTimeout(fallbackTimer);
+  }, [isLoaded, userId, router, checkRole]);
 
   if (error) {
     return (

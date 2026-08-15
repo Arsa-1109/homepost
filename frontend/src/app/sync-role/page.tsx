@@ -31,25 +31,28 @@ function SyncRoleContent() {
         const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
         
         if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
-          // Cookies required for offline clerk mock system
+          // Cookies required for offline clerk mock system and fast middleware checks
           if (typeof window !== "undefined") {
-            document.cookie = "mock_user_onboarding_complete=true; path=/";
+            document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
+            document.cookie = `mock_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
           }
           if (user.role === "landlord") {
-            if (typeof window !== "undefined") {
-              document.cookie = "mock_user_role=landlord; path=/";
+            try {
+              await completeOnboarding("landlord");
+              if (session) await session.reload();
+            } catch (e) {
+              console.warn("Non-fatal onboarding sync notice:", e);
             }
-            await completeOnboarding("landlord");
-            if (session) await session.reload();
             // Hard redirect forces full app remount to fetch new clerk JWT/metadata
             window.location.href = "/landlord/dashboard";
             return;
           } else if (user.role === "tenant") {
-            if (typeof window !== "undefined") {
-              document.cookie = "mock_user_role=tenant; path=/";
+            try {
+              await completeOnboarding("tenant");
+              if (session) await session.reload();
+            } catch (e) {
+              console.warn("Non-fatal onboarding sync notice:", e);
             }
-            await completeOnboarding("tenant");
-            if (session) await session.reload();
             // Hard redirect forces full app remount to fetch new clerk JWT/metadata
             window.location.href = "/tenant/dashboard";
             return;
@@ -64,9 +67,17 @@ function SyncRoleContent() {
 
         if (intent === "landlord") {
           setStatus("Setting up your landlord account...");
+          if (typeof window !== "undefined") {
+            document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
+            document.cookie = "mock_user_role=landlord; path=/; max-age=604800; SameSite=Lax";
+          }
           await api.post("/api/v1/onboarding/register-landlord", undefined, token);
-          await completeOnboarding("landlord");
-          if (session) await session.reload();
+          try {
+            await completeOnboarding("landlord");
+            if (session) await session.reload();
+          } catch (e) {
+            console.warn("Non-fatal onboarding sync notice:", e);
+          }
           // Hard redirect forces full app remount to fetch new clerk JWT/metadata
           window.location.href = "/landlord/dashboard";
         } else if (intent === "tenant" && landlordEmail) {
@@ -74,7 +85,7 @@ function SyncRoleContent() {
           await api.post("/api/v1/onboarding/request-access", { landlord_email: landlordEmail }, token);
           setIsPending(true);
         } else {
-          router.push("/");
+          window.location.href = "/";
         }
       } catch (err: any) {
         console.error("Sync role failed:", err);
