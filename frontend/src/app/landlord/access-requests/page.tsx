@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useAuth } from "@clerk/nextjs";
 
 interface TenantRequest {
   id: string;
@@ -54,6 +55,7 @@ function AccessRequestCard({
   onApprove: (tenantId: string) => void; 
   onDeny: (tenantId: string) => void; 
 }) {
+  const { isLoaded, getToken } = useAuth();
   const [propertyId, setPropertyId] = useState<string>("");
   const [unitId, setUnitId] = useState<string>("");
   const [units, setUnits] = useState<Unit[]>([]);
@@ -64,16 +66,17 @@ function AccessRequestCard({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!isLoaded || !propertyId) {
+      setUnits([]);
+      setUnitId("");
+      return;
+    }
     async function loadUnits() {
-      if (!propertyId) {
-        setUnits([]);
-        setUnitId("");
-        return;
-      }
       setLoadingUnits(true);
       setUnitId("");
       try {
-        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${propertyId}/units`);
+        const token = await getToken();
+        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${propertyId}/units`, {}, token);
         setUnits(data || []);
       } catch (err) {
         console.error("Failed to load units:", err);
@@ -83,7 +86,7 @@ function AccessRequestCard({
       }
     }
     loadUnits();
-  }, [propertyId]);
+  }, [propertyId, isLoaded, getToken]);
 
   const handleApprove = async () => {
     if (!unitId) {
@@ -331,6 +334,7 @@ function AccessRequestCard({
 }
 
 export default function AccessRequestsPage() {
+  const { isLoaded, getToken } = useAuth();
   const [requests, setRequests] = useState<TenantRequest[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -339,10 +343,12 @@ export default function AccessRequestsPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   async function loadData() {
+    if (!isLoaded) return;
     try {
+      const token = await getToken();
       const [pendingRes, propsRes] = await Promise.all([
-        fetchAPI<TenantRequest[]>("/api/v1/landlord/pending-tenants"),
-        fetchAPI<Property[]>("/api/v1/landlord/properties")
+        fetchAPI<TenantRequest[]>("/api/v1/landlord/pending-tenants", {}, token),
+        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token)
       ]);
       setRequests(pendingRes || []);
       setProperties(propsRes || []);
@@ -355,8 +361,9 @@ export default function AccessRequestsPage() {
   }
 
   useEffect(() => {
+    if (!isLoaded) return;
     loadData();
-  }, []);
+  }, [isLoaded]);
 
   const handleRemove = (tenantId: string) => {
     setRequests(prev => prev.filter(t => t.id !== tenantId));

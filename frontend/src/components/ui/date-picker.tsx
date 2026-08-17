@@ -36,7 +36,7 @@ export function DatePicker({
       const spaceBelow = window.innerHeight - containerRect.bottom;
       const spaceAbove = containerRect.top;
       
-      if (spaceBelow < popoverRect.height && spaceAbove > spaceBelow) {
+      if (spaceBelow < 340 && spaceAbove > spaceBelow) {
         setPosition("top");
       } else {
         setPosition("bottom");
@@ -127,7 +127,7 @@ export function DatePicker({
         <div 
           ref={popoverRef}
           className={cn(
-            "absolute left-0 z-[100] w-[300px] p-4 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 shadow-2xl shadow-black/80 backdrop-blur-2xl animate-scaleIn select-none",
+            "absolute left-0 z-[150] w-[300px] max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/80 shadow-2xl shadow-black/90 backdrop-blur-2xl animate-scaleIn select-none",
             position === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"
           )}
         >

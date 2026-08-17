@@ -17,6 +17,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
+import { useAuth } from "@clerk/nextjs";
 
 type Announcement = {
   id: string;
@@ -136,6 +137,7 @@ export default function TenantAnnouncementsPage() {
 function TenantAnnouncementsContent() {
   const searchParams = useSearchParams();
   const targetAnnouncementId = searchParams.get("id") || searchParams.get("announcementId");
+  const { isLoaded, getToken } = useAuth();
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,9 +155,11 @@ function TenantAnnouncementsContent() {
   }, [selectedFilter, searchQuery]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadData() {
       try {
-        const data = await fetchAPI<Announcement[]>("/api/v1/tenant/announcements");
+        const token = await getToken();
+        const data = await fetchAPI<Announcement[]>("/api/v1/tenant/announcements", {}, token);
         setAnnouncements(data);
       } catch (err) {
         console.error(err);
@@ -164,7 +168,7 @@ function TenantAnnouncementsContent() {
       }
     }
     loadData();
-  }, []);
+  }, [isLoaded]);
 
   const [nowTimestamp, setNowTimestamp] = useState<number>(0);
 

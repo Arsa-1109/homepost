@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
+import { useAuth } from "@clerk/nextjs";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -150,6 +151,7 @@ function LandlordAnnouncementsContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const router = useRouter();
+  const { isLoaded, getToken } = useAuth();
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -186,10 +188,12 @@ function LandlordAnnouncementsContent() {
   }, [selectedProperty, selectedFilter, searchQuery]);
 
   async function loadData() {
+    if (!isLoaded) return;
     try {
+      const token = await getToken();
       const [props, anns] = await Promise.all([
-        fetchAPI<Property[]>("/api/v1/landlord/properties"),
-        fetchAPI<Announcement[]>("/api/v1/landlord/announcements")
+        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token),
+        fetchAPI<Announcement[]>("/api/v1/landlord/announcements", {}, token)
       ]);
       setProperties(props);
       if (props.length > 0) setSelectedProperty(props[0].id);
@@ -202,14 +206,16 @@ function LandlordAnnouncementsContent() {
   }
 
   useEffect(() => {
+    if (!isLoaded) return;
     loadData();
-  }, []);
+  }, [isLoaded]);
 
   useEffect(() => {
-    if (!selectedProperty) return;
+    if (!isLoaded || !selectedProperty) return;
     async function loadUnits() {
       try {
-        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
+        const token = await getToken();
+        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`, {}, token);
         const sorted = (data || []).slice().sort((a, b) =>
           (a.unit_label || "").localeCompare(b.unit_label || "", undefined, {
             numeric: true,
@@ -223,7 +229,7 @@ function LandlordAnnouncementsContent() {
     }
     setSelectedUnit("");
     loadUnits();
-  }, [selectedProperty]);
+  }, [selectedProperty, isLoaded, getToken]);
 
   const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);

@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { uploadFile } from "@/lib/upload";
 import { MaintenanceTimeline } from "@/components/MaintenanceTimeline";
 import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
+import { useAuth } from "@clerk/nextjs";
 
 export type Property = { id: string; name: string };
 export type Unit = { id: string; unit_label: string };
@@ -632,6 +633,7 @@ function LandlordMaintenanceContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const router = useRouter();
+  const { isLoaded, getToken } = useAuth();
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
@@ -675,10 +677,12 @@ function LandlordMaintenanceContent() {
   }, [selectedProperty, selectedUnit, selectedFilter, searchQuery]);
 
   async function loadData() {
+    if (!isLoaded) return;
     try {
+      const token = await getToken();
       const [propsData, reqsData] = await Promise.all([
-        fetchAPI<Property[]>("/api/v1/landlord/properties"),
-        fetchAPI<MaintenanceRequest[]>("/api/v1/landlord/maintenance")
+        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token),
+        fetchAPI<MaintenanceRequest[]>("/api/v1/landlord/maintenance", {}, token)
       ]);
       setProperties(propsData);
       setRequests(reqsData);
@@ -690,11 +694,12 @@ function LandlordMaintenanceContent() {
   }
 
   useEffect(() => {
+    if (!isLoaded) return;
     loadData();
-  }, []);
+  }, [isLoaded]);
 
   useEffect(() => {
-    if (!selectedProperty || selectedProperty === "all") {
+    if (!isLoaded || !selectedProperty || selectedProperty === "all") {
       setUnits([]);
       setSelectedUnit("all");
       return;
@@ -703,7 +708,8 @@ function LandlordMaintenanceContent() {
     async function loadUnits() {
       setUnitsLoading(true);
       try {
-        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`);
+        const token = await getToken();
+        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`, {}, token);
         setUnits(data);
       } catch (err) {
         console.error(err);
@@ -715,7 +721,7 @@ function LandlordMaintenanceContent() {
 
     setSelectedUnit("all");
     loadUnits();
-  }, [selectedProperty]);
+  }, [selectedProperty, isLoaded, getToken]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {

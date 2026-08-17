@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { LightboxModal, isImageUrl } from "@/components/LightboxModal";
+import { useAuth } from "@clerk/nextjs";
 
 type Property = { id: string; name: string };
 type Unit = { id: string; unit_label: string };
@@ -56,6 +57,7 @@ function LandlordDocumentsContent() {
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
   const router = useRouter();
+  const { isLoaded, getToken } = useAuth();
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
@@ -79,9 +81,11 @@ function LandlordDocumentsContent() {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadProps() {
       try {
-        const data = await fetchAPI<Property[]>("/api/v1/landlord/properties");
+        const token = await getToken();
+        const data = await fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token);
         setProperties(data);
         if (data.length > 0) {
           const urlParams = new URLSearchParams(window.location.search);
@@ -105,16 +109,19 @@ function LandlordDocumentsContent() {
       }
     }
     loadProps();
-  }, []);
+  }, [isLoaded]);
 
   useEffect(() => {
-    if (!selectedProperty) return;
+    if (!isLoaded || !selectedProperty) return;
 
     // Load units for the selected property
     async function loadUnits() {
       try {
+        const token = await getToken();
         const data = await fetchAPI<Unit[]>(
           `/api/v1/landlord/properties/${selectedProperty}/units`,
+          {},
+          token,
         );
         const sorted = (data || []).slice().sort((a, b) =>
           (a.unit_label || "").localeCompare(b.unit_label || "", undefined, {
@@ -132,8 +139,11 @@ function LandlordDocumentsContent() {
     async function loadDocs() {
       setDocsLoading(true);
       try {
+        const token = await getToken();
         const data = await fetchAPI<Document[]>(
           `/api/v1/landlord/properties/${selectedProperty}/documents`,
+          {},
+          token,
         );
         setDocuments(data);
       } catch (err) {
@@ -148,7 +158,7 @@ function LandlordDocumentsContent() {
     setCurrentPage(1);
     loadUnits();
     loadDocs();
-  }, [selectedProperty]);
+  }, [selectedProperty, isLoaded, getToken]);
 
   // Reset page on search or filter change
   useEffect(() => {

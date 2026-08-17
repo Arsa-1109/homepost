@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from pydantic import BaseModel, Field
 from app.core.database import get_session
 from app.core.limiter import limiter
 from app.dependencies.auth import get_current_landlord, guard_demo_mutation
@@ -173,6 +174,11 @@ async def delete_property(
 # ---------------------------------------------------------------------------
 # Units
 # ---------------------------------------------------------------------------
+class BatchUnitCreate(BaseModel):
+    property_id: uuid.UUID
+    unit_labels: list[str] = Field(..., min_length=1, max_length=50)
+
+
 @router.post("/units", response_model=Unit)
 @limiter.limit("20/minute")
 async def create_unit(
@@ -209,6 +215,74 @@ async def create_unit(
     await session.commit()
     await session.refresh(unit)
     return unit
+
+
+@router.post("/units/batch", response_model=list[Unit])
+@limiter.limit("20/minute")
+async def create_units_batch(
+    request: Request,
+    batch_in: BatchUnitCreate,
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    guard_demo_mutation(user, "create units")
+
+    # Ensure property belongs to landlord
+    prop = await session.get(Property, batch_in.property_id)
+    if not prop or prop.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Property not found or access denied.")
+
+    # Validate non-empty sanitized labels and check for duplicates within the batch
+    clean_labels: list[str] = []
+    seen_lower = set()
+    for raw_label in batch_in.unit_labels:
+        stripped = raw_label.strip()
+        if not stripped:
+            continue
+        formatted = format_address(stripped)
+        lower = formatted.lower()
+        if lower in seen_lower:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duplicate unit label '{formatted}' found within the request batch."
+            )
+        seen_lower.add(lower)
+        clean_labels.append(formatted)
+
+    if not clean_labels:
+        raise HTTPException(status_code=400, detail="At least one valid unit label must be provided.")
+
+    # Check for existing duplicates in the database for this property
+    from sqlalchemy import func
+    existing_result = await session.execute(
+        select(Unit.unit_label).where(
+            Unit.property_id == batch_in.property_id,
+            func.lower(func.trim(Unit.unit_label)).in_(list(seen_lower))
+        )
+    )
+    existing_labels = existing_result.scalars().all()
+    if existing_labels:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A unit with label '{existing_labels[0]}' already exists in this property."
+        )
+
+    # Insert all units atomically
+    created_units: list[Unit] = []
+    for label in clean_labels:
+        unit = Unit(
+            property_id=batch_in.property_id,
+            unit_label=label,
+            rent_due_day=1,
+        )
+        session.add(unit)
+        created_units.append(unit)
+
+    await session.commit()
+    for u in created_units:
+        await session.refresh(u)
+
+    return created_units
 
 @router.get("/properties/{property_id}/units", response_model=list[UnitResponse])
 async def list_units(
@@ -906,6 +980,7 @@ class GenerateInvitePayload(BaseModel):
     clear_data: bool = False
     lease_start: Optional[date] = None
     lease_end: Optional[date] = None
+    rent_due_day: Optional[int] = Field(default=None, ge=1, le=31)
 
 class ApproveTenantPayload(BaseModel):
     user_id: uuid.UUID
@@ -944,6 +1019,10 @@ async def generate_invite(
         docs = docs_result.scalars().all()
         for d in docs:
             d.is_archived = True
+
+    if payload.rent_due_day is not None:
+        unit.rent_due_day = payload.rent_due_day
+        session.add(unit)
 
     invite = Invite(
         unit_id=unit.id,

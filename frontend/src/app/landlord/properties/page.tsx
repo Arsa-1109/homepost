@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 
 export type Property = {
   id: string;
@@ -64,6 +65,7 @@ function PropertyCard({
   onUpdate: (updatedProperty: Property) => void;
   onDelete: (propertyId: string) => void;
 }) {
+  const { isLoaded, getToken } = useAuth();
   const [unitSummary, setUnitSummary] = useState<PropertyUnitSummary | null>(
     null,
   );
@@ -80,10 +82,14 @@ function PropertyCard({
 
   useEffect(() => {
     let isMounted = true;
+    if (!isLoaded) return;
     async function loadUnitSummary() {
       try {
+        const token = await getToken();
         const units = await fetchAPI<{ id: string; is_occupied: boolean }[]>(
           `/api/v1/landlord/properties/${p.id}/units`,
+          {},
+          token,
         );
         if (isMounted) {
           const total = units.length;
@@ -104,7 +110,7 @@ function PropertyCard({
     return () => {
       isMounted = false;
     };
-  }, [p.id]);
+  }, [p.id, isLoaded, getToken]);
 
   const handleSave = async () => {
     if (!editName.trim() || !editAddress.trim() || !editCity.trim()) {
@@ -359,6 +365,7 @@ function PropertyCard({
 }
 
 function LandlordPropertiesContent() {
+  const { isLoaded, getToken } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalUnitsCount, setTotalUnitsCount] = useState<number | null>(null);
@@ -383,12 +390,14 @@ function LandlordPropertiesContent() {
   const [currentPage, setCurrentPage] = useState(1);
 
   async function loadData() {
+    if (!isLoaded) return;
     try {
-      const data = await fetchAPI<Property[]>("/api/v1/landlord/properties");
+      const token = await getToken();
+      const data = await fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token);
       setProperties(data);
       if (data.length > 0) {
         const unitPromises = data.map((p) =>
-          fetchAPI<any[]>(`/api/v1/landlord/properties/${p.id}/units`).catch(() => [])
+          fetchAPI<any[]>(`/api/v1/landlord/properties/${p.id}/units`, {}, token).catch(() => [])
         );
         const unitsResults = await Promise.all(unitPromises);
         const total = unitsResults.reduce((acc, units) => acc + units.length, 0);
@@ -405,8 +414,9 @@ function LandlordPropertiesContent() {
   }
 
   useEffect(() => {
+    if (!isLoaded) return;
     loadData();
-  }, []);
+  }, [isLoaded]);
 
   useEffect(() => {
     setCurrentPage(1);

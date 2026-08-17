@@ -30,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { uploadFiles } from "@/lib/upload";
 import { toast } from "sonner";
+import { useAuth } from "@clerk/nextjs";
 
 type MaintenanceRequest = {
   id: string;
@@ -618,6 +619,7 @@ function TenantRequestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const targetRequestId = searchParams.get("id") || searchParams.get("requestId");
+  const { isLoaded, getToken } = useAuth();
 
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [profile, setProfile] = useState<any>(null);
@@ -665,11 +667,13 @@ function TenantRequestsContent() {
   };
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadAll() {
       try {
+        const token = await getToken();
         const [reqs, prof] = await Promise.all([
-          fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance"),
-          fetchAPI<any>("/api/v1/tenant/profile")
+          fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
+          fetchAPI<any>("/api/v1/tenant/profile", {}, token)
         ]);
         setRequests(reqs);
         setProfile(prof);
@@ -680,7 +684,7 @@ function TenantRequestsContent() {
       }
     }
     loadAll();
-  }, []);
+  }, [isLoaded]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {

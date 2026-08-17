@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LightboxModal, isImageUrl } from "@/components/LightboxModal";
+import { useAuth } from "@clerk/nextjs";
 
 type Document = {
   id: string;
@@ -31,6 +32,7 @@ type Document = {
 };
 
 export default function TenantDocumentsPage() {
+  const { isLoaded, getToken } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,9 +48,11 @@ export default function TenantDocumentsPage() {
   }, [selectedFilter, searchQuery]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadData() {
       try {
-        const data = await fetchAPI<Document[]>("/api/v1/tenant/documents");
+        const token = await getToken();
+        const data = await fetchAPI<Document[]>("/api/v1/tenant/documents", {}, token);
         setDocuments(data);
       } catch (err) {
         console.error(err);
@@ -57,12 +61,15 @@ export default function TenantDocumentsPage() {
       }
     }
     loadData();
-  }, []);
+  }, [isLoaded]);
 
   const handleDownload = async (fileKey: string, title: string) => {
     try {
+      const token = await getToken();
       const { download_url } = await fetchAPI<{ download_url: string }>(
-        `/api/v1/uploads/download-url?file_key=${encodeURIComponent(fileKey)}&download=true`
+        `/api/v1/uploads/download-url?file_key=${encodeURIComponent(fileKey)}&download=true`,
+        {},
+        token
       );
       const link = document.createElement("a");
       link.href = download_url;
@@ -81,8 +88,11 @@ export default function TenantDocumentsPage() {
       return;
     }
     try {
+      const token = await getToken();
       const { download_url } = await fetchAPI<{ download_url: string }>(
         `/api/v1/uploads/download-url?file_key=${encodeURIComponent(doc.file_key)}`,
+        {},
+        token
       );
       setPreviewDoc({ ...doc, file_url: download_url });
     } catch (err) {

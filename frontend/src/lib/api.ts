@@ -105,13 +105,14 @@ export async function apiFetch<T = unknown>(
         "user_demo_tenant_001",
         "user_demo_tenant_002",
       ]);
-      const isTenantRoute = path.includes("/tenant") || mockRole === "tenant" || (mockEmail && mockEmail.includes("tenant"));
-      const fallbackId = isTenantRoute ? "user_demo_tenant_001" : "user_demo_landlord_001";
-      const resolvedId = (mockId && ALLOWED_DEMO_IDS.has(mockId)) ? mockId : fallbackId;
-      const resolvedEmail = (resolvedId === "user_demo_landlord_001") ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io";
-      const resolvedName = (resolvedId === "user_demo_landlord_001") ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins";
 
-      if (resolvedEmail && resolvedId) {
+      // Only generate synthetic demo JWT if the user is explicitly in a demo session
+      if (mockId && ALLOWED_DEMO_IDS.has(mockId)) {
+        const isTenantRoute = path.includes("/tenant") || mockRole === "tenant" || (mockEmail && mockEmail.includes("tenant"));
+        const resolvedId = mockId;
+        const resolvedEmail = mockEmail || ((resolvedId === "user_demo_landlord_001") ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io");
+        const resolvedName = (resolvedId === "user_demo_landlord_001") ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins";
+
         const header = { alg: "none", typ: "JWT" };
         const payload = {
           sub: resolvedId,
@@ -123,7 +124,6 @@ export async function apiFetch<T = unknown>(
         const b64 = (s: string) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
         activeToken = `${b64(JSON.stringify(header))}.${b64(JSON.stringify(payload))}.`;
       }
-
     }
 
   }

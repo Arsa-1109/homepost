@@ -22,9 +22,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
+import { useAuth } from "@clerk/nextjs";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +68,9 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   const [leaseStart, setLeaseStart] = useState("");
   const [leaseTenureType, setLeaseTenureType] = useState("12");
   const [customLeaseTenure, setCustomLeaseTenure] = useState("12");
+  const [rentDueDay, setRentDueDay] = useState(
+    u.rent_due_day ? u.rent_due_day.toString() : "1"
+  );
 
   const isLeaseExpired = useMemo(() => {
     if (!u.lease_end) return false;
@@ -213,8 +218,8 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
               <UserCheck className="w-3.5 h-3.5" />
               <span>Invite Tenant</span>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
-              <div className="p-6 sm:p-7 space-y-6">
+            <DialogContent className="sm:max-w-[440px] p-0 overflow-visible border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
+              <div className="p-6 sm:p-7 space-y-5 relative">
                 {/* Header */}
                 <div className="flex items-start gap-4">
                   <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner ring-4 ring-[rgb(var(--ml-accent))]/5">
@@ -238,7 +243,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                 </div>
 
                 {/* Custom Glassmorphic Checkbox Card for Retain Data */}
-                <label className="flex items-start gap-3.5 p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/30 hover:border-[rgb(var(--ml-text-primary))]/40 transition-all cursor-pointer group select-none">
+                <label className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[rgb(var(--ml-bg-primary))]/60 border border-border/30 hover:border-[rgb(var(--ml-text-primary))]/40 transition-all cursor-pointer group select-none">
                   <input
                     type="checkbox"
                     checked={keepData}
@@ -267,8 +272,36 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                   </div>
                 </label>
 
-                {/* Lease Terms Picker */}
-                <div className="space-y-4 pt-1">
+                {/* Lease & Rent Terms Picker */}
+                <div className="space-y-3.5 pt-1">
+                  {/* Monthly Rent Due Day */}
+                  <div>
+                    <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                      <span>Monthly Rent Due Day</span>
+                    </label>
+                    <Select
+                      value={rentDueDay}
+                      onValueChange={(val) => setRentDueDay(val || "1")}
+                    >
+                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
+                        <SelectValue placeholder="Select Rent Due Day" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-56 overflow-y-auto z-[120]">
+                        {Array.from({ length: 31 }, (_, i) => (
+                          <SelectItem
+                            key={i + 1}
+                            value={(i + 1).toString()}
+                            className="font-semibold text-xs cursor-pointer"
+                          >
+                            Day {i + 1} of every month
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Lease Start Date */}
                   <div>
                     <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
@@ -281,6 +314,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                     />
                   </div>
 
+                  {/* Lease Tenure */}
                   <div>
                     <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
                       Lease Tenure
@@ -292,7 +326,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                       <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
                         <SelectValue placeholder="Select Tenure" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
+                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto z-[120]">
                         <SelectItem
                           value="3"
                           className="font-semibold text-xs cursor-pointer"
@@ -388,6 +422,7 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                               clear_data: !keepData,
                               lease_start,
                               lease_end,
+                              rent_due_day: parseInt(rentDueDay) || 1,
                             }),
                           },
                         );
@@ -416,16 +451,25 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
 }
 
 export default function LandlordUnitsPage() {
+  const { isLoaded, getToken } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [unitsLoading, setUnitsLoading] = useState(true);
 
+  // Progressive disclosure creation state
   const [unitLabel, setUnitLabel] = useState("");
-  const [rentDay, setRentDay] = useState("1");
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [batchInput, setBatchInput] = useState("");
+  const [inviteImmediately, setInviteImmediately] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Active Invite Modal for immediate invite after creation
+  const [createdUnitForInvite, setCreatedUnitForInvite] = useState<Unit | null>(
+    null
+  );
+  const [isImmediateInviteOpen, setIsImmediateInviteOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<
@@ -441,9 +485,11 @@ export default function LandlordUnitsPage() {
   }, [searchQuery, selectedFilter, selectedProperty]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     async function loadProps() {
       try {
-        const data = await fetchAPI<Property[]>("/api/v1/landlord/properties");
+        const token = await getToken();
+        const data = await fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token);
         setProperties(data);
         if (data.length > 0) {
           const urlParams = new URLSearchParams(window.location.search);
@@ -467,14 +513,17 @@ export default function LandlordUnitsPage() {
       }
     }
     loadProps();
-  }, []);
+  }, [isLoaded]);
 
   const loadUnits = async () => {
-    if (!selectedProperty) return;
+    if (!isLoaded || !selectedProperty) return;
     setUnitsLoading(true);
     try {
+      const token = await getToken();
       const data = await fetchAPI<Unit[]>(
         `/api/v1/landlord/properties/${selectedProperty}/units`,
+        {},
+        token
       );
       setUnits(data || []);
     } catch (err) {
@@ -485,12 +534,15 @@ export default function LandlordUnitsPage() {
   };
 
   useEffect(() => {
+    if (!isLoaded) return;
     loadUnits();
-  }, [selectedProperty]);
+  }, [selectedProperty, isLoaded]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  // Single unit creation
+  const handleCreateSingle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProperty) return;
+    const cleanLabel = unitLabel.trim();
+    if (!selectedProperty || !cleanLabel) return;
 
     setIsSubmitting(true);
     try {
@@ -498,17 +550,97 @@ export default function LandlordUnitsPage() {
         method: "POST",
         body: JSON.stringify({
           property_id: selectedProperty,
-          unit_label: unitLabel,
-          rent_due_day: parseInt(rentDay),
+          unit_label: cleanLabel,
         }),
       });
       setUnits((prev) => [...prev, newUnit]);
       setUnitLabel("");
-      setRentDay("1");
-      setShowAddForm(false);
-      toast.success("Unit created successfully!");
+      toast.success(`Unit "${newUnit.unit_label}" created successfully!`);
+
+      if (inviteImmediately) {
+        setCreatedUnitForInvite(newUnit);
+        setIsImmediateInviteOpen(true);
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to create unit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Helper to parse batch input
+  const parsedBatchLabels = useMemo(() => {
+    const parts = batchInput
+      .split(/[,;\n]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const result: string[] = [];
+
+    for (const part of parts) {
+      const rangeMatch = part.match(
+        /^([A-Za-z\s_-]*)(\d+)\s*[-–—]\s*([A-Za-z\s_-]*)(\d+)$/
+      );
+      if (rangeMatch) {
+        const prefix1 = rangeMatch[1];
+        const startNum = parseInt(rangeMatch[2], 10);
+        const prefix2 = rangeMatch[3];
+        const endNum = parseInt(rangeMatch[4], 10);
+        const prefix = prefix1 || prefix2 || "";
+
+        if (
+          !isNaN(startNum) &&
+          !isNaN(endNum) &&
+          startNum <= endNum &&
+          endNum - startNum <= 50
+        ) {
+          for (let n = startNum; n <= endNum; n++) {
+            result.push(`${prefix}${n}`.trim());
+          }
+          continue;
+        }
+      }
+      result.push(part);
+    }
+
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const item of result) {
+      const lower = item.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        unique.push(item);
+      }
+    }
+    return unique;
+  }, [batchInput]);
+
+  // Batch unit creation
+  const handleCreateBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProperty || parsedBatchLabels.length === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const createdUnits = await fetchAPI<Unit[]>(
+        "/api/v1/landlord/units/batch",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            property_id: selectedProperty,
+            unit_labels: parsedBatchLabels,
+          }),
+        }
+      );
+      setUnits((prev) => [...prev, ...createdUnits]);
+      setBatchInput("");
+      setIsBatchMode(false);
+      toast.success(
+        `Created ${createdUnits.length} unit${
+          createdUnits.length === 1 ? "" : "s"
+        } successfully!`
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create units in batch.");
     } finally {
       setIsSubmitting(false);
     }
@@ -606,21 +738,6 @@ export default function LandlordUnitsPage() {
                 </Select>
               ) : null}
             </div>
-
-            {/* Toggle Add Unit Form Button */}
-            {properties.length > 0 && (
-              <Button
-                onClick={() => setShowAddForm((prev) => !prev)}
-                className="h-11 px-4 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs flex items-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"
-              >
-                {showAddForm ? (
-                  <X className="w-4 h-4" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                <span>{showAddForm ? "Hide Form" : "Add Unit"}</span>
-              </Button>
-            )}
           </div>
         </div>
 
@@ -726,95 +843,137 @@ export default function LandlordUnitsPage() {
             </div>
           )}
 
-          {/* Add Unit Form (Collapsible with smooth Motion reveal) */}
-          <AnimatePresence>
-            {showAddForm && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, scale: 0.98 }}
-                animate={{ opacity: 1, height: "auto", scale: 1 }}
-                exit={{ opacity: 0, height: 0, scale: 0.98 }}
-                transition={{ duration: 0.25 }}
-                className="relative z-20"
-              >
-                <form
-                  onSubmit={handleCreate}
-                  className="p-6 sm:p-8 bg-[rgb(var(--ml-bg-secondary))] border border-border rounded-3xl space-y-5 shadow-md mb-8 relative z-20"
-                >
-                  <div>
-                    <h2 className="text-lg font-black text-[rgb(var(--ml-text-primary))] tracking-tight flex items-center gap-2">
-                      <Plus className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
-                      Add New Unit
-                    </h2>
-                    <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] mt-0.5">
-                      Define unit details, set the monthly rent due day, and select the lease period for{" "}
-                      <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-                        {selectedPropertyName}
-                      </span>
-                      .
-                    </p>
+          {/* Progressive Disclosure Unit Creation Section */}
+          <div className="p-5 sm:p-6 bg-[rgb(var(--ml-bg-secondary))] border border-border/70 rounded-3xl space-y-4 shadow-sm relative">
+            {!isBatchMode ? (
+              /* Single Unit Quick-Add */
+              <form onSubmit={handleCreateSingle} className="space-y-3.5">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={unitLabel}
+                      onChange={(e) => setUnitLabel(e.target.value)}
+                      placeholder={`Unit label / name (e.g. Apt 104, Room 2B for ${selectedPropertyName})`}
+                      className="w-full h-11 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-4 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/60"
+                    />
                   </div>
+                  <Button
+                    type="submit"
+                    disabled={!unitLabel.trim() || isSubmitting}
+                    className="h-11 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{isSubmitting ? "Adding..." : "Add Unit"}</span>
+                  </Button>
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
-                        Unit Label / Name
-                      </label>
-                      <input
-                        required
-                        value={unitLabel}
-                        onChange={(e) => setUnitLabel(e.target.value)}
-                        placeholder="e.g. Apt 101, Penthouse, Unit B"
-                        className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50"
-                      />
-                    </div>
+                {/* Progressive Disclosure Triggers */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
+                  {/* Batch Mode Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBatchMode(true);
+                      setBatchInput("");
+                    }}
+                    className="inline-flex items-center gap-1.5 font-bold text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors cursor-pointer"
+                  >
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>+ Add multiple units</span>
+                  </button>
 
-                    <div>
-                      <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
-                        Monthly Rent Due Day
-                      </label>
-                      <Select
-                        value={rentDay}
-                        onValueChange={(val) => setRentDay(val || "1")}
-                      >
-                        <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
-                          <SelectValue placeholder="Select Day" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
-                          {Array.from({ length: 31 }, (_, i) => (
-                            <SelectItem
-                              key={i + 1}
-                              value={(i + 1).toString()}
-                              className="font-semibold text-xs cursor-pointer"
-                            >
-                              Day {i + 1} of every month
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-2 border-t border-border/30">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowAddForm(false)}
-                      className="px-5 py-2 text-xs font-bold border-border/40 rounded-xl hover:bg-[rgb(var(--ml-bg-primary))]"
+                  {/* Advanced: Invite Tenant Immediately */}
+                  <label className="inline-flex items-center gap-2 font-medium text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={inviteImmediately}
+                      onChange={(e) => setInviteImmediately(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all duration-200 ${
+                        inviteImmediately
+                          ? "bg-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))]"
+                          : "bg-[rgb(var(--ml-bg-primary))] border-border/80 text-transparent"
+                      }`}
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      disabled={isSubmitting}
-                      type="submit"
-                      className="px-6 py-2 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
-                    >
-                      {isSubmitting ? "Creating Unit..." : "Save Unit"}
-                    </Button>
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                    <span>Invite tenant immediately</span>
+                  </label>
+                </div>
+              </form>
+            ) : (
+              /* Batch Unit Creation Mode */
+              <form onSubmit={handleCreateBatch} className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-black text-[rgb(var(--ml-text-primary))]">
+                    <Layers className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
+                    <span>Batch Add Units</span>
                   </div>
-                </form>
-              </motion.div>
+                  <button
+                    type="button"
+                    onClick={() => setIsBatchMode(false)}
+                    className="text-xs font-bold text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] transition-colors cursor-pointer"
+                  >
+                    Switch to single unit
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <textarea
+                    rows={2}
+                    value={batchInput}
+                    onChange={(e) => setBatchInput(e.target.value)}
+                    placeholder="Enter unit numbers or ranges (e.g. 101, 102, 103 or 101-106, Apt 1-4)"
+                    className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/60 resize-none"
+                  />
+
+                  {/* Preview Chips */}
+                  {parsedBatchLabels.length > 0 && (
+                    <div className="p-3 rounded-xl bg-[rgb(var(--ml-bg-primary))]/50 border border-border/40 space-y-1.5">
+                      <p className="text-[11px] font-bold text-[rgb(var(--ml-text-secondary))]">
+                        Detected Units ({parsedBatchLabels.length}):
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                        {parsedBatchLabels.map((label, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-lg bg-[rgb(var(--ml-bg-secondary))] border border-border/60 text-[11px] font-bold text-[rgb(var(--ml-text-primary))]"
+                          >
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-1 border-t border-border/30">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsBatchMode(false)}
+                    className="px-4 py-2 text-xs font-bold border-border/40 rounded-xl hover:bg-[rgb(var(--ml-bg-primary))]"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={parsedBatchLabels.length === 0 || isSubmitting}
+                    className="px-5 py-2 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] disabled:opacity-50 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"
+                  >
+                    {isSubmitting
+                      ? "Creating..."
+                      : `Create ${parsedBatchLabels.length} Unit${
+                          parsedBatchLabels.length === 1 ? "" : "s"
+                        }`}
+                  </Button>
+                </div>
+              </form>
             )}
-          </AnimatePresence>
+          </div>
 
           {/* Units Content Area */}
           <AnimatePresence mode="wait">
@@ -862,16 +1021,8 @@ export default function LandlordUnitsPage() {
                 <p className="text-xs text-[rgb(var(--ml-text-secondary))] max-w-sm mx-auto">
                   {searchQuery
                     ? `No units match your search query "${searchQuery}". Try clearing the search or filter.`
-                    : "Get started by adding your first unit to this property above."}
+                    : "Get started by adding your first unit to this property using the input above."}
                 </p>
-                {!searchQuery && (
-                  <Button
-                    onClick={() => setShowAddForm(true)}
-                    className="mt-2 text-xs font-bold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl px-4 py-2 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
-                  >
-                    Add Unit Now
-                  </Button>
-                )}
               </motion.div>
             ) : (
               <motion.div
@@ -963,6 +1114,235 @@ export default function LandlordUnitsPage() {
           )}
         </>
       )}
+
+      {/* Immediate Invite Modal when user checks 'Invite tenant immediately' */}
+      {createdUnitForInvite && (
+        <ImmediateInviteModal
+          unit={createdUnitForInvite}
+          isOpen={isImmediateInviteOpen}
+          onClose={() => {
+            setIsImmediateInviteOpen(false);
+            setCreatedUnitForInvite(null);
+            loadUnits();
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function ImmediateInviteModal({
+  unit,
+  isOpen,
+  onClose,
+}: {
+  unit: Unit;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  const [keepData, setKeepData] = useState(true);
+  const [leaseStart, setLeaseStart] = useState("");
+  const [leaseTenureType, setLeaseTenureType] = useState("12");
+  const [customLeaseTenure, setCustomLeaseTenure] = useState("12");
+  const [rentDueDay, setRentDueDay] = useState(
+    unit.rent_due_day ? unit.rent_due_day.toString() : "1"
+  );
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      let lease_start: string | null = null;
+      let lease_end: string | null = null;
+
+      if (leaseStart) {
+        lease_start = leaseStart;
+        const finalTenureMonths =
+          leaseTenureType === "custom"
+            ? parseInt(customLeaseTenure)
+            : parseInt(leaseTenureType);
+
+        if (!isNaN(finalTenureMonths) && finalTenureMonths >= 1) {
+          const startDate = new Date(leaseStart);
+          if (!isNaN(startDate.getTime())) {
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + finalTenureMonths);
+            lease_end = endDate.toISOString().split("T")[0];
+          }
+        }
+      }
+
+      const res = await fetchAPI<{ token: string }>(
+        "/api/v1/landlord/generate-invite",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            unit_id: unit.id,
+            clear_data: !keepData,
+            lease_start,
+            lease_end,
+            rent_due_day: parseInt(rentDueDay) || 1,
+          }),
+        }
+      );
+      const link = `${window.location.origin}/join/${res.token}`;
+      navigator.clipboard.writeText(link);
+      toast.success("Invite link copied to clipboard!");
+      onClose();
+    } catch (err) {
+      toast.error("Failed to generate invite.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[440px] p-0 overflow-visible border border-border/60 shadow-2xl bg-[rgb(var(--ml-bg-secondary))] rounded-3xl outline-none ring-0">
+        <div className="p-6 sm:p-7 space-y-5 relative">
+          <div className="flex items-start gap-4">
+            <div className="p-3.5 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0 shadow-inner ring-4 ring-[rgb(var(--ml-accent))]/5">
+              <DoorOpen className="h-6 w-6 text-[rgb(var(--ml-accent))]" />
+            </div>
+            <div>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black text-[rgb(var(--ml-text-primary))] tracking-tight">
+                  Invite Tenant
+                </DialogTitle>
+                <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                  Generate a unique, secure invite link for your new tenant
+                  moving into{" "}
+                  <span className="font-bold text-[rgb(var(--ml-text-primary))]">
+                    Unit {unit.unit_label}
+                  </span>
+                  .
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+          </div>
+
+          <div className="space-y-3.5 pt-1">
+            <div>
+              <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                <span>Monthly Rent Due Day</span>
+              </label>
+              <Select
+                value={rentDueDay}
+                onValueChange={(val) => setRentDueDay(val || "1")}
+              >
+                <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
+                  <SelectValue placeholder="Select Rent Due Day" />
+                </SelectTrigger>
+                <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-56 overflow-y-auto z-[120]">
+                  {Array.from({ length: 31 }, (_, i) => (
+                    <SelectItem
+                      key={i + 1}
+                      value={(i + 1).toString()}
+                      className="font-semibold text-xs cursor-pointer"
+                    >
+                      Day {i + 1} of every month
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                <span>Lease Start Date (Optional)</span>
+              </label>
+              <DatePicker
+                value={leaseStart}
+                onChange={(dateStr) => setLeaseStart(dateStr)}
+                placeholder="Select lease start date"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
+                Lease Tenure
+              </label>
+              <Select
+                value={leaseTenureType}
+                onValueChange={(val) => setLeaseTenureType(val || "12")}
+              >
+                <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
+                  <SelectValue placeholder="Select Tenure" />
+                </SelectTrigger>
+                <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto z-[120]">
+                  <SelectItem
+                    value="3"
+                    className="font-semibold text-xs cursor-pointer"
+                  >
+                    3 Months
+                  </SelectItem>
+                  <SelectItem
+                    value="6"
+                    className="font-semibold text-xs cursor-pointer"
+                  >
+                    6 Months
+                  </SelectItem>
+                  <SelectItem
+                    value="12"
+                    className="font-semibold text-xs cursor-pointer"
+                  >
+                    12 Months (1 Year)
+                  </SelectItem>
+                  <SelectItem
+                    value="24"
+                    className="font-semibold text-xs cursor-pointer"
+                  >
+                    24 Months (2 Years)
+                  </SelectItem>
+                  <SelectItem
+                    value="custom"
+                    className="font-semibold text-xs cursor-pointer"
+                  >
+                    Custom Duration...
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {leaseTenureType === "custom" && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={customLeaseTenure}
+                    onChange={(e) => setCustomLeaseTenure(e.target.value)}
+                    placeholder="Months (e.g. 18)"
+                    className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-2.5 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))]"
+                  />
+                  <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] shrink-0">
+                    Months
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-border/30 flex gap-3 justify-end items-center">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 text-xs font-bold border border-border/40 bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-secondary))] rounded-xl transition-colors cursor-pointer flex-1 sm:flex-initial shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isGenerating}
+              onClick={handleGenerate}
+              className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.2)] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] disabled:opacity-50"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>{isGenerating ? "Generating..." : "Generate Link"}</span>
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

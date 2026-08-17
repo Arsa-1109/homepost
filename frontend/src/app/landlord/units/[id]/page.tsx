@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@clerk/nextjs";
 
 type UnitDetail = {
   unit: {
@@ -55,6 +56,7 @@ export default function UnitDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const unitId = params.id as string;
+  const { isLoaded, getToken } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,13 +99,14 @@ export default function UnitDetailsPage() {
   }, [unitData]);
 
   useEffect(() => {
+    if (!isLoaded || !unitId) return;
     async function loadData() {
-      if (!unitId) return;
       try {
+        const token = await getToken();
         const [unitRes, maintRes, docsRes] = await Promise.all([
-          fetchAPI<UnitDetail>(`/api/v1/landlord/units/${unitId}`),
-          fetchAPI<MaintenanceRequest[]>(`/api/v1/landlord/maintenance?unit_id=${unitId}`),
-          fetchAPI<Document[]>(`/api/v1/landlord/units/${unitId}/documents`)
+          fetchAPI<UnitDetail>(`/api/v1/landlord/units/${unitId}`, {}, token),
+          fetchAPI<MaintenanceRequest[]>(`/api/v1/landlord/maintenance?unit_id=${unitId}`, {}, token),
+          fetchAPI<Document[]>(`/api/v1/landlord/units/${unitId}/documents`, {}, token)
         ]);
         setUnitData(unitRes);
         setMaintenanceRequests(maintRes);
@@ -116,7 +119,7 @@ export default function UnitDetailsPage() {
       }
     }
     loadData();
-  }, [unitId]);
+  }, [unitId, isLoaded, getToken]);
 
   if (loading) {
     return (

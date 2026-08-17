@@ -8,9 +8,11 @@ import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Wrench, ChevronLeft, Upload, Image as ImageIcon, X, Send, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@clerk/nextjs";
 
 export default function NewRequestPage() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
@@ -57,6 +59,7 @@ export default function NewRequestPage() {
     setError("");
 
     try {
+      const token = await getToken();
       let imageKeys: string[] = [];
       if (images.length > 0) {
         imageKeys = await Promise.all(
@@ -72,7 +75,7 @@ export default function NewRequestPage() {
           priority,
           image_keys: imageKeys,
         }),
-      });
+      }, token);
 
       router.push("/tenant/requests");
       router.refresh();

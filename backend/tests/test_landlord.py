@@ -791,3 +791,66 @@ async def test_landlord_download_url_authorized_for_all_attached_keys(client: As
         assert denied_res.status_code == 403
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_generate_invite_updates_rent_due_day(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /api/v1/landlord/generate-invite updates unit.rent_due_day when provided."""
+    landlord = seed_data["landlord"]
+    unit = seed_data["unit"]
+    assert unit.rent_due_day != 25  # Initially 1 or something other than 25
+
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        res = await client.post(
+            "/api/v1/landlord/generate-invite",
+            json={
+                "unit_id": str(unit.id),
+                "lease_start": "2026-09-01",
+                "lease_end": "2027-08-31",
+                "rent_due_day": 25,
+            },
+        )
+        assert res.status_code == 200
+
+        # Verify unit rent_due_day was updated in DB
+        await db_session.refresh(unit)
+        assert unit.rent_due_day == 25
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_batch_create_units(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /api/v1/landlord/units/batch creates multiple units atomically."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    try:
+        res = await client.post(
+            "/api/v1/landlord/units/batch",
+            json={
+                "property_id": str(prop.id),
+                "unit_labels": ["Apt 801", "Apt 802", "Apt 803"],
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert len(data) == 3
+        labels = [u["unit_label"] for u in data]
+        assert "Apt 801" in labels
+        assert "Apt 802" in labels
+        assert "Apt 803" in labels
+
+        # Verify duplicate creation in same batch fails
+        dup_res = await client.post(
+            "/api/v1/landlord/units/batch",
+            json={
+                "property_id": str(prop.id),
+                "unit_labels": ["Apt 801", "Apt 804"],
+            },
+        )
+        assert dup_res.status_code == 400
+        assert "already exists" in dup_res.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
