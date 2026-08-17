@@ -2,14 +2,16 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "@clerk/nextjs";
+import { useAuth, useUser, useSession } from "@clerk/nextjs";
 import { api, UserRoleResponse } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
 
 function SyncRoleContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isLoaded, session } = useSession();
+  const { isLoaded: isAuthLoaded, getToken } = useAuth();
+  const { user: clerkUser } = useUser();
+  const { session } = useSession();
   const [status, setStatus] = useState("Syncing your account...");
   const [isPending, setIsPending] = useState(false);
   
@@ -19,7 +21,7 @@ function SyncRoleContent() {
   const syncInProgress = useRef(false);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isAuthLoaded) return;
 
     async function syncRole() {
       // Guard against React Strict Mode double-invocation
@@ -27,36 +29,45 @@ function SyncRoleContent() {
       syncInProgress.current = true;
 
       try {
-        const token = session ? await session.getToken() : null;
-        const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
+        const token = await getToken();
+        let user: UserRoleResponse | null = null;
+
+        try {
+          user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
+        } catch (fetchErr: any) {
+          console.warn("Could not fetch user role directly from /me:", fetchErr);
+        }
+
+        const metadataRole = (clerkUser?.publicMetadata as any)?.role;
+        const effectiveRole = (user && user.role && user.role !== "none" && user.role !== "unassigned")
+          ? user.role
+          : (metadataRole === "landlord" || metadataRole === "tenant" ? metadataRole : null);
         
-        if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
+        if (effectiveRole) {
           // Cookies required for offline clerk mock system and fast middleware checks
           if (typeof window !== "undefined") {
             document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
-            document.cookie = `mock_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
+            document.cookie = `mock_user_role=${effectiveRole}; path=/; max-age=604800; SameSite=Lax`;
           }
-          if (user.role === "landlord") {
+          if (effectiveRole === "landlord") {
             try {
               await completeOnboarding("landlord");
               if (session) await session.reload();
             } catch (e) {
               console.warn("Non-fatal onboarding sync notice:", e);
             }
-            // Hard redirect forces full app remount to fetch new clerk JWT/metadata
             window.location.href = "/landlord/dashboard";
             return;
-          } else if (user.role === "tenant") {
+          } else if (effectiveRole === "tenant") {
             try {
               await completeOnboarding("tenant");
               if (session) await session.reload();
             } catch (e) {
               console.warn("Non-fatal onboarding sync notice:", e);
             }
-            // Hard redirect forces full app remount to fetch new clerk JWT/metadata
             window.location.href = "/tenant/dashboard";
             return;
-          } else if (user.role === "tenant_pending") {
+          } else if (effectiveRole === "tenant_pending") {
             setIsPending(true);
             return;
           }
@@ -71,14 +82,18 @@ function SyncRoleContent() {
             document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
             document.cookie = "mock_user_role=landlord; path=/; max-age=604800; SameSite=Lax";
           }
-          await api.post("/api/v1/onboarding/register-landlord", undefined, token);
+          try {
+            await api.post("/api/v1/onboarding/register-landlord", undefined, token);
+          } catch (regErr: any) {
+            // If already registered, proceed safely
+            console.log("Landlord registration response:", regErr?.message);
+          }
           try {
             await completeOnboarding("landlord");
             if (session) await session.reload();
           } catch (e) {
             console.warn("Non-fatal onboarding sync notice:", e);
           }
-          // Hard redirect forces full app remount to fetch new clerk JWT/metadata
           window.location.href = "/landlord/dashboard";
         } else if (intent === "tenant" && landlordEmail) {
           setStatus("Sending access request to landlord...");
@@ -97,11 +112,11 @@ function SyncRoleContent() {
           setErrorMessage("Something went wrong finishing your setup. Try again?");
         }
       } finally {
-        syncInProgress.current = false; // Allow future retries
+        syncInProgress.current = false;
       }
     }
     syncRole();
-  }, [isLoaded, router, session, searchParams]);
+  }, [isAuthLoaded, router, session, searchParams, clerkUser, getToken]);
 
   if (errorStatus) {
     return (

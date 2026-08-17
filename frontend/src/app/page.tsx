@@ -353,6 +353,18 @@ export default function LandingPage() {
   // Check if user already has a role
   useEffect(() => {
     let isMounted = true;
+
+    // Check Clerk publicMetadata or local cookies first for instant resolution
+    const metadataRole = (user?.publicMetadata as any)?.role;
+    const metadataComplete = (user?.publicMetadata as any)?.onboardingComplete;
+    const cookieRole = typeof document !== "undefined" 
+      ? document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2] 
+      : null;
+
+    if (metadataRole === "landlord" || metadataRole === "tenant" || metadataComplete || cookieRole === "landlord" || cookieRole === "tenant") {
+      setHasRole(true);
+    }
+
     if (isLoaded && isSignedIn && user) {
       const checkRole = async () => {
         try {
@@ -361,12 +373,18 @@ export default function LandingPage() {
           if (isMounted) {
             if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
               setHasRole(true);
-            } else {
+              if (typeof window !== "undefined") {
+                document.cookie = `mock_user_role=${me.role}; path=/; max-age=604800; SameSite=Lax`;
+                document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
+              }
+            } else if (!metadataRole && !metadataComplete && !cookieRole) {
               setHasRole(false);
             }
           }
         } catch (err) {
-          if (isMounted) setHasRole(false);
+          if (isMounted && !metadataRole && !metadataComplete && !cookieRole) {
+            setHasRole(false);
+          }
         }
       };
       checkRole();
@@ -378,17 +396,17 @@ export default function LandingPage() {
     };
   }, [isLoaded, isSignedIn, user, getToken]);
 
-  // Fallback: If Clerk takes too long or fails to load, default to showing the portal cards
+  // Fallback: If Clerk takes too long or fails to load, default to showing portal cards ONLY if not signed in
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (hasRole === null) {
-        console.warn("Clerk loading timed out. Falling back to default landing page state.");
+      if (hasRole === null && (!isLoaded || !isSignedIn)) {
+        console.warn("Auth loading timed out. Falling back to default landing page state.");
         setHasRole(false);
       }
-    }, 2500);
+    }, 3000);
 
     return () => clearTimeout(timer);
-  }, [hasRole]);
+  }, [hasRole, isLoaded, isSignedIn]);
 
   const handleLandlordSelect = async () => {
     if (!isLoaded) return;

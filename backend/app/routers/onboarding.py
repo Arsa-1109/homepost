@@ -60,8 +60,20 @@ async def sync_user(
 ):
     user.email = payload.email
     user.full_name = payload.full_name
+
+    # If the user is unassigned, check if an existing record with this email has an assigned role
+    if user.role == UserRole.UNASSIGNED and payload.email:
+        statement = select(User).where(User.email == payload.email, User.id != user.id)
+        result = await session.execute(statement)
+        existing_user = result.scalar_one_or_none()
+        if existing_user and existing_user.role != UserRole.UNASSIGNED:
+            user.role = existing_user.role
+            if existing_user.requested_landlord_id:
+                user.requested_landlord_id = existing_user.requested_landlord_id
+
     session.add(user)
     await session.commit()
+    await session.refresh(user)
     return {"status": "success", "user": user}
 
 

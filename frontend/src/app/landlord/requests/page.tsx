@@ -283,7 +283,17 @@ function StagedAttachmentThumbnail({
   );
 }
 
-export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: MaintenanceRequest, onUpdate: () => void, defaultExpanded?: boolean }) {
+export function RequestCard({ 
+  req, 
+  onUpdate, 
+  defaultExpanded = false,
+  isHighlighted = false 
+}: { 
+  req: MaintenanceRequest; 
+  onUpdate: () => void; 
+  defaultExpanded?: boolean;
+  isHighlighted?: boolean;
+}) {
   const [status, setStatus] = useState(req.status);
   const [notes, setNotes] = useState(req.landlord_notes || "");
   const [files, setFiles] = useState<File[]>([]);
@@ -294,6 +304,12 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (defaultExpanded) {
+      setIsExpanded(true);
+    }
+  }, [defaultExpanded]);
 
   useEffect(() => {
     setStatus(req.status);
@@ -389,7 +405,14 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
   };
 
   return (
-    <div className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
+    <div 
+      id={`request-${req.id}`}
+      className={`rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+        isHighlighted
+          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+          : "border-border/60"
+      }`}
+    >
       {/* Collapsed Card Header */}
       <div 
         className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none relative z-10"
@@ -631,13 +654,16 @@ export default function LandlordMaintenancePage() {
 
 function LandlordMaintenanceContent() {
   const searchParams = useSearchParams();
-  const idParam = searchParams.get("id");
+  const idParam = searchParams.get("id") || searchParams.get("requestId");
   const router = useRouter();
   const { isLoaded, getToken } = useAuth();
 
   const [properties, setProperties] = useState<Property[]>([]);
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
   const [units, setUnits] = useState<Unit[]>([]);
@@ -656,9 +682,6 @@ function LandlordMaintenanceContent() {
     setSelectedFilter("ALL");
     setSearchQuery("");
     setCurrentPage(1);
-    if (idParam) {
-      router.replace("/landlord/requests");
-    }
   };
 
   const hasActiveFilters = useMemo(() => {
@@ -666,10 +689,9 @@ function LandlordMaintenanceContent() {
       (selectedProperty !== "all" && selectedProperty !== "") ||
       (selectedUnit !== "all" && selectedUnit !== "") ||
       selectedFilter !== "ALL" ||
-      searchQuery.trim().length > 0 ||
-      Boolean(idParam)
+      searchQuery.trim().length > 0
     );
-  }, [selectedProperty, selectedUnit, selectedFilter, searchQuery, idParam]);
+  }, [selectedProperty, selectedUnit, selectedFilter, searchQuery]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -725,11 +747,6 @@ function LandlordMaintenanceContent() {
 
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
-      // ID filter
-      if (idParam && req.id !== idParam) {
-        return false;
-      }
-
       // Property filter
       if (selectedProperty && selectedProperty !== "all") {
         const propObj = properties.find(p => p.id === selectedProperty);
@@ -767,9 +784,64 @@ function LandlordMaintenanceContent() {
 
       return true;
     }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [requests, properties, selectedProperty, selectedUnit, selectedFilter, searchQuery, idParam]);
+  }, [requests, properties, units, selectedProperty, selectedUnit, selectedFilter, searchQuery]);
 
   const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1;
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  // Handle deep-linking auto-expand, page navigation, highlighting, and smooth scroll
+  useEffect(() => {
+    if (!loading && idParam && requests.length > 0) {
+      const target = requests.find((r) => r.id === idParam);
+      if (target) {
+        setExpandedId(idParam);
+        setHighlightedId(idParam);
+
+        // Reset filter/search if target would be hidden
+        if (selectedProperty !== "all" && target.property_name) {
+          const propObj = properties.find(p => p.id === selectedProperty);
+          if (propObj && target.property_name !== propObj.name) {
+            setSelectedProperty("all");
+          }
+        }
+        if (selectedFilter !== "ALL" && target.status !== selectedFilter) {
+          setSelectedFilter("ALL");
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matches =
+            target.title.toLowerCase().includes(q) ||
+            target.description.toLowerCase().includes(q) ||
+            target.property_name?.toLowerCase().includes(q) ||
+            target.unit_label?.toLowerCase().includes(q);
+          if (!matches) {
+            setSearchQuery("");
+          }
+        }
+
+        const targetIndex = filteredRequests.findIndex((r) => r.id === idParam);
+        if (targetIndex !== -1) {
+          const targetPage = Math.floor(targetIndex / ITEMS_PER_PAGE) + 1;
+          if (currentPage !== targetPage) {
+            setCurrentPage(targetPage);
+          }
+        }
+
+        const scrollTimer = setTimeout(() => {
+          const el = document.getElementById(`request-${idParam}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 350);
+        return () => clearTimeout(scrollTimer);
+      }
+    }
+  }, [loading, idParam, requests]);
 
   const paginatedRequests = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -906,19 +978,6 @@ function LandlordMaintenanceContent() {
             />
           </div>
         </div>
-        
-        {idParam && (
-          <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
-            <span>Showing a specific request.</span>
-            <button 
-              onClick={handleResetAllFilters}
-              className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2 cursor-pointer flex items-center gap-1"
-            >
-              <RotateCcw className="w-3 h-3" />
-              Clear Filter
-            </button>
-          </div>
-        )}
       </div>
 
       {!loading && properties.length === 0 ? (
@@ -1036,7 +1095,12 @@ function LandlordMaintenanceContent() {
                       show: { opacity: 1, y: 0 }
                     }}
                   >
-                    <RequestCard req={req} onUpdate={loadData} defaultExpanded={req.id === idParam} />
+                    <RequestCard 
+                      req={req} 
+                      onUpdate={loadData} 
+                      defaultExpanded={req.id === expandedId || req.id === idParam}
+                      isHighlighted={req.id === highlightedId}
+                    />
                   </motion.div>
                 ))}
               </motion.div>

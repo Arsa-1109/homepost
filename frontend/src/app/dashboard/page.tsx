@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { api, UserRoleResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 export default function DashboardRedirect() {
   const { isLoaded, userId, getToken } = useAuth();
+  const { user: clerkUser } = useUser();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const redirectedRef = useRef(false);
@@ -16,25 +17,41 @@ export default function DashboardRedirect() {
     if (redirectedRef.current) return;
     setError(null);
     try {
-      const token = await getToken();
-      const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
-      if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
+      const metadataRole = (clerkUser?.publicMetadata as any)?.role;
+      const cookieRole = typeof document !== "undefined"
+        ? document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2]
+        : null;
+
+      let dbRole: string | null = null;
+      try {
+        const token = await getToken();
+        const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
+        if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
+          dbRole = user.role;
+        }
+      } catch (fetchErr) {
+        console.warn("Could not fetch user from backend /me in dashboard redirect:", fetchErr);
+      }
+
+      const effectiveRole = dbRole || (metadataRole === "landlord" || metadataRole === "tenant" ? metadataRole : null) || cookieRole;
+
+      if (effectiveRole && effectiveRole !== "none" && effectiveRole !== "unassigned") {
         redirectedRef.current = true;
         if (typeof window !== "undefined") {
-          document.cookie = `mock_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`;
+          document.cookie = `mock_user_role=${effectiveRole}; path=/; max-age=604800; SameSite=Lax`;
           document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax`;
         }
-        if (user.role === "landlord") {
+        if (effectiveRole === "landlord") {
           window.location.replace("/landlord/dashboard");
-        } else if (user.role === "tenant") {
+        } else if (effectiveRole === "tenant") {
           window.location.replace("/tenant/dashboard");
-        } else if (user.role === "tenant_pending") {
+        } else if (effectiveRole === "tenant_pending") {
           window.location.replace("/sync-role");
         } else {
           window.location.replace("/");
         }
       } else {
-        // User has no role set in database yet -> send to home page to pick a role
+        // User has no role set anywhere -> send to home page to pick a role
         redirectedRef.current = true;
         window.location.replace("/");
       }
@@ -42,7 +59,7 @@ export default function DashboardRedirect() {
       console.error("Dashboard redirect failed:", err);
       setError(err?.message || "Unable to connect to backend server.");
     }
-  }, [getToken]);
+  }, [getToken, clerkUser]);
 
   useEffect(() => {
     if (!isLoaded) return;
