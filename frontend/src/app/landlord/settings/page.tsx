@@ -22,23 +22,25 @@ export default function LandlordSettingsPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl mx-auto animate-fade-slide-up pb-16">
+    <div className="space-y-6 sm:space-y-8 w-full max-w-4xl mx-auto animate-fade-slide-up pb-16 overflow-x-hidden">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--ml-accent)/0.15)] text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent)/0.3)]">
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--ml-accent)/0.15)] text-[rgb(var(--ml-accent-dark))] dark:text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent)/0.3)]">
             Account Management
           </span>
         </div>
-        <h1 className="text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
           Settings & Preferences
         </h1>
-        <p className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] mt-1">
+        <p className="text-xs sm:text-sm font-medium text-[rgb(var(--ml-text-secondary))] mt-1">
           Manage your landlord credentials, security settings, and profile details.
         </p>
       </div>
 
-      <div className="border border-border/60 hover:border-border/80 transition-all rounded-3xl bg-[rgb(var(--ml-bg-secondary))] p-1.5 sm:p-5 shadow-sm overflow-hidden flex justify-center">
-        <UserProfile routing="hash" appearance={clerkUserProfileAppearance} />
+      <div className="border border-border/60 hover:border-border/80 transition-all rounded-2xl sm:rounded-3xl bg-[rgb(var(--ml-bg-secondary))] p-0 sm:p-4 md:p-6 shadow-sm overflow-hidden flex justify-center w-full max-w-full overflow-x-hidden">
+        <div className="w-full max-w-full overflow-x-hidden flex justify-center">
+          <UserProfile routing="hash" appearance={clerkUserProfileAppearance} />
+        </div>
       </div>
     </div>
   );

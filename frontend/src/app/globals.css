@@ -448,24 +448,77 @@ textarea:focus,
   background-image: none !important;
 }
 
-/* UserProfile Container & Navbar Overrides for Light/Dark harmony */
+/* UserProfile Container & Mobile Shell Overrides for Light/Dark harmony */
 .cl-userProfile-root {
   background: transparent !important;
+  background-color: transparent !important;
   width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.cl-userProfile-root * {
+  box-sizing: border-box !important;
 }
 
 .cl-userProfile-root .cl-cardBox,
 .cl-userProfile-root .cl-card,
 .cl-userProfile-root .cl-navbar,
 .cl-userProfile-root .cl-scrollBox,
-.cl-userProfile-root .cl-pageScrollable {
+.cl-userProfile-root .cl-pageScrollable,
+.cl-userProfile-root .cl-page,
+.cl-userProfile-root .cl-profilePage {
   background: transparent !important;
   background-color: transparent !important;
+  background-image: none !important;
   border-color: transparent !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-.cl-userProfile-root .cl-navbar {
-  border-right: 1px solid rgba(var(--ml-border), 0.35) !important;
+/* Mobile Navbar Shell Overrides — Ensure zero dark bars in light mode */
+.cl-userProfile-root .cl-navbarMobileMenuRow {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-bottom: 1px solid rgba(var(--ml-border), 0.4) !important;
+  color: rgb(var(--ml-text-primary)) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.cl-userProfile-root .cl-navbarMobileMenuRowTitle {
+  color: rgb(var(--ml-text-primary)) !important;
+  font-weight: 700 !important;
+}
+
+.cl-userProfile-root .cl-navbarMobileMenuButton {
+  color: rgb(var(--ml-text-primary)) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 1px solid rgba(var(--ml-border), 0.5) !important;
+  border-radius: 0.75rem !important;
+}
+
+.cl-userProfile-root .cl-navbarMobileMenuButton:hover {
+  background-color: rgba(var(--ml-bg-primary), 0.8) !important;
+  color: rgb(var(--ml-accent)) !important;
+}
+
+/* Responsive Navbar Border (Desktop vs Mobile) */
+@media (min-width: 640px) {
+  .cl-userProfile-root .cl-navbar {
+    border-right: 1px solid rgba(var(--ml-border), 0.35) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .cl-userProfile-root .cl-navbar {
+    border-right: none !important;
+  }
 }
 
 .cl-userProfile-root .cl-navbarButton {
@@ -489,10 +542,19 @@ textarea:focus,
   border-bottom: 1px solid rgba(var(--ml-border), 0.25) !important;
   padding-top: 1.25rem !important;
   padding-bottom: 1.25rem !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .cl-userProfile-root .cl-profileSection:last-child {
   border-bottom: none !important;
+}
+
+.cl-userProfile-root .cl-profileSectionContent {
+  max-width: 100% !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 .cl-userProfile-root .cl-profileSectionTitleText,
@@ -508,6 +570,7 @@ textarea:focus,
 .cl-userProfile-root .cl-userPreviewSecondaryIdentifier {
   color: rgb(var(--ml-text-secondary)) !important;
   font-weight: 500 !important;
+  word-break: break-word !important;
 }
 
 .cl-userProfile-root .cl-profileSectionPrimaryButton {
