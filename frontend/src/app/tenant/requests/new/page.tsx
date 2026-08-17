@@ -88,7 +88,7 @@ export default function NewRequestPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-16 animate-fade-slide-up">
+    <div className="max-w-3xl mx-auto space-y-6 pb-16 animate-fade-slide-up w-full overflow-x-hidden sm:overflow-visible">
       {/* Header Section */}
       <div className="space-y-3">
         <Link 
@@ -117,7 +117,7 @@ export default function NewRequestPage() {
       )}
 
       {/* Main Form Container */}
-      <form onSubmit={handleSubmit} className="bg-[rgb(var(--ml-bg-secondary))] p-6 sm:p-8 rounded-3xl border border-border/60 shadow-sm space-y-6">
+      <form onSubmit={handleSubmit} className="bg-[rgb(var(--ml-bg-secondary))] p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/60 shadow-sm space-y-5 sm:space-y-6 max-w-full overflow-hidden">
         <div className="space-y-1.5">
           <label htmlFor="issue-title" className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
             Issue Title <span className="text-red-400">*</span>
@@ -189,18 +189,18 @@ export default function NewRequestPage() {
           <div className="space-y-3">
             {/* Display Selected Images */}
             {images.length > 0 && (
-              <div className="grid gap-3">
+              <div className="grid gap-2.5 sm:gap-3">
                 {images.map((img, index) => (
-                  <div key={index} className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))] border border-border/60 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div key={index} className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-[rgb(var(--ml-bg-primary))] border border-border/60 shadow-xs max-w-full overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                       <div className="p-2 sm:p-2.5 rounded-xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] shrink-0">
                         <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-bold text-[rgb(var(--ml-text-primary))] truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-bold text-[rgb(var(--ml-text-primary))] truncate" title={img.name}>
                           {img.name}
                         </p>
-                        <p className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-medium">
+                        <p className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-medium tabular-nums">
                           {(img.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
@@ -208,7 +208,7 @@ export default function NewRequestPage() {
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 touch-manipulation"
+                      className="size-9 rounded-xl flex items-center justify-center text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 touch-manipulation active:scale-95"
                       title="Remove image"
                       aria-label="Remove image"
                     >

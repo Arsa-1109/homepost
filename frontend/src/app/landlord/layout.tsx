@@ -120,7 +120,7 @@ export default function LandlordLayout({
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Control Bar — Desktop */}
-        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md bg-opacity-85">
+        <header className="hidden md:flex h-16 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))]/95 sticky top-0 z-40 backdrop-blur-md">
           <div className="font-bold text-lg text-[rgb(var(--ml-text-primary))] capitalize">
             {(() => {
               const parts = pathname.split("/");
@@ -181,7 +181,7 @@ export default function LandlordLayout({
         </header>
 
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 sm:p-4 border-b border-border bg-[rgb(var(--ml-bg-secondary))]/95 sticky top-0 z-40 backdrop-blur-md">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold text-[rgb(var(--ml-text-primary))] hover:opacity-80 transition-opacity">
             <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
             <span>Homepost</span>
