@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { api, UserRoleResponse } from "@/lib/api";
 import { completeOnboarding } from "@/app/actions/onboarding";
-import { Building2, ShieldAlert, CheckCircle2, ArrowRight, LogOut, LayoutDashboard, DoorOpen, MapPin, UserCheck, Loader2 } from "lucide-react";
+import { Building2, ShieldAlert, CheckCircle2, ArrowRight, LogOut, LayoutDashboard, DoorOpen, MapPin, UserCheck, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface InvitePreview {
@@ -26,6 +26,8 @@ interface InvitePreview {
   property_owner_id: string;
   status: string;
   expires_at: string;
+  lease_start?: string | null;
+  lease_end?: string | null;
 }
 
 export default function JoinPage({
@@ -273,6 +275,22 @@ export default function JoinPage({
                     </span>
                   </div>
                 </div>
+
+                {(invite.lease_start || invite.lease_end) && (
+                  <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-[rgb(var(--ml-bg-primary))]/70 border border-[rgb(var(--ml-border))]/50 text-xs">
+                    <div className="flex items-center gap-1.5 text-[rgb(var(--ml-text-secondary))] font-medium">
+                      <Calendar className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                      <span>Lease Period</span>
+                    </div>
+                    <span className="font-semibold text-[rgb(var(--ml-text-primary))]">
+                      {invite.lease_start && invite.lease_end
+                        ? `${new Date(invite.lease_start).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })} – ${new Date(invite.lease_end).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
+                        : invite.lease_start
+                        ? `Starts ${new Date(invite.lease_start).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
+                        : `Ends ${new Date(invite.lease_end!).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`}
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between text-xs pt-1">
                   <div className="flex items-center gap-1.5 text-[rgb(var(--ml-text-secondary))]">

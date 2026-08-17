@@ -13,8 +13,9 @@ Tokens expire after 7 days by default.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from enum import Enum
+from typing import Optional
 
 from sqlmodel import Field, SQLModel, Column
 from sqlalchemy import DateTime, String
@@ -53,3 +54,6 @@ class Invite(SQLModel, table=True):
     )
     expires_at: datetime = Field(default_factory=_default_expires_at)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+
+    lease_start: Optional[date] = Field(default=None)
+    lease_end: Optional[date] = Field(default=None)

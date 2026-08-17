@@ -13,7 +13,8 @@ import {
   Users, 
   Mail, 
   Home, 
-  Clock 
+  Clock,
+  Calendar
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DatePicker } from "@/components/ui/date-picker";
 
 interface TenantRequest {
   id: string;
@@ -56,6 +58,9 @@ function AccessRequestCard({
   const [unitId, setUnitId] = useState<string>("");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(false);
+  const [leaseStart, setLeaseStart] = useState("");
+  const [leaseTenureType, setLeaseTenureType] = useState("12");
+  const [customLeaseTenure, setCustomLeaseTenure] = useState("12");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -87,9 +92,31 @@ function AccessRequestCard({
     }
     setIsSubmitting(true);
     try {
+      let lease_start: string | null = null;
+      let lease_end: string | null = null;
+
+      if (leaseStart) {
+        lease_start = leaseStart;
+        const finalTenureMonths =
+          leaseTenureType === "custom"
+            ? parseInt(customLeaseTenure)
+            : parseInt(leaseTenureType);
+
+        if (!isNaN(finalTenureMonths) && finalTenureMonths >= 1) {
+          const startDate = new Date(leaseStart);
+          if (!isNaN(startDate.getTime())) {
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + finalTenureMonths);
+            lease_end = endDate.toISOString().split("T")[0];
+          }
+        }
+      }
+
       await api.post("/api/v1/landlord/approve-tenant", {
         user_id: tenant.id,
-        unit_id: unitId
+        unit_id: unitId,
+        lease_start,
+        lease_end,
       });
       toast.success(`${tenant.full_name || tenant.email} approved successfully!`);
       onApprove(tenant.id);
@@ -157,67 +184,122 @@ function AccessRequestCard({
           </div>
         </div>
 
-        {/* Middle: Property & Unit Selectors */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full lg:w-auto lg:min-w-[400px]">
-          {/* Property Selector */}
-          <div>
-            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
-              Property
-            </span>
-            <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
-              <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30 transition-all">
-                <span className="truncate text-left">
-                  {propertyId 
-                    ? properties.find(p => p.id === propertyId)?.name || "Select Property" 
-                    : "Select Property"}
-                </span>
-              </SelectTrigger>
-              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
-                {properties.map(p => (
-                  <SelectItem key={p.id} value={p.id} className="rounded-lg text-xs font-medium">
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Middle: Property & Unit Selectors + Lease Terms */}
+        <div className="flex flex-col gap-3 w-full lg:w-auto lg:min-w-[440px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Property Selector */}
+            <div>
+              <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+                Property
+              </span>
+              <Select value={propertyId} onValueChange={(val) => setPropertyId(val || "")}>
+                <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30 transition-all">
+                  <span className="truncate text-left">
+                    {propertyId 
+                      ? properties.find(p => p.id === propertyId)?.name || "Select Property" 
+                      : "Select Property"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
+                  {properties.map(p => (
+                    <SelectItem key={p.id} value={p.id} className="rounded-lg text-xs font-medium">
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Unit Selector */}
+            <div>
+              <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+                Assign Unit
+              </span>
+              <Select 
+                value={unitId} 
+                onValueChange={(val) => setUnitId(val || "")} 
+                disabled={!propertyId || loadingUnits}
+              >
+                <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30 transition-all disabled:opacity-40">
+                  <span className="truncate text-left">
+                    {!propertyId 
+                      ? "Select property first" 
+                      : loadingUnits 
+                      ? "Loading units..." 
+                      : unitId 
+                      ? `Unit ${units.find(u => u.id === unitId)?.unit_label || unitId}` 
+                      : vacantUnits.length > 0 
+                      ? `Choose Unit (${vacantUnits.length} vacant)` 
+                      : "No vacant units"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
+                  {vacantUnits.map(u => (
+                    <SelectItem key={u.id} value={u.id} className="rounded-lg text-xs font-medium">
+                      Unit {u.unit_label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasNoVacantUnits && (
+                <p className="text-[10px] text-amber-500 font-semibold flex items-center gap-1 mt-1">
+                  <ShieldAlert className="w-3 h-3 shrink-0" /> No vacant units in this building.
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Unit Selector */}
-          <div>
-            <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
-              Assign Unit
-            </span>
-            <Select 
-              value={unitId} 
-              onValueChange={(val) => setUnitId(val || "")} 
-              disabled={!propertyId || loadingUnits}
-            >
-              <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/30 transition-all disabled:opacity-40">
-                <span className="truncate text-left">
-                  {!propertyId 
-                    ? "Select property first" 
-                    : loadingUnits 
-                    ? "Loading units..." 
-                    : unitId 
-                    ? `Unit ${units.find(u => u.id === unitId)?.unit_label || unitId}` 
-                    : vacantUnits.length > 0 
-                    ? `Choose Unit (${vacantUnits.length} vacant)` 
-                    : "No vacant units"}
-                </span>
-              </SelectTrigger>
-              <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
-                {vacantUnits.map(u => (
-                  <SelectItem key={u.id} value={u.id} className="rounded-lg text-xs font-medium">
-                    Unit {u.unit_label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {hasNoVacantUnits && (
-              <p className="text-[10px] text-amber-500 font-semibold flex items-center gap-1 mt-1">
-                <ShieldAlert className="w-3 h-3 shrink-0" /> No vacant units in this building.
-              </p>
-            )}
+          {/* Lease Start Date & Tenure Controls */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-[rgb(var(--ml-accent))]" /> Lease Start (Opt)
+              </span>
+              <DatePicker
+                value={leaseStart}
+                onChange={(dateStr) => setLeaseStart(dateStr)}
+                placeholder="Start Date"
+              />
+            </div>
+            <div>
+              <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+                Lease Tenure
+              </span>
+              <Select
+                value={leaseTenureType}
+                onValueChange={(val) => setLeaseTenureType(val || "12")}
+              >
+                <SelectTrigger className="w-full h-10 bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl px-3 text-xs font-medium text-[rgb(var(--ml-text-primary))]">
+                  <span className="truncate">
+                    {leaseTenureType === "3" ? "3 Months" :
+                     leaseTenureType === "6" ? "6 Months" :
+                     leaseTenureType === "12" ? "12 Months (1 Yr)" :
+                     leaseTenureType === "24" ? "24 Months (2 Yrs)" : "Custom..."}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
+                  <SelectItem value="3" className="text-xs">3 Months</SelectItem>
+                  <SelectItem value="6" className="text-xs">6 Months</SelectItem>
+                  <SelectItem value="12" className="text-xs">12 Months (1 Year)</SelectItem>
+                  <SelectItem value="24" className="text-xs">24 Months (2 Years)</SelectItem>
+                  <SelectItem value="custom" className="text-xs">Custom...</SelectItem>
+                </SelectContent>
+              </Select>
+              {leaseTenureType === "custom" && (
+                <div className="mt-1 flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={customLeaseTenure}
+                    onChange={(e) => setCustomLeaseTenure(e.target.value)}
+                    placeholder="Months"
+                    className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-1.5 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none"
+                  />
+                  <span className="text-[10px] font-semibold text-[rgb(var(--ml-text-secondary))] shrink-0">Mo</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

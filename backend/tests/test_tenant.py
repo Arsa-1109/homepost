@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -271,5 +271,31 @@ async def test_tenant_maintenance_detail_and_isolation(
         # Non-existent request -> 404
         fake_res = await client.get(f"/api/v1/tenant/maintenance/{uuid.uuid4()}")
         assert fake_res.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_tenant_profile_endpoint_returns_populated_lease_dates(
+    client: AsyncClient, seed_data, db_session: AsyncSession
+):
+    """GET /api/v1/tenant/profile returns populated lease_start and lease_end strings."""
+    tenant = seed_data["tenant"]
+    profile = seed_data["profile"]
+
+    # Assign lease dates to profile
+    profile.lease_start = date(2026, 10, 1)
+    profile.lease_end = date(2027, 9, 30)
+    db_session.add(profile)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: tenant
+    try:
+        res = await client.get("/api/v1/tenant/profile")
+        assert res.status_code == 200
+        data = res.json()
+        assert data["lease_start"] == "2026-10-01"
+        assert data["lease_end"] == "2027-09-30"
+        assert data["unit_label"] == "Unit 4B"
+        assert data["property_name"] == "Oakview Residency"
     finally:
         app.dependency_overrides.pop(get_current_user, None)

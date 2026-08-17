@@ -133,6 +133,12 @@ export function LightboxModal({
   const dragStart = useRef({ x: 0, y: 0 });
   const dragDistance = useRef(0);
 
+  // Mobile Touch gesture state
+  const touchStartRef = useRef<{ x: number; y: number; time: number }>({ x: 0, y: 0, time: 0 });
+  const initialDistanceRef = useRef<number | null>(null);
+  const lastTapRef = useRef<number>(0);
+  const [swipeOffsetY, setSwipeOffsetY] = useState(0);
+
   const handleZoomIn = () =>
     setZoom((prev) => Math.min(Number((prev + 0.25).toFixed(2)), 3));
   const handleZoomOut = () =>
@@ -144,6 +150,7 @@ export function LightboxModal({
   const handleResetZoom = () => {
     setZoom(1);
     setPosition({ x: 0, y: 0 });
+    setSwipeOffsetY(0);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -166,6 +173,77 @@ export function LightboxModal({
   };
 
   const handleMouseUp = () => setIsDragging(false);
+
+  // Mobile Touch Event Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const now = Date.now();
+      // Double-tap zoom toggle
+      if (now - lastTapRef.current < 300 && isImage) {
+        if (zoom > 1) {
+          handleResetZoom();
+        } else {
+          setZoom(2);
+        }
+        lastTapRef.current = 0;
+        return;
+      }
+      lastTapRef.current = now;
+
+      touchStartRef.current = {
+        x: touch.clientX - position.x,
+        y: touch.clientY - position.y,
+        time: now,
+      };
+      setIsDragging(true);
+    } else if (e.touches.length === 2 && isImage) {
+      // 2-Finger Pinch start
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialDistanceRef.current = dist;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      if (zoom > 1) {
+        // Pan image when zoomed
+        setPosition({
+          x: touch.clientX - touchStartRef.current.x,
+          y: touch.clientY - touchStartRef.current.y,
+        });
+      } else if (zoom === 1) {
+        // Swipe down to dismiss gesture when unzoomed
+        const deltaY = touch.clientY - touchStartRef.current.y;
+        if (deltaY > 0) {
+          setSwipeOffsetY(deltaY);
+        }
+      }
+    } else if (e.touches.length === 2 && initialDistanceRef.current !== null && isImage) {
+      // 2-Finger Pinch scaling
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const scaleFactor = dist / initialDistanceRef.current;
+      setZoom((prev) => Math.min(Math.max(Number((prev * scaleFactor).toFixed(2)), 0.5), 3));
+      initialDistanceRef.current = dist;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    initialDistanceRef.current = null;
+    if (zoom === 1 && swipeOffsetY > 100) {
+      onClose();
+    } else {
+      setSwipeOffsetY(0);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -195,10 +273,13 @@ export function LightboxModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.18 } }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/92 backdrop-blur-md p-3 sm:p-6 cursor-pointer"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/92 backdrop-blur-md p-3 sm:p-6 cursor-pointer touch-none select-none"
       onClick={onClose}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Top Header Bar */}
       <motion.div
@@ -366,9 +447,10 @@ export function LightboxModal({
                 zoom > 1 ? "cursor-grab active:cursor-grabbing" : "cursor-default"
               }`}
               style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-                transition: isDragging ? "none" : "transform 0.15s ease-out",
-                willChange: "transform",
+                transform: `translate(${position.x}px, ${position.y + swipeOffsetY}px) scale(${zoom})`,
+                opacity: swipeOffsetY > 0 ? Math.max(1 - swipeOffsetY / 300, 0.4) : 1,
+                transition: isDragging ? "none" : "transform 0.15s ease-out, opacity 0.15s ease-out",
+                willChange: "transform, opacity",
               }}
               draggable={false}
               onClick={(e) => e.stopPropagation()}

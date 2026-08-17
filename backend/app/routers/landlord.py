@@ -510,10 +510,11 @@ async def update_maintenance_request(
         if req_in.landlord_notes is not None and req_in.landlord_notes != db_req.landlord_notes:
             notes_changed = True
 
-        if req_in.landlord_image_keys is not None:
+        keys_to_update = req_in.landlord_image_keys if req_in.landlord_image_keys is not None else req_in.attachments
+        if keys_to_update is not None:
             existing_keys = db_req.landlord_image_keys or []
-            new_image_keys = [k for k in req_in.landlord_image_keys if k not in existing_keys]
-            if new_image_keys:
+            new_image_keys = [k for k in keys_to_update if k not in existing_keys]
+            if keys_to_update != existing_keys:
                 images_changed = True
 
         # Capture enum string values BEFORE mutating db_req so event logging has accurate before/after
@@ -564,8 +565,8 @@ async def update_maintenance_request(
         if notes_changed:
             db_req.landlord_notes = req_in.landlord_notes
 
-        if req_in.landlord_image_keys is not None:
-            db_req.landlord_image_keys = req_in.landlord_image_keys
+        if keys_to_update is not None:
+            db_req.landlord_image_keys = keys_to_update
 
         db_req.updated_at = datetime.now(_tz.utc)
 
@@ -595,9 +596,12 @@ async def update_maintenance_request(
                 payload["notes"] = req_in.landlord_notes
                 desc_parts.append("Added notes.")
             if images_changed:
-                payload["image_keys"] = new_image_keys
-                payload["image_count"] = len(new_image_keys)
-                desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
+                payload["image_keys"] = keys_to_update
+                payload["image_count"] = len(keys_to_update) if keys_to_update is not None else 0
+                if new_image_keys:
+                    desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
+                else:
+                    desc_parts.append("Updated attached files.")
             events.append(MaintenanceEvent(
                 maintenance_request_id=db_req.id,
                 actor_id=user.id,
@@ -619,8 +623,8 @@ async def update_maintenance_request(
                     maintenance_request_id=db_req.id,
                     actor_id=user.id,
                     event_type="images_attached",
-                    description=f"Landlord attached {len(new_image_keys)} resolution file(s).",
-                    payload={"image_count": len(new_image_keys), "image_keys": new_image_keys},
+                    description=f"Landlord attached {len(new_image_keys)} resolution file(s)." if new_image_keys else f"Landlord updated resolution files ({len(keys_to_update) if keys_to_update else 0} attached).",
+                    payload={"image_count": len(keys_to_update) if keys_to_update else 0, "image_keys": keys_to_update},
                 ))
 
         if priority_changed:
@@ -900,6 +904,8 @@ from app.models.user import UserRole
 class GenerateInvitePayload(BaseModel):
     unit_id: uuid.UUID
     clear_data: bool = False
+    lease_start: Optional[date] = None
+    lease_end: Optional[date] = None
 
 class ApproveTenantPayload(BaseModel):
     user_id: uuid.UUID
@@ -939,7 +945,12 @@ async def generate_invite(
         for d in docs:
             d.is_archived = True
 
-    invite = Invite(unit_id=unit.id, created_by=user.id)
+    invite = Invite(
+        unit_id=unit.id,
+        created_by=user.id,
+        lease_start=payload.lease_start,
+        lease_end=payload.lease_end,
+    )
     session.add(invite)
     await session.commit()
     await session.refresh(invite)
@@ -990,6 +1001,10 @@ async def approve_tenant(
     tenant.requested_landlord_id = None
     session.add(tenant)
 
+    # Effective lease dates with fallback to unit lease dates if not provided
+    effective_lease_start = payload.lease_start if payload.lease_start is not None else unit.lease_start
+    effective_lease_end = payload.lease_end if payload.lease_end is not None else unit.lease_end
+
     # Re-activate existing profile if user had prior tenancy, or create new
     user_prof_stmt = select(TenantProfile).where(TenantProfile.user_id == tenant.id)
     user_prof_res = await session.execute(user_prof_stmt)
@@ -997,8 +1012,8 @@ async def approve_tenant(
 
     if profile:
         profile.unit_id = unit.id
-        profile.lease_start = payload.lease_start
-        profile.lease_end = payload.lease_end
+        profile.lease_start = effective_lease_start
+        profile.lease_end = effective_lease_end
         profile.is_active = True
         profile.removed_at = None
         session.add(profile)
@@ -1006,8 +1021,8 @@ async def approve_tenant(
         profile = TenantProfile(
             user_id=tenant.id,
             unit_id=unit.id,
-            lease_start=payload.lease_start,
-            lease_end=payload.lease_end,
+            lease_start=effective_lease_start,
+            lease_end=effective_lease_end,
             is_active=True
         )
         session.add(profile)

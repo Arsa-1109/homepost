@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -125,11 +126,23 @@ function AttachmentThumbnail({
 }
 
 export default function TenantAnnouncementsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">Loading announcements...</div>}>
+      <TenantAnnouncementsContent />
+    </Suspense>
+  );
+}
+
+function TenantAnnouncementsContent() {
+  const searchParams = useSearchParams();
+  const targetAnnouncementId = searchParams.get("id") || searchParams.get("announcementId");
+
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "RECENT" | "PROPERTY" | "UNIT">("ALL");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
@@ -183,6 +196,54 @@ export default function TenantAnnouncementsPage() {
   }, [announcements, searchQuery, selectedFilter, nowTimestamp]);
 
   const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
+
+  // Handle deep-linking auto-expand, page navigation, highlighting, and smooth scroll
+  useEffect(() => {
+    if (!loading && targetAnnouncementId && announcements.length > 0) {
+      const target = announcements.find((a) => a.id === targetAnnouncementId);
+      if (target) {
+        setHighlightedId(targetAnnouncementId);
+
+        // Reset filter/search if target would be hidden
+        if (selectedFilter === "PROPERTY" && target.unit_id) {
+          setSelectedFilter("ALL");
+        } else if (selectedFilter === "UNIT" && !target.unit_id) {
+          setSelectedFilter("ALL");
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matches = target.title.toLowerCase().includes(q) || target.body.toLowerCase().includes(q);
+          if (!matches) {
+            setSearchQuery("");
+          }
+        }
+
+        const targetIndex = filteredAnnouncements.findIndex((a) => a.id === targetAnnouncementId);
+        if (targetIndex !== -1) {
+          const targetPage = Math.floor(targetIndex / ITEMS_PER_PAGE) + 1;
+          if (currentPage !== targetPage) {
+            setCurrentPage(targetPage);
+          }
+        }
+
+        const scrollTimer = setTimeout(() => {
+          const el = document.getElementById(`announcement-${targetAnnouncementId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 200);
+
+        const highlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+        }, 3000);
+
+        return () => {
+          clearTimeout(scrollTimer);
+          clearTimeout(highlightTimer);
+        };
+      }
+    }
+  }, [loading, targetAnnouncementId, announcements, filteredAnnouncements, selectedFilter, searchQuery, currentPage]);
 
   const paginatedAnnouncements = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -318,15 +379,21 @@ export default function TenantAnnouncementsPage() {
               ) : (
                 paginatedAnnouncements.map((ann) => {
                   const isUnitSpecific = !!ann.unit_id;
+                  const isHighlighted = highlightedId === ann.id;
 
                   return (
                     <motion.div
+                      id={`announcement-${ann.id}`}
                       key={ann.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.1 }}
-                      className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-colors duration-200 space-y-3 relative group"
+                      className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-all duration-300 space-y-3 relative group ${
+                        isHighlighted
+                          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+                          : "border-border/60"
+                      }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
                         <div className="flex items-center gap-2 flex-wrap">

@@ -215,31 +215,36 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                       <li key={req.id}>
                         <Link href={`/landlord/requests?id=${req.id}`}>
                           <div className={cn(
-                            "flex items-center justify-between py-3 px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group",
+                            "flex flex-col sm:flex-row sm:items-center justify-between py-3.5 px-4 sm:px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group gap-2.5 sm:gap-4",
                             getPriorityLeftBorder(req.priority)
                           )}>
-                            <div className="flex items-center gap-3.5 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className={cn(
-                                "w-10 h-10 rounded-2xl flex items-center justify-center text-[15px] flex-shrink-0",
+                                "w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-[15px] shrink-0",
                                 getPriorityIconClass(req.priority)
                               )}>
                                 <MaintIcon className="w-4 h-4" />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="text-[14px] font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                                  {req.title}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+                                    {req.title}
+                                  </span>
+                                  <span className={cn('sm:hidden text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider', getPriorityPillClass(req.priority))}>
+                                    {req.priority}
+                                  </span>
                                 </div>
-                                <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
+                                <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5 truncate">
                                   {formatAddress(req.property_name || "Unknown Property")} · Unit {req.unit_label}
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 flex-shrink-0">
-                              <div className="flex flex-col items-end justify-center">
-                                <span className={cn('text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider', getPriorityPillClass(req.priority))}>
+                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pl-12 sm:pl-0">
+                              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-1">
+                                <span className={cn('hidden sm:inline-flex text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider', getPriorityPillClass(req.priority))}>
                                   {req.priority}
                                 </span>
-                                <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium mt-1">
+                                <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium">
                                   Reported {new Date(req.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                                 </span>
                               </div>
@@ -459,19 +464,21 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                     return (
                       <li key={unit.id}>
                         <Link href={`/landlord/units/${unit.id}`} className="block">
-                          <div className="flex items-center gap-3.5 py-3 px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group">
-                            <div className="w-10 h-10 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border/40 flex items-center justify-center font-black text-xs text-[rgb(var(--ml-text-primary))] flex-shrink-0 px-1">
-                              {getUnitInitials(unit.unit_label)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-[14px] font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                                Unit {unit.unit_label}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 px-4 sm:px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group gap-2.5 sm:gap-3">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border/40 flex items-center justify-center font-black text-xs text-[rgb(var(--ml-text-primary))] shrink-0 px-1">
+                                {getUnitInitials(unit.unit_label)}
                               </div>
-                              <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
-                                {unit.tenant_name ? `${unit.tenant_name} · ` : ''}{formatAddress(unit.property_name || "Unknown Property")}
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+                                  Unit {unit.unit_label}
+                                </div>
+                                <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5 truncate">
+                                  {unit.tenant_name ? `${unit.tenant_name} · ` : ''}{formatAddress(unit.property_name || "Unknown Property")}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2.5 flex-shrink-0">
+                            <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pl-12 sm:pl-0">
                               {unit.is_occupied ? (
                                 <div className="flex items-center gap-1.5">
                                   {unit.has_pending_maintenance && (

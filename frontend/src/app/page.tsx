@@ -521,13 +521,13 @@ export default function LandingPage() {
       </nav>
 
       {/* Main Content Area */}
-      <main className="relative pt-32 pb-24 px-6 md:px-16 min-h-screen z-10 block">
+      <main className="relative pt-20 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-6 md:px-16 min-h-screen z-10 block">
 
         {/* Hero Section */}
         <Hero />
 
         {/* Auth / Role Selection Area */}
-        <section id="role-selection" className="max-w-6xl w-full mx-auto relative min-h-[500px] mb-32 z-20 flex justify-center mt-48">
+        <section id="role-selection" className="max-w-6xl w-full mx-auto relative min-h-[450px] sm:min-h-[500px] mb-20 sm:mb-28 md:mb-32 z-20 flex justify-center mt-12 sm:mt-24 md:mt-48">
 
           {hasRole === null ? (
             <PortalSkeleton />
@@ -535,18 +535,18 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-12 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
+              className="p-8 sm:p-12 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
             >
-              <h2 className="text-3xl font-bold">Welcome back!</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold">Welcome back!</h2>
               <Button
                 onClick={() => router.push("/dashboard")}
-                className="px-10 py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
+                className="px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
               >
-                Go to Dashboard <ArrowRight className="w-6 h-6" />
+                Go to Dashboard <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
             </motion.div>
           ) : (
-            <div className="w-full relative min-h-auto lg:h-[560px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-4">
+            <div className="w-full relative min-h-[460px] lg:h-[560px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-2 sm:px-4">
               {error && (
                 <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
                   {error}
@@ -647,16 +647,16 @@ export default function LandingPage() {
                     animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
                     exit={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
                     onSubmit={handleTenantSubmit}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-card border border-border shadow-xl rounded-xl p-12 flex flex-col items-start justify-center z-40 min-h-[400px]"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-2xl bg-card border border-border shadow-xl rounded-2xl p-5 sm:p-8 md:p-12 flex flex-col items-start justify-center z-40 min-h-[420px]"
                   >
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-8 border border-border mx-auto">
-                      <Key className="text-muted-foreground w-8 h-8" />
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mb-6 sm:mb-8 border border-border mx-auto">
+                      <Key className="text-muted-foreground w-7 h-7 sm:w-8 sm:h-8" />
                     </div>
-                    <h2 className="text-3xl font-semibold mb-4 tracking-tight w-full text-center">Tenant Access</h2>
-                    <p className="text-center w-full text-muted-foreground font-medium mb-8">Enter your landlord's email address to connect with their portal.</p>
+                    <h2 className="text-2xl sm:text-3xl font-semibold mb-3 sm:mb-4 tracking-tight w-full text-center">Tenant Access</h2>
+                    <p className="text-center w-full text-sm sm:text-base text-muted-foreground font-medium mb-6 sm:mb-8">Enter your landlord's email address to connect with their portal.</p>
 
-                    <div className="w-full mb-8">
-                      <label htmlFor="landlord-email" className="block text-sm font-semibold mb-3 text-foreground tracking-wide">Landlord's Email Address</label>
+                    <div className="w-full mb-6 sm:mb-8">
+                      <label htmlFor="landlord-email" className="block text-sm font-semibold mb-2.5 sm:mb-3 text-foreground tracking-wide">Landlord's Email Address</label>
                       <input
                         id="landlord-email"
                         type="email"
@@ -666,22 +666,22 @@ export default function LandingPage() {
                         required
                         inputMode="email"
                         autoComplete="email"
-                        className="w-full p-4 rounded-lg border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-lg font-medium shadow-inner placeholder:text-muted-foreground/40"
+                        className="w-full p-3.5 sm:p-4 rounded-lg border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-base sm:text-lg font-medium shadow-inner placeholder:text-muted-foreground/40"
                       />
                     </div>
-                    <div className="flex gap-4 w-full">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setRoleSelection("none")}
-                        className="px-8 py-4 h-auto rounded-lg font-semibold hover:bg-muted hover:border-border"
+                        className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 h-auto rounded-lg font-semibold hover:bg-muted hover:border-border"
                       >
                         Back
                       </Button>
                       <Button
                         type="submit"
                         isLoading={isSubmitting}
-                        className="flex-1 px-8 py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold hover:text-white hover:shadow-none hover:translate-y-0"
+                        className="flex-1 w-full px-6 sm:px-8 py-3.5 sm:py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold hover:text-white hover:shadow-none hover:translate-y-0"
                       >
                         Request Access
                       </Button>

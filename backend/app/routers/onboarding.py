@@ -11,7 +11,7 @@ All endpoints require a valid Clerk JWT (get_current_user dependency).
 
 import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -180,6 +180,8 @@ class InvitePreviewResponse(BaseModel):
     property_owner_id: uuid.UUID
     status: str
     expires_at: datetime
+    lease_start: date | None = None
+    lease_end: date | None = None
 
 
 @router.get("/invite/{token}", response_model=InvitePreviewResponse)
@@ -252,6 +254,8 @@ async def get_invite_preview(
         property_owner_id=prop.owner_id,
         status=invite.status.value if hasattr(invite.status, "value") else str(invite.status),
         expires_at=invite.expires_at,
+        lease_start=invite.lease_start or (unit.lease_start if unit else None),
+        lease_end=invite.lease_end or (unit.lease_end if unit else None),
     )
 
 
@@ -361,6 +365,10 @@ async def accept_invite(
     unit.status = "Occupied"
     session.add(unit)
 
+    # Transfer invite lease dates with fallback to unit lease dates
+    effective_lease_start = invite.lease_start if invite.lease_start is not None else (unit.lease_start if unit else None)
+    effective_lease_end = invite.lease_end if invite.lease_end is not None else (unit.lease_end if unit else None)
+
     # Update existing profile if user already has one, or create new TenantProfile (maintaining unique user_id)
     user_profile_stmt = select(TenantProfile).where(TenantProfile.user_id == user.id)
     user_profile_res = await session.execute(user_profile_stmt)
@@ -368,8 +376,8 @@ async def accept_invite(
 
     if profile:
         profile.unit_id = invite.unit_id
-        profile.lease_start = unit.lease_start if unit else None
-        profile.lease_end = unit.lease_end if unit else None
+        profile.lease_start = effective_lease_start
+        profile.lease_end = effective_lease_end
         profile.is_active = True
         profile.removed_at = None
         session.add(profile)
@@ -377,8 +385,8 @@ async def accept_invite(
         profile = TenantProfile(
             user_id=user.id,
             unit_id=invite.unit_id,
-            lease_start=unit.lease_start if unit else None,
-            lease_end=unit.lease_end if unit else None,
+            lease_start=effective_lease_start,
+            lease_end=effective_lease_end,
             is_active=True
         )
         session.add(profile)

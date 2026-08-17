@@ -89,14 +89,14 @@ export function Hero() {
   }, { scope: container });
 
   return (
-    <section ref={container} className="relative w-full min-h-[60vh] flex flex-col items-center justify-start text-center overflow-visible z-30 perspective-[1000px] pt-32 pb-16 pointer-events-none">
+    <section ref={container} className="relative w-full min-h-[50vh] sm:min-h-[60vh] flex flex-col items-center justify-start text-center overflow-visible z-30 perspective-[1000px] pt-16 sm:pt-24 md:pt-28 pb-12 sm:pb-16 pointer-events-none">
 
       {/* 1. Title Area */}
       <div ref={titleScrollRef} className="relative w-full flex flex-col items-center origin-center will-change-transform [transform-style:preserve-3d]">
         <div ref={titleTiltRef} className="relative w-full flex flex-col items-center origin-center will-change-transform z-20">
           <h1
             ref={titleRef}
-            className="text-5xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl"
+            className="text-4xl sm:text-6xl md:text-8xl font-extrabold text-foreground mb-4 tracking-tighter drop-shadow-2xl"
           >
             Homepost
           </h1>

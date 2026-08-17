@@ -18,6 +18,8 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -195,24 +197,122 @@ function AttachmentThumbnail({
   );
 }
 
+function StagedAttachmentThumbnail({
+  file,
+  onRemove,
+  onViewImage,
+}: {
+  file: File;
+  onRemove: () => void;
+  onViewImage: (url: string) => void;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const isImg = file.type.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic|heif)$/i.test(file.name);
+
+  useEffect(() => {
+    if (isImg) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [file, isImg]);
+
+  const handleView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isImg && previewUrl) {
+      onViewImage(previewUrl);
+    }
+  };
+
+  return (
+    <div className="relative group/staged flex-shrink-0">
+      {isImg && previewUrl ? (
+        <div
+          onClick={handleView}
+          className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-dashed border-[rgb(var(--ml-accent))] overflow-hidden bg-[rgb(var(--ml-bg-primary))]/50 hover:border-[rgb(var(--ml-text-primary))]/50 transition-all cursor-pointer shadow-sm"
+        >
+          <img
+            src={previewUrl}
+            alt={file.name}
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 z-10">
+            <button
+              type="button"
+              onClick={handleView}
+              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+              title="View preview"
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={handleView}
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-dashed border-[rgb(var(--ml-accent))] bg-[rgb(var(--ml-bg-primary))]/50 flex flex-col items-center justify-between p-2 shadow-sm select-none"
+        >
+          <div className="flex-1 flex items-center justify-center">
+            <FileText className="w-6 h-6 text-[rgb(var(--ml-accent))]" />
+          </div>
+          <span className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-semibold truncate w-full text-center" title={file.name}>
+            {file.name}
+          </span>
+          <span className="text-[9px] text-[rgb(var(--ml-text-secondary))]/70 font-medium">
+            {(file.size / (1024 * 1024)).toFixed(1)}MB
+          </span>
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove();
+        }}
+        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-all cursor-pointer z-20 active:scale-95"
+        title="Remove attachment"
+        aria-label="Remove attachment"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: MaintenanceRequest, onUpdate: () => void, defaultExpanded?: boolean }) {
   const [status, setStatus] = useState(req.status);
   const [notes, setNotes] = useState(req.landlord_notes || "");
   const [files, setFiles] = useState<File[]>([]);
+  const [existingKeys, setExistingKeys] = useState<string[]>(req.landlord_image_keys || []);
+  const [existingUrls, setExistingUrls] = useState<string[]>(req.landlord_image_urls || []);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
 
+  useEffect(() => {
+    setStatus(req.status);
+    setNotes(req.landlord_notes || "");
+    setExistingKeys(req.landlord_image_keys || []);
+    setExistingUrls(req.landlord_image_urls || []);
+  }, [req]);
+
+  const handleRemoveExistingAttachment = (index: number) => {
+    setExistingKeys((prev) => prev.filter((_, i) => i !== index));
+    setExistingUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleUpdate = async () => {
     setIsUpdating(true);
     setError(null);
     try {
-      let imageKeys: string[] | undefined = undefined;
+      let imageKeys: string[] = [...existingKeys];
       
       if (files.length > 0) {
-        imageKeys = [...(req.landlord_image_keys || [])];
         for (const file of files) {
           const key = await uploadFile(file, "maintenance");
           imageKeys.push(key);
@@ -224,7 +324,8 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
         body: JSON.stringify({ 
           status, 
           landlord_notes: notes || null,
-          ...(imageKeys ? { landlord_image_keys: imageKeys } : {})
+          landlord_image_keys: imageKeys,
+          attachments: imageKeys,
         }),
       });
       setFiles([]);
@@ -239,7 +340,11 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
     }
   };
 
-  const hasChanges = status !== req.status || notes !== (req.landlord_notes || "") || files.length > 0;
+  const hasChanges =
+    status !== req.status ||
+    notes !== (req.landlord_notes || "") ||
+    files.length > 0 ||
+    existingKeys.length !== (req.landlord_image_keys?.length || 0);
 
   const getStatusColor = (s: string) => {
     switch (s) {
@@ -253,9 +358,16 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files).slice(0, 3);
+      const selectedFiles = Array.from(e.target.files);
       const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf", ".doc", ".docx", ".mp4", ".mov", ".webm", ".m4v"];
       const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+      const currentTotal = existingKeys.length + files.length;
+      if (currentTotal + selectedFiles.length > 3) {
+        toast.error(`You can only attach up to 3 files in total. You currently have ${currentTotal} file(s).`);
+        e.target.value = "";
+        return;
+      }
 
       for (const file of selectedFiles) {
         const ext = "." + file.name.split(".").pop()?.toLowerCase();
@@ -270,7 +382,8 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
           return;
         }
       }
-      setFiles(selectedFiles);
+      setFiles((prev) => [...prev, ...selectedFiles].slice(0, 3 - existingKeys.length));
+      e.target.value = "";
     }
   };
 
@@ -355,14 +468,30 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
                     </div>
                   )}
 
-                  {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
+                  {existingUrls.length > 0 && (
                     <div className="space-y-2.5">
                       <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
-                        Landlord Resolution Files
+                        Landlord Resolution Files ({existingUrls.length})
                       </h4>
                       <div className="flex flex-wrap gap-3">
-                        {req.landlord_image_urls.map((url, idx) => (
-                          <AttachmentThumbnail key={idx} url={url} onViewImage={setLightboxUrl} />
+                        {existingUrls.map((url, idx) => (
+                          <div key={idx} className="relative group/thumb flex-shrink-0">
+                            <AttachmentThumbnail url={url} onViewImage={setLightboxUrl} />
+                            {req.status !== "closed" && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveExistingAttachment(idx);
+                                }}
+                                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-all cursor-pointer z-20 active:scale-95"
+                                title="Delete attachment"
+                                aria-label="Delete attachment"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -405,27 +534,50 @@ export function RequestCard({ req, onUpdate, defaultExpanded = false }: { req: M
                   </div>
         
                   <div>
-                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">Attach Photos/Docs (Max 3)</span>
-                    <div className="relative group/upload">
-                      <input 
-                        type="file" 
-                        multiple
-                        accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
-                        onChange={handleFileChange}
-                        disabled={req.status === "closed"}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
-                      />
-                      <div className="w-full border border-dashed border-border/70 bg-[rgb(var(--ml-bg-primary))] group-hover/upload:border-[rgb(var(--ml-text-primary))]/40 rounded-xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
-                        <ImageIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))] group-hover/upload:text-[rgb(var(--ml-text-primary))] transition-colors" />
-                        <span className="text-xs font-semibold text-[rgb(var(--ml-text-primary))] mt-1">Upload Files</span>
-                        <span className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))]">Photos, docs, or videos (Max 10MB)</span>
-                      </div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">
+                        Attach Photos/Docs (Max 3)
+                      </span>
+                      <span className="text-[10px] font-semibold text-[rgb(var(--ml-text-secondary))]">
+                        {existingKeys.length + files.length}/3 total
+                      </span>
                     </div>
+
+                    {existingKeys.length + files.length < 3 && req.status !== "closed" && (
+                      <div className="relative group/upload">
+                        <input 
+                          type="file" 
+                          multiple
+                          accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
+                          onChange={handleFileChange}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
+                        />
+                        <div className="w-full border border-dashed border-border/70 bg-[rgb(var(--ml-bg-primary))] group-hover/upload:border-[rgb(var(--ml-text-primary))]/40 rounded-xl p-4 flex flex-col items-center justify-center gap-1 transition-all">
+                          <ImageIcon className="w-5 h-5 text-[rgb(var(--ml-text-secondary))] group-hover/upload:text-[rgb(var(--ml-text-primary))] transition-colors" />
+                          <span className="text-xs font-semibold text-[rgb(var(--ml-text-primary))] mt-1">Upload Files</span>
+                          <span className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))]">Photos, docs, or videos (Max 10MB)</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Staged Attachments Preview Grid */}
                     {files.length > 0 && (
-                      <p className="text-[11px] font-semibold text-[rgb(var(--ml-accent))] mt-2 px-1 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--ml-accent))] animate-pulse"></span>
-                        {files.length} file(s) selected
-                      </p>
+                      <div className="mt-3 space-y-2">
+                        <span className="text-[10px] font-bold text-[rgb(var(--ml-accent))] uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--ml-accent))] animate-pulse" />
+                          Ready to Upload ({files.length})
+                        </span>
+                        <div className="flex flex-wrap gap-3">
+                          {files.map((file, idx) => (
+                            <StagedAttachmentThumbnail
+                              key={idx}
+                              file={file}
+                              onRemove={() => setFiles(prev => prev.filter((_, i) => i !== idx))}
+                              onViewImage={setLightboxUrl}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
 
@@ -495,6 +647,27 @@ function LandlordMaintenanceContent() {
 
   const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
+
+  const handleResetAllFilters = () => {
+    setSelectedProperty("all");
+    setSelectedUnit("all");
+    setSelectedFilter("ALL");
+    setSearchQuery("");
+    setCurrentPage(1);
+    if (idParam) {
+      router.replace("/landlord/requests");
+    }
+  };
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      (selectedProperty !== "all" && selectedProperty !== "") ||
+      (selectedUnit !== "all" && selectedUnit !== "") ||
+      selectedFilter !== "ALL" ||
+      searchQuery.trim().length > 0 ||
+      Boolean(idParam)
+    );
+  }, [selectedProperty, selectedUnit, selectedFilter, searchQuery, idParam]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -681,7 +854,7 @@ function LandlordMaintenanceContent() {
 
         {/* Search & Filter Controls Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-          {/* Filter Pills */}
+          {/* Filter Pills & Reset Action */}
           <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
             {[
               { id: "ALL", label: "All Requests" },
@@ -702,6 +875,17 @@ function LandlordMaintenanceContent() {
                 {filter.label}
               </button>
             ))}
+
+            {hasActiveFilters && (
+              <button
+                onClick={handleResetAllFilters}
+                className="px-3 py-1.5 rounded-xl text-xs font-bold text-red-500 hover:text-red-600 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]"
+                title="Reset all active filters"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Filters
+              </button>
+            )}
           </div>
 
           {/* Search Input */}
@@ -721,9 +905,10 @@ function LandlordMaintenanceContent() {
           <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
             <span>Showing a specific request.</span>
             <button 
-              onClick={() => router.replace('/landlord/requests')}
-              className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
+              onClick={handleResetAllFilters}
+              className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2 cursor-pointer flex items-center gap-1"
             >
+              <RotateCcw className="w-3 h-3" />
               Clear Filter
             </button>
           </div>
@@ -806,11 +991,21 @@ function LandlordMaintenanceContent() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.12 }}
-                className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3"
+                className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-4"
               >
                 <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
-                <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No matching requests</p>
-                <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Try adjusting your search or filter.</p>
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No matching requests</p>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Try adjusting your search query or active filters.</p>
+                </div>
+                <Button
+                  onClick={handleResetAllFilters}
+                  variant="outline"
+                  className="h-9 px-4 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-bg-primary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                  Reset Filters
+                </Button>
               </motion.div>
             ) : (
               <motion.div 

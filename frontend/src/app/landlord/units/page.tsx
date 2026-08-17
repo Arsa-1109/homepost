@@ -63,6 +63,9 @@ type Unit = {
 
 function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
   const [keepData, setKeepData] = useState(true);
+  const [leaseStart, setLeaseStart] = useState("");
+  const [leaseTenureType, setLeaseTenureType] = useState("12");
+  const [customLeaseTenure, setCustomLeaseTenure] = useState("12");
 
   const isLeaseExpired = useMemo(() => {
     if (!u.lease_end) return false;
@@ -264,6 +267,85 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                   </div>
                 </label>
 
+                {/* Lease Terms Picker */}
+                <div className="space-y-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                      <span>Lease Start Date (Optional)</span>
+                    </label>
+                    <DatePicker
+                      value={leaseStart}
+                      onChange={(dateStr) => setLeaseStart(dateStr)}
+                      placeholder="Select lease start date"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
+                      Lease Tenure
+                    </label>
+                    <Select
+                      value={leaseTenureType}
+                      onValueChange={(val) => setLeaseTenureType(val || "12")}
+                    >
+                      <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
+                        <SelectValue placeholder="Select Tenure" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
+                        <SelectItem
+                          value="3"
+                          className="font-semibold text-xs cursor-pointer"
+                        >
+                          3 Months
+                        </SelectItem>
+                        <SelectItem
+                          value="6"
+                          className="font-semibold text-xs cursor-pointer"
+                        >
+                          6 Months
+                        </SelectItem>
+                        <SelectItem
+                          value="12"
+                          className="font-semibold text-xs cursor-pointer"
+                        >
+                          12 Months (1 Year)
+                        </SelectItem>
+                        <SelectItem
+                          value="24"
+                          className="font-semibold text-xs cursor-pointer"
+                        >
+                          24 Months (2 Years)
+                        </SelectItem>
+                        <SelectItem
+                          value="custom"
+                          className="font-semibold text-xs cursor-pointer"
+                        >
+                          Custom Duration...
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {leaseTenureType === "custom" && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={customLeaseTenure}
+                          onChange={(e) =>
+                            setCustomLeaseTenure(e.target.value)
+                          }
+                          placeholder="Months (e.g. 18)"
+                          className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-2.5 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))]"
+                        />
+                        <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] shrink-0">
+                          Months
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Actions Footer */}
                 <div className="pt-4 border-t border-border/30 flex gap-3 justify-end items-center">
                   <button
@@ -277,6 +359,26 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                     type="button"
                     onClick={async () => {
                       try {
+                        let lease_start: string | null = null;
+                        let lease_end: string | null = null;
+
+                        if (leaseStart) {
+                          lease_start = leaseStart;
+                          const finalTenureMonths =
+                            leaseTenureType === "custom"
+                              ? parseInt(customLeaseTenure)
+                              : parseInt(leaseTenureType);
+
+                          if (!isNaN(finalTenureMonths) && finalTenureMonths >= 1) {
+                            const startDate = new Date(leaseStart);
+                            if (!isNaN(startDate.getTime())) {
+                              const endDate = new Date(startDate);
+                              endDate.setMonth(endDate.getMonth() + finalTenureMonths);
+                              lease_end = endDate.toISOString().split("T")[0];
+                            }
+                          }
+                        }
+
                         const res = await fetchAPI<{ token: string }>(
                           "/api/v1/landlord/generate-invite",
                           {
@@ -284,6 +386,8 @@ function UnitCard({ u, onRefresh }: { u: Unit; onRefresh: () => void }) {
                             body: JSON.stringify({
                               unit_id: u.id,
                               clear_data: !keepData,
+                              lease_start,
+                              lease_end,
                             }),
                           },
                         );
@@ -320,9 +424,6 @@ export default function LandlordUnitsPage() {
 
   const [unitLabel, setUnitLabel] = useState("");
   const [rentDay, setRentDay] = useState("1");
-  const [leaseStart, setLeaseStart] = useState("");
-  const [leaseTenureType, setLeaseTenureType] = useState("12");
-  const [customLeaseTenure, setCustomLeaseTenure] = useState("12");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -375,7 +476,7 @@ export default function LandlordUnitsPage() {
       const data = await fetchAPI<Unit[]>(
         `/api/v1/landlord/properties/${selectedProperty}/units`,
       );
-      setUnits(data);
+      setUnits(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -391,26 +492,6 @@ export default function LandlordUnitsPage() {
     e.preventDefault();
     if (!selectedProperty) return;
 
-    let lease_start: string | null = null;
-    let lease_end: string | null = null;
-
-    if (leaseStart) {
-      lease_start = leaseStart;
-      const finalTenureMonths =
-        leaseTenureType === "custom"
-          ? parseInt(customLeaseTenure)
-          : parseInt(leaseTenureType);
-
-      if (!isNaN(finalTenureMonths) && finalTenureMonths >= 1) {
-        const startDate = new Date(leaseStart);
-        if (!isNaN(startDate.getTime())) {
-          const endDate = new Date(startDate);
-          endDate.setMonth(endDate.getMonth() + finalTenureMonths);
-          lease_end = endDate.toISOString().split("T")[0];
-        }
-      }
-    }
-
     setIsSubmitting(true);
     try {
       const newUnit = await fetchAPI<Unit>("/api/v1/landlord/units", {
@@ -419,16 +500,11 @@ export default function LandlordUnitsPage() {
           property_id: selectedProperty,
           unit_label: unitLabel,
           rent_due_day: parseInt(rentDay),
-          lease_start,
-          lease_end,
         }),
       });
       setUnits((prev) => [...prev, newUnit]);
       setUnitLabel("");
       setRentDay("1");
-      setLeaseStart("");
-      setLeaseTenureType("12");
-      setCustomLeaseTenure("12");
       setShowAddForm(false);
       toast.success("Unit created successfully!");
     } catch (err: any) {
@@ -715,82 +791,6 @@ export default function LandlordUnitsPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
-                        Lease Start Date
-                      </label>
-                      <DatePicker
-                        value={leaseStart}
-                        onChange={(dateStr) => setLeaseStart(dateStr)}
-                        placeholder="Select start date"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5">
-                        Lease Tenure
-                      </label>
-                      <Select
-                        value={leaseTenureType}
-                        onValueChange={(val) => setLeaseTenureType(val || "12")}
-                      >
-                        <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11 text-xs font-medium">
-                          <SelectValue placeholder="Select Tenure" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl max-h-60 overflow-y-auto">
-                          <SelectItem
-                            value="3"
-                            className="font-semibold text-xs cursor-pointer"
-                          >
-                            3 Months
-                          </SelectItem>
-                          <SelectItem
-                            value="6"
-                            className="font-semibold text-xs cursor-pointer"
-                          >
-                            6 Months
-                          </SelectItem>
-                          <SelectItem
-                            value="12"
-                            className="font-semibold text-xs cursor-pointer"
-                          >
-                            12 Months (1 Year)
-                          </SelectItem>
-                          <SelectItem
-                            value="24"
-                            className="font-semibold text-xs cursor-pointer"
-                          >
-                            24 Months (2 Years)
-                          </SelectItem>
-                          <SelectItem
-                            value="custom"
-                            className="font-semibold text-xs cursor-pointer"
-                          >
-                            Custom Duration...
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {leaseTenureType === "custom" && (
-                        <div className="mt-2 flex items-center gap-2">
-                          <input
-                            type="number"
-                            min="1"
-                            max="120"
-                            required
-                            value={customLeaseTenure}
-                            onChange={(e) =>
-                              setCustomLeaseTenure(e.target.value)
-                            }
-                            placeholder="Months (e.g. 18)"
-                            className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-2.5 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))]"
-                          />
-                          <span className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] shrink-0">
-                            Months
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
 

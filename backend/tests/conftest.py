@@ -175,6 +175,7 @@ async def seed_data(db_session: AsyncSession):
         "unassigned": unassigned,
         "property": prop,
         "unit": unit,
+        "unit_101": unit,
         "profile": profile,
     }
 

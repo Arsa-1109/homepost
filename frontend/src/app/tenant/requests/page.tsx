@@ -155,6 +155,7 @@ function CompactRequestCard({
   onCloseRequest,
   isClosing,
   onViewImage,
+  isHighlighted = false,
 }: {
   req: MaintenanceRequest;
   isExpanded: boolean;
@@ -163,6 +164,7 @@ function CompactRequestCard({
   onCloseRequest: (id: string, e: React.MouseEvent) => void;
   isClosing: boolean;
   onViewImage: (url: string) => void;
+  isHighlighted?: boolean;
 }) {
   const statusCfg = STATUS_CONFIG[req.status] ?? STATUS_CONFIG.closed;
 
@@ -173,7 +175,12 @@ function CompactRequestCard({
 
   return (
     <div
-      className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
+      id={`request-${req.id}`}
+      className={`rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+        isHighlighted
+          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+          : "border-border/60"
+      }`}
     >
       {/* Collapsed Card Header */}
       <div
@@ -466,7 +473,8 @@ function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModalProps) 
                       type="button"
                       onClick={() => removeFile(idx)}
                       disabled={submitting}
-                      className="text-red-400 hover:text-red-300 transition-colors p-0.5 cursor-pointer"
+                      className="min-w-[44px] min-h-[44px] p-2 flex items-center justify-center rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer touch-manipulation"
+                      aria-label="Remove attached file"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -609,6 +617,7 @@ function PaginationControls({
 function TenantRequestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const targetRequestId = searchParams.get("id") || searchParams.get("requestId");
 
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [profile, setProfile] = useState<any>(null);
@@ -616,6 +625,7 @@ function TenantRequestsContent() {
   const [confirmReopen, setConfirmReopen] = useState<{ id: string } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const initialStatus = (searchParams.get("status") as any) || "ALL";
   const initialSearch = searchParams.get("q") || "";
@@ -672,35 +682,6 @@ function TenantRequestsContent() {
     loadAll();
   }, []);
 
-  const [closingId, setClosingId] = useState<string | null>(null);
-  const [confirmClose, setConfirmClose] = useState<{ id: string } | null>(null);
-
-  const handleReopen = (requestId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setConfirmReopen({ id: requestId });
-  };
-
-  const handleCloseRequest = (requestId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setConfirmClose({ id: requestId });
-  };
-
-  const executeCloseRequest = async (requestId: string) => {
-    setClosingId(requestId);
-    try {
-      const updatedReq = await fetchAPI<MaintenanceRequest>(
-        `/api/v1/tenant/maintenance/${requestId}/close`,
-        { method: "POST" }
-      );
-      toast.success("Maintenance request closed successfully.");
-      setRequests((prev) => prev.map((r) => (r.id === updatedReq.id ? updatedReq : r)));
-    } catch (err: any) {
-      toast.error(err.message || "Failed to close request.");
-    } finally {
-      setClosingId(null);
-    }
-  };
-
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
       // Status filter
@@ -729,6 +710,82 @@ function TenantRequestsContent() {
       setCurrentPage(1);
     }
   }, [currentPage, totalPages]);
+
+  // Handle deep-linking auto-expand, page navigation, highlighting, and smooth scroll
+  useEffect(() => {
+    if (!loading && targetRequestId && requests.length > 0) {
+      const target = requests.find((r) => r.id === targetRequestId);
+      if (target) {
+        setExpandedId(targetRequestId);
+        setHighlightedId(targetRequestId);
+
+        // Reset filter/search if target would be hidden
+        if (selectedFilter !== "ALL" && target.status !== selectedFilter) {
+          setSelectedFilter("ALL");
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matches = target.title.toLowerCase().includes(q) || target.description.toLowerCase().includes(q);
+          if (!matches) {
+            setSearchQuery("");
+          }
+        }
+
+        const targetIndex = filteredRequests.findIndex((r) => r.id === targetRequestId);
+        if (targetIndex !== -1) {
+          const targetPage = Math.floor(targetIndex / pageSize) + 1;
+          if (currentPage !== targetPage) {
+            setCurrentPage(targetPage);
+          }
+        }
+
+        const scrollTimer = setTimeout(() => {
+          const el = document.getElementById(`request-${targetRequestId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 200);
+
+        const highlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+        }, 3000);
+
+        return () => {
+          clearTimeout(scrollTimer);
+          clearTimeout(highlightTimer);
+        };
+      }
+    }
+  }, [loading, targetRequestId, requests, filteredRequests, pageSize]);
+
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [confirmClose, setConfirmClose] = useState<{ id: string } | null>(null);
+
+  const handleReopen = (requestId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setConfirmReopen({ id: requestId });
+  };
+
+  const handleCloseRequest = (requestId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setConfirmClose({ id: requestId });
+  };
+
+  const executeCloseRequest = async (requestId: string) => {
+    setClosingId(requestId);
+    try {
+      const updatedReq = await fetchAPI<MaintenanceRequest>(
+        `/api/v1/tenant/maintenance/${requestId}/close`,
+        { method: "POST" }
+      );
+      toast.success("Maintenance request closed successfully.");
+      setRequests((prev) => prev.map((r) => (r.id === updatedReq.id ? updatedReq : r)));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to close request.");
+    } finally {
+      setClosingId(null);
+    }
+  };
 
   const paginatedRequests = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -945,6 +1002,7 @@ function TenantRequestsContent() {
                       onCloseRequest={handleCloseRequest}
                       isClosing={closingId === req.id}
                       onViewImage={setPreviewUrl}
+                      isHighlighted={highlightedId === req.id}
                     />
                   </motion.div>
                 ))}

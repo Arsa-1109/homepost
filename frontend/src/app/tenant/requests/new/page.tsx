@@ -205,8 +205,9 @@ export default function NewRequestPage() {
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="p-2 rounded-xl text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+                      className="min-w-[44px] min-h-[44px] p-2.5 rounded-xl flex items-center justify-center text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 touch-manipulation"
                       title="Remove image"
+                      aria-label="Remove image"
                     >
                       <X className="w-4 h-4" />
                     </button>

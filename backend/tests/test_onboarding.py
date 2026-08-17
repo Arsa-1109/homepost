@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,7 @@ from app.models.user import User, UserRole
 from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
 from app.models.unit import Unit
+from app.models.tenant_profile import TenantProfile
 
 
 async def test_get_me(client: AsyncClient, seed_data):
@@ -428,3 +429,81 @@ async def test_get_invite_preview_not_found_and_expired(client: AsyncClient, see
     res_410 = await client.get("/api/v1/onboarding/invite/expired-preview-token")
     assert res_410.status_code == 410
     assert res_410.json()["detail"] == "invite_expired"
+
+
+async def test_get_invite_preview_includes_lease_dates(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """GET /onboarding/invite/{token} returns populated lease_start and lease_end."""
+    unit = seed_data["unit"]
+    landlord = seed_data["landlord"]
+
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="lease-preview-token-123",
+        unit_id=unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        lease_start=date(2026, 9, 1),
+        lease_end=date(2027, 8, 31),
+    )
+    db_session.add(invite)
+    await db_session.commit()
+
+    res = await client.get("/api/v1/onboarding/invite/lease-preview-token-123")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["token"] == "lease-preview-token-123"
+    assert data["lease_start"] == "2026-09-01"
+    assert data["lease_end"] == "2027-08-31"
+
+
+async def test_accept_invite_transfers_lease_to_tenant_profile(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /onboarding/accept-invite transfers lease dates from invite to TenantProfile."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+
+    # Create a vacant unit for this invite
+    vacant_unit = Unit(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        unit_label="Unit AcceptLease",
+        rent_due_day=1,
+        status="Vacant",
+    )
+    invite = Invite(
+        id=uuid.uuid4(),
+        token="accept-transfer-token-456",
+        unit_id=vacant_unit.id,
+        created_by=landlord.id,
+        status=InviteStatus.PENDING,
+        lease_start=date(2026, 9, 1),
+        lease_end=date(2027, 8, 31),
+    )
+    unassigned_user = User(
+        id=uuid.uuid4(),
+        clerk_id=f"user_accept_{uuid.uuid4()}",
+        email="tenant_accept_lease@homepost.dev",
+        role=UserRole.UNASSIGNED,
+    )
+    db_session.add(vacant_unit)
+    db_session.add(invite)
+    db_session.add(unassigned_user)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: unassigned_user
+    try:
+        res = await client.post(
+            "/api/v1/onboarding/accept-invite",
+            json={"token": "accept-transfer-token-456"},
+        )
+        assert res.status_code == 200
+
+        # Verify TenantProfile has transferred lease dates
+        stmt = select(TenantProfile).where(TenantProfile.user_id == unassigned_user.id)
+        profile_res = await db_session.execute(stmt)
+        profile = profile_res.scalar_one_or_none()
+        assert profile is not None
+        assert profile.unit_id == vacant_unit.id
+        assert profile.lease_start == date(2026, 9, 1)
+        assert profile.lease_end == date(2027, 8, 31)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)

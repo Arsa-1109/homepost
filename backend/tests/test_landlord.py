@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,6 +10,8 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
+from app.models.invite import Invite
+from app.models.tenant_profile import TenantProfile
 from app.models.maintenance_request import MaintenanceRequest, RequestStatus, RequestPriority
 from app.models.announcement import Announcement
 from app.models.document import Document
@@ -522,5 +524,270 @@ async def test_announcement_crud_lifecycle(client: AsyncClient, seed_data):
         list_res = await client.get(f"/api/v1/landlord/announcements?property_id={prop.id}")
         assert list_res.status_code == 200
         assert not any(a["id"] == ann_id for a in list_res.json())
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_generate_invite_persists_lease_dates(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /api/v1/landlord/generate-invite persists lease_start and lease_end onto the Invite record."""
+    landlord = seed_data["landlord"]
+    unit = seed_data["unit"]
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    try:
+        res = await client.post(
+            "/api/v1/landlord/generate-invite",
+            json={
+                "unit_id": str(unit.id),
+                "lease_start": "2026-09-01",
+                "lease_end": "2027-08-31",
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["lease_start"] == "2026-09-01"
+        assert data["lease_end"] == "2027-08-31"
+
+        # Verify database record directly
+        invite_id = uuid.UUID(data["id"])
+        invite_in_db = await db_session.get(Invite, invite_id)
+        assert invite_in_db is not None
+        assert invite_in_db.lease_start == date(2026, 9, 1)
+        assert invite_in_db.lease_end == date(2027, 8, 31)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_create_unit_without_lease_fields(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /api/v1/landlord/units succeeds without providing lease_start or lease_end."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    try:
+        res = await client.post(
+            "/api/v1/landlord/units",
+            json={
+                "property_id": str(prop.id),
+                "unit_label": "Unit 99",
+                "rent_due_day": 5,
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["unit_label"] == "Unit 99"
+        assert data.get("lease_start") is None
+        assert data.get("lease_end") is None
+
+        unit_id = uuid.UUID(data["id"])
+        unit_in_db = await db_session.get(Unit, unit_id)
+        assert unit_in_db is not None
+        assert unit_in_db.lease_start is None
+        assert unit_in_db.lease_end is None
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_approve_tenant_persists_lease_dates(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /api/v1/landlord/approve-tenant saves provided lease_start & lease_end to TenantProfile."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    # Create a fresh vacant unit and pending applicant
+    unit_res = await client.post(
+        "/api/v1/landlord/units",
+        json={"property_id": str(prop.id), "unit_label": "Unit ApproveTest", "rent_due_day": 1},
+    )
+    assert unit_res.status_code == 200
+    unit_id = uuid.UUID(unit_res.json()["id"])
+
+    applicant = User(
+        id=uuid.uuid4(),
+        clerk_id=f"user_app_{uuid.uuid4()}",
+        email="applicant_lease@homepost.dev",
+        role=UserRole.TENANT_PENDING,
+        requested_landlord_id=landlord.id,
+    )
+    db_session.add(applicant)
+    await db_session.commit()
+
+    try:
+        approve_res = await client.post(
+            "/api/v1/landlord/approve-tenant",
+            json={
+                "user_id": str(applicant.id),
+                "unit_id": str(unit_id),
+                "lease_start": "2026-10-01",
+                "lease_end": "2027-09-30",
+            },
+        )
+        assert approve_res.status_code == 200
+
+        # Check tenant profile in database
+        stmt = select(TenantProfile).where(TenantProfile.user_id == applicant.id)
+        profile_res = await db_session.execute(stmt)
+        profile = profile_res.scalar_one_or_none()
+        assert profile is not None
+        assert profile.lease_start == date(2026, 10, 1)
+        assert profile.lease_end == date(2027, 9, 30)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_approve_tenant_fallback_when_dates_omitted(client: AsyncClient, seed_data, db_session: AsyncSession):
+    """POST /api/v1/landlord/approve-tenant falls back to unit lease dates when payload dates are omitted."""
+    landlord = seed_data["landlord"]
+    prop = seed_data["property"]
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    # Create unit with default lease dates
+    unit = Unit(
+        id=uuid.uuid4(),
+        property_id=prop.id,
+        unit_label="Unit Fallback",
+        rent_due_day=1,
+        lease_start=date(2026, 1, 1),
+        lease_end=date(2026, 12, 31),
+        status="Vacant",
+    )
+    applicant = User(
+        id=uuid.uuid4(),
+        clerk_id=f"user_app_fb_{uuid.uuid4()}",
+        email="applicant_fallback@homepost.dev",
+        role=UserRole.TENANT_PENDING,
+        requested_landlord_id=landlord.id,
+    )
+    db_session.add(unit)
+    db_session.add(applicant)
+    await db_session.commit()
+
+    try:
+        approve_res = await client.post(
+            "/api/v1/landlord/approve-tenant",
+            json={
+                "user_id": str(applicant.id),
+                "unit_id": str(unit.id),
+                # No lease_start or lease_end provided
+            },
+        )
+        assert approve_res.status_code == 200
+
+        stmt = select(TenantProfile).where(TenantProfile.user_id == applicant.id)
+        profile_res = await db_session.execute(stmt)
+        profile = profile_res.scalar_one_or_none()
+        assert profile is not None
+        assert profile.lease_start == date(2026, 1, 1)
+        assert profile.lease_end == date(2026, 12, 31)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_update_maintenance_request_removes_landlord_attachment(client: AsyncClient, seed_data, db_session: AsyncSession, mock_storage):
+    """Test updating a maintenance request to remove an existing landlord attachment key."""
+    landlord = seed_data["landlord"]
+    unit = seed_data["unit"]
+    profile = seed_data["profile"]
+    app.dependency_overrides[get_current_user] = lambda: landlord
+
+    # Create a maintenance request with 2 landlord attachments
+    req = MaintenanceRequest(
+        id=uuid.uuid4(),
+        tenant_id=profile.id,
+        unit_id=unit.id,
+        title="AC Water Leakage",
+        description="Water leaking from indoor unit.",
+        priority=RequestPriority.HIGH,
+        status=RequestStatus.IN_PROGRESS,
+        landlord_notes="Initial inspection done.",
+        landlord_image_keys=["maintenance/req1/photo1.jpg", "maintenance/req1/photo2.jpg"],
+    )
+    db_session.add(req)
+    await db_session.commit()
+
+    try:
+        # 1. Update with landlord_image_keys removing photo2.jpg
+        patch_res = await client.patch(
+            f"/api/v1/landlord/maintenance/{req.id}",
+            json={
+                "landlord_image_keys": ["maintenance/req1/photo1.jpg"],
+            },
+        )
+        assert patch_res.status_code == 200
+        data = patch_res.json()
+        assert data["landlord_image_keys"] == ["maintenance/req1/photo1.jpg"]
+        assert len(data["landlord_image_urls"]) == 1
+
+        await db_session.refresh(req)
+        assert req.landlord_image_keys == ["maintenance/req1/photo1.jpg"]
+
+        # 2. Update using attachments field removing the remaining attachment
+        patch_res2 = await client.patch(
+            f"/api/v1/landlord/maintenance/{req.id}",
+            json={
+                "attachments": [],
+            },
+        )
+        assert patch_res2.status_code == 200
+        data2 = patch_res2.json()
+        assert data2["landlord_image_keys"] == []
+        assert len(data2["landlord_image_urls"]) == 0
+
+        await db_session.refresh(req)
+        assert req.landlord_image_keys == []
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_landlord_download_url_authorized_for_all_attached_keys(client: AsyncClient, seed_data, db_session: AsyncSession, mock_storage):
+    """Test landlord can generate presigned download URLs for all tenant and landlord attached keys across their units."""
+    landlord = seed_data["landlord"]
+    unit = seed_data["unit"]
+    profile = seed_data["profile"]
+
+    req = MaintenanceRequest(
+        id=uuid.uuid4(),
+        tenant_id=profile.id,
+        unit_id=unit.id,
+        title="Heater Repair",
+        description="Heater not turning on.",
+        priority=RequestPriority.MEDIUM,
+        status=RequestStatus.IN_PROGRESS,
+        image_keys=["maintenance/req_heater/tenant_leak.jpg"],
+        landlord_image_keys=["maintenance/req_heater/landlord_receipt.pdf"],
+    )
+    db_session.add(req)
+    await db_session.commit()
+
+    # 1. Authorized Landlord gets download URL for tenant attachment
+    app.dependency_overrides[get_current_user] = lambda: landlord
+    try:
+        res_tenant_key = await client.get("/api/v1/uploads/download-url?file_key=maintenance/req_heater/tenant_leak.jpg")
+        assert res_tenant_key.status_code == 200
+        assert "download_url" in res_tenant_key.json()
+        assert "maintenance/req_heater/tenant_leak.jpg" in res_tenant_key.json()["download_url"]
+
+        # 2. Authorized Landlord gets download URL for landlord attachment
+        res_ll_key = await client.get("/api/v1/uploads/download-url?file_key=maintenance/req_heater/landlord_receipt.pdf")
+        assert res_ll_key.status_code == 200
+        assert "download_url" in res_ll_key.json()
+        assert "maintenance/req_heater/landlord_receipt.pdf" in res_ll_key.json()["download_url"]
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+    # 3. Unauthorized other landlord is denied
+    other_landlord = User(
+        id=uuid.uuid4(),
+        clerk_id="clerk_other_landlord_777",
+        email="otherlandlord@homepost.dev",
+        role=UserRole.LANDLORD,
+    )
+    db_session.add(other_landlord)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: other_landlord
+    try:
+        denied_res = await client.get("/api/v1/uploads/download-url?file_key=maintenance/req_heater/landlord_receipt.pdf")
+        assert denied_res.status_code == 403
     finally:
         app.dependency_overrides.pop(get_current_user, None)

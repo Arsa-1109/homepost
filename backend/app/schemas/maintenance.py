@@ -15,6 +15,7 @@ class MaintenanceRequestUpdate(BaseModel):
     priority: RequestPriority | None = None
     landlord_notes: str | None = None
     landlord_image_keys: Optional[List[str]] = Field(default=None)
+    attachments: Optional[List[str]] = Field(default=None)
 
 class MaintenanceRequestReopen(BaseModel):
     notes: str = Field(..., min_length=1, max_length=2000)

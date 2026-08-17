@@ -250,8 +250,8 @@ export default function LandlordLayout({
         </main>
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-md border-t border-border px-2 py-1.5 flex items-center justify-around">
-          {visibleNavItems.slice(0, 6).map((item) => {
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-lg border-t border-border px-2 py-1 flex items-center justify-around">
+          {visibleNavItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
@@ -259,17 +259,87 @@ export default function LandlordLayout({
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 px-1.5 py-1 rounded-lg text-[9.5px] font-medium transition-all duration-200 cursor-pointer",
+                  "flex flex-col items-center justify-center min-h-[48px] min-w-[48px] px-2 py-1 rounded-xl text-[10.5px] font-semibold transition-all duration-200 cursor-pointer touch-manipulation",
                   isActive
-                    ? "text-[rgb(var(--ml-accent))] font-semibold"
+                    ? "text-[rgb(var(--ml-accent))]"
                     : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
                 )}
               >
                 <Icon className={cn("size-5 transition-transform", isActive && "scale-110 text-[rgb(var(--ml-accent))]")} />
-                <span className="truncate max-w-[72px] tracking-tight">{item.label}</span>
+                <span className="truncate max-w-[68px] tracking-tight mt-0.5">{item.label}</span>
               </Link>
             );
           })}
+
+          {/* 5th Tab: More Drawer */}
+          <Sheet>
+            <SheetTrigger render={
+              <button
+                type="button"
+                className={cn(
+                  "flex flex-col items-center justify-center min-h-[48px] min-w-[48px] px-2 py-1 rounded-xl text-[10.5px] font-semibold transition-all duration-200 cursor-pointer touch-manipulation",
+                  visibleNavItems.slice(4).some((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
+                    ? "text-[rgb(var(--ml-accent))]"
+                    : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
+                )}
+                aria-label="More navigation options"
+              >
+                <Menu className={cn("size-5 transition-transform", visibleNavItems.slice(4).some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) && "scale-110 text-[rgb(var(--ml-accent))]")} />
+                <span className="truncate max-w-[68px] tracking-tight mt-0.5">More</span>
+              </button>
+            }>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="p-6 rounded-t-3xl max-h-[80vh] overflow-y-auto">
+              <SheetTitle className="text-lg font-bold text-[rgb(var(--ml-text-primary))] mb-4">More Options</SheetTitle>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {visibleNavItems.slice(4).map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 p-3.5 rounded-xl border border-border text-sm font-semibold transition-all duration-200",
+                        isActive
+                          ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))]"
+                          : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                      )}
+                    >
+                      <Icon className={cn("size-5 shrink-0", isActive ? "text-[rgb(var(--ml-accent))]" : "text-[rgb(var(--ml-text-secondary))]")} />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {isDemoActive && (
+                <div className="pt-4 border-t border-border flex flex-col gap-2.5">
+                  <div className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">Demo Controls</div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      startDemoSession("tenant");
+                      window.location.href = "/tenant/dashboard";
+                    }}
+                    className="w-full justify-start text-sm h-11 rounded-xl"
+                  >
+                    Switch to Resident Demo
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      clearDemoSession();
+                      window.location.href = "/";
+                    }}
+                    className="w-full justify-start text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 h-11 rounded-xl"
+                  >
+                    Exit Demo Mode
+                  </Button>
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
         </nav>
       </div>
     </div>
