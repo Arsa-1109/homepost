@@ -535,6 +535,165 @@ async def list_maintenance_requests(
         
     return response_data
 
+async def _validate_maintenance_update(req_in: MaintenanceRequestUpdate, db_req: MaintenanceRequest):
+    if db_req.status == "closed":
+        raise HTTPException(status_code=400, detail="Cannot modify a closed maintenance request.")
+
+    status_changed = False
+    priority_changed = False
+    notes_changed = False
+    images_changed = False
+    new_image_keys: list[str] = []
+
+    if req_in.status and req_in.status != db_req.status:
+        if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
+            valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. "
+                       f"Valid transitions are: {valid_states}",
+            )
+        status_changed = True
+
+    if req_in.priority and req_in.priority != db_req.priority:
+        priority_changed = True
+
+    if req_in.landlord_notes is not None and req_in.landlord_notes != db_req.landlord_notes:
+        notes_changed = True
+
+    keys_to_update = req_in.landlord_image_keys if req_in.landlord_image_keys is not None else req_in.attachments
+    if keys_to_update is not None:
+        existing_keys = db_req.landlord_image_keys or []
+        new_image_keys = [k for k in keys_to_update if k not in existing_keys]
+        if keys_to_update != existing_keys:
+            images_changed = True
+
+    old_status_val: str = db_req.status.value if hasattr(db_req.status, "value") else str(db_req.status)
+    old_priority_val: str = db_req.priority.value if hasattr(db_req.priority, "value") else str(db_req.priority)
+    new_status_val: str = (
+        (req_in.status.value if hasattr(req_in.status, "value") else str(req_in.status))
+        if req_in.status else old_status_val
+    )
+    new_priority_val: str = (
+        (req_in.priority.value if hasattr(req_in.priority, "value") else str(req_in.priority))
+        if req_in.priority else old_priority_val
+    )
+
+    return (
+        status_changed, priority_changed, notes_changed, images_changed, 
+        new_image_keys, keys_to_update, old_status_val, old_priority_val, 
+        new_status_val, new_priority_val
+    )
+
+async def _apply_maintenance_mutations(
+    session: AsyncSession, 
+    db_req: MaintenanceRequest, 
+    req_in: MaintenanceRequestUpdate,
+    status_changed: bool, 
+    priority_changed: bool, 
+    notes_changed: bool, 
+    keys_to_update: list[str] | None, 
+    background_tasks: BackgroundTasks
+):
+    from datetime import datetime, timezone as _tz
+    if status_changed:
+        db_req.status = req_in.status
+        if req_in.status != "open":
+            from app.models.tenant_profile import TenantProfile
+            tenant_profile = await session.get(TenantProfile, db_req.tenant_id)
+            if tenant_profile:
+                tenant_user = await session.get(User, tenant_profile.user_id)
+                if tenant_user and tenant_user.email:
+                    background_tasks.add_task(
+                        send_status_update,
+                        tenant_email=tenant_user.email,
+                        request_title=db_req.title,
+                        new_status=req_in.status,
+                    )
+
+    if priority_changed:
+        db_req.priority = req_in.priority
+
+    if notes_changed:
+        db_req.landlord_notes = req_in.landlord_notes
+
+    if keys_to_update is not None:
+        db_req.landlord_image_keys = keys_to_update
+
+    db_req.updated_at = datetime.now(_tz.utc)
+    await session.commit()
+    await session.refresh(db_req)
+
+async def _log_maintenance_events(
+    session: AsyncSession, 
+    db_req: MaintenanceRequest, 
+    user: User, 
+    req_in: MaintenanceRequestUpdate,
+    status_changed: bool, 
+    priority_changed: bool, 
+    notes_changed: bool, 
+    images_changed: bool, 
+    new_image_keys: list[str], 
+    keys_to_update: list[str] | None, 
+    old_status_val: str, 
+    old_priority_val: str, 
+    new_status_val: str, 
+    new_priority_val: str
+):
+    events: list[MaintenanceEvent] = []
+
+    if status_changed:
+        payload: dict = {"old_status": old_status_val, "new_status": new_status_val}
+        desc_parts = [f"Landlord changed status from {old_status_val.upper()} to {new_status_val.upper()}."]
+        if notes_changed:
+            payload["notes"] = req_in.landlord_notes
+            desc_parts.append("Added notes.")
+        if images_changed:
+            payload["image_keys"] = keys_to_update
+            payload["image_count"] = len(keys_to_update) if keys_to_update is not None else 0
+            if new_image_keys:
+                desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
+            else:
+                desc_parts.append("Updated attached files.")
+        events.append(MaintenanceEvent(
+            maintenance_request_id=db_req.id,
+            actor_id=user.id,
+            event_type="status_changed",
+            description=" ".join(desc_parts),
+            payload=payload,
+        ))
+    else:
+        if notes_changed:
+            events.append(MaintenanceEvent(
+                maintenance_request_id=db_req.id,
+                actor_id=user.id,
+                event_type="note_added",
+                description="Landlord updated the resolution notes." if old_status_val else "Landlord added resolution notes.",
+                payload={"notes": req_in.landlord_notes},
+            ))
+        if images_changed:
+            events.append(MaintenanceEvent(
+                maintenance_request_id=db_req.id,
+                actor_id=user.id,
+                event_type="images_attached",
+                description=f"Landlord attached {len(new_image_keys)} resolution file(s)." if new_image_keys else f"Landlord updated resolution files ({len(keys_to_update) if keys_to_update else 0} attached).",
+                payload={"image_count": len(keys_to_update) if keys_to_update else 0, "image_keys": keys_to_update},
+            ))
+
+    if priority_changed:
+        events.append(MaintenanceEvent(
+            maintenance_request_id=db_req.id,
+            actor_id=user.id,
+            event_type="priority_changed",
+            description=f"Landlord changed priority from {old_priority_val.upper()} to {new_priority_val.upper()}.",
+            payload={"old_priority": old_priority_val, "new_priority": new_priority_val},
+        ))
+
+    if events:
+        for ev in events:
+            session.add(ev)
+        await session.commit()
+
 @router.patch("/maintenance/{request_id}", response_model=MaintenanceRequestResponse)
 @limiter.limit("20/minute")
 async def update_maintenance_request(
@@ -559,50 +718,11 @@ async def update_maintenance_request(
     # Phase 1: validate inputs and compute change flags
     # ---------------------------------------------------------------
     try:
-        if db_req.status == "closed":
-            raise HTTPException(status_code=400, detail="Cannot modify a closed maintenance request.")
-
-        status_changed = False
-        priority_changed = False
-        notes_changed = False
-        images_changed = False
-        new_image_keys: list[str] = []
-
-        if req_in.status and req_in.status != db_req.status:
-            if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
-                valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. "
-                           f"Valid transitions are: {valid_states}",
-                )
-            status_changed = True
-
-        if req_in.priority and req_in.priority != db_req.priority:
-            priority_changed = True
-
-        if req_in.landlord_notes is not None and req_in.landlord_notes != db_req.landlord_notes:
-            notes_changed = True
-
-        keys_to_update = req_in.landlord_image_keys if req_in.landlord_image_keys is not None else req_in.attachments
-        if keys_to_update is not None:
-            existing_keys = db_req.landlord_image_keys or []
-            new_image_keys = [k for k in keys_to_update if k not in existing_keys]
-            if keys_to_update != existing_keys:
-                images_changed = True
-
-        # Capture enum string values BEFORE mutating db_req so event logging has accurate before/after
-        old_status_val: str = db_req.status.value if hasattr(db_req.status, "value") else str(db_req.status)
-        old_priority_val: str = db_req.priority.value if hasattr(db_req.priority, "value") else str(db_req.priority)
-        new_status_val: str = (
-            (req_in.status.value if hasattr(req_in.status, "value") else str(req_in.status))
-            if req_in.status else old_status_val
-        )
-        new_priority_val: str = (
-            (req_in.priority.value if hasattr(req_in.priority, "value") else str(req_in.priority))
-            if req_in.priority else old_priority_val
-        )
-
+        (
+            status_changed, priority_changed, notes_changed, images_changed,
+            new_image_keys, keys_to_update, old_status_val, old_priority_val,
+            new_status_val, new_priority_val
+        ) = await _validate_maintenance_update(req_in, db_req)
     except HTTPException:
         raise
     except Exception as e:
@@ -615,38 +735,11 @@ async def update_maintenance_request(
     # ---------------------------------------------------------------
     # Phase 2: apply mutations and commit (this MUST always succeed)
     # ---------------------------------------------------------------
-    from datetime import datetime, timezone as _tz
-
     try:
-        if status_changed:
-            db_req.status = req_in.status
-            if req_in.status != "open":
-                from app.models.tenant_profile import TenantProfile
-                tenant_profile = await session.get(TenantProfile, db_req.tenant_id)
-                if tenant_profile:
-                    tenant_user = await session.get(User, tenant_profile.user_id)
-                    if tenant_user and tenant_user.email:
-                        background_tasks.add_task(
-                            send_status_update,
-                            tenant_email=tenant_user.email,
-                            request_title=db_req.title,
-                            new_status=req_in.status,
-                        )
-
-        if priority_changed:
-            db_req.priority = req_in.priority
-
-        if notes_changed:
-            db_req.landlord_notes = req_in.landlord_notes
-
-        if keys_to_update is not None:
-            db_req.landlord_image_keys = keys_to_update
-
-        db_req.updated_at = datetime.now(_tz.utc)
-
-        await session.commit()
-        await session.refresh(db_req)
-
+        await _apply_maintenance_mutations(
+            session, db_req, req_in, status_changed, priority_changed, 
+            notes_changed, keys_to_update, background_tasks
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -661,60 +754,11 @@ async def update_maintenance_request(
     # Phase 3: audit event logging — best-effort, never blocks response
     # ---------------------------------------------------------------
     try:
-        events: list[MaintenanceEvent] = []
-
-        if status_changed:
-            payload: dict = {"old_status": old_status_val, "new_status": new_status_val}
-            desc_parts = [f"Landlord changed status from {old_status_val.upper()} to {new_status_val.upper()}."]
-            if notes_changed:
-                payload["notes"] = req_in.landlord_notes
-                desc_parts.append("Added notes.")
-            if images_changed:
-                payload["image_keys"] = keys_to_update
-                payload["image_count"] = len(keys_to_update) if keys_to_update is not None else 0
-                if new_image_keys:
-                    desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
-                else:
-                    desc_parts.append("Updated attached files.")
-            events.append(MaintenanceEvent(
-                maintenance_request_id=db_req.id,
-                actor_id=user.id,
-                event_type="status_changed",
-                description=" ".join(desc_parts),
-                payload=payload,
-            ))
-        else:
-            if notes_changed:
-                events.append(MaintenanceEvent(
-                    maintenance_request_id=db_req.id,
-                    actor_id=user.id,
-                    event_type="note_added",
-                    description="Landlord updated the resolution notes." if old_status_val else "Landlord added resolution notes.",
-                    payload={"notes": req_in.landlord_notes},
-                ))
-            if images_changed:
-                events.append(MaintenanceEvent(
-                    maintenance_request_id=db_req.id,
-                    actor_id=user.id,
-                    event_type="images_attached",
-                    description=f"Landlord attached {len(new_image_keys)} resolution file(s)." if new_image_keys else f"Landlord updated resolution files ({len(keys_to_update) if keys_to_update else 0} attached).",
-                    payload={"image_count": len(keys_to_update) if keys_to_update else 0, "image_keys": keys_to_update},
-                ))
-
-        if priority_changed:
-            events.append(MaintenanceEvent(
-                maintenance_request_id=db_req.id,
-                actor_id=user.id,
-                event_type="priority_changed",
-                description=f"Landlord changed priority from {old_priority_val.upper()} to {new_priority_val.upper()}.",
-                payload={"old_priority": old_priority_val, "new_priority": new_priority_val},
-            ))
-
-        if events:
-            for ev in events:
-                session.add(ev)
-            await session.commit()
-
+        await _log_maintenance_events(
+            session, db_req, user, req_in, status_changed, priority_changed, 
+            notes_changed, images_changed, new_image_keys, keys_to_update, 
+            old_status_val, old_priority_val, new_status_val, new_priority_val
+        )
     except Exception:
         # Audit logging must never surface as a 500 to the client
         try:
@@ -1194,24 +1238,11 @@ async def deny_tenant(
 # ---------------------------------------------------------------------------
 from app.models.tenant_profile import TenantProfile
 
-@router.get("/dashboard")
-async def get_dashboard_summary(
-    user: User = Depends(get_current_landlord),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Returns all data needed to render the landlord dashboard bento grid:
-    - Property & unit stats (total, occupied, vacant)
-    - Urgent/high-priority open maintenance requests
-    - Pending tenant approvals
-    - Recent maintenance activity (last 5 events)
-    """
-    # --- Properties ---
-    prop_result = await session.execute(select(Property).where(Property.owner_id == user.id))
+async def _fetch_dashboard_properties_and_units(session: AsyncSession, user_id: uuid.UUID):
+    prop_result = await session.execute(select(Property).where(Property.owner_id == user_id))
     properties = prop_result.scalars().all()
     prop_ids = [p.id for p in properties]
 
-    # --- Units ---
     if prop_ids:
         unit_result = await session.execute(select(Unit).where(Unit.property_id.in_(prop_ids)))
         all_units = unit_result.scalars().all()
@@ -1220,7 +1251,6 @@ async def get_dashboard_summary(
 
     unit_ids = [u.id for u in all_units]
 
-    # Occupied = units that have an active tenant profile
     unit_tenant_map = {}
     if unit_ids:
         tenant_profile_result = await session.execute(
@@ -1240,7 +1270,6 @@ async def get_dashboard_summary(
     else:
         occupied_unit_ids = set()
 
-    # --- Pending Invites ---
     if unit_ids:
         from app.models.invite import Invite
         invite_result = await session.execute(
@@ -1253,35 +1282,159 @@ async def get_dashboard_summary(
     else:
         pending_unit_ids = set()
 
-    total_units = len(all_units)
-    occupied_count = len(occupied_unit_ids)
-    vacant_count = total_units - occupied_count
+    return properties, prop_ids, all_units, unit_ids, unit_tenant_map, occupied_unit_ids, pending_unit_ids
 
-    # --- Active Maintenance (all open/in_progress, sorted by priority) ---
-    if unit_ids:
-        from sqlalchemy import case, literal
-        priority_order = case(
-            (MaintenanceRequest.priority == "urgent", literal(1)),
-            (MaintenanceRequest.priority == "high", literal(2)),
-            (MaintenanceRequest.priority == "medium", literal(3)),
-            (MaintenanceRequest.priority == "low", literal(4)),
-            else_=literal(5)
-        )
-        urgent_result = await session.execute(
-            select(MaintenanceRequest)
-            .where(
-                MaintenanceRequest.unit_id.in_(unit_ids),
-                MaintenanceRequest.status.in_(["open", "in_progress"]),
-            )
-            .order_by(priority_order, MaintenanceRequest.updated_at.desc(), MaintenanceRequest.created_at.desc())
-        )
-        urgent_requests = urgent_result.scalars().all()
-        units_with_pending_maint = {str(r.unit_id) for r in urgent_requests}
-    else:
-        urgent_requests = []
-        units_with_pending_maint = set()
+async def _fetch_dashboard_maintenance(session: AsyncSession, unit_ids: list[uuid.UUID]):
+    if not unit_ids:
+        return [], set()
 
-    # Build unit_label lookup for maintenance display
+    from sqlalchemy import case, literal
+    priority_order = case(
+        (MaintenanceRequest.priority == "urgent", literal(1)),
+        (MaintenanceRequest.priority == "high", literal(2)),
+        (MaintenanceRequest.priority == "medium", literal(3)),
+        (MaintenanceRequest.priority == "low", literal(4)),
+        else_=literal(5)
+    )
+    urgent_result = await session.execute(
+        select(MaintenanceRequest)
+        .where(
+            MaintenanceRequest.unit_id.in_(unit_ids),
+            MaintenanceRequest.status.in_(["open", "in_progress"]),
+        )
+        .order_by(priority_order, MaintenanceRequest.updated_at.desc(), MaintenanceRequest.created_at.desc())
+    )
+    urgent_requests = urgent_result.scalars().all()
+    units_with_pending_maint = {str(r.unit_id) for r in urgent_requests}
+    return urgent_requests, units_with_pending_maint
+
+async def _fetch_dashboard_pending_tenants(session: AsyncSession, user_id: uuid.UUID):
+    pending_result = await session.execute(
+        select(User).where(
+            User.requested_landlord_id == user_id,
+            User.role == UserRole.TENANT_PENDING,
+        )
+    )
+    pending_tenants = pending_result.scalars().all()
+    return [
+        {
+            "id": str(t.id),
+            "name": t.full_name or t.email,
+            "email": t.email,
+            "unit_label": "—",
+        }
+        for t in pending_tenants
+    ]
+
+async def _fetch_dashboard_recent_activity(
+    session: AsyncSession, user_id: uuid.UUID, unit_ids: list[uuid.UUID], 
+    prop_ids: list[uuid.UUID], unit_property_name_map: dict, 
+    unit_label_map: dict, prop_name_map: dict
+):
+    activity_list = []
+    if not (unit_ids and prop_ids):
+        return activity_list
+
+    from datetime import datetime, timedelta, timezone
+    from app.models.document import Document
+    from app.models.maintenance_event import MaintenanceEvent
+    from app.models.announcement import Announcement
+    from app.schemas.activity import ActivityItem
+    
+    thirty_days_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
+    
+    maint_events_result = await session.execute(
+        select(MaintenanceEvent, MaintenanceRequest)
+        .join(MaintenanceRequest, MaintenanceEvent.maintenance_request_id == MaintenanceRequest.id)
+        .where(
+            MaintenanceRequest.unit_id.in_(unit_ids),
+            MaintenanceEvent.created_at >= thirty_days_ago,
+            (MaintenanceEvent.actor_id == user_id) | (MaintenanceEvent.event_type.in_(["reopened", "status_changed"]))
+        )
+        .order_by(MaintenanceEvent.created_at.desc())
+        .limit(10)
+    )
+    
+    for event, r in maint_events_result.all():
+        event_meta = r.status.value if hasattr(r.status, 'value') else str(r.status)
+        if event.event_type == "reopened":
+            event_meta = "reopened"
+        
+        actor = "landlord" if event.actor_id == user_id else "tenant"
+        if event_meta == "closed" and actor == "landlord":
+            continue
+
+        activity_list.append(ActivityItem(
+            type="maintenance_update",
+            id=r.id,
+            title=r.title,
+            timestamp=event.created_at,
+            meta=event_meta,
+            actor=actor,
+            property_name=unit_property_name_map.get(str(r.unit_id), "Unknown Property"),
+            unit_label=unit_label_map.get(str(r.unit_id), "—")
+        ))
+        
+    recent_docs_result = await session.execute(
+        select(Document)
+        .where(Document.property_id.in_(prop_ids))
+        .order_by(Document.created_at.desc())
+        .limit(10)
+    )
+    
+    for d in recent_docs_result.scalars().all():
+        activity_list.append(ActivityItem(
+            type="document_upload",
+            id=d.id,
+            title=d.title,
+            timestamp=d.created_at,
+            meta=d.file_type,
+            actor="landlord",
+            property_name=prop_name_map.get(str(d.property_id), "Unknown Property"),
+            unit_label=unit_label_map.get(str(d.unit_id)) if d.unit_id else "All units"
+        ))
+        
+    recent_anns_result = await session.execute(
+        select(Announcement)
+        .where(Announcement.property_id.in_(prop_ids))
+        .order_by(Announcement.created_at.desc())
+        .limit(10)
+    )
+    
+    for a in recent_anns_result.scalars().all():
+        activity_list.append(ActivityItem(
+            type="announcement_posted",
+            id=a.id,
+            title=a.title,
+            timestamp=a.created_at,
+            meta="",
+            actor="landlord",
+            property_name=prop_name_map.get(str(a.property_id), "Unknown Property"),
+            unit_label=unit_label_map.get(str(a.unit_id)) if a.unit_id else "All units"
+        ))
+        
+    activity_list.sort(key=lambda x: x.timestamp, reverse=True)
+    return activity_list[:5]
+
+
+@router.get("/dashboard")
+async def get_dashboard_summary(
+    user: User = Depends(get_current_landlord),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Returns all data needed to render the landlord dashboard bento grid:
+    - Property & unit stats (total, occupied, vacant)
+    - Urgent/high-priority open maintenance requests
+    - Pending tenant approvals
+    - Recent maintenance activity (last 5 events)
+    """
+    properties, prop_ids, all_units, unit_ids, unit_tenant_map, occupied_unit_ids, pending_unit_ids = \
+        await _fetch_dashboard_properties_and_units(session, user.id)
+
+    urgent_requests, units_with_pending_maint = await _fetch_dashboard_maintenance(session, unit_ids)
+    pending_list = await _fetch_dashboard_pending_tenants(session, user.id)
+
     unit_label_map = {str(u.id): u.unit_label for u in all_units}
     prop_name_map = {str(p.id): p.name for p in properties}
     unit_property_name_map = {
@@ -1289,120 +1442,17 @@ async def get_dashboard_summary(
         for u in all_units
     }
 
-    # --- Pending Tenants ---
-    pending_result = await session.execute(
-        select(User).where(
-            User.requested_landlord_id == user.id,
-            User.role == UserRole.TENANT_PENDING,
-        )
+    activity_list = await _fetch_dashboard_recent_activity(
+        session, user.id, unit_ids, prop_ids, 
+        unit_property_name_map, unit_label_map, prop_name_map
     )
-    pending_tenants = pending_result.scalars().all()
-
-    pending_list = []
-    for t in pending_tenants:
-        pending_list.append({
-            "id": str(t.id),
-            "name": t.full_name or t.email,
-            "email": t.email,
-            "unit_label": "—",
-        })
-
-    # --- Recent Activity ---
-    activity_list = []
-    if unit_ids and prop_ids:
-        from datetime import datetime, timedelta, timezone
-        from app.models.document import Document
-        from app.models.maintenance_event import MaintenanceEvent
-        from app.models.announcement import Announcement
-        from app.schemas.activity import ActivityItem
-        
-        thirty_days_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
-        
-        # Fetch maintenance events (landlord actions OR tenant reopens/closures)
-        maint_events_result = await session.execute(
-            select(MaintenanceEvent, MaintenanceRequest)
-            .join(MaintenanceRequest, MaintenanceEvent.maintenance_request_id == MaintenanceRequest.id)
-            .where(
-                MaintenanceRequest.unit_id.in_(unit_ids),
-                MaintenanceEvent.created_at >= thirty_days_ago,
-                (MaintenanceEvent.actor_id == user.id) | (MaintenanceEvent.event_type.in_(["reopened", "status_changed"]))
-            )
-            .order_by(MaintenanceEvent.created_at.desc())
-            .limit(10)
-        )
-        maint_events = maint_events_result.all()
-        
-        for event, r in maint_events:
-            event_meta = r.status.value if hasattr(r.status, 'value') else str(r.status)
-            if event.event_type == "reopened":
-                event_meta = "reopened"
-            
-            actor = "landlord" if event.actor_id == user.id else "tenant"
-            
-            # Exclude status changes to closed if performed by landlord
-            if event_meta == "closed" and actor == "landlord":
-                continue
-
-            activity_list.append(ActivityItem(
-                type="maintenance_update",
-                id=r.id,
-                title=r.title,
-                timestamp=event.created_at,
-                meta=event_meta,
-                actor=actor,
-                property_name=unit_property_name_map.get(str(r.unit_id), "Unknown Property"),
-                unit_label=unit_label_map.get(str(r.unit_id), "—")
-            ))
-            
-        recent_docs_result = await session.execute(
-            select(Document)
-            .where(Document.property_id.in_(prop_ids))
-            .order_by(Document.created_at.desc())
-            .limit(10)
-        )
-        recent_docs = recent_docs_result.scalars().all()
-        
-        for d in recent_docs:
-            activity_list.append(ActivityItem(
-                type="document_upload",
-                id=d.id,
-                title=d.title,
-                timestamp=d.created_at,
-                meta=d.file_type,
-                actor="landlord",
-                property_name=prop_name_map.get(str(d.property_id), "Unknown Property"),
-                unit_label=unit_label_map.get(str(d.unit_id)) if d.unit_id else "All units"
-            ))
-            
-        recent_anns_result = await session.execute(
-            select(Announcement)
-            .where(Announcement.property_id.in_(prop_ids))
-            .order_by(Announcement.created_at.desc())
-            .limit(10)
-        )
-        recent_anns = recent_anns_result.scalars().all()
-        
-        for a in recent_anns:
-            activity_list.append(ActivityItem(
-                type="announcement_posted",
-                id=a.id,
-                title=a.title,
-                timestamp=a.created_at,
-                meta="",
-                actor="landlord",
-                property_name=prop_name_map.get(str(a.property_id), "Unknown Property"),
-                unit_label=unit_label_map.get(str(a.unit_id)) if a.unit_id else "All units"
-            ))
-            
-        activity_list.sort(key=lambda x: x.timestamp, reverse=True)
-        activity_list = activity_list[:5]
 
     return {
         "property_stats": {
             "total_properties": len(properties),
-            "total_units": total_units,
-            "occupied_units": occupied_count,
-            "vacant_units": vacant_count,
+            "total_units": len(all_units),
+            "occupied_units": len(occupied_unit_ids),
+            "vacant_units": len(all_units) - len(occupied_unit_ids),
         },
         "units": [
             {
@@ -1478,13 +1528,18 @@ async def remove_tenant(
 
     # 3. Soft-delete the tenant profiles and reset user role to UNASSIGNED
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+    user_ids = [profile.user_id for profile in profiles]
     for profile in profiles:
         profile.is_active = False
         profile.removed_at = now
         session.add(profile)
 
-        tenant_user = await session.get(User, profile.user_id)
-        if tenant_user:
+    # Batch fetch all tenant users in a single query instead of N individual gets
+    if user_ids:
+        tenant_users_result = await session.execute(
+            select(User).where(User.id.in_(user_ids))
+        )
+        for tenant_user in tenant_users_result.scalars().all():
             tenant_user.role = UserRole.UNASSIGNED
             tenant_user.requested_landlord_id = None
             session.add(tenant_user)

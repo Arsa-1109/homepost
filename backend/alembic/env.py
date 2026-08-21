@@ -14,7 +14,7 @@ from alembic import context
 # IMPORT SQLMODEL AND ALL YOUR MODELS HERE
 from sqlmodel import SQLModel
 # Ensure the model registry is loaded so Alembic detects all tables
-from app.models import *
+import app.models  # noqa: F401 — triggers model registry for Alembic table discovery
 from app.core.config import get_settings
 
 # this is the Alembic Config object, which provides

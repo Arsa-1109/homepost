@@ -27,7 +27,6 @@ const nextConfig = {
   },
   ...(useMockAuth ? {
     webpack: (config) => {
-      console.log("Using Mock Clerk Auth (offline mode)...");
       config.resolve.alias["@clerk/nextjs$"] = path.resolve(process.cwd(), "src/lib/clerk-mock.tsx");
       config.resolve.alias["@clerk/nextjs/server$"] = path.resolve(process.cwd(), "src/lib/clerk-server-mock.ts");
       return config;

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import AsyncGenerator
 import pytest
 from httpx import AsyncClient, ASGITransport

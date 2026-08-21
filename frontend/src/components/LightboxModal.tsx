@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import {
@@ -245,26 +245,24 @@ export function LightboxModal({
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (isImage) {
-        if (e.key === "+" || e.key === "=") handleZoomIn();
-        if (e.key === "-" || e.key === "_") handleZoomOut();
-        if (e.key === "0") handleResetZoom();
-      }
-    };
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+    if (isImage) {
+      if (e.key === "+" || e.key === "=") handleZoomIn();
+      if (e.key === "-" || e.key === "_") handleZoomOut();
+      if (e.key === "0") handleResetZoom();
+    }
+  }, [onClose, isImage, handleZoomIn, handleZoomOut, handleResetZoom]);
 
-    // Lock body scroll while lightbox is open
+  useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = prev;
     };
-  }, [onClose, isImage]);
+  }, [handleKeyDown]);
 
   if (typeof window === "undefined") return null;
 

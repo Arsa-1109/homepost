@@ -89,7 +89,7 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
     Raises:
         JWTError: If the token is invalid, expired, tampered with, or unverified for non-demo users.
     """
-    if settings.mock_auth or os.getenv("MOCK_AUTH") == "true":
+    if (settings.mock_auth or os.getenv("MOCK_AUTH") == "true") and settings.environment != "production":
         try:
             payload = jwt.get_unverified_claims(token)
             if not payload.get("sub"):
@@ -113,6 +113,8 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
 
     # Step 2: Strictly restrict unsigned / alg: "none" tokens to designated demo accounts
     if alg == "none" or not kid:
+        if settings.environment == "production":
+            raise JWTError("Unsigned tokens are not permitted in production.")
         try:
             payload = jwt.get_unverified_claims(token)
             sub = payload.get("sub")

@@ -15,7 +15,7 @@ Started via FastAPI lifespan event in main.py.
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import date
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession

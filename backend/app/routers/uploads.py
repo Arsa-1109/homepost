@@ -9,6 +9,7 @@ from app.models.maintenance_request import MaintenanceRequest
 from app.models.announcement import Announcement
 from app.core.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import String
 from sqlmodel import select
 from app.services.storage import generate_object_key, upload_file_to_r2, generate_presigned_download_url
 from pydantic import BaseModel
@@ -58,6 +59,18 @@ class DownloadURLResponse(BaseModel):
     download_url: str
 
 
+# Magic byte signatures for file type validation
+_MAGIC_SIGNATURES: dict[str, list[tuple[bytes, int, str]]] = {
+    ".jpg":  [(b"\xff\xd8\xff", 3, "Invalid JPEG image")],
+    ".jpeg": [(b"\xff\xd8\xff", 3, "Invalid JPEG image")],
+    ".png":  [(b"\x89PNG", 4, "Invalid PNG image")],
+    ".pdf":  [(b"%PDF", 4, "Invalid PDF document")],
+    ".docx": [(b"PK\x03\x04", 4, "Invalid DOCX document")],
+    ".doc":  [(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", 8, "Invalid DOC document")],
+    ".webm": [(b"\x1a\x45\xdf\xa3", 4, "Invalid WEBM video")],
+}
+
+
 def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
     """
     Validate binary file headers against expected magic byte signatures.
@@ -66,35 +79,17 @@ def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-    # JPEG: FF D8 FF
-    if ext in [".jpg", ".jpeg"]:
-        if len(file_bytes) < 3 or not file_bytes.startswith(b"\xff\xd8\xff"):
-            raise HTTPException(status_code=400, detail="Invalid JPEG image content or corrupted file.")
+    # Simple prefix-match types
+    if ext in _MAGIC_SIGNATURES:
+        for magic, min_len, error_msg in _MAGIC_SIGNATURES[ext]:
+            if len(file_bytes) < min_len or not file_bytes.startswith(magic):
+                raise HTTPException(status_code=400, detail=f"{error_msg} content or corrupted file.")
+        return
 
-    # PNG: 89 50 4E 47 (\x89PNG)
-    elif ext == ".png":
-        if len(file_bytes) < 4 or not file_bytes.startswith(b"\x89PNG"):
-            raise HTTPException(status_code=400, detail="Invalid PNG image content or corrupted file.")
-
-    # PDF: %PDF (25 50 44 46)
-    elif ext == ".pdf":
-        if len(file_bytes) < 4 or not file_bytes.startswith(b"%PDF"):
-            raise HTTPException(status_code=400, detail="Invalid PDF document content or corrupted file.")
-
-    # WEBP: RIFF....WEBP
-    elif ext == ".webp":
+    # WEBP: RIFF....WEBP (requires offset check)
+    if ext == ".webp":
         if len(file_bytes) < 12 or not (file_bytes.startswith(b"RIFF") and file_bytes[8:12] == b"WEBP"):
             raise HTTPException(status_code=400, detail="Invalid WEBP image content or corrupted file.")
-
-    # DOCX: PK\x03\x04 (ZIP container for Office Open XML)
-    elif ext == ".docx":
-        if len(file_bytes) < 4 or not file_bytes.startswith(b"PK\x03\x04"):
-            raise HTTPException(status_code=400, detail="Invalid DOCX document content or corrupted file.")
-
-    # DOC: D0 CF 11 E0 A1 B1 1A E1 (Legacy Microsoft Compound Document)
-    elif ext == ".doc":
-        if len(file_bytes) < 8 or not file_bytes.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
-            raise HTTPException(status_code=400, detail="Invalid DOC document content or corrupted file.")
 
     # HEIC / HEIF: ftypheic / ftypmif1 / ftypmsf1 / ftyphevc
     elif ext in [".heic", ".heif"]:
@@ -108,11 +103,6 @@ def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
         box_type = file_bytes[4:8]
         if box_type not in [b"ftyp", b"moov", b"mdat", b"wide"] and b"ftyp" not in file_bytes[:32]:
             raise HTTPException(status_code=400, detail="Invalid MP4/MOV video content or corrupted file.")
-
-    # WEBM: 1A 45 DF A3 (EBML container)
-    elif ext == ".webm":
-        if len(file_bytes) < 4 or not file_bytes.startswith(b"\x1a\x45\xdf\xa3"):
-            raise HTTPException(status_code=400, detail="Invalid WEBM video content or corrupted file.")
 
 
 @router.post("/", response_model=DirectUploadResponse)
@@ -181,27 +171,35 @@ async def get_presigned_download_url(
             )
             authorized = doc_res.scalars().first() is not None
         elif file_key.startswith("maintenance/"):
+            from sqlalchemy import or_, literal
+            from sqlalchemy.sql import func
             maint_res = await session.execute(
-                select(MaintenanceRequest)
+                select(MaintenanceRequest.id)
                 .join(Unit, MaintenanceRequest.unit_id == Unit.id)
                 .join(Property, Unit.property_id == Property.id)
-                .where(Property.owner_id == user.id)
+                .where(
+                    Property.owner_id == user.id,
+                    or_(
+                        func.cast(MaintenanceRequest.image_keys, String).contains(file_key),
+                        func.cast(MaintenanceRequest.landlord_image_keys, String).contains(file_key),
+                    )
+                )
+                .limit(1)
             )
-            for req_obj in maint_res.scalars().all():
-                if (req_obj.image_keys and file_key in req_obj.image_keys) or \
-                   (req_obj.landlord_image_keys and file_key in req_obj.landlord_image_keys):
-                    authorized = True
-                    break
+            authorized = maint_res.scalars().first() is not None
         elif file_key.startswith("announcements/"):
+            from sqlalchemy import or_
+            from sqlalchemy.sql import func
             ann_res = await session.execute(
-                select(Announcement)
+                select(Announcement.id)
                 .join(Property, Announcement.property_id == Property.id)
-                .where(Property.owner_id == user.id)
+                .where(
+                    Property.owner_id == user.id,
+                    func.cast(Announcement.attachment_keys, String).contains(file_key),
+                )
+                .limit(1)
             )
-            for ann_obj in ann_res.scalars().all():
-                if ann_obj.attachment_keys and file_key in ann_obj.attachment_keys:
-                    authorized = True
-                    break
+            authorized = ann_res.scalars().first() is not None
     elif user.role == UserRole.TENANT:
         prof_res = await session.execute(
             select(TenantProfile).where(TenantProfile.user_id == user.id, TenantProfile.is_active == True)
@@ -220,25 +218,32 @@ async def get_presigned_download_url(
                     )
                     authorized = doc_res.scalars().first() is not None
                 elif file_key.startswith("maintenance/"):
+                    from sqlalchemy import or_
+                    from sqlalchemy.sql import func
                     maint_res = await session.execute(
-                        select(MaintenanceRequest).where(MaintenanceRequest.tenant_id == profile.id)
+                        select(MaintenanceRequest.id)
+                        .where(
+                            MaintenanceRequest.tenant_id == profile.id,
+                            or_(
+                                func.cast(MaintenanceRequest.image_keys, String).contains(file_key),
+                                func.cast(MaintenanceRequest.landlord_image_keys, String).contains(file_key),
+                            )
+                        )
+                        .limit(1)
                     )
-                    for req_obj in maint_res.scalars().all():
-                        if (req_obj.image_keys and file_key in req_obj.image_keys) or \
-                           (req_obj.landlord_image_keys and file_key in req_obj.landlord_image_keys):
-                            authorized = True
-                            break
+                    authorized = maint_res.scalars().first() is not None
                 elif file_key.startswith("announcements/"):
+                    from sqlalchemy.sql import func
                     ann_res = await session.execute(
-                        select(Announcement).where(
+                        select(Announcement.id)
+                        .where(
                             Announcement.property_id == unit.property_id,
                             (Announcement.unit_id == None) | (Announcement.unit_id == profile.unit_id),
+                            func.cast(Announcement.attachment_keys, String).contains(file_key),
                         )
+                        .limit(1)
                     )
-                    for ann_obj in ann_res.scalars().all():
-                        if ann_obj.attachment_keys and file_key in ann_obj.attachment_keys:
-                            authorized = True
-                            break
+                    authorized = ann_res.scalars().first() is not None
 
     if not authorized:
         raise HTTPException(status_code=403, detail="You do not have permission to access this file.")

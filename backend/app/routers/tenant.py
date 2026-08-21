@@ -4,7 +4,7 @@ from sqlmodel import select
 import uuid
 
 from app.core.database import get_session
-from app.dependencies.auth import get_current_tenant_profile, get_active_tenant_profile, get_current_user
+from app.dependencies.auth import get_current_tenant_profile, get_active_tenant_profile
 from app.models.user import User
 from app.models.tenant_profile import TenantProfile
 from app.models.property import Property

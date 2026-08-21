@@ -103,7 +103,7 @@ async def get_current_user(
         is_email_verified = (
             payload.get("email_verified") is True
             or payload.get("email_verified") == "true"
-            or settings.mock_auth
+            or (settings.mock_auth and settings.environment != "production")
             or clerk_id in ALLOWED_DEMO_USER_IDS
         )
         if is_email_verified:

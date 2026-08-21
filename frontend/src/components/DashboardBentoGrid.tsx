@@ -125,14 +125,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
     return 'border-l-[3px] border-l-muted-foreground';
   };
 
-  const getPriorityPillClass = (priority: string) => {
-    const p = priority.toLowerCase();
-    if (p === 'urgent' || p === 'high') return 'bg-orange-500/10 text-orange-600 dark:bg-[rgba(251,146,60,0.12)] dark:text-[#FB923C]';
-    if (p === 'medium') return 'bg-indigo-500/10 text-indigo-600 dark:bg-[rgba(129,140,248,0.12)] dark:text-[#818CF8]';
-    return 'bg-muted text-muted-foreground';
-  };
-
-  const getPriorityIconClass = (priority: string) => {
+  const getPriorityClass = (priority: string) => {
     const p = priority.toLowerCase();
     if (p === 'urgent' || p === 'high') return 'bg-orange-500/10 text-orange-600 dark:bg-[rgba(251,146,60,0.12)] dark:text-[#FB923C]';
     if (p === 'medium') return 'bg-indigo-500/10 text-indigo-600 dark:bg-[rgba(129,140,248,0.12)] dark:text-[#818CF8]';
@@ -221,7 +214,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className={cn(
                                 "w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-[15px] shrink-0",
-                                getPriorityIconClass(req.priority)
+                                getPriorityClass(req.priority)
                               )}>
                                 <MaintIcon className="w-4 h-4" />
                               </div>
@@ -230,7 +223,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                                   <span className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
                                     {req.title}
                                   </span>
-                                  <span className={cn('sm:hidden text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider', getPriorityPillClass(req.priority))}>
+                                  <span className={cn('sm:hidden text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider', getPriorityClass(req.priority))}>
                                     {req.priority}
                                   </span>
                                 </div>
@@ -241,7 +234,7 @@ export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
                             </div>
                             <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pl-12 sm:pl-0">
                               <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-1">
-                                <span className={cn('hidden sm:inline-flex text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider', getPriorityPillClass(req.priority))}>
+                                <span className={cn('hidden sm:inline-flex text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider', getPriorityClass(req.priority))}>
                                   {req.priority}
                                 </span>
                                 <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium">
