@@ -299,3 +299,58 @@ async def test_tenant_profile_endpoint_returns_populated_lease_dates(
         assert data["property_name"] == "Oakview Residency"
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+async def test_reopen_maintenance_request_resets_stale_landlord_notes_and_images(
+    client: AsyncClient, seed_data, db_session: AsyncSession
+):
+    """Reopening a request resets landlord_notes and landlord_image_keys while preserving history."""
+    from app.models.maintenance_event import MaintenanceEvent
+    from sqlmodel import select
+
+    tenant = seed_data["tenant"]
+    profile = seed_data["profile"]
+    unit = seed_data["unit"]
+
+    # Create resolved request with landlord notes & images
+    req = MaintenanceRequest(
+        id=uuid.uuid4(),
+        tenant_id=profile.id,
+        unit_id=unit.id,
+        title="Kitchen Sink Leak",
+        description="Water pooling under pipe.",
+        priority=RequestPriority.HIGH,
+        status=RequestStatus.RESOLVED,
+        landlord_notes="Replaced the gasket seal.",
+        landlord_image_keys=["maintenance/receipt.jpg", "maintenance/fixed_pipe.jpg"],
+    )
+    db_session.add(req)
+    await db_session.commit()
+
+    app.dependency_overrides[get_current_user] = lambda: tenant
+    try:
+        reopen_res = await client.post(
+            f"/api/v1/tenant/maintenance/{req.id}/reopen",
+            json={"notes": "Leak started dripping again."},
+        )
+        assert reopen_res.status_code == 200
+        data = reopen_res.json()
+        assert data["status"] == "open"
+        assert data["landlord_notes"] is None
+        assert data["landlord_image_keys"] is None
+
+        # Verify in database directly
+        await db_session.refresh(req)
+        assert req.status == RequestStatus.OPEN
+        assert req.landlord_notes is None
+        assert req.landlord_image_keys is None
+
+        # Verify timeline events contain the reopening event
+        events_res = await db_session.execute(
+            select(MaintenanceEvent).where(MaintenanceEvent.maintenance_request_id == req.id)
+        )
+        events = events_res.scalars().all()
+        assert any(e.event_type == "reopened" and "Leak started dripping again." in str(e.payload) for e in events)
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+

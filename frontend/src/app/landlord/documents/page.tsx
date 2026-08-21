@@ -86,8 +86,8 @@ function LandlordDocumentsContent() {
       try {
         const token = await getToken();
         const data = await fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token);
-        setProperties(data);
-        if (data.length > 0) {
+        setProperties(data || []);
+        if (data && data.length > 0) {
           const urlParams = new URLSearchParams(window.location.search);
           const initialPropertyId = urlParams.get("property_id");
           if (
@@ -99,17 +99,23 @@ function LandlordDocumentsContent() {
             setSelectedProperty(data[0].id);
           }
         } else {
+          setProperties([]);
+          setSelectedProperty("");
+          setDocuments([]);
           setDocsLoading(false);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load landlord properties for documents:", err);
+        setProperties([]);
+        setSelectedProperty("");
+        setDocuments([]);
         setDocsLoading(false);
       } finally {
         setLoading(false);
       }
     }
     loadProps();
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   useEffect(() => {
     if (!isLoaded || !selectedProperty) return;

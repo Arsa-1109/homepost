@@ -195,6 +195,8 @@ async def reopen_maintenance_request(
         )
 
     req.status = RequestStatus.OPEN
+    req.landlord_notes = None
+    req.landlord_image_keys = None
     req.updated_at = now
     
     event_payload = {

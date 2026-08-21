@@ -91,12 +91,33 @@ export function startDemoSession(role: "owner" | "tenant"): string {
   return config.dashboardUrl;
 }
 
+const ALLOWED_DEMO_COOKIE_IDS = new Set([
+  "user_demo_landlord_001",
+  "user_demo_tenant_001",
+  "user_demo_tenant_002",
+]);
+
 export function isDemoSession(): boolean {
   if (typeof window === "undefined") return false;
-  return Boolean(
-    localStorage.getItem("mock_user_id") ||
-    document.cookie.includes("mock_user_id=")
-  );
+  const clerk = (window as any).Clerk;
+  // If a live Clerk user is present (not mock or demo)
+  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_COOKIE_IDS.has(clerk.user.id)) {
+    return false;
+  }
+
+  const mockId = localStorage.getItem("mock_user_id");
+  const hasMockCookie = document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
+  const effectiveId = mockId || hasMockCookie;
+  return Boolean(effectiveId && ALLOWED_DEMO_COOKIE_IDS.has(effectiveId));
+}
+
+export function sanitizeSession(isSignedIn?: boolean): void {
+  if (typeof window === "undefined") return;
+  const clerk = (window as any).Clerk;
+  // Only sanitize demo session if a live Clerk user is authenticated
+  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_COOKIE_IDS.has(clerk.user.id)) {
+    clearDemoSession();
+  }
 }
 
 export function getDemoUser(): {
@@ -106,6 +127,8 @@ export function getDemoUser(): {
   role: "landlord" | "tenant";
 } | null {
   if (typeof window === "undefined") return null;
+  if (!isDemoSession()) return null;
+
   const email = localStorage.getItem("mock_user_email") || "";
   const name = localStorage.getItem("mock_user_name") || "Demo User";
   const userId = localStorage.getItem("mock_user_id") || "";
@@ -122,12 +145,27 @@ export function getDemoUser(): {
 
 export function clearDemoSession(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("mock_user_email");
-  localStorage.removeItem("mock_user_name");
-  localStorage.removeItem("mock_user_id");
+  const mockId = localStorage.getItem("mock_user_id") || document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
+  
+  // Only wipe if it is actually one of the designated demo accounts!
+  const isDemo = Boolean(mockId && ALLOWED_DEMO_COOKIE_IDS.has(mockId));
+  if (!isDemo && mockId) {
+    // This is a legitimate custom mock user (e.g. mock_...), do NOT destroy their session!
+    return;
+  }
+
+  try {
+    localStorage.removeItem("mock_user_email");
+    localStorage.removeItem("mock_user_name");
+    localStorage.removeItem("mock_user_id");
+    localStorage.removeItem("mock_user_role");
+    localStorage.removeItem("mock_user_onboarding_complete");
+  } catch (e) {
+    // ignore storage access errors
+  }
 
   const deleteCookie = (name: string) => {
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0`;
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
   };
 
   deleteCookie("mock_user_email");
@@ -136,4 +174,5 @@ export function clearDemoSession(): void {
   deleteCookie("mock_user_role");
   deleteCookie("mock_user_onboarding_complete");
 }
+
 

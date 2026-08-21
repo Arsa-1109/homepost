@@ -63,17 +63,22 @@ export function mockLogin(email: string, name: string, customUserId?: string) {
     }
   }
 
+  const role = email.includes("landlord") || email.includes("owner")
+    ? "landlord"
+    : (email.includes("tenant") ? "tenant" : (localStorage.getItem("mock_user_role") || "landlord"));
+
   localStorage.setItem("mock_user_email", email);
   localStorage.setItem("mock_user_name", name);
   localStorage.setItem("mock_user_id", userId);
+  localStorage.setItem("mock_user_role", role);
+  localStorage.setItem("mock_user_onboarding_complete", "true");
   
   if (typeof window !== "undefined") {
-    const role = email.includes("landlord") ? "landlord" : "tenant";
-    document.cookie = `mock_user_email=${encodeURIComponent(email)}; path=/; max-age=604800`;
-    document.cookie = `mock_user_name=${encodeURIComponent(name)}; path=/; max-age=604800`;
-    document.cookie = `mock_user_id=${encodeURIComponent(userId)}; path=/; max-age=604800`;
-    document.cookie = `mock_user_role=${role}; path=/; max-age=604800`;
-    document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800`;
+    document.cookie = `mock_user_email=${encodeURIComponent(email)}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `mock_user_name=${encodeURIComponent(name)}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `mock_user_id=${encodeURIComponent(userId)}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `mock_user_role=${role}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax`;
     (window as any).Clerk = {
       loaded: true,
       session: {
@@ -97,6 +102,10 @@ export function mockLogin(email: string, name: string, customUserId?: string) {
         id: userId,
         primaryEmailAddress: { emailAddress: email },
         fullName: name,
+        publicMetadata: {
+          role,
+          onboardingComplete: true,
+        },
       },
     });
   }
@@ -106,12 +115,18 @@ export function mockLogout() {
   localStorage.removeItem("mock_user_email");
   localStorage.removeItem("mock_user_name");
   localStorage.removeItem("mock_user_id");
+  localStorage.removeItem("mock_user_role");
+  localStorage.removeItem("mock_user_onboarding_complete");
   
   if (typeof window !== "undefined") {
-    document.cookie = "mock_user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    document.cookie = "mock_user_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    document.cookie = "mock_user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    document.cookie = "mock_user_onboarding_complete=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    const deleteCookie = (name: string) => {
+      document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
+    };
+    deleteCookie("mock_user_email");
+    deleteCookie("mock_user_name");
+    deleteCookie("mock_user_id");
+    deleteCookie("mock_user_role");
+    deleteCookie("mock_user_onboarding_complete");
     (window as any).Clerk = {
       loaded: true,
       session: null
@@ -138,9 +153,16 @@ export function ClerkProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMockStateGlobal = setState;
-    const email = localStorage.getItem("mock_user_email");
-    const name = localStorage.getItem("mock_user_name");
-    const userId = localStorage.getItem("mock_user_id");
+    const cookieMatch = (name: string) => {
+      if (typeof document === "undefined") return null;
+      const match = document.cookie.match(new RegExp("(^|;\\s*)" + name + "=([^;]*)"));
+      return match ? decodeURIComponent(match[2]) : null;
+    };
+
+    const email = localStorage.getItem("mock_user_email") || cookieMatch("mock_user_email");
+    const name = localStorage.getItem("mock_user_name") || cookieMatch("mock_user_name");
+    const userId = localStorage.getItem("mock_user_id") || cookieMatch("mock_user_id");
+    const role = localStorage.getItem("mock_user_role") || cookieMatch("mock_user_role") || "landlord";
     
     if (typeof window !== "undefined") {
       (window as any).mockLogin = mockLogin;
@@ -152,9 +174,9 @@ export function ClerkProvider({ children }: { children: React.ReactNode }) {
       loaded: true,
       session: email ? {
         getToken: async () => {
-          const e = localStorage.getItem("mock_user_email");
-          const n = localStorage.getItem("mock_user_name");
-          const u = localStorage.getItem("mock_user_id");
+          const e = localStorage.getItem("mock_user_email") || cookieMatch("mock_user_email");
+          const n = localStorage.getItem("mock_user_name") || cookieMatch("mock_user_name");
+          const u = localStorage.getItem("mock_user_id") || cookieMatch("mock_user_id");
           if (!e) return null;
           return generateMockJWT(e, n || "Mock User", u || "mock_user");
         }
@@ -170,6 +192,10 @@ export function ClerkProvider({ children }: { children: React.ReactNode }) {
           id: userId,
           primaryEmailAddress: { emailAddress: email },
           fullName: name,
+          publicMetadata: {
+            role,
+            onboardingComplete: true,
+          },
         } as any,
       });
     } else {

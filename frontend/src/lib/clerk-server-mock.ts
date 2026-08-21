@@ -4,10 +4,10 @@ import { cookies } from "next/headers";
 export const auth = async () => {
   const cookieStore = await cookies();
   const mockUserEmail = cookieStore.get("mock_user_email")?.value || null;
-  const mockUserId = cookieStore.get("mock_user_id")?.value || null;
+  const mockUserId = cookieStore.get("mock_user_id")?.value || (mockUserEmail ? `mock_${mockUserEmail.replace(/[^a-zA-Z0-9]/g, "")}` : null);
   const mockUserName = cookieStore.get("mock_user_name")?.value || null;
   const mockOnboardingComplete = cookieStore.get("mock_user_onboarding_complete")?.value === "true";
-  const mockUserRole = cookieStore.get("mock_user_role")?.value || null;
+  const mockUserRole = cookieStore.get("mock_user_role")?.value || (mockUserEmail?.includes("landlord") ? "landlord" : (mockUserEmail?.includes("tenant") ? "tenant" : "landlord"));
 
   return {
     userId: mockUserId,
@@ -31,11 +31,11 @@ export const auth = async () => {
 
 auth.protect = async () => {
   const cookieStore = await cookies();
-  const mockUserId = cookieStore.get("mock_user_id")?.value || null;
   const mockUserEmail = cookieStore.get("mock_user_email")?.value || null;
+  const mockUserId = cookieStore.get("mock_user_id")?.value || (mockUserEmail ? `mock_${mockUserEmail.replace(/[^a-zA-Z0-9]/g, "")}` : null);
   const mockUserName = cookieStore.get("mock_user_name")?.value || null;
   const mockOnboardingComplete = cookieStore.get("mock_user_onboarding_complete")?.value === "true";
-  const mockUserRole = cookieStore.get("mock_user_role")?.value || null;
+  const mockUserRole = cookieStore.get("mock_user_role")?.value || (mockUserEmail?.includes("landlord") ? "landlord" : (mockUserEmail?.includes("tenant") ? "tenant" : "landlord"));
 
   if (!mockUserId) {
     throw new Error("Auth required (mocked)");
@@ -56,8 +56,8 @@ auth.protect = async () => {
 
 auth.getToken = async () => {
   const cookieStore = await cookies();
-  const mockUserId = cookieStore.get("mock_user_id")?.value || null;
   const mockUserEmail = cookieStore.get("mock_user_email")?.value || null;
+  const mockUserId = cookieStore.get("mock_user_id")?.value || (mockUserEmail ? `mock_${mockUserEmail.replace(/[^a-zA-Z0-9]/g, "")}` : null);
   const mockUserName = cookieStore.get("mock_user_name")?.value || null;
   if (!mockUserEmail) return null;
   const encodeBase64Url = (str: string) => {
@@ -68,11 +68,11 @@ auth.getToken = async () => {
   };
   const header = { alg: "none", typ: "JWT" };
   const payload = {
-    sub: mockUserId,
+    sub: mockUserId || "user_mock",
     email: mockUserEmail,
-    name: mockUserName,
+    name: mockUserName || "Mock User",
     iss: "https://test.clerk.dev",
-    exp: Math.floor(Date.now() / 1000) + 3600 * 24,
+    exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 7,
   };
   return `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}.`;
 };
@@ -108,10 +108,10 @@ export const clerkClient = async () => {
 export function clerkMiddleware(handler: any) {
   return async (req: any, event: any) => {
     const mockUserEmail = req.cookies?.get("mock_user_email")?.value || null;
-    const mockUserId = req.cookies?.get("mock_user_id")?.value || null;
+    const mockUserId = req.cookies?.get("mock_user_id")?.value || (mockUserEmail ? `mock_${mockUserEmail.replace(/[^a-zA-Z0-9]/g, "")}` : null);
     const mockUserName = req.cookies?.get("mock_user_name")?.value || null;
     const mockOnboardingComplete = req.cookies?.get("mock_user_onboarding_complete")?.value === "true";
-    const mockUserRole = req.cookies?.get("mock_user_role")?.value || null;
+    const mockUserRole = req.cookies?.get("mock_user_role")?.value || (mockUserEmail?.includes("landlord") ? "landlord" : (mockUserEmail?.includes("tenant") ? "tenant" : "landlord"));
 
     const mockAuthResult = {
       userId: mockUserId,
@@ -134,11 +134,11 @@ export function clerkMiddleware(handler: any) {
         };
         const header = { alg: "none", typ: "JWT" };
         const payload = {
-          sub: mockUserId,
+          sub: mockUserId || "user_mock",
           email: mockUserEmail,
-          name: mockUserName,
+          name: mockUserName || "Mock User",
           iss: "https://test.clerk.dev",
-          exp: Math.floor(Date.now() / 1000) + 3600 * 24,
+          exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 7,
         };
         return `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}.`;
       },

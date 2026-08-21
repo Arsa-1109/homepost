@@ -490,33 +490,43 @@ export default function LandlordUnitsPage() {
       try {
         const token = await getToken();
         const data = await fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token);
-        setProperties(data);
-        if (data.length > 0) {
+        const validProps = Array.isArray(data) ? data : [];
+        setProperties(validProps);
+        if (validProps.length > 0) {
           const urlParams = new URLSearchParams(window.location.search);
           const initialPropertyId = urlParams.get("property_id");
           if (
             initialPropertyId &&
-            data.some((p) => p.id === initialPropertyId)
+            validProps.some((p) => p.id === initialPropertyId)
           ) {
             setSelectedProperty(initialPropertyId);
           } else {
-            setSelectedProperty(data[0].id);
+            setSelectedProperty(validProps[0].id);
           }
         } else {
+          setSelectedProperty("");
+          setUnits([]);
           setUnitsLoading(false);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load landlord properties for units:", err);
+        setProperties([]);
+        setSelectedProperty("");
+        setUnits([]);
         setUnitsLoading(false);
       } finally {
         setLoading(false);
       }
     }
     loadProps();
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   const loadUnits = async () => {
-    if (!isLoaded || !selectedProperty) return;
+    if (!isLoaded || !selectedProperty) {
+      setUnits([]);
+      setUnitsLoading(false);
+      return;
+    }
     setUnitsLoading(true);
     try {
       const token = await getToken();
@@ -525,9 +535,10 @@ export default function LandlordUnitsPage() {
         {},
         token
       );
-      setUnits(data || []);
+      setUnits(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load units for property:", err);
+      setUnits([]);
     } finally {
       setUnitsLoading(false);
     }
@@ -536,7 +547,7 @@ export default function LandlordUnitsPage() {
   useEffect(() => {
     if (!isLoaded) return;
     loadUnits();
-  }, [selectedProperty, isLoaded]);
+  }, [selectedProperty, isLoaded, getToken]);
 
   // Single unit creation
   const handleCreateSingle = async (e: React.FormEvent) => {

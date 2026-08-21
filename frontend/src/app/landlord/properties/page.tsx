@@ -394,20 +394,22 @@ function LandlordPropertiesContent() {
     try {
       const token = await getToken();
       const data = await fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token);
-      setProperties(data);
-      if (data.length > 0) {
-        const unitPromises = data.map((p) =>
+      const validProps = Array.isArray(data) ? data : [];
+      setProperties(validProps);
+      if (validProps.length > 0) {
+        const unitPromises = validProps.map((p) =>
           fetchAPI<any[]>(`/api/v1/landlord/properties/${p.id}/units`, {}, token).catch(() => [])
         );
         const unitsResults = await Promise.all(unitPromises);
-        const total = unitsResults.reduce((acc, units) => acc + units.length, 0);
+        const total = unitsResults.reduce((acc, units) => acc + (Array.isArray(units) ? units.length : 0), 0);
         setTotalUnitsCount(total);
       } else {
         setTotalUnitsCount(0);
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to load properties.");
+      console.error("Failed to load landlord properties:", err);
+      setProperties([]);
+      setTotalUnitsCount(0);
     } finally {
       setLoading(false);
     }
@@ -416,7 +418,7 @@ function LandlordPropertiesContent() {
   useEffect(() => {
     if (!isLoaded) return;
     loadData();
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   useEffect(() => {
     setCurrentPage(1);

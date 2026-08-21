@@ -53,43 +53,58 @@ export async function apiFetch<T = unknown>(
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
     const clerkGlobal = (window as any).Clerk;
-    if (clerkGlobal?.session) {
+    const isRealUserPresent = Boolean(clerkGlobal?.user || clerkGlobal?.session?.user);
+
+    if (isRealUserPresent) {
+      // Clear any lingering demo state from previous sessions
       try {
-        activeToken = await clerkGlobal.session.getToken();
-      } catch (err) {
-        console.error("Failed to automatically get Clerk token:", err);
+        localStorage.removeItem("mock_user_email");
+        localStorage.removeItem("mock_user_name");
+        localStorage.removeItem("mock_user_id");
+        localStorage.removeItem("mock_user_role");
+        localStorage.removeItem("mock_user_onboarding_complete");
+        document.cookie = "mock_user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0";
+      } catch (e) {
+        // ignore
       }
-    }
 
-    if (!activeToken) {
-      // Short poll (max 500ms) to see if Clerk initializes
-      const clerk = await new Promise<any>((resolve) => {
-        if ((window as any).Clerk?.loaded || (window as any).Clerk?.session) {
-          resolve((window as any).Clerk);
-          return;
-        }
-        const interval = setInterval(() => {
-          if ((window as any).Clerk?.loaded || (window as any).Clerk?.session) {
-            clearInterval(interval);
-            resolve((window as any).Clerk);
-          }
-        }, 30);
-        setTimeout(() => {
-          clearInterval(interval);
-          resolve((window as any).Clerk || null);
-        }, 500);
-      });
-
-      if (clerk?.session) {
+      if (clerkGlobal?.session) {
         try {
-          activeToken = await clerk.session.getToken();
+          activeToken = await clerkGlobal.session.getToken();
         } catch (err) {
           console.error("Failed to automatically get Clerk token:", err);
         }
       }
-    }
 
-    if (!activeToken) {
+      if (!activeToken) {
+        // Short poll (max 500ms) to see if Clerk session token resolves
+        const clerk = await new Promise<any>((resolve) => {
+          if ((window as any).Clerk?.session) {
+            resolve((window as any).Clerk);
+            return;
+          }
+          const interval = setInterval(() => {
+            if ((window as any).Clerk?.session) {
+              clearInterval(interval);
+              resolve((window as any).Clerk);
+            }
+          }, 30);
+          setTimeout(() => {
+            clearInterval(interval);
+            resolve((window as any).Clerk || null);
+          }, 500);
+        });
+
+        if (clerk?.session) {
+          try {
+            activeToken = await clerk.session.getToken();
+          } catch (err) {
+            console.error("Failed to automatically get Clerk token after polling:", err);
+          }
+        }
+      }
+    } else {
+      // No real Clerk user session present — only then evaluate demo mode
       const getCookie = (name: string) => {
         if (typeof document === "undefined") return null;
         const match = document.cookie.match(new RegExp("(^|;\\s*)(" + name + ")=([^;]*)"));
@@ -100,18 +115,10 @@ export async function apiFetch<T = unknown>(
       const mockId = localStorage.getItem("mock_user_id") || getCookie("mock_user_id");
       const mockRole = localStorage.getItem("mock_user_role") || getCookie("mock_user_role");
       
-      const ALLOWED_DEMO_IDS = new Set([
-        "user_demo_landlord_001",
-        "user_demo_tenant_001",
-        "user_demo_tenant_002",
-      ]);
-
-      // Only generate synthetic demo JWT if the user is explicitly in a demo session
-      if (mockId && ALLOWED_DEMO_IDS.has(mockId)) {
-        const isTenantRoute = path.includes("/tenant") || mockRole === "tenant" || (mockEmail && mockEmail.includes("tenant"));
-        const resolvedId = mockId;
+      if (mockId || mockEmail) {
+        const resolvedId = mockId || `mock_${(mockEmail || "user").replace(/[^a-zA-Z0-9]/g, "")}`;
         const resolvedEmail = mockEmail || ((resolvedId === "user_demo_landlord_001") ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io");
-        const resolvedName = (resolvedId === "user_demo_landlord_001") ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins";
+        const resolvedName = localStorage.getItem("mock_user_name") || getCookie("mock_user_name") || ((resolvedId === "user_demo_landlord_001") ? "Marcus Vance (Demo Landlord)" : (resolvedId === "user_demo_tenant_001" ? "Sarah Jenkins" : "Mock User"));
 
         const header = { alg: "none", typ: "JWT" };
         const payload = {
@@ -125,7 +132,6 @@ export async function apiFetch<T = unknown>(
         activeToken = `${b64(JSON.stringify(header))}.${b64(JSON.stringify(payload))}.`;
       }
     }
-
   }
 
   const headers: Record<string, string> = {

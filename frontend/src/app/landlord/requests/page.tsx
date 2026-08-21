@@ -295,10 +295,8 @@ export function RequestCard({
   isHighlighted?: boolean;
 }) {
   const [status, setStatus] = useState(req.status);
-  const [notes, setNotes] = useState(req.landlord_notes || "");
+  const [notes, setNotes] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [existingKeys, setExistingKeys] = useState<string[]>(req.landlord_image_keys || []);
-  const [existingUrls, setExistingUrls] = useState<string[]>(req.landlord_image_urls || []);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -313,38 +311,36 @@ export function RequestCard({
 
   useEffect(() => {
     setStatus(req.status);
-    setNotes(req.landlord_notes || "");
-    setExistingKeys(req.landlord_image_keys || []);
-    setExistingUrls(req.landlord_image_urls || []);
-  }, [req]);
-
-  const handleRemoveExistingAttachment = (index: number) => {
-    setExistingKeys((prev) => prev.filter((_, i) => i !== index));
-    setExistingUrls((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, [req.status]);
 
   const handleUpdate = async () => {
     setIsUpdating(true);
     setError(null);
     try {
-      let imageKeys: string[] = [...existingKeys];
+      let newImageKeys: string[] = [];
       
       if (files.length > 0) {
         for (const file of files) {
           const key = await uploadFile(file, "maintenance");
-          imageKeys.push(key);
+          newImageKeys.push(key);
         }
+      }
+
+      const payload: Record<string, any> = { status };
+      const trimmedNotes = notes.trim();
+      if (trimmedNotes) {
+        payload.landlord_notes = trimmedNotes;
+      }
+      if (newImageKeys.length > 0) {
+        payload.landlord_image_keys = newImageKeys;
+        payload.attachments = newImageKeys;
       }
 
       await fetchAPI(`/api/v1/landlord/maintenance/${req.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ 
-          status, 
-          landlord_notes: notes || null,
-          landlord_image_keys: imageKeys,
-          attachments: imageKeys,
-        }),
+        body: JSON.stringify(payload),
       });
+      setNotes("");
       setFiles([]);
       toast.success("Maintenance request updated successfully!");
       setTimelineRefreshKey(k => k + 1);
@@ -359,9 +355,8 @@ export function RequestCard({
 
   const hasChanges =
     status !== req.status ||
-    notes !== (req.landlord_notes || "") ||
-    files.length > 0 ||
-    existingKeys.length !== (req.landlord_image_keys?.length || 0);
+    notes.trim().length > 0 ||
+    files.length > 0;
 
   const getStatusColor = (s: string) => {
     switch (s) {
@@ -379,9 +374,8 @@ export function RequestCard({
       const ALLOWED_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf", ".doc", ".docx", ".mp4", ".mov", ".webm", ".m4v"];
       const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
-      const currentTotal = existingKeys.length + files.length;
-      if (currentTotal + selectedFiles.length > 3) {
-        toast.error(`You can only attach up to 3 files in total. You currently have ${currentTotal} file(s).`);
+      if (files.length + selectedFiles.length > 3) {
+        toast.error(`You can attach up to 3 files per update. You currently have ${files.length} file(s) selected.`);
         e.target.value = "";
         return;
       }
@@ -399,7 +393,7 @@ export function RequestCard({
           return;
         }
       }
-      setFiles((prev) => [...prev, ...selectedFiles].slice(0, 3 - existingKeys.length));
+      setFiles((prev) => [...prev, ...selectedFiles].slice(0, 3));
       e.target.value = "";
     }
   };
@@ -492,37 +486,37 @@ export function RequestCard({
                     </div>
                   )}
 
-                  {existingUrls.length > 0 && (
-                    <div className="space-y-2.5">
-                      <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
-                        Landlord Resolution Files ({existingUrls.length})
-                      </h4>
-                      <div className="flex flex-wrap gap-3">
-                        {existingUrls.map((url, idx) => (
-                          <div key={idx} className="relative group/thumb flex-shrink-0">
-                            <AttachmentThumbnail url={url} onViewImage={setLightboxUrl} />
-                            {req.status !== "closed" && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveExistingAttachment(idx);
-                                }}
-                                className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-all cursor-pointer z-20 active:scale-95"
-                                title="Delete attachment"
-                                aria-label="Delete attachment"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
+                  {/* Active Landlord Notes / Latest Resolution Summary */}
+                  {(req.landlord_notes || (req.landlord_image_urls && req.landlord_image_urls.length > 0)) && (
+                    <div className="space-y-3 p-5 rounded-2xl bg-[rgb(var(--ml-accent))]/5 border border-[rgb(var(--ml-accent))]/20 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-accent))] uppercase tracking-wider flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
+                          Latest Landlord Notes / Resolution Summary
+                        </h4>
                       </div>
+                      {req.landlord_notes && (
+                        <div className="text-xs sm:text-sm text-[rgb(var(--ml-text-primary))] leading-relaxed whitespace-pre-wrap font-medium">
+                          {req.landlord_notes}
+                        </div>
+                      )}
+                      {req.landlord_image_urls && req.landlord_image_urls.length > 0 && (
+                        <div className="pt-2">
+                          <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block mb-2">
+                            Resolution Files ({req.landlord_image_urls.length})
+                          </span>
+                          <div className="flex flex-wrap gap-3">
+                            {req.landlord_image_urls.map((url, idx) => (
+                              <AttachmentThumbnail key={idx} url={url} onViewImage={setLightboxUrl} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
       
-                {/* Action Sidebar */}
+                {/* Action Sidebar: Action Composer */}
                 <div className="lg:w-80 flex flex-col space-y-5 border-t lg:border-t-0 lg:border-l border-border/40 pt-6 lg:pt-0 lg:pl-8">
                   <div>
                     <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider mb-3">
@@ -547,12 +541,14 @@ export function RequestCard({
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">Landlord Notes (Optional)</span>
+                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
+                      Add Update Note (Optional)
+                    </span>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       disabled={req.status === "closed"}
-                      placeholder="Add an internal note or message to tenant..."
+                      placeholder="Add an update or resolution note for this action..."
                       className="w-full bg-[rgb(var(--ml-bg-primary))] border border-border/60 rounded-xl p-3.5 text-xs font-medium outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all min-h-[96px] resize-none placeholder:text-[rgb(var(--ml-text-secondary))]/60 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
@@ -560,14 +556,14 @@ export function RequestCard({
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider">
-                        Attach Photos/Docs (Max 3)
+                        Attach Files to Update (Max 3)
                       </span>
                       <span className="text-[10px] font-semibold text-[rgb(var(--ml-text-secondary))]">
-                        {existingKeys.length + files.length}/3 total
+                        {files.length}/3
                       </span>
                     </div>
 
-                    {existingKeys.length + files.length < 3 && req.status !== "closed" && (
+                    {files.length < 3 && req.status !== "closed" && (
                       <div className="relative group/upload">
                         <input 
                           type="file" 
@@ -703,13 +699,15 @@ function LandlordMaintenanceContent() {
     try {
       const token = await getToken();
       const [propsData, reqsData] = await Promise.all([
-        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token),
-        fetchAPI<MaintenanceRequest[]>("/api/v1/landlord/maintenance", {}, token)
+        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token).catch(() => []),
+        fetchAPI<MaintenanceRequest[]>("/api/v1/landlord/maintenance", {}, token).catch(() => [])
       ]);
-      setProperties(propsData);
-      setRequests(reqsData);
+      setProperties(Array.isArray(propsData) ? propsData : []);
+      setRequests(Array.isArray(reqsData) ? reqsData : []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load landlord requests:", err);
+      setProperties([]);
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -718,7 +716,7 @@ function LandlordMaintenanceContent() {
   useEffect(() => {
     if (!isLoaded) return;
     loadData();
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   useEffect(() => {
     if (!isLoaded || !selectedProperty || selectedProperty === "all") {

@@ -192,14 +192,23 @@ function LandlordAnnouncementsContent() {
     try {
       const token = await getToken();
       const [props, anns] = await Promise.all([
-        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token),
-        fetchAPI<Announcement[]>("/api/v1/landlord/announcements", {}, token)
+        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token).catch(() => []),
+        fetchAPI<Announcement[]>("/api/v1/landlord/announcements", {}, token).catch(() => [])
       ]);
-      setProperties(props);
-      if (props.length > 0) setSelectedProperty(props[0].id);
-      setAnnouncements(anns);
+      const validProps = Array.isArray(props) ? props : [];
+      const validAnns = Array.isArray(anns) ? anns : [];
+      setProperties(validProps);
+      if (validProps.length > 0) {
+        setSelectedProperty((prev) => (validProps.some((p) => p.id === prev) ? prev : validProps[0].id));
+      } else {
+        setSelectedProperty("");
+      }
+      setAnnouncements(validAnns);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load landlord announcements:", err);
+      setProperties([]);
+      setSelectedProperty("");
+      setAnnouncements([]);
     } finally {
       setLoading(false);
     }
@@ -208,7 +217,7 @@ function LandlordAnnouncementsContent() {
   useEffect(() => {
     if (!isLoaded) return;
     loadData();
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   useEffect(() => {
     if (!isLoaded || !selectedProperty) return;

@@ -363,7 +363,7 @@ export default function AccessRequestsPage() {
   useEffect(() => {
     if (!isLoaded) return;
     loadData();
-  }, [isLoaded]);
+  }, [isLoaded, getToken]);
 
   const handleRemove = (tenantId: string) => {
     setRequests(prev => prev.filter(t => t.id !== tenantId));
