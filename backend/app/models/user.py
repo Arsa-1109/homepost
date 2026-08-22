@@ -34,7 +34,10 @@ class User(SQLModel, table=True):
     clerk_id: str = Field(
         sa_column=Column(String, unique=True, index=True, nullable=False),
     )
-    email: str = Field(max_length=320, index=True)
+    email: Optional[str] = Field(
+        default=None,
+        sa_column=Column(String(320), unique=True, index=True, nullable=True),
+    )
     full_name: str = Field(default="", max_length=255)
     role: UserRole = Field(
         sa_column=Column(

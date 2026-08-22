@@ -87,16 +87,20 @@ async def test_forged_alg_none_token_rejected(client: AsyncClient, monkeypatch):
 
 
 async def test_demo_allowlisted_token_accepted(client: AsyncClient, db_session, monkeypatch):
-    """In production (MOCK_AUTH=false), unsigned tokens for allowlisted demo accounts should be permitted."""
+    """
+    Unsigned tokens for allowlisted demo accounts are permitted ONLY when
+    ENABLE_DEMO_AUTH is explicitly true in a non-production environment (C2).
+    """
     import base64
     import json
     import uuid
     from app.core.config import get_settings
 
-    # Simulate production mode
+    # Simulate an explicit demo deployment (non-production, demo auth opted in)
     settings = get_settings()
     monkeypatch.setattr(settings, "mock_auth", False)
     monkeypatch.setenv("MOCK_AUTH", "false")
+    monkeypatch.setattr(settings, "enable_demo_auth", True)
 
     # Seed demo landlord user in test DB
     demo_landlord = User(

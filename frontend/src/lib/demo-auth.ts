@@ -1,31 +1,20 @@
 /**
  * Instant Demo Authentication Utility
  *
- * Provides zero-friction test-drive access for landing page visitors:
+ * Provides zero-friction test-drive access for landing page visitors —
+ * ONLY in builds where NEXT_PUBLIC_DEMO_MODE === "true" (C5).
+ *
  * - Owner Demo: landlord@homepost.demo (Marcus Vance) -> /landlord/dashboard
  * - Resident Demo: sarah.jenkins@demo.homepost.io (Sarah Jenkins) -> /tenant/dashboard
+ *
+ * Creation paths (startDemoSession / isDemoSession / getDemoUser) are inert
+ * when the build flag is off. Cleanup helpers (clearDemoSession /
+ * sanitizeSession) stay active unconditionally so stale demo state from
+ * older cached bundles is still wiped when a real user signs in.
  */
 
-function encodeBase64Url(str: string): string {
-  if (typeof window === "undefined") return "";
-  return btoa(unescape(encodeURIComponent(str)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-}
-
-export function generateDemoJWT(email: string, name: string, sub: string): string {
-  const header = { alg: "none", typ: "JWT" };
-  const payload = {
-    sub: sub,
-    email: email,
-    name: name,
-    iss: "https://test.clerk.dev",
-    exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 7, // 7 days
-  };
-
-  return `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}.`;
-}
+import { ALLOWED_DEMO_IDS, IS_DEMO_MODE } from "@/lib/demo-mode";
+import { generateDemoJWT } from "@/lib/demo-token";
 
 export interface DemoSessionConfig {
   email: string;
@@ -53,6 +42,7 @@ export const DEMO_ACCOUNTS: Record<"owner" | "tenant", DemoSessionConfig> = {
 };
 
 export function startDemoSession(role: "owner" | "tenant"): string {
+  if (!IS_DEMO_MODE) return "/";
   const config = DEMO_ACCOUNTS[role];
   if (!config) return "/";
 
@@ -77,45 +67,30 @@ export function startDemoSession(role: "owner" | "tenant"): string {
         getToken: async () => mockToken,
       },
     };
-
-    // 4. Trigger global mock state if available
-    if (typeof (window as any).mockLogin === "function") {
-      try {
-        (window as any).mockLogin(config.email, config.name, config.userId);
-      } catch (err) {
-        console.warn("mockLogin hook execution warning:", err);
-      }
-    }
   }
 
   return config.dashboardUrl;
 }
 
-const ALLOWED_DEMO_COOKIE_IDS = new Set([
-  "user_demo_landlord_001",
-  "user_demo_tenant_001",
-  "user_demo_tenant_002",
-]);
-
 export function isDemoSession(): boolean {
-  if (typeof window === "undefined") return false;
+  if (!IS_DEMO_MODE || typeof window === "undefined") return false;
   const clerk = (window as any).Clerk;
   // If a live Clerk user is present (not mock or demo)
-  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_COOKIE_IDS.has(clerk.user.id)) {
+  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_IDS.has(clerk.user.id)) {
     return false;
   }
 
   const mockId = localStorage.getItem("mock_user_id");
   const hasMockCookie = document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
   const effectiveId = mockId || hasMockCookie;
-  return Boolean(effectiveId && ALLOWED_DEMO_COOKIE_IDS.has(effectiveId));
+  return Boolean(effectiveId && ALLOWED_DEMO_IDS.has(effectiveId));
 }
 
 export function sanitizeSession(isSignedIn?: boolean): void {
   if (typeof window === "undefined") return;
   const clerk = (window as any).Clerk;
   // Only sanitize demo session if a live Clerk user is authenticated
-  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_COOKIE_IDS.has(clerk.user.id)) {
+  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_IDS.has(clerk.user.id)) {
     clearDemoSession();
   }
 }
@@ -126,14 +101,14 @@ export function getDemoUser(): {
   userId: string;
   role: "landlord" | "tenant";
 } | null {
-  if (typeof window === "undefined") return null;
+  if (!IS_DEMO_MODE || typeof window === "undefined") return null;
   if (!isDemoSession()) return null;
 
   const email = localStorage.getItem("mock_user_email") || "";
   const name = localStorage.getItem("mock_user_name") || "Demo User";
   const userId = localStorage.getItem("mock_user_id") || "";
   const isTenant = email.includes("tenant") || email.includes("sarah");
-  
+
   if (!userId && !email) return null;
   return {
     email: email || (isTenant ? DEMO_ACCOUNTS.tenant.email : DEMO_ACCOUNTS.owner.email),
@@ -146,9 +121,9 @@ export function getDemoUser(): {
 export function clearDemoSession(): void {
   if (typeof window === "undefined") return;
   const mockId = localStorage.getItem("mock_user_id") || document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
-  
+
   // Only wipe if it is actually one of the designated demo accounts!
-  const isDemo = Boolean(mockId && ALLOWED_DEMO_COOKIE_IDS.has(mockId));
+  const isDemo = Boolean(mockId && ALLOWED_DEMO_IDS.has(mockId));
   if (!isDemo && mockId) {
     // This is a legitimate custom mock user (e.g. mock_...), do NOT destroy their session!
     return;
@@ -174,5 +149,3 @@ export function clearDemoSession(): void {
   deleteCookie("mock_user_role");
   deleteCookie("mock_user_onboarding_complete");
 }
-
-

@@ -30,20 +30,24 @@ async def test_get_me(client: AsyncClient, seed_data):
 
 
 async def test_sync_user(client: AsyncClient, seed_data):
-    """POST /onboarding/sync updates user profile attributes."""
+    """
+    POST /onboarding/sync updates profile attributes for the JWT-bound email.
+    Roles are never inherited from client-supplied emails (C1 hardening).
+    """
     user = seed_data["unassigned"]
     app.dependency_overrides[get_current_user] = lambda: user
 
     try:
         response = await client.post(
             "/api/v1/onboarding/sync",
-            json={"email": "synced@homepost.dev", "full_name": "Synced User"},
+            json={"email": user.email, "full_name": "Synced User"},
         )
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
-        assert data["user"]["email"] == "synced@homepost.dev"
+        assert data["user"]["email"] == user.email
         assert data["user"]["full_name"] == "Synced User"
+        assert data["user"]["role"] == "unassigned"
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 

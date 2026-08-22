@@ -58,18 +58,22 @@ async def sync_user(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    user.email = payload.email
-    user.full_name = payload.full_name
+    """
+    Sync profile fields for the JWT-verified identity.
 
-    # If the user is unassigned, check if an existing record with this email has an assigned role
-    if user.role == UserRole.UNASSIGNED and payload.email:
-        statement = select(User).where(User.email == payload.email, User.id != user.id)
-        result = await session.execute(statement)
-        existing_user = result.scalar_one_or_none()
-        if existing_user and existing_user.role != UserRole.UNASSIGNED:
-            user.role = existing_user.role
-            if existing_user.requested_landlord_id:
-                user.requested_landlord_id = existing_user.requested_landlord_id
+    The client may only confirm the email already bound to its Clerk identity.
+    Roles are NEVER derived from client-supplied emails (C1 hardening).
+    """
+    if payload.email != user.email:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": "The submitted email does not match your verified account email.",
+                "code": "EMAIL_IDENTITY_MISMATCH",
+            },
+        )
+
+    user.full_name = payload.full_name
 
     session.add(user)
     await session.commit()

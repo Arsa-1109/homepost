@@ -6,9 +6,17 @@
  * 2. Prefix the backend API URL
  * 3. Handle 401/403 gracefully with empathetic redirects
  *
+ * Demo sessions attach a token ONLY in builds where NEXT_PUBLIC_DEMO_MODE is
+ * "true"; otherwise requests proceed without an Authorization header and the
+ * backend rejects unauthenticated calls cleanly (C5).
+ *
  * Usage:
  *   const data = await apiFetch("/api/v1/properties", { method: "GET" });
  */
+
+import { ALLOWED_DEMO_IDS, IS_DEMO_MODE } from "@/lib/demo-mode";
+import { generateDemoJWT } from "@/lib/demo-token";
+import { DEMO_ACCOUNTS } from "@/lib/demo-auth";
 
 export interface UserRoleResponse {
   id: string;
@@ -19,6 +27,62 @@ export interface UserRoleResponse {
   requested_landlord_id?: string | null;
   created_at?: string;
   updated_at?: string;
+}
+
+const MOCK_STORAGE_KEYS = [
+  "mock_user_email",
+  "mock_user_name",
+  "mock_user_id",
+  "mock_user_role",
+  "mock_user_onboarding_complete",
+] as const;
+
+function clearLingeringMockStorage(): void {
+  try {
+    for (const key of MOCK_STORAGE_KEYS) {
+      localStorage.removeItem(key);
+    }
+    document.cookie = "mock_user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0";
+  } catch (e) {
+    // ignore storage access errors
+  }
+}
+
+async function getClerkToken(): Promise<string | null> {
+  const clerkGlobal = (window as any).Clerk;
+  if (!clerkGlobal?.session) return null;
+  try {
+    return await clerkGlobal.session.getToken();
+  } catch (err) {
+    console.error("Failed to get Clerk session token:", err);
+    return null;
+  }
+}
+
+/**
+ * Resolve a demo bearer token — reachable only in flagged demo builds.
+ * Returns null unless the stored mock identity is an allowlisted demo account.
+ */
+function resolveDemoToken(): string | null {
+  if (!IS_DEMO_MODE || typeof window === "undefined") return null;
+
+  const getCookie = (name: string) => {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(new RegExp("(^|;\\s*)(" + name + ")=([^;]*)"));
+    return match ? decodeURIComponent(match[3]) : null;
+  };
+
+  const mockId = localStorage.getItem("mock_user_id") || getCookie("mock_user_id");
+  if (!mockId || !ALLOWED_DEMO_IDS.has(mockId)) return null;
+
+  const config =
+    Object.values(DEMO_ACCOUNTS).find((account) => account.userId === mockId) ?? null;
+
+  return generateDemoJWT(
+    localStorage.getItem("mock_user_email") || getCookie("mock_user_email") || config?.email || "",
+    localStorage.getItem("mock_user_name") || getCookie("mock_user_name") || config?.name || "",
+    mockId,
+  );
 }
 
 /**
@@ -57,24 +121,9 @@ export async function apiFetch<T = unknown>(
 
     if (isRealUserPresent) {
       // Clear any lingering demo state from previous sessions
-      try {
-        localStorage.removeItem("mock_user_email");
-        localStorage.removeItem("mock_user_name");
-        localStorage.removeItem("mock_user_id");
-        localStorage.removeItem("mock_user_role");
-        localStorage.removeItem("mock_user_onboarding_complete");
-        document.cookie = "mock_user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0";
-      } catch (e) {
-        // ignore
-      }
+      clearLingeringMockStorage();
 
-      if (clerkGlobal?.session) {
-        try {
-          activeToken = await clerkGlobal.session.getToken();
-        } catch (err) {
-          console.error("Failed to automatically get Clerk token:", err);
-        }
-      }
+      activeToken = await getClerkToken();
 
       if (!activeToken) {
         // Short poll (max 500ms) to see if Clerk session token resolves
@@ -104,33 +153,8 @@ export async function apiFetch<T = unknown>(
         }
       }
     } else {
-      // No real Clerk user session present — only then evaluate demo mode
-      const getCookie = (name: string) => {
-        if (typeof document === "undefined") return null;
-        const match = document.cookie.match(new RegExp("(^|;\\s*)(" + name + ")=([^;]*)"));
-        return match ? decodeURIComponent(match[3]) : null;
-      };
-
-      const mockEmail = localStorage.getItem("mock_user_email") || getCookie("mock_user_email");
-      const mockId = localStorage.getItem("mock_user_id") || getCookie("mock_user_id");
-      const mockRole = localStorage.getItem("mock_user_role") || getCookie("mock_user_role");
-      
-      if (mockId || mockEmail) {
-        const resolvedId = mockId || `mock_${(mockEmail || "user").replace(/[^a-zA-Z0-9]/g, "")}`;
-        const resolvedEmail = mockEmail || ((resolvedId === "user_demo_landlord_001") ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io");
-        const resolvedName = localStorage.getItem("mock_user_name") || getCookie("mock_user_name") || ((resolvedId === "user_demo_landlord_001") ? "Marcus Vance (Demo Landlord)" : (resolvedId === "user_demo_tenant_001" ? "Sarah Jenkins" : "Mock User"));
-
-        const header = { alg: "none", typ: "JWT" };
-        const payload = {
-          sub: resolvedId,
-          email: resolvedEmail,
-          name: resolvedName,
-          iss: "https://test.clerk.dev",
-          exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 7,
-        };
-        const b64 = (s: string) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-        activeToken = `${b64(JSON.stringify(header))}.${b64(JSON.stringify(payload))}.`;
-      }
+      // No real Clerk user session present — demo tokens only behind the build flag.
+      activeToken = resolveDemoToken();
     }
   }
 

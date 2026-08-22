@@ -4,7 +4,7 @@ sqlmodel==0.0.38
 asyncpg==0.30.*
 aiosqlite==0.20.*
 alembic==1.14.*
-python-jose[cryptography]==3.3.*
+pyjwt[crypto]==2.*
 httpx==0.28.*
 boto3==1.35.*
 resend==2.5.*

@@ -86,6 +86,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
     max_reopen_days: int = 14
     mock_auth: bool = False
+    enable_demo_auth: bool = False  # Explicit opt-in for unsigned demo tokens; never in production
     environment: str = "development"  # "development" | "staging" | "production"
 
     # --- Upload Constraints ---

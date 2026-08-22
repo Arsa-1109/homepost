@@ -12,8 +12,11 @@ Data Isolation:
   filter by this unit_id.
 """
 
+import logging
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -22,6 +25,8 @@ from app.core.database import get_session
 from app.core.security import verify_clerk_token, ALLOWED_DEMO_USER_IDS
 from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
+
+logger = logging.getLogger(__name__)
 
 # Bearer token extractor — looks for "Authorization: Bearer <token>"
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -117,15 +122,30 @@ async def get_current_user(
                 await session.refresh(user)
 
     if user is None:
-        # Auto-create on first API call (Clerk → PostgreSQL sync)
+        # Auto-create on first API call (Clerk → PostgreSQL sync).
+        # Email stays NULL when Clerk provides none — unique constraint treats
+        # NULLs as distinct, so email-less signups never collide.
         user = User(
             clerk_id=clerk_id,
-            email=payload.get("email", ""),
+            email=payload.get("email") or None,
             full_name=payload.get("name", ""),
             role=UserRole.UNASSIGNED,
         )
         session.add(user)
-        await session.commit()
+        try:
+            await session.commit()
+        except IntegrityError:
+            # Another verified identity already owns this email. The new
+            # account proceeds without one rather than hijacking or crashing.
+            await session.rollback()
+            logger.warning(
+                "User signup for clerk_id=%s claimed an email already owned by "
+                "another account; created account without an email binding.",
+                clerk_id,
+            )
+            user.email = None
+            session.add(user)
+            await session.commit()
         await session.refresh(user)
 
     return user

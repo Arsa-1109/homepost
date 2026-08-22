@@ -34,6 +34,10 @@ async def lifespan(application: FastAPI):
     - Shutdown: stop APScheduler, dispose database engine.
     """
     # --- Startup ---
+    from app.core.security import validate_secure_environment
+
+    validate_secure_environment(settings)
+
     raw_url = settings.database_url
     try:
         parsed = urlparse(raw_url)

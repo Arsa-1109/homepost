@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/Hero";
 import { Building2, Key, ArrowRight, Loader2, Wrench, Megaphone, FileText, Sun, Moon, LineChart, Users, Sparkles } from "lucide-react";
 import { startDemoSession } from "@/lib/demo-auth";
+import { IS_DEMO_MODE } from "@/lib/demo-mode";
 
 const DemoDashboard = dynamic(
   () => import("@/components/DemoDashboard").then((m) => m.DemoDashboard),
@@ -373,7 +374,7 @@ export default function LandingPage() {
           if (isMounted) {
             if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
               setHasRole(true);
-              if (typeof window !== "undefined") {
+              if (IS_DEMO_MODE && typeof window !== "undefined") {
                 document.cookie = `mock_user_role=${me.role}; path=/; max-age=604800; SameSite=Lax`;
                 document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
               }
@@ -603,17 +604,19 @@ export default function LandingPage() {
                         >
                           Enter Owner Portal
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleLaunchDemo("owner")}
-                          isLoading={launchingDemo === "owner"}
-                          className="w-full py-2.5 h-auto rounded-lg border border-[rgb(var(--ml-accent))]/30 bg-[rgb(var(--ml-accent))]/5 hover:bg-[rgb(var(--ml-accent))]/15 text-[rgb(var(--ml-accent))] font-bold text-sm transition-all flex items-center justify-center gap-1.5"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          <span>Try Owner Demo</span>
-                          <span className="text-xs opacity-75 font-normal ml-0.5">(Instant Access)</span>
-                        </Button>
+                        {IS_DEMO_MODE && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => handleLaunchDemo("owner")}
+                            isLoading={launchingDemo === "owner"}
+                            className="w-full py-2.5 h-auto rounded-lg border border-[rgb(var(--ml-accent))]/30 bg-[rgb(var(--ml-accent))]/5 hover:bg-[rgb(var(--ml-accent))]/15 text-[rgb(var(--ml-accent))] font-bold text-sm transition-all flex items-center justify-center gap-1.5"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            <span>Try Owner Demo</span>
+                            <span className="text-xs opacity-75 font-normal ml-0.5">(Instant Access)</span>
+                          </Button>
+                        )}
                       </div>
                     </motion.article>
 
@@ -641,17 +644,19 @@ export default function LandingPage() {
                         >
                           Access Tenant Portal
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => handleLaunchDemo("tenant")}
-                          isLoading={launchingDemo === "tenant"}
-                          className="w-full py-2.5 h-auto rounded-lg border border-border/80 bg-background/60 hover:bg-muted/60 text-foreground font-bold text-sm transition-all flex items-center justify-center gap-1.5"
-                        >
-                          <Sparkles className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
-                          <span>Try Resident Demo</span>
-                          <span className="text-xs text-muted-foreground font-normal ml-0.5">(Instant Access)</span>
-                        </Button>
+                        {IS_DEMO_MODE && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => handleLaunchDemo("tenant")}
+                            isLoading={launchingDemo === "tenant"}
+                            className="w-full py-2.5 h-auto rounded-lg border border-border/80 bg-background/60 hover:bg-muted/60 text-foreground font-bold text-sm transition-all flex items-center justify-center gap-1.5"
+                          >
+                            <Sparkles className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
+                            <span>Try Resident Demo</span>
+                            <span className="text-xs text-muted-foreground font-normal ml-0.5">(Instant Access)</span>
+                          </Button>
+                        )}
                       </div>
                     </motion.article>
                   </motion.div>
@@ -873,10 +878,12 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Contextual Demo Dashboard Area */}
-        <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
-          <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
-        </section>
+        {/* Contextual Demo Dashboard Area — demo builds only */}
+        {IS_DEMO_MODE && (
+          <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
+            <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
+          </section>
+        )}
       </main>
 
       {/* Footer */}
