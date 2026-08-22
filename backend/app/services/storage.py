@@ -14,6 +14,7 @@ Key format conventions:
   - Documents: documents/{property_id}/{uuid}.{ext}
 """
 
+import asyncio
 import uuid
 from typing import BinaryIO
 
@@ -74,6 +75,21 @@ def upload_file_to_r2(
     )
 
 
+async def upload_file_to_r2_async(
+    file_obj: BinaryIO,
+    object_key: str,
+    content_type: str | None = None
+) -> None:
+    """
+    Async wrapper around the synchronous botocore transfer.
+
+    boto3's upload_fileobj performs blocking network IO; running it via
+    asyncio.to_thread keeps the event loop free while preserving boto3's
+    retry/backoff semantics.
+    """
+    await asyncio.to_thread(upload_file_to_r2, file_obj, object_key, content_type)
+
+
 def generate_presigned_download_url(
     object_key: str,
     expires: int = 900,
@@ -107,40 +123,42 @@ def generate_presigned_download_url(
     return url
 
 
-def hydrate_maintenance_request(db_req, resp_model) -> None:
+async def generate_presigned_urls_batch(object_keys: list[str]) -> list[str]:
+    """
+    Generate presigned download URLs for many keys concurrently, off the loop.
+
+    Presigning is pure local signing (no network), but the botocore signer is
+    synchronous; fanning out across worker threads keeps large hydration
+    payloads from stalling the event loop. Keys that fail to sign are skipped.
+    """
+    if not object_keys:
+        return []
+
+    results = await asyncio.gather(
+        *(asyncio.to_thread(generate_presigned_download_url, key) for key in object_keys),
+        return_exceptions=True,
+    )
+    return [url for url in results if isinstance(url, str)]
+
+
+async def hydrate_maintenance_request(db_req, resp_model) -> None:
     """
     Populates image_urls and landlord_image_urls on the response model
-    by generating presigned download URLs for all keys.
+    by batch-generating presigned download URLs for all keys.
     """
-    urls = []
-    if db_req.image_keys:
-        for key in db_req.image_keys:
-            try:
-                urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-    resp_model.image_urls = urls
-
-    landlord_urls = []
-    if db_req.landlord_image_keys:
-        for key in db_req.landlord_image_keys:
-            try:
-                landlord_urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-    resp_model.landlord_image_urls = landlord_urls
+    resp_model.image_urls = await generate_presigned_urls_batch(
+        list(db_req.image_keys or [])
+    )
+    resp_model.landlord_image_urls = await generate_presigned_urls_batch(
+        list(db_req.landlord_image_keys or [])
+    )
 
 
-def hydrate_announcement(db_ann, resp_model) -> None:
+async def hydrate_announcement(db_ann, resp_model) -> None:
     """
     Populates attachment_urls on the response model
-    by generating presigned download URLs for all attachment keys.
+    by batch-generating presigned download URLs for all attachment keys.
     """
-    urls = []
-    if db_ann.attachment_keys:
-        for key in db_ann.attachment_keys:
-            try:
-                urls.append(generate_presigned_download_url(key))
-            except Exception:
-                pass
-    resp_model.attachment_urls = urls
+    resp_model.attachment_urls = await generate_presigned_urls_batch(
+        list(db_ann.attachment_keys or [])
+    )

@@ -17,7 +17,11 @@ from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequest
 from app.schemas.announcement import AnnouncementResponse
 from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
-from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request, hydrate_announcement
+from app.services.storage import (
+    hydrate_maintenance_request,
+    hydrate_announcement,
+    generate_presigned_urls_batch,
+)
 from app.core.limiter import limiter
 from fastapi import Request
 
@@ -106,7 +110,7 @@ async def submit_maintenance_request(
                 )
     
     resp = MaintenanceRequestResponse.model_validate(req)
-    hydrate_maintenance_request(req, resp)
+    await hydrate_maintenance_request(req, resp)
     return resp
 
 @router.get("/maintenance/{request_id}/events")
@@ -131,13 +135,9 @@ async def list_maintenance_events(
         data = event.model_dump()
         data["actor_name"] = user_name or "Unknown User"
         if data.get("payload") and "image_keys" in data["payload"]:
-            urls = []
-            for key in data["payload"]["image_keys"]:
-                try:
-                    urls.append(generate_presigned_download_url(key))
-                except Exception:
-                    pass
-            data["payload"]["image_urls"] = urls
+            data["payload"]["image_urls"] = await generate_presigned_urls_batch(
+                data["payload"]["image_keys"]
+            )
         events.append(data)
         
     return events
@@ -158,7 +158,7 @@ async def list_my_maintenance_requests(
     response_data = []
     for r in requests:
         resp = MaintenanceRequestResponse.model_validate(r)
-        hydrate_maintenance_request(r, resp)
+        await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
 
     return response_data
@@ -241,7 +241,7 @@ async def reopen_maintenance_request(
                 )
 
     resp = MaintenanceRequestResponse.model_validate(req)
-    hydrate_maintenance_request(req, resp)
+    await hydrate_maintenance_request(req, resp)
     return resp
 
 
@@ -284,7 +284,7 @@ async def close_maintenance_request(
     await session.refresh(req)
     
     resp = MaintenanceRequestResponse.model_validate(req)
-    hydrate_maintenance_request(req, resp)
+    await hydrate_maintenance_request(req, resp)
     return resp
 
 
@@ -302,7 +302,7 @@ async def get_maintenance_request(
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
 
     resp = MaintenanceRequestResponse.model_validate(req)
-    hydrate_maintenance_request(req, resp)
+    await hydrate_maintenance_request(req, resp)
     return resp
 
 
@@ -332,7 +332,7 @@ async def list_property_announcements(
     out = []
     for ann in anns:
         resp = AnnouncementResponse.model_validate(ann)
-        hydrate_announcement(ann, resp)
+        await hydrate_announcement(ann, resp)
         out.append(resp)
     return out
 
@@ -360,17 +360,13 @@ async def list_shared_documents(
         .order_by(Document.created_at.desc())
     )
     docs = result.scalars().all()
-    
+
+    urls = await generate_presigned_urls_batch([d.file_key for d in docs])
     response_data = []
-    for d in docs:
-        url = ""
-        try:
-            url = generate_presigned_download_url(d.file_key)
-        except Exception:
-            pass
+    for d, url in zip(docs, urls):
         resp = DocumentResponse.model_validate(d)
         resp.file_url = url
         response_data.append(resp)
-        
+
     return response_data
 

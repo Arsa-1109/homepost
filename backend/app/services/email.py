@@ -15,6 +15,7 @@ Email functions:
   - send_lease_expiry_reminder → tenant
 """
 
+import asyncio
 import html
 import logging
 
@@ -51,6 +52,16 @@ def _send_email(to: str, subject: str, html_body: str) -> None:
         )
     except Exception as e:
         logger.error(f"Failed to send email to {to}: {e}", exc_info=True)
+
+
+async def send_email_async(to: str, subject: str, html_body: str) -> None:
+    """
+    Async wrapper around the synchronous Resend HTTP call.
+
+    resend.Emails.send performs blocking network IO; running it via
+    asyncio.to_thread keeps callers' event loops responsive.
+    """
+    await asyncio.to_thread(_send_email, to, subject, html_body)
 
 
 # ---------------------------------------------------------------------------
@@ -227,6 +238,26 @@ def send_rent_reminder(
     </div>
     """
     _send_email(tenant_email, subject, html_body)
+
+
+async def send_rent_reminder_async(
+    tenant_email: str,
+    unit_label: str,
+    days_until_due: int,
+) -> None:
+    """Non-blocking variant of send_rent_reminder (used by the scheduler)."""
+    await asyncio.to_thread(send_rent_reminder, tenant_email, unit_label, days_until_due)
+
+
+async def send_lease_expiry_reminder_async(
+    tenant_email: str,
+    unit_label: str,
+    days_until_expiry: int,
+) -> None:
+    """Non-blocking variant of send_lease_expiry_reminder (used by the scheduler)."""
+    await asyncio.to_thread(
+        send_lease_expiry_reminder, tenant_email, unit_label, days_until_expiry
+    )
 
 
 def send_lease_expiry_reminder(

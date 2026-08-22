@@ -3,11 +3,11 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-# ⚠️ MUST stay at 1 replica — APScheduler runs in-process.
-# Multiple replicas = duplicate scheduled emails.
-# See: Production Hardening Notes in implementation_plan.md
+# H6: the scheduler now dedupes across replicas via a Postgres advisory lock
+# (pg_try_advisory_lock on 'rent_reminders'), so scaling beyond 1 replica no
+# longer duplicates reminder emails. 1 replica remains the default.
 numReplicas = 1
-startCommand = "/bin/sh -c 'alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT'"
+startCommand = "/bin/sh -c 'alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips=*'"
 releaseCommand = "alembic upgrade head"
 healthcheckPath = "/health"
 healthcheckTimeout = 15

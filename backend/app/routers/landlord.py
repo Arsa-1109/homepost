@@ -7,7 +7,7 @@ from sqlmodel import select
 from pydantic import BaseModel, Field
 from app.core.database import get_session
 from app.core.limiter import limiter
-from app.dependencies.auth import get_current_landlord, guard_demo_mutation
+from app.dependencies.auth import get_current_landlord, require_non_demo_user
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
@@ -25,9 +25,19 @@ from app.services.email import (
     send_approval_notification,
     send_denial_notification,
 )
-from app.services.storage import generate_presigned_download_url, hydrate_maintenance_request, hydrate_announcement
+from app.services.storage import (
+    hydrate_maintenance_request,
+    hydrate_announcement,
+    generate_presigned_urls_batch,
+)
 
-router = APIRouter(prefix="/landlord", tags=["Landlord"])
+# require_non_demo_user at router level (H7): every mutating route on this
+# router structurally rejects demo accounts — no per-endpoint guard calls.
+router = APIRouter(
+    prefix="/landlord",
+    tags=["Landlord"],
+    dependencies=[Depends(require_non_demo_user)],
+)
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -114,7 +124,6 @@ async def delete_property(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    guard_demo_mutation(user, "delete properties")
 
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
@@ -225,7 +234,6 @@ async def create_units_batch(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    guard_demo_mutation(user, "create units")
 
     # Ensure property belongs to landlord
     prop = await session.get(Property, batch_in.property_id)
@@ -454,7 +462,6 @@ async def delete_unit(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    guard_demo_mutation(user, "delete units")
 
     unit = await session.get(Unit, unit_id)
     if not unit:
@@ -530,7 +537,7 @@ async def list_maintenance_requests(
         resp = MaintenanceRequestResponse.model_validate(r)
         resp.property_name = prop_name
         resp.unit_label = unit_label
-        hydrate_maintenance_request(r, resp)
+        await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
         
     return response_data
@@ -710,7 +717,11 @@ async def update_maintenance_request(
 
     # Ensure this request belongs to one of landlord's units
     unit = await session.get(Unit, db_req.unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
     prop = await session.get(Property, unit.property_id)
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found.")
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
 
@@ -767,7 +778,7 @@ async def update_maintenance_request(
             pass
 
     resp = MaintenanceRequestResponse.model_validate(db_req)
-    hydrate_maintenance_request(db_req, resp)
+    await hydrate_maintenance_request(db_req, resp)
     return resp
 
 
@@ -782,10 +793,14 @@ async def list_maintenance_events(
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
         
     unit = await session.get(Unit, db_req.unit_id)
+    if not unit:
+        raise HTTPException(status_code=404, detail="Unit not found.")
     prop = await session.get(Property, unit.property_id)
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found.")
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
-        
+
     result = await session.execute(
         select(MaintenanceEvent, User.full_name)
         .join(User, MaintenanceEvent.actor_id == User.id)
@@ -798,13 +813,9 @@ async def list_maintenance_events(
         data = event.model_dump()
         data["actor_name"] = user_name or "Unknown User"
         if data.get("payload") and "image_keys" in data["payload"]:
-            urls = []
-            for key in data["payload"]["image_keys"]:
-                try:
-                    urls.append(generate_presigned_download_url(key))
-                except Exception:
-                    pass
-            data["payload"]["image_urls"] = urls
+            data["payload"]["image_urls"] = await generate_presigned_urls_batch(
+                data["payload"]["image_keys"]
+            )
         events.append(data)
         
     return events
@@ -835,7 +846,7 @@ async def create_announcement(
     await session.refresh(ann)
 
     resp = AnnouncementResponse.model_validate(ann)
-    hydrate_announcement(ann, resp)
+    await hydrate_announcement(ann, resp)
     return resp
 
 @router.get("/announcements", response_model=list[AnnouncementResponse])
@@ -850,7 +861,7 @@ async def list_announcements(
     out = []
     for ann in anns:
         resp = AnnouncementResponse.model_validate(ann)
-        hydrate_announcement(ann, resp)
+        await hydrate_announcement(ann, resp)
         out.append(resp)
     return out
 
@@ -884,7 +895,7 @@ async def update_announcement(
     await session.refresh(ann)
 
     resp = AnnouncementResponse.model_validate(ann)
-    hydrate_announcement(ann, resp)
+    await hydrate_announcement(ann, resp)
     return resp
 
 @router.delete("/announcements/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -895,7 +906,6 @@ async def delete_announcement(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    guard_demo_mutation(user, "delete announcements")
 
     ann = await session.get(Announcement, announcement_id)
     if not ann or ann.author_id != user.id:
@@ -933,15 +943,10 @@ async def create_document_record(
     session.add(doc)
     await session.commit()
     await session.refresh(doc)
-    
-    url = ""
-    try:
-        url = generate_presigned_download_url(doc.file_key)
-    except Exception:
-        pass
-        
+
+    urls = await generate_presigned_urls_batch([doc.file_key])
     resp = DocumentResponse.model_validate(doc)
-    resp.file_url = url
+    resp.file_url = urls[0] if urls else ""
     return resp
 
 @router.get("/properties/{property_id}/documents", response_model=list[DocumentResponse])
@@ -961,18 +966,14 @@ async def list_documents(
         .order_by(Document.created_at.desc())
     )
     docs = result.scalars().all()
-    
+
+    urls = await generate_presigned_urls_batch([d.file_key for d in docs])
     response_data = []
-    for d in docs:
-        url = ""
-        try:
-            url = generate_presigned_download_url(d.file_key)
-        except Exception:
-            pass
+    for d, url in zip(docs, urls):
         resp = DocumentResponse.model_validate(d)
         resp.file_url = url
         response_data.append(resp)
-        
+
     return response_data
 
 @router.get("/units/{unit_id}/documents", response_model=list[DocumentResponse])
@@ -995,18 +996,14 @@ async def list_unit_documents(
         .order_by(Document.created_at.desc())
     )
     docs = result.scalars().all()
-    
+
+    urls = await generate_presigned_urls_batch([d.file_key for d in docs])
     response_data = []
-    for d in docs:
-        url = ""
-        try:
-            url = generate_presigned_download_url(d.file_key)
-        except Exception:
-            pass
+    for d, url in zip(docs, urls):
         resp = DocumentResponse.model_validate(d)
         resp.file_url = url
         response_data.append(resp)
-        
+
     return response_data
 
 # ---------------------------------------------------------------------------
@@ -1043,7 +1040,6 @@ async def generate_invite(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
-    guard_demo_mutation(user, "generate tenant invites")
 
     # Ensure unit belongs to landlord
     unit = await session.get(Unit, payload.unit_id)
@@ -1098,7 +1094,6 @@ async def approve_tenant(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
-    guard_demo_mutation(user, "approve tenant applications")
 
     tenant = await session.get(User, payload.user_id)
     if not tenant or tenant.requested_landlord_id != user.id or tenant.role != UserRole.TENANT_PENDING:
@@ -1213,7 +1208,6 @@ async def deny_tenant(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
-    guard_demo_mutation(user, "deny tenant applications")
 
     tenant = await session.get(User, payload.user_id)
     if not tenant or tenant.requested_landlord_id != user.id or tenant.role != UserRole.TENANT_PENDING:
@@ -1501,7 +1495,6 @@ async def remove_tenant(
     Sets is_active=False and removed_at=now() on all active TenantProfiles for this unit.
     Sets unit.status = 'Vacant'.
     """
-    guard_demo_mutation(user, "remove tenants from units")
 
     from app.models.tenant_profile import TenantProfile
     from datetime import datetime, timezone

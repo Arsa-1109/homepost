@@ -14,7 +14,7 @@ Data Isolation:
 
 import logging
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,6 +54,7 @@ def guard_demo_mutation(user: User, action: str = "modify this resource") -> Non
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     session: AsyncSession = Depends(get_session),
 ) -> User:
@@ -94,6 +95,9 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"message": "Invalid authentication token."},
         )
+
+    # Rate limiter keying (H5): bucket by identity before anything else runs.
+    request.state.user_id = clerk_id
 
     settings = get_settings()
 
@@ -168,6 +172,28 @@ async def get_current_landlord(
                 "suggestion": "If you believe this is a mistake, please contact your property manager.",
             },
         )
+    return user
+
+
+async def require_non_demo_user(
+    request: Request,
+    user: User = Depends(get_current_landlord),
+) -> User:
+    """
+    Router-level dependency form of guard_demo_mutation (audit finding H7).
+
+    Attaching this to an APIRouter's `dependencies=[...]` structurally blocks
+    every mutating route (POST/PUT/PATCH/DELETE) on that router for demo
+    accounts — new endpoints inherit the guard automatically instead of
+    remembering per-handler calls. Read methods (GET/HEAD/OPTIONS) pass
+    through untouched.
+
+    Chains through get_current_landlord (the router's standard identity
+    source) so the user is resolved exactly once per request via FastAPI's
+    dependency cache.
+    """
+    if request.method not in ("GET", "HEAD", "OPTIONS"):
+        guard_demo_mutation(user)
     return user
 
 

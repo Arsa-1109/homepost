@@ -91,6 +91,7 @@ class Settings(BaseSettings):
 
     # --- Upload Constraints ---
     max_upload_size_bytes: int = 10_485_760  # 10 MB
+    max_uploads_per_user_per_day: int = 50
 
 
 @lru_cache

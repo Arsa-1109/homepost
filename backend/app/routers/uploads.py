@@ -11,10 +11,17 @@ from app.core.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import String
 from sqlmodel import select
-from app.services.storage import generate_object_key, upload_file_to_r2, generate_presigned_download_url
+from app.services.storage import (
+    generate_object_key,
+    upload_file_to_r2,
+    upload_file_to_r2_async,
+    generate_presigned_download_url,
+)
+from app.services.upload_quota import consume_daily_upload_quota, seconds_until_next_utc_day
 from pydantic import BaseModel
 from app.core.limiter import limiter
 from app.core.config import get_settings
+import asyncio
 import io
 
 import os
@@ -105,20 +112,57 @@ def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
             raise HTTPException(status_code=400, detail="Invalid MP4/MOV video content or corrupted file.")
 
 
+async def enforce_upload_rbac(session: AsyncSession, user: User, prefix: str) -> None:
+    """
+    Role matrix for upload prefixes (audit finding H2):
+      - documents / announcements → LANDLORD only
+      - maintenance → active TENANT or LANDLORD
+    Any other role (UNASSIGNED, TENANT_PENDING) is rejected.
+    """
+    if user.role == UserRole.LANDLORD:
+        return
+
+    if prefix in ("documents", "announcements"):
+        raise HTTPException(
+            status_code=403,
+            detail="Only property owners can upload documents or announcements.",
+        )
+
+    # maintenance prefix: requires an active tenancy
+    is_active_tenant = False
+    if user.role == UserRole.TENANT:
+        prof_res = await session.execute(
+            select(TenantProfile).where(
+                TenantProfile.user_id == user.id,
+                TenantProfile.is_active == True,  # noqa: E712
+            )
+        )
+        is_active_tenant = prof_res.scalars().first() is not None
+
+    if not is_active_tenant:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission to upload maintenance files.",
+        )
+
+
 @router.post("/", response_model=DirectUploadResponse)
 @limiter.limit("10/minute")
 async def upload_file_direct(
     request: Request,
     prefix: str = Form("maintenance", description="Folder prefix (e.g., 'maintenance', 'documents', or 'announcements')"),
     file: UploadFile = File(..., description="The file to upload"),
-    user: User = Depends(get_current_user)
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     guard_demo_mutation(user, "upload files directly")
 
     settings = get_settings()
-    
+
     if prefix not in ["maintenance", "documents", "announcements"]:
         raise HTTPException(status_code=400, detail="Invalid upload prefix.")
+
+    await enforce_upload_rbac(session, user, prefix)
 
     filename = file.filename or ""
     ext = os.path.splitext(filename)[1].lower()
@@ -136,12 +180,20 @@ async def upload_file_direct(
 
     # Security validation: Validate binary magic bytes
     validate_file_magic_bytes(file_bytes, ext)
-        
+
+    allowed = await consume_daily_upload_quota(session, user.id)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Daily upload limit reached. Please try again tomorrow.",
+            headers={"Retry-After": str(seconds_until_next_utc_day())},
+        )
+
     object_key = generate_object_key(prefix, file.filename)
-    
-    # Upload to R2 synchronously
-    upload_file_to_r2(io.BytesIO(file_bytes), object_key, file.content_type)
-    
+
+    # Offload the blocking botocore transfer to a worker thread
+    await upload_file_to_r2_async(io.BytesIO(file_bytes), object_key, file.content_type)
+
     return DirectUploadResponse(file_key=object_key)
 
 
@@ -249,5 +301,7 @@ async def get_presigned_download_url(
         raise HTTPException(status_code=403, detail="You do not have permission to access this file.")
 
     filename = file_key.split("/")[-1] if download else None
-    url = generate_presigned_download_url(file_key, expires=900, filename=filename)
+    url = await asyncio.to_thread(
+        generate_presigned_download_url, file_key, 900, filename
+    )
     return DownloadURLResponse(download_url=url)
