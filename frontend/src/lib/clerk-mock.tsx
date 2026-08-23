@@ -200,20 +200,94 @@ function SignUpButtonBase({ children }: { children?: React.ReactNode }) {
 export const SignUpButton = SignUpButtonBase;
 
 export function UserButton() {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const menuId = React.useId();
   const role = readRole();
+  const persona = role ? personaFor(role) : null;
+  const initials = (role ?? "?").slice(0, 2).toUpperCase();
+
+  function signOutAndRedirect() {
+    clearMockCookies();
+    window.location.href = "/";
+  }
+
+  React.useEffect(() => {
+    if (!menuOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        containerRef.current?.querySelector<HTMLButtonElement>("button[data-testid='mock-user-button']")?.focus();
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  const menuItemClass =
+    "block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgb(var(--ml-accent))]";
+
   return (
-    <button
-      type="button"
-      data-testid="mock-user-button"
-      title="Sign out"
-      onClick={() => {
-        clearMockCookies();
-        window.location.href = "/";
-      }}
-      className="h-8 w-8 rounded-full bg-[rgb(var(--ml-accent))] text-xs font-bold uppercase text-white"
-    >
-      {(role ?? "?").slice(0, 2)}
-    </button>
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        data-testid="mock-user-button"
+        title="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        aria-controls={menuOpen ? menuId : undefined}
+        onClick={() => setMenuOpen((open) => !open)}
+        className="h-8 w-8 cursor-pointer rounded-full bg-[rgb(var(--ml-accent))] text-xs font-bold uppercase text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(var(--ml-accent))]"
+      >
+        {initials}
+      </button>
+
+      {menuOpen && (
+        <div
+          id={menuId}
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-[rgb(var(--ml-bg-secondary))] shadow-lg"
+        >
+          <div className="border-b border-border px-3 py-2">
+            <p className="truncate text-sm font-semibold text-[rgb(var(--ml-text-primary))]">
+              {persona?.name ?? "Not signed in"}
+            </p>
+            {persona && (
+              <p className="truncate text-xs text-[rgb(var(--ml-text-secondary))]">{persona.email}</p>
+            )}
+          </div>
+          <nav className="p-1" aria-label="Account">
+            <a
+              href="/user"
+              role="menuitem"
+              onClick={() => setMenuOpen(false)}
+              className={`${menuItemClass} text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-accent))]/10 hover:text-[rgb(var(--ml-accent))]`}
+            >
+              Account
+            </a>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={signOutAndRedirect}
+              className={`${menuItemClass} text-red-600 hover:bg-red-500/10 dark:text-red-400`}
+            >
+              Sign out
+            </button>
+          </nav>
+        </div>
+      )}
+    </div>
   );
 }
 
