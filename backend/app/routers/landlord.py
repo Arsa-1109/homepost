@@ -30,6 +30,14 @@ from app.services.storage import (
     hydrate_announcement,
     generate_presigned_urls_batch,
 )
+from app.core.pagination import PaginationParams, Page
+from app.services.storage_cleanup import (
+    collect_property_storage_keys,
+    collect_unit_storage_keys,
+    purge_storage_keys,
+    record_cleanup_failures,
+)
+from app.core.time import utc_now
 
 # require_non_demo_user at router level (H7): every mutating route on this
 # router structurally rejects demo accounts — no per-endpoint guard calls.
@@ -78,13 +86,28 @@ async def create_property(
     await session.refresh(prop)
     return prop
 
-@router.get("/properties", response_model=list[Property])
+@router.get("/properties", response_model=Page[Property])
 async def list_properties(
+    pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(select(Property).where(Property.owner_id == user.id))
-    return result.scalars().all()
+    from sqlalchemy import func
+
+    base = select(Property).where(Property.owner_id == user.id)
+    total_res = await session.execute(
+        select(func.count()).select_from(base.subquery())
+    )
+    total = total_res.scalar_one()
+
+    result = await session.execute(
+        base.order_by(Property.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+    )
+    items = result.scalars().all()
+    return Page(items=items, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 @router.put("/properties/{property_id}", response_model=Property)
 @limiter.limit("20/minute")
@@ -121,6 +144,7 @@ async def update_property(
 async def delete_property(
     request: Request,
     property_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
@@ -128,6 +152,9 @@ async def delete_property(
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=404, detail="Property not found")
+
+    # M2: collect R2 keys BEFORE the cascade deletes remove their rows.
+    storage_keys = await collect_property_storage_keys(session, property_id)
         
     # Check for active tenants in any unit
     from app.models.tenant_profile import TenantProfile
@@ -178,6 +205,10 @@ async def delete_property(
     
     await session.delete(prop)
     await session.commit()
+
+    # M2: best-effort background R2 cleanup — never blocks the response.
+    if storage_keys:
+        background_tasks.add_task(purge_storage_keys_with_failure_tracking, storage_keys)
     return None
 
 # ---------------------------------------------------------------------------
@@ -459,6 +490,7 @@ async def update_unit(
 async def delete_unit(
     request: Request,
     unit_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
@@ -470,6 +502,9 @@ async def delete_unit(
     prop = await session.get(Property, unit.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
+
+    # M2: collect R2 keys BEFORE the cascade deletes remove their rows.
+    storage_keys = await collect_unit_storage_keys(session, unit.id)
         
     # Check if there is an active tenant in this unit
     from app.models.tenant_profile import TenantProfile
@@ -505,33 +540,66 @@ async def delete_unit(
     
     await session.delete(unit)
     await session.commit()
+
+    # M2: best-effort background R2 cleanup — never blocks the response.
+    if storage_keys:
+        background_tasks.add_task(purge_storage_keys_with_failure_tracking, storage_keys)
     return {"message": "Unit deleted successfully"}
+
+
+async def purge_storage_keys_with_failure_tracking(object_keys: list[str]) -> None:
+    """
+    Background task: delete R2 objects best-effort, recording any failures.
+
+    Uses its own session so failure rows persist independently of the
+    (already committed) request transaction.
+    """
+    from app.core.database import async_session_maker
+    from app.services.storage_cleanup import purge_storage_keys
+
+    failed = await purge_storage_keys(object_keys)
+    if failed:
+        await record_cleanup_failures(failed)
 
 # ---------------------------------------------------------------------------
 # Maintenance Requests
 # ---------------------------------------------------------------------------
-@router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
+@router.get("/maintenance", response_model=Page[MaintenanceRequestResponse])
 async def list_maintenance_requests(
     unit_id: uuid.UUID | None = None,
+    pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy import func
+
     # Get maintenance requests for landlord's properties using a single JOIN
+    filters = [Property.owner_id == user.id]
+    if unit_id:
+        filters.append(Unit.id == unit_id)
+
+    total_res = await session.execute(
+        select(func.count())
+        .select_from(MaintenanceRequest)
+        .join(Unit, MaintenanceRequest.unit_id == Unit.id)
+        .join(Property, Unit.property_id == Property.id)
+        .where(*filters)
+    )
+    total = total_res.scalar_one()
+
     query = (
         select(MaintenanceRequest, Property.name, Unit.unit_label)
         .join(Unit, MaintenanceRequest.unit_id == Unit.id)
         .join(Property, Unit.property_id == Property.id)
-        .where(Property.owner_id == user.id)
+        .where(*filters)
+        .order_by(MaintenanceRequest.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
-    
-    if unit_id:
-        query = query.where(Unit.id == unit_id)
-        
-    query = query.order_by(MaintenanceRequest.created_at.desc())
-    
+
     req_result = await session.execute(query)
     requests = req_result.all()
-    
+
     response_data = []
     for r, prop_name, unit_label in requests:
         resp = MaintenanceRequestResponse.model_validate(r)
@@ -539,8 +607,9 @@ async def list_maintenance_requests(
         resp.unit_label = unit_label
         await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
-        
-    return response_data
+
+    return Page(items=response_data, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 async def _validate_maintenance_update(req_in: MaintenanceRequestUpdate, db_req: MaintenanceRequest):
     if db_req.status == "closed":
@@ -849,13 +918,22 @@ async def create_announcement(
     await hydrate_announcement(ann, resp)
     return resp
 
-@router.get("/announcements", response_model=list[AnnouncementResponse])
+@router.get("/announcements", response_model=Page[AnnouncementResponse])
 async def list_announcements(
+    pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy import func
+
+    base = select(Announcement).where(Announcement.author_id == user.id)
+    total_res = await session.execute(select(func.count()).select_from(base.subquery()))
+    total = total_res.scalar_one()
+
     result = await session.execute(
-        select(Announcement).where(Announcement.author_id == user.id).order_by(Announcement.created_at.desc())
+        base.order_by(Announcement.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
     anns = result.scalars().all()
     out = []
@@ -863,7 +941,8 @@ async def list_announcements(
         resp = AnnouncementResponse.model_validate(ann)
         await hydrate_announcement(ann, resp)
         out.append(resp)
-    return out
+    return Page(items=out, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 @router.put("/announcements/{announcement_id}", response_model=AnnouncementResponse)
 @limiter.limit("15/minute")
@@ -949,21 +1028,28 @@ async def create_document_record(
     resp.file_url = urls[0] if urls else ""
     return resp
 
-@router.get("/properties/{property_id}/documents", response_model=list[DocumentResponse])
+@router.get("/properties/{property_id}/documents", response_model=Page[DocumentResponse])
 async def list_documents(
     property_id: uuid.UUID,
+    pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy import func
+
     # Ensure property belongs to landlord
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
-        
+
+    base = select(Document).where(Document.property_id == property_id)
+    total_res = await session.execute(select(func.count()).select_from(base.subquery()))
+    total = total_res.scalar_one()
+
     result = await session.execute(
-        select(Document)
-        .where(Document.property_id == property_id)
-        .order_by(Document.created_at.desc())
+        base.order_by(Document.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
     docs = result.scalars().all()
 
@@ -974,14 +1060,18 @@ async def list_documents(
         resp.file_url = url
         response_data.append(resp)
 
-    return response_data
+    return Page(items=response_data, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
-@router.get("/units/{unit_id}/documents", response_model=list[DocumentResponse])
+@router.get("/units/{unit_id}/documents", response_model=Page[DocumentResponse])
 async def list_unit_documents(
     unit_id: uuid.UUID,
+    pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy import func
+
     # Ensure unit and property belong to landlord
     unit = await session.get(Unit, unit_id)
     if not unit:
@@ -989,11 +1079,15 @@ async def list_unit_documents(
     prop = await session.get(Property, unit.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
-        
+
+    base = select(Document).where(Document.unit_id == unit_id)
+    total_res = await session.execute(select(func.count()).select_from(base.subquery()))
+    total = total_res.scalar_one()
+
     result = await session.execute(
-        select(Document)
-        .where(Document.unit_id == unit_id)
-        .order_by(Document.created_at.desc())
+        base.order_by(Document.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
     docs = result.scalars().all()
 
@@ -1004,7 +1098,8 @@ async def list_unit_documents(
         resp.file_url = url
         response_data.append(resp)
 
-    return response_data
+    return Page(items=response_data, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 # ---------------------------------------------------------------------------
 # Onboarding & Invites (Phase 4)
@@ -1075,15 +1170,26 @@ async def generate_invite(
     await session.refresh(invite)
     return invite
 
-@router.get("/pending-tenants", response_model=list[User])
+@router.get("/pending-tenants", response_model=Page[User])
 async def pending_tenants(
+    pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session)
 ):
-    result = await session.execute(
-        select(User).where(User.requested_landlord_id == user.id, User.role == UserRole.TENANT_PENDING)
+    from sqlalchemy import func
+
+    base = select(User).where(
+        User.requested_landlord_id == user.id, User.role == UserRole.TENANT_PENDING
     )
-    return result.scalars().all()
+    total_res = await session.execute(select(func.count()).select_from(base.subquery()))
+    total = total_res.scalar_one()
+
+    result = await session.execute(
+        base.offset(pagination.offset).limit(pagination.limit)
+    )
+    items = result.scalars().all()
+    return Page(items=items, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 @router.post("/approve-tenant")
 @limiter.limit("15/minute")
@@ -1335,7 +1441,7 @@ async def _fetch_dashboard_recent_activity(
     from app.models.announcement import Announcement
     from app.schemas.activity import ActivityItem
     
-    thirty_days_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=30)
+    thirty_days_ago = utc_now() - timedelta(days=30)
     
     maint_events_result = await session.execute(
         select(MaintenanceEvent, MaintenanceRequest)
@@ -1520,7 +1626,7 @@ async def remove_tenant(
         raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
 
     # 3. Soft-delete the tenant profiles and reset user role to UNASSIGNED
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = utc_now()
     user_ids = [profile.user_id for profile in profiles]
     for profile in profiles:
         profile.is_active = False

@@ -36,7 +36,7 @@ async def test_property_crud_and_cascade(client: AsyncClient, seed_data, db_sess
         # 2. List Properties
         list_res = await client.get("/api/v1/landlord/properties")
         assert list_res.status_code == 200
-        assert any(p["id"] == prop_id for p in list_res.json())
+        assert any(p["id"] == prop_id for p in list_res.json()["items"])
 
         # 3. Update Property
         update_res = await client.put(
@@ -60,7 +60,7 @@ async def test_property_crud_and_cascade(client: AsyncClient, seed_data, db_sess
         # Verify property is removed
         list_after = await client.get("/api/v1/landlord/properties")
         assert list_after.status_code == 200
-        assert not any(p["id"] == prop_id for p in list_after.json())
+        assert not any(p["id"] == prop_id for p in list_after.json()["items"])
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
@@ -139,7 +139,7 @@ async def test_tenant_approval_and_denial_flows(
         # 1. List pending tenants
         list_res = await client.get("/api/v1/landlord/pending-tenants")
         assert list_res.status_code == 200
-        pending_ids = [u["id"] for u in list_res.json()]
+        pending_ids = [u["id"] for u in list_res.json()["items"]]
         assert str(pending_tenant_1.id) in pending_ids
         assert str(pending_tenant_2.id) in pending_ids
 
@@ -239,7 +239,7 @@ async def test_announcements_and_documents(client: AsyncClient, seed_data, mock_
         # List Announcements
         list_ann = await client.get(f"/api/v1/landlord/announcements?property_id={prop.id}")
         assert list_ann.status_code == 200
-        assert any(a["id"] == ann_id for a in list_ann.json())
+        assert any(a["id"] == ann_id for a in list_ann.json()["items"])
 
         # Create Document
         doc_res = await client.post(
@@ -257,7 +257,7 @@ async def test_announcements_and_documents(client: AsyncClient, seed_data, mock_
         # List Documents under property
         list_doc = await client.get(f"/api/v1/landlord/properties/{prop.id}/documents")
         assert list_doc.status_code == 200
-        assert any(d["id"] == doc_id for d in list_doc.json())
+        assert any(d["id"] == doc_id for d in list_doc.json()["items"])
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
@@ -475,14 +475,14 @@ async def test_unit_and_property_document_management(client: AsyncClient, seed_d
         # 3. List by property (should contain both)
         p_docs = await client.get(f"/api/v1/landlord/properties/{prop.id}/documents")
         assert p_docs.status_code == 200
-        p_doc_ids = [d["id"] for d in p_docs.json()]
+        p_doc_ids = [d["id"] for d in p_docs.json()["items"]]
         assert prop_doc_id in p_doc_ids
         assert unit_doc_id in p_doc_ids
 
         # 4. List by unit (should contain only unit doc)
         u_docs = await client.get(f"/api/v1/landlord/units/{unit.id}/documents")
         assert u_docs.status_code == 200
-        u_doc_ids = [d["id"] for d in u_docs.json()]
+        u_doc_ids = [d["id"] for d in u_docs.json()["items"]]
         assert unit_doc_id in u_doc_ids
         assert prop_doc_id not in u_doc_ids
     finally:
@@ -523,7 +523,7 @@ async def test_announcement_crud_lifecycle(client: AsyncClient, seed_data):
         # 4. Verify gone
         list_res = await client.get(f"/api/v1/landlord/announcements?property_id={prop.id}")
         assert list_res.status_code == 200
-        assert not any(a["id"] == ann_id for a in list_res.json())
+        assert not any(a["id"] == ann_id for a in list_res.json()["items"])
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 

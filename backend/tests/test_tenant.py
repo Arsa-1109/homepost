@@ -59,7 +59,7 @@ async def test_tenant_maintenance_submission_and_landlord_email(
         # List tenant requests
         list_res = await client.get("/api/v1/tenant/maintenance")
         assert list_res.status_code == 200
-        assert any(r["id"] == req_id for r in list_res.json())
+        assert any(r["id"] == req_id for r in list_res.json()["items"])
 
         # View audit timeline events
         events_res = await client.get(f"/api/v1/tenant/maintenance/{req_id}/events")
@@ -158,12 +158,12 @@ async def test_tenant_announcements_and_documents(
         # Check announcements
         ann_res = await client.get("/api/v1/tenant/announcements")
         assert ann_res.status_code == 200
-        assert any(a["id"] == str(ann.id) for a in ann_res.json())
+        assert any(a["id"] == str(ann.id) for a in ann_res.json()["items"])
 
         # Check documents
         doc_res = await client.get("/api/v1/tenant/documents")
         assert doc_res.status_code == 200
-        assert any(d["id"] == str(doc.id) for d in doc_res.json())
+        assert any(d["id"] == str(doc.id) for d in doc_res.json()["items"])
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
@@ -227,14 +227,14 @@ async def test_tenant_data_isolation_cross_property(
         # Check documents - should NOT contain other_prop_doc or sibling_unit_doc
         doc_res = await client.get("/api/v1/tenant/documents")
         assert doc_res.status_code == 200
-        doc_ids = [d["id"] for d in doc_res.json()]
+        doc_ids = [d["id"] for d in doc_res.json()["items"]]
         assert str(other_prop_doc.id) not in doc_ids
         assert str(sibling_unit_doc.id) not in doc_ids
 
         # Check announcements - should NOT contain other_ann
         ann_res = await client.get("/api/v1/tenant/announcements")
         assert ann_res.status_code == 200
-        ann_ids = [a["id"] for a in ann_res.json()]
+        ann_ids = [a["id"] for a in ann_res.json()["items"]]
         assert str(other_ann.id) not in ann_ids
     finally:
         app.dependency_overrides.pop(get_current_user, None)

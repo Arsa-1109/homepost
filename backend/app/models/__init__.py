@@ -20,6 +20,8 @@ from app.models.maintenance_event import MaintenanceEvent
 from app.models.announcement import Announcement
 from app.models.document import Document
 from app.models.invite import Invite, InviteStatus
+from app.models.storage_cleanup_failure import StorageCleanupFailure
+from app.models.upload_quota import UploadQuota
 
 __all__ = [
     "User",
@@ -36,4 +38,6 @@ __all__ = [
     "Invite",
     "InviteStatus",
     "MaintenanceEvent",
+    "StorageCleanupFailure",
+    "UploadQuota",
 ]

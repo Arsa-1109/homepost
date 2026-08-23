@@ -20,6 +20,8 @@ from typing import Optional
 from sqlmodel import Field, SQLModel, Column
 from sqlalchemy import DateTime, String
 
+from app.core.time import utc_now_naive
+
 
 class InviteStatus(str, Enum):
     PENDING = "pending"
@@ -28,8 +30,8 @@ class InviteStatus(str, Enum):
 
 
 def _default_expires_at() -> datetime:
-    """Invite expires 7 days from creation."""
-    return (datetime.now(timezone.utc) + timedelta(days=7)).replace(tzinfo=None)
+    """Invite expires 7 days from creation (naive UTC — legacy column)."""
+    return utc_now_naive() + timedelta(days=7)
 
 
 class Invite(SQLModel, table=True):

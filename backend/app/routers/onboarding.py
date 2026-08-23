@@ -25,6 +25,7 @@ from app.models.invite import Invite, InviteStatus
 from app.models.property import Property
 from app.models.unit import Unit
 from app.services.email import send_pending_tenant_notification
+from app.core.time import utc_now, as_aware_utc
 from sqlalchemy import func
 
 from app.core.limiter import limiter
@@ -227,7 +228,7 @@ async def get_invite_preview(
             detail="invite_already_used"
         )
 
-    if invite.status == InviteStatus.EXPIRED or invite.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+    if invite.status == InviteStatus.EXPIRED or as_aware_utc(invite.expires_at) < utc_now():
         if invite.status != InviteStatus.EXPIRED:
             invite.status = InviteStatus.EXPIRED
             session.add(invite)
@@ -312,8 +313,8 @@ async def accept_invite(
             detail="invite_already_used"
         )
 
-    # Note: timezone-naive UTC comparison
-    if invite.status == InviteStatus.EXPIRED or invite.expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+    # Note: aware-UTC comparison via core/time helpers (M10)
+    if invite.status == InviteStatus.EXPIRED or as_aware_utc(invite.expires_at) < utc_now():
         if invite.status != InviteStatus.EXPIRED:
             invite.status = InviteStatus.EXPIRED
             session.add(invite)

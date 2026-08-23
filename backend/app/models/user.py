@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Optional
 
 from sqlmodel import Field, SQLModel, Column
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, String, UniqueConstraint
 
 
 class UserRole(str, Enum):
@@ -29,6 +29,9 @@ class UserRole(str, Enum):
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
+    __table_args__ = (
+        UniqueConstraint("email", name="uq_users_email"),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     clerk_id: str = Field(
@@ -36,7 +39,7 @@ class User(SQLModel, table=True):
     )
     email: Optional[str] = Field(
         default=None,
-        sa_column=Column(String(320), unique=True, index=True, nullable=True),
+        sa_column=Column(String(320), index=True, nullable=True),
     )
     full_name: str = Field(default="", max_length=255)
     role: UserRole = Field(

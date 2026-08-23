@@ -90,6 +90,16 @@ async def upload_file_to_r2_async(
     await asyncio.to_thread(upload_file_to_r2, file_obj, object_key, content_type)
 
 
+def delete_object_from_r2(object_key: str) -> None:
+    """
+    Delete a single object from Cloudflare R2.
+
+    Used by the best-effort background cleanup (M2); callers treat failures
+    as non-fatal and record them for an ops sweep.
+    """
+    _s3_client.delete_object(Bucket=settings.r2_bucket_name, Key=object_key)
+
+
 def generate_presigned_download_url(
     object_key: str,
     expires: int = 900,

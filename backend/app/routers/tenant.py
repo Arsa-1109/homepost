@@ -23,6 +23,8 @@ from app.services.storage import (
     generate_presigned_urls_batch,
 )
 from app.core.limiter import limiter
+from app.core.pagination import PaginationParams, Page
+from app.core.time import utc_now, as_aware_utc
 from fastapi import Request
 
 router = APIRouter(prefix="/tenant", tags=["Tenant"])
@@ -142,16 +144,23 @@ async def list_maintenance_events(
         
     return events
 
-@router.get("/maintenance", response_model=list[MaintenanceRequestResponse])
+@router.get("/maintenance", response_model=Page[MaintenanceRequestResponse])
 async def list_my_maintenance_requests(
+    pagination: PaginationParams = Depends(),
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy import func
+
     # Data isolation anchored on profile.id (tenant_id) so they don't see previous tenant requests
+    base = select(MaintenanceRequest).where(MaintenanceRequest.tenant_id == profile.id)
+    total_res = await session.execute(select(func.count()).select_from(base.subquery()))
+    total = total_res.scalar_one()
+
     result = await session.execute(
-        select(MaintenanceRequest)
-        .where(MaintenanceRequest.tenant_id == profile.id)
-        .order_by(MaintenanceRequest.created_at.desc())
+        base.order_by(MaintenanceRequest.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
     requests = result.scalars().all()
 
@@ -161,7 +170,8 @@ async def list_my_maintenance_requests(
         await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
 
-    return response_data
+    return Page(items=response_data, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 @router.post("/maintenance/{request_id}/reopen", response_model=MaintenanceRequestResponse)
 @limiter.limit("5/minute")
@@ -185,8 +195,8 @@ async def reopen_maintenance_request(
     from app.core.config import get_settings
     
     settings = get_settings()
-    now = datetime.now(timezone.utc)
-    updated_at = req.updated_at.replace(tzinfo=timezone.utc) if req.updated_at.tzinfo is None else req.updated_at
+    now = utc_now()
+    updated_at = as_aware_utc(req.updated_at)
     time_since_resolution = now - updated_at
     if time_since_resolution.days > settings.max_reopen_days:
         raise HTTPException(
@@ -309,24 +319,35 @@ async def get_maintenance_request(
 # ---------------------------------------------------------------------------
 # Announcements
 # ---------------------------------------------------------------------------
-@router.get("/announcements", response_model=list[AnnouncementResponse])
+@router.get("/announcements", response_model=Page[AnnouncementResponse])
 async def list_property_announcements(
+    pagination: PaginationParams = Depends(),
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
     from sqlmodel import or_
+    from sqlalchemy import func
+
     # First, get the unit to find the property_id
     unit = await session.get(Unit, profile.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
-        
+
+    scope = (
+        Announcement.property_id == unit.property_id,
+        or_(Announcement.unit_id == None, Announcement.unit_id == profile.unit_id),  # noqa: E711
+    )
+    total_res = await session.execute(
+        select(func.count()).select_from(Announcement).where(*scope)
+    )
+    total = total_res.scalar_one()
+
     result = await session.execute(
         select(Announcement)
-        .where(
-            Announcement.property_id == unit.property_id,
-            or_(Announcement.unit_id == None, Announcement.unit_id == profile.unit_id)
-        )
+        .where(*scope)
         .order_by(Announcement.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
     anns = result.scalars().all()
     out = []
@@ -334,30 +355,42 @@ async def list_property_announcements(
         resp = AnnouncementResponse.model_validate(ann)
         await hydrate_announcement(ann, resp)
         out.append(resp)
-    return out
+    return Page(items=out, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 
 # ---------------------------------------------------------------------------
 # Documents
 # ---------------------------------------------------------------------------
-@router.get("/documents", response_model=list[DocumentResponse])
+@router.get("/documents", response_model=Page[DocumentResponse])
 async def list_shared_documents(
+    pagination: PaginationParams = Depends(),
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
+    from sqlalchemy import func
+
     # First, get the unit to find the property_id
     unit = await session.get(Unit, profile.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
-        
-    # Return documents for this property that are either property-wide (unit_id IS NULL) 
+
+    # Return documents for this property that are either property-wide (unit_id IS NULL)
     # or specific to this tenant's unit (unit_id == unit.id)
+    scope = (
+        Document.property_id == unit.property_id,
+        (Document.unit_id == None) | (Document.unit_id == unit.id),  # noqa: E711
+    )
+    total_res = await session.execute(
+        select(func.count()).select_from(Document).where(*scope)
+    )
+    total = total_res.scalar_one()
+
     result = await session.execute(
         select(Document)
-        .where(
-            Document.property_id == unit.property_id,
-            (Document.unit_id == None) | (Document.unit_id == unit.id)
-        )
+        .where(*scope)
         .order_by(Document.created_at.desc())
+        .offset(pagination.offset)
+        .limit(pagination.limit)
     )
     docs = result.scalars().all()
 
@@ -368,5 +401,6 @@ async def list_shared_documents(
         resp.file_url = url
         response_data.append(resp)
 
-    return response_data
+    return Page(items=response_data, total=total, limit=pagination.limit,
+                offset=pagination.offset)
 

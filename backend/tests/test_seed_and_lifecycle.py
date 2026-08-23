@@ -176,13 +176,13 @@ async def test_seeded_data_queried_via_landlord_api(db_session, client):
     # 1. Properties API
     resp = await client.get("/api/v1/landlord/properties")
     assert resp.status_code == 200
-    props = resp.json()
+    props = resp.json()["items"]
     assert len(props) == 2
 
     # 2. Maintenance Requests API
     resp = await client.get("/api/v1/landlord/maintenance")
     assert resp.status_code == 200
-    requests = resp.json()
+    requests = resp.json()["items"]
     assert len(requests) == 3
 
     # Clean up overrides
@@ -214,7 +214,7 @@ async def test_seeded_data_queried_via_tenant_api(db_session, client, mock_stora
     # 1. Tenant Maintenance Requests (Should see Unit 101 requests: sink leak & balcony door = 2)
     resp = await client.get("/api/v1/tenant/maintenance")
     assert resp.status_code == 200
-    reqs = resp.json()
+    reqs = resp.json()["items"]
     assert len(reqs) == 2
     titles = {r["title"] for r in reqs}
     assert "Leaking kitchen sink pipe" in titles
@@ -223,7 +223,7 @@ async def test_seeded_data_queried_via_tenant_api(db_session, client, mock_stora
     # 2. Tenant Announcements (Should see Maplewood Heights property-wide + Unit 101 announcement = 2)
     resp = await client.get("/api/v1/tenant/announcements")
     assert resp.status_code == 200
-    announcements = resp.json()
+    announcements = resp.json()["items"]
     assert len(announcements) == 2
 
     # Clean up overrides

@@ -42,8 +42,11 @@ def upgrade() -> None:
             "Cannot add unique constraint on users.email — duplicate emails found: "
             f"{listing}. Run scripts/deduplicate_user_emails.py to resolve them, then retry."
         )
-    op.create_unique_constraint(CONSTRAINT_NAME, "users", ["email"])
+    # batch mode handles SQLite's lack of ALTER TABLE ADD CONSTRAINT
+    with op.batch_alter_table('users') as batch_op:
+        batch_op.create_unique_constraint(CONSTRAINT_NAME, ['email'])
 
 
 def downgrade() -> None:
-    op.drop_constraint(CONSTRAINT_NAME, "users", type_="unique")
+    with op.batch_alter_table('users') as batch_op:
+        batch_op.drop_constraint(CONSTRAINT_NAME, type_='unique')

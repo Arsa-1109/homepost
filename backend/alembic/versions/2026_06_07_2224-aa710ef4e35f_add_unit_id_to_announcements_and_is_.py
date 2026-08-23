@@ -20,13 +20,18 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def upgrade() -> None:
+def upgrade():
     op.add_column('announcements', sa.Column('unit_id', sa.Uuid(), nullable=True))
-    op.create_foreign_key('fk_announcements_units', 'announcements', 'units', ['unit_id'], ['id'])
+    # batch mode handles SQLite's lack of ALTER TABLE ADD CONSTRAINT
+    with op.batch_alter_table('announcements') as batch_op:
+        batch_op.create_foreign_key(
+            'fk_announcements_units', 'units', ['unit_id'], ['id']
+        )
     op.add_column('documents', sa.Column('is_archived', sa.Boolean(), server_default=sa.text('false'), nullable=False))
 
 
-def downgrade() -> None:
+def downgrade():
     op.drop_column('documents', 'is_archived')
-    op.drop_constraint('fk_announcements_units', 'announcements', type_='foreignkey')
+    with op.batch_alter_table('announcements') as batch_op:
+        batch_op.drop_constraint('fk_announcements_units', type_='foreignkey')
     op.drop_column('announcements', 'unit_id')

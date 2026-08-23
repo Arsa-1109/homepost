@@ -15,16 +15,19 @@ import uuid
 from datetime import date, datetime, timezone
 from typing import Optional
 
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
 class TenantProfile(SQLModel, table=True):
     __tablename__ = "tenant_profiles"
+    __table_args__ = (
+        UniqueConstraint("user_id", name="tenant_profiles_user_id_key"),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(
-        foreign_key="users.id", unique=True, index=True, nullable=False
+        foreign_key="users.id", index=True, nullable=False
     )
     unit_id: uuid.UUID = Field(foreign_key="units.id", index=True, nullable=False)
 
