@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import React, { useState, useMemo } from "react";
 import { Plus, Layers, X, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,8 +87,8 @@ export function CreateUnitForm({
       setUnitLabel("");
       toast.success(`Unit "${newUnit.unit_label}" created successfully!`);
       onSuccess([newUnit]);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create unit. Please try again.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to create unit. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -113,8 +115,8 @@ export function CreateUnitForm({
         } successfully!`
       );
       onSuccess(createdUnits);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create units in batch.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to create units in batch.");
     } finally {
       setIsSubmitting(false);
     }
@@ -216,3 +218,4 @@ export function CreateUnitForm({
     </div>
   );
 }
+

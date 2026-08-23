@@ -13,12 +13,14 @@ import secrets
 import uuid
 from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.core.database import get_session
-from app.dependencies.auth import get_current_user, guard_demo_mutation
+from app.core.security import verify_clerk_token
+from app.dependencies.auth import get_current_user, guard_demo_mutation, bearer_scheme
 from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 from app.models.invite import Invite, InviteStatus
@@ -193,8 +195,8 @@ class InvitePreviewResponse(BaseModel):
     property_city: str | None = None
     unit_label: str
     landlord_name: str | None = None
-    landlord_id: uuid.UUID
-    property_owner_id: uuid.UUID
+    landlord_id: uuid.UUID | None = None
+    property_owner_id: uuid.UUID | None = None
     status: str
     expires_at: datetime
     lease_start: date | None = None
@@ -206,11 +208,13 @@ class InvitePreviewResponse(BaseModel):
 async def get_invite_preview(
     request: Request,
     token: str,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     session: AsyncSession = Depends(get_session)
 ):
     """
-    Public/Authenticated Invite Preview.
-    Returns metadata about the invite without accepting or auto-assigning anything.
+    Public/Authenticated Invite Preview (M3).
+    Returns safe non-PII metadata for anonymous visitors; returns full lease details
+    and owner metadata when authenticated.
     """
     statement = select(Invite).where(Invite.token == token)
     result = await session.execute(statement)
@@ -260,10 +264,20 @@ async def get_invite_preview(
 
     landlord = await session.get(User, prop.owner_id)
 
+    # Optional authentication check: if user presents a valid token, expose full preview
+    is_authenticated = False
+    if credentials:
+        try:
+            payload = await verify_clerk_token(credentials.credentials)
+            if payload.get("sub"):
+                is_authenticated = True
+        except Exception:
+            is_authenticated = False
+
     return InvitePreviewResponse(
         token=invite.token,
         property_name=prop.name,
-        property_address=prop.address,
+        property_address=prop.address if is_authenticated else None,
         property_city=prop.city,
         unit_label=unit.unit_label,
         landlord_name=landlord.full_name if landlord and landlord.full_name else "Property Owner",

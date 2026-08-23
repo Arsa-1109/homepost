@@ -1,5 +1,9 @@
 "use client";
 
+import { ClerkPublicMetadata } from "@/lib/clerk-global";
+
+import { errorMessage, errorStatus as extractErrorStatus } from "@/lib/errors";
+
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useUser, useSession } from "@clerk/nextjs";
@@ -34,11 +38,11 @@ function SyncRoleContent() {
 
         try {
           user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
-        } catch (fetchErr: any) {
+        } catch (fetchErr) {
           console.warn("Could not fetch user role directly from /me:", fetchErr);
         }
 
-        const metadataRole = (clerkUser?.publicMetadata as any)?.role;
+        const metadataRole = (clerkUser?.publicMetadata as ClerkPublicMetadata | undefined)?.role;
         const effectiveRole = (user && user.role && user.role !== "none" && user.role !== "unassigned")
           ? user.role
           : (metadataRole === "landlord" || metadataRole === "tenant" ? metadataRole : null);
@@ -84,9 +88,8 @@ function SyncRoleContent() {
           }
           try {
             await api.post("/api/v1/onboarding/register-landlord", undefined, token);
-          } catch (regErr: any) {
+          } catch {
             // If already registered, proceed safely
-            console.log("Landlord registration response:", regErr?.message);
           }
           try {
             await completeOnboarding("landlord");
@@ -102,9 +105,9 @@ function SyncRoleContent() {
         } else {
           window.location.href = "/";
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Sync role failed:", err);
-        const code = err?.response?.status || err?.status || 500;
+        const code = extractErrorStatus(err) ?? 500;
         setErrorStatus(code);
         if (code === 400) {
           setErrorMessage("Looks like you already have an account role set up.");
@@ -180,3 +183,4 @@ export default function SyncRolePage() {
     </Suspense>
   );
 }
+

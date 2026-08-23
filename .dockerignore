@@ -1,0 +1,77 @@
+# Root .dockerignore
+# Excludes large contexts and secrets from root-level Docker builds
+
+# Virtual environments & Dependencies
+node_modules/
+frontend/node_modules/
+venv/
+.venv/
+backend/venv/
+backend/.venv/
+
+# Build outputs
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+dist/
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+__pycache__/
+*.py[cod]
+
+# Secrets & Environment Files
+.env
+.env.*
+*.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.*
+frontend/.env.local
+frontend/.env.*.local
+/.clerk/
+.clerk/
+*.pem
+*.key
+*.cert
+*.crt
+
+# Safe templates
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Git, IDE, OS
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+.agent/
+.agents/
+openspec/
+
+# Testing & Coverage
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+backend/.pytest_cache/
+test-results/
+frontend/test-results/
+playwright-report/
+frontend/playwright-report/
+blob-report/
+frontend/blob-report/
+
+# Databases & local volumes
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+postgres_data/
+*.log

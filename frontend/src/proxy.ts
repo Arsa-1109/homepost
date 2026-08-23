@@ -108,11 +108,12 @@ export default clerkMiddleware(async (auth, req) => {
   // Protect all non-public routes (e.g. /landlord/*, /tenant/*).
   // Real Clerk session ONLY — no cookie-fabricated session claims (C5).
   const authObj = await auth();
-  let sessionClaims: any = authObj?.sessionClaims;
+  type SessionClaimsLike = { metadata?: { onboardingComplete?: boolean; role?: string } };
+  let sessionClaims = (authObj?.sessionClaims ?? null) as SessionClaimsLike | null;
 
   if (!sessionClaims) {
     const { sessionClaims: protectedClaims } = await auth.protect();
-    sessionClaims = protectedClaims;
+    sessionClaims = protectedClaims as unknown as SessionClaimsLike;
   }
 
   // Role-Based Access Control via Clerk session claims
@@ -144,3 +145,4 @@ export const config = {
     "/(api|trpc)(.*)",
   ],
 };
+

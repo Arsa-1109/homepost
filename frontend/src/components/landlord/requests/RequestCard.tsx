@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -161,8 +163,8 @@ export function RequestCard({
       toast.success("Maintenance request updated successfully!");
       setTimelineRefreshKey((k) => k + 1);
       onUpdate();
-    } catch (err: any) {
-      const rawMsg = err.message || "Failed to update request";
+    } catch (err) {
+      const rawMsg = errorMessage(err) || "Failed to update request";
       setError(getEmpatheticErrorMessage(rawMsg));
     } finally {
       setIsUpdating(false);
@@ -381,7 +383,7 @@ export function RequestCard({
                     </span>
                     <Select
                       value={status}
-                      onValueChange={(val: any) => setStatus(val)}
+                      onValueChange={(val) => setStatus(val as typeof req.status)}
                       disabled={req.status === "closed"}
                     >
                       <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 transition-colors h-11 rounded-xl">
@@ -518,3 +520,4 @@ export function RequestCard({
     </div>
   );
 }
+

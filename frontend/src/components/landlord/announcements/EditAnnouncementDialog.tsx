@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { errorMessage } from "@/lib/errors";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -56,7 +57,7 @@ export function EditAnnouncementDialog({
 
     setIsEditSubmitting(true);
     try {
-      const payload: any = { title: editTitle, body: editBody };
+      const payload: Record<string, unknown> = { title: editTitle, body: editBody };
       payload.unit_id = editUnitId ? editUnitId : null;
 
       await fetchAPI(`/api/v1/landlord/announcements/${announcement.id}`, {
@@ -66,8 +67,8 @@ export function EditAnnouncementDialog({
       toast.success("Announcement updated successfully!");
       onClose();
       onSuccess();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to update announcement. Please try again.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to update announcement. Please try again.");
     } finally {
       setIsEditSubmitting(false);
     }
@@ -162,3 +163,4 @@ export function EditAnnouncementDialog({
     </Dialog>
   );
 }
+

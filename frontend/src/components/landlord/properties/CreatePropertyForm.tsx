@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { errorMessage } from "@/lib/errors";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchAPI } from "@/lib/api";
@@ -40,8 +41,8 @@ export function CreatePropertyForm({ onSuccess, onCancel }: CreatePropertyFormPr
       setCity("");
       toast.success("Property added successfully!");
       onSuccess(newProp);
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to add property. Please try again.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to add property. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,3 +124,4 @@ export function CreatePropertyForm({ onSuccess, onCancel }: CreatePropertyFormPr
     </form>
   );
 }
+

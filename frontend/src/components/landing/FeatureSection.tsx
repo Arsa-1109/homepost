@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Building2, Wrench, Users, Megaphone, FileText } from "lucide-react";
 
 export const FEATURE_CONTENT = {

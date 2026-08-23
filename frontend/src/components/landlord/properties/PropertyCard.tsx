@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -113,8 +115,8 @@ export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
       onUpdate(updated);
       setIsEditing(false);
       toast.success("Property updated successfully");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update property");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to update property");
     } finally {
       setIsSaving(false);
     }
@@ -129,8 +131,8 @@ export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
       onDelete(p.id);
       toast.success("Property deleted successfully");
       setShowDeleteDialog(false);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete property");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to delete property");
     } finally {
       setIsDeleting(false);
     }
@@ -319,3 +321,4 @@ export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
     </div>
   );
 }
+

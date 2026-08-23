@@ -1,5 +1,8 @@
 "use client";
 
+import { ClerkPublicMetadata } from "@/lib/clerk-global";
+import { errorMessage } from "@/lib/errors";
+
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
@@ -17,7 +20,7 @@ export default function DashboardRedirect() {
     if (redirectedRef.current) return;
     setError(null);
     try {
-      const metadataRole = (clerkUser?.publicMetadata as any)?.role;
+      const metadataRole = (clerkUser?.publicMetadata as ClerkPublicMetadata | undefined)?.role;
       const cookieRole = typeof document !== "undefined"
         ? document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2]
         : null;
@@ -55,9 +58,9 @@ export default function DashboardRedirect() {
         redirectedRef.current = true;
         window.location.replace("/");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Dashboard redirect failed:", err);
-      setError(err?.message || "Unable to connect to backend server.");
+      setError(errorMessage(err) || "Unable to connect to backend server.");
     }
   }, [getToken, clerkUser]);
 
@@ -106,3 +109,4 @@ export default function DashboardRedirect() {
     </div>
   );
 }
+

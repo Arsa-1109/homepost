@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -94,8 +96,8 @@ export default function TenantDashboard() {
         setProfile(prof);
         setRequests(reqs.slice(0, 5)); // Show up to 5 recent requests
         setAnnouncements(anns);
-      } catch (err: any) {
-        setError(err.message ?? "Something went wrong.");
+      } catch (err) {
+        setError(errorMessage(err) ?? "Something went wrong.");
       } finally {
         setLoading(false);
       }
@@ -338,3 +340,4 @@ export default function TenantDashboard() {
     </div>
   );
 }
+

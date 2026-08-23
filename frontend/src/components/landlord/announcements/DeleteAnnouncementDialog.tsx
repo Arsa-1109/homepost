@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { errorMessage } from "@/lib/errors";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -31,8 +32,8 @@ export function DeleteAnnouncementDialog({
       toast.success("Announcement deleted successfully!");
       onClose();
       onSuccess();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to delete announcement.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to delete announcement.");
     } finally {
       setIsDeleteSubmitting(false);
     }
@@ -72,3 +73,4 @@ export function DeleteAnnouncementDialog({
     </Dialog>
   );
 }
+

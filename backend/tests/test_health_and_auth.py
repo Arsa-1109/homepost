@@ -12,6 +12,14 @@ async def test_health_check(client: AsyncClient):
     assert response.json() == {"status": "ok", "service": "homepost-api"}
 
 
+async def test_healthz_check(client: AsyncClient):
+    """Checks that the /healthz Kubernetes/Docker standard probe responds with 200."""
+    response = await client.get("/healthz")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "service": "homepost-api"}
+
+
+
 async def test_unauthorized_without_token(client: AsyncClient):
     """Endpoints requiring authentication should return 401 when no token is supplied."""
     response = await client.get("/api/v1/onboarding/me")

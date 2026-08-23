@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import React, { useState, useEffect } from "react";
 import { Calendar, Pencil, AlertTriangle } from "lucide-react";
 import {
@@ -62,8 +64,8 @@ export function EditLeaseModal({
       toast.success("Lease dates updated successfully");
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update lease dates");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to update lease dates");
     } finally {
       setIsUpdating(false);
     }
@@ -171,8 +173,8 @@ export function EditUnitModal({
       toast.success("Unit updated successfully");
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update unit");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to update unit");
     } finally {
       setIsUpdating(false);
     }
@@ -284,8 +286,8 @@ export function DeleteUnitModal({
       toast.success("Unit deleted successfully");
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete unit");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to delete unit");
     } finally {
       setIsDeleting(false);
     }
@@ -332,3 +334,4 @@ export function DeleteUnitModal({
     </Dialog>
   );
 }
+

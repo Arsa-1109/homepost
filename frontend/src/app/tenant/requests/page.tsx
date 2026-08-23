@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -164,8 +166,8 @@ function TenantRequestsContent() {
       );
       toast.success("Maintenance request closed successfully.");
       refetch();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to close request.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to close request.");
     } finally {
       setClosingId(null);
     }
@@ -257,7 +259,7 @@ function TenantRequestsContent() {
                 <button
                   type="button"
                   key={filter.id}
-                  onClick={() => handleFilterChange(filter.id as any)}
+                  onClick={() => handleFilterChange(filter.id as Parameters<typeof handleFilterChange>[0])}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                     selectedFilter === filter.id
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
@@ -411,3 +413,4 @@ function TenantRequestsContent() {
     </>
   );
 }
+

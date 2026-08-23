@@ -1,24 +1,56 @@
-# Virtual environments
+# Virtual environments & python caches
 venv/
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+*.pyd
 
-# Environment files (Railway injects env vars at runtime)
+# Environment files & secrets (injected via cloud runtime / compose)
 .env
 .env.*
+*.env
 !.env.example
+*.pem
+*.key
+*.cert
+*.crt
 
 # IDE / OS
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+desktop.ini
 
-# Testing / caching
+# Testing, linters & caching
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+.hypothesis/
 htmlcov/
+tests/
+pytest.ini
+.coverage
+.coverage.*
+test-results/
+
+# Development / seed scripts (not shipped to production runtime)
+seed.py
+apply_migration.py
+
+# Local databases & logs
+*.db
+*.sqlite
+*.sqlite3
+*-journal
+*.db-shm
+*.db-wal
+*.log
 
 # Git
 .git/

@@ -21,7 +21,7 @@ import {
   Clock,
 } from "lucide-react";
 import { MaintenanceRequest, RequestCard } from "@/components/landlord/requests/RequestCard";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import {

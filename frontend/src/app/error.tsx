@@ -29,7 +29,7 @@ export default function ErrorPage({
         <Button onClick={() => reset()} className="bg-[rgb(var(--ml-accent))] hover:opacity-90 text-white">
           Try again
         </Button>
-        <Button variant="outline" onClick={() => window.location.href = "/landlord/dashboard"}>
+        <Button variant="outline" onClick={() => window.location.href = "/"}>
           Return Home
         </Button>
       </div>

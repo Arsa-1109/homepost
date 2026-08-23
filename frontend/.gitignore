@@ -1,7 +1,59 @@
+# ==============================================================================
+# Dependencies
+# ==============================================================================
+node_modules/
+.pnp/
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
-# clerk configuration (can include secrets)
+# ==============================================================================
+# Next.js Build Outputs
+# ==============================================================================
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+.eslintcache
+.turbo/
+
+# ==============================================================================
+# Environment Variables & Secrets
+# ==============================================================================
+.env
+.env.*
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 /.clerk/
+.clerk/
 
-# Playwright
+# Allow example configs
+!.env.example
+!.env.test.example
+
+# ==============================================================================
+# Testing & Playwright
+# ==============================================================================
+coverage/
 test-results/
 playwright-report/
+blob-report/
+playwright/.cache/
+
+# ==============================================================================
+# Logs & Misc
+# ==============================================================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db

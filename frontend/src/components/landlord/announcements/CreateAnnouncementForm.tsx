@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { errorMessage } from "@/lib/errors";
 import { Megaphone, Paperclip, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -92,7 +93,7 @@ export function CreateAnnouncementForm({
         );
       }
 
-      const payload: any = { property_id: selectedProperty, title, body };
+      const payload: Record<string, unknown> = { property_id: selectedProperty, title, body };
       if (selectedUnit) payload.unit_id = selectedUnit;
       if (attachmentKeys.length > 0) payload.attachment_keys = attachmentKeys;
 
@@ -107,8 +108,8 @@ export function CreateAnnouncementForm({
       setAttachments([]);
       toast.success("Announcement posted successfully!");
       onSuccess();
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to post announcement. Please try again.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to post announcement. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -295,3 +296,4 @@ export function CreateAnnouncementForm({
     </form>
   );
 }
+

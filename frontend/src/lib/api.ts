@@ -17,6 +17,7 @@
 import { ALLOWED_DEMO_IDS, IS_DEMO_MODE } from "@/lib/demo-mode";
 import { generateDemoJWT } from "@/lib/demo-token";
 import { DEMO_ACCOUNTS } from "@/lib/demo-auth";
+import { getClerkGlobal } from "@/lib/clerk-global";
 
 export interface UserRoleResponse {
   id: string;
@@ -48,8 +49,17 @@ function clearLingeringMockStorage(): void {
   }
 }
 
+interface ClerkGlobalWindow extends Window {
+  Clerk?: {
+    session?: {
+      getToken: () => Promise<string | null>;
+    };
+  };
+}
+
 async function getClerkToken(): Promise<string | null> {
-  const clerkGlobal = (window as any).Clerk;
+  if (typeof window === "undefined") return null;
+  const clerkGlobal = (window as unknown as ClerkGlobalWindow).Clerk;
   if (!clerkGlobal?.session) return null;
   try {
     return await clerkGlobal.session.getToken();
@@ -116,7 +126,7 @@ export async function apiFetch<T = unknown>(
 
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
-    const clerkGlobal = (window as any).Clerk;
+    const clerkGlobal = getClerkGlobal();
     const isRealUserPresent = Boolean(clerkGlobal?.user || clerkGlobal?.session?.user);
 
     if (isRealUserPresent) {
@@ -128,19 +138,19 @@ export async function apiFetch<T = unknown>(
       if (!activeToken) {
         // Short poll (max 500ms) to see if Clerk session token resolves
         const clerk = await new Promise<any>((resolve) => {
-          if ((window as any).Clerk?.session) {
-            resolve((window as any).Clerk);
+          if (getClerkGlobal()?.session) {
+            resolve(getClerkGlobal());
             return;
           }
           const interval = setInterval(() => {
-            if ((window as any).Clerk?.session) {
+            if (getClerkGlobal()?.session) {
               clearInterval(interval);
-              resolve((window as any).Clerk);
+              resolve(getClerkGlobal());
             }
           }, 30);
           setTimeout(() => {
             clearInterval(interval);
-            resolve((window as any).Clerk || null);
+            resolve(getClerkGlobal() || null);
           }, 500);
         });
 
@@ -178,8 +188,8 @@ export async function apiFetch<T = unknown>(
       ...options,
       headers,
     });
-  } catch (err: any) {
-    if (err?.name === "AbortError") {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
       throw err;
     }
     console.error("Network error fetching " + path + ":", err);
@@ -234,13 +244,14 @@ export const fetchAPI = apiFetch;
 // Alias for files expecting api.post/api.get
 export const api = {
   get: <T = unknown>(path: string, token: string | null = null) => apiFetch<T>(path, { method: "GET" }, token),
-  post: <T = unknown>(path: string, body?: any, token: string | null = null) => apiFetch<T>(path, { 
+  post: <T = unknown>(path: string, body?: unknown, token: string | null = null) => apiFetch<T>(path, { 
     method: "POST", 
     body: body ? JSON.stringify(body) : undefined 
   }, token),
-  put: <T = unknown>(path: string, body?: any, token: string | null = null) => apiFetch<T>(path, { 
+  put: <T = unknown>(path: string, body?: unknown, token: string | null = null) => apiFetch<T>(path, { 
     method: "PUT", 
     body: body ? JSON.stringify(body) : undefined 
   }, token),
   delete: <T = unknown>(path: string, token: string | null = null) => apiFetch<T>(path, { method: "DELETE" }, token)
 };
+

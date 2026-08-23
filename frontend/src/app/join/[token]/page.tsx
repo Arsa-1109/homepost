@@ -7,6 +7,8 @@
 
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
@@ -22,8 +24,8 @@ interface InvitePreview {
   property_city?: string | null;
   unit_label: string;
   landlord_name?: string | null;
-  landlord_id: string;
-  property_owner_id: string;
+  landlord_id?: string | null;
+  property_owner_id?: string | null;
   status: string;
   expires_at: string;
   lease_start?: string | null;
@@ -69,8 +71,9 @@ export default function JoinPage({
           }
         }
       }
-    } catch (err: any) {
-      const msg = err.message || "";
+    } catch (err: unknown) {
+      const errObj = err as { message?: string } | null;
+      const msg = errObj?.message || "";
       if (msg.includes("invite_not_found")) {
         setError("This invite link is invalid or doesn't exist.");
       } else if (msg.includes("invite_expired")) {
@@ -106,8 +109,8 @@ export default function JoinPage({
       await api.post("/api/v1/onboarding/accept-invite", { token }, authToken);
       await completeOnboarding().catch(() => {});
       window.location.href = "/tenant/dashboard";
-    } catch (err: any) {
-      const msg = err.message || "";
+    } catch (err) {
+      const msg = errorMessage(err);
       if (msg.includes("invite_not_found")) {
         setError("This invite link is invalid or doesn't exist.");
       } else if (msg.includes("invite_expired")) {

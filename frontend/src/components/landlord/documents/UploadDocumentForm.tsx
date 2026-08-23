@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { errorMessage } from "@/lib/errors";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,7 +48,7 @@ export function UploadDocumentForm({
     try {
       const fileKey = await uploadFile(file, "documents");
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         property_id: selectedProperty,
         title,
         file_key: fileKey,
@@ -68,8 +69,8 @@ export function UploadDocumentForm({
       setSelectedUnit("");
       toast.success("Document uploaded successfully!");
       onSuccess(newDoc);
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to upload document. Please try again.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to upload document. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -210,3 +211,4 @@ export function UploadDocumentForm({
     </form>
   );
 }
+

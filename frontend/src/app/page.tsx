@@ -1,9 +1,13 @@
 "use client";
 
+import { ClerkPublicMetadata } from "@/lib/clerk-global";
+
+import { errorMessage } from "@/lib/errors";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "next-themes";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
@@ -102,8 +106,8 @@ export default function LandingPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const metadataRole = (user?.publicMetadata as any)?.role;
-    const metadataComplete = (user?.publicMetadata as any)?.onboardingComplete;
+    const metadataRole = (user?.publicMetadata as ClerkPublicMetadata | undefined)?.role;
+    const metadataComplete = (user?.publicMetadata as ClerkPublicMetadata | undefined)?.onboardingComplete;
     const cookieRole =
       typeof document !== "undefined"
         ? document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2]
@@ -173,8 +177,8 @@ export default function LandingPage() {
           document.cookie = "mock_user_onboarding_complete=true; path=/";
         }
         router.push("/sync-role");
-      } catch (err: any) {
-        setError(err.message || "Failed to register as landlord.");
+      } catch (err) {
+        setError(errorMessage(err) || "Failed to register as landlord.");
         setIsSubmitting(false);
       }
     } else {
@@ -196,8 +200,8 @@ export default function LandingPage() {
           document.cookie = "mock_user_onboarding_complete=true; path=/";
         }
         router.push("/sync-role");
-      } catch (err: any) {
-        setError(err.message || "Failed to request access. Check the email.");
+      } catch (err) {
+        setError(errorMessage(err) || "Failed to request access. Check the email.");
         setIsSubmitting(false);
       }
     } else {
@@ -469,3 +473,4 @@ export default function LandingPage() {
     </div>
   );
 }
+

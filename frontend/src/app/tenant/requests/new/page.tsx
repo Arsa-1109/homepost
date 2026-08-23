@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
@@ -80,8 +82,8 @@ export default function NewRequestPage() {
       router.push("/tenant/requests");
       router.refresh();
       toast.success("Maintenance request submitted successfully.");
-    } catch (err: any) {
-      setError(err.message || "Failed to submit request.");
+    } catch (err) {
+      setError(errorMessage(err) || "Failed to submit request.");
     } finally {
       setLoading(false);
     }
@@ -271,3 +273,4 @@ export default function NewRequestPage() {
     </div>
   );
 }
+

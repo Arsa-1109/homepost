@@ -1,4 +1,4 @@
-fastapi[standard]==0.115.*
+fastapi[standard]==0.141.*
 uvicorn[standard]==0.34.*
 sqlmodel==0.0.38
 asyncpg==0.30.*
@@ -8,10 +8,11 @@ pyjwt[crypto]==2.*
 httpx==0.28.*
 boto3==1.35.*
 resend==2.5.*
-python-dotenv==1.1.*
-python-multipart==0.0.20
+python-dotenv==1.2.*
+python-multipart==0.0.31
 apscheduler==3.10.*
 pydantic-settings==2.7.*
-pytest==8.3.*
-pytest-asyncio==0.24.*
+pytest==9.0.*
+pytest-asyncio==1.4.*
 slowapi==0.1.9
+starlette==1.6.*

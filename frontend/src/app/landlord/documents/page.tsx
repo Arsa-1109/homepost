@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
+import { errorMessage } from "@/lib/errors";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
@@ -119,9 +120,9 @@ function LandlordDocumentsContent() {
       );
       setUnits(sortedUnits);
       setDocuments(Array.isArray(docData) ? docData : []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load documents/units:", err);
-      setDocsError(err?.message || "Failed to load documents.");
+      setDocsError(errorMessage(err) || "Failed to load documents.");
       setDocuments([]);
     } finally {
       setDocsLoading(false);
@@ -526,3 +527,4 @@ function LandlordDocumentsContent() {
     </>
   );
 }
+

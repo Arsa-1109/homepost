@@ -85,6 +85,7 @@ class Settings(BaseSettings):
     # --- App ---
     frontend_url: str = "http://localhost:3000"
     max_reopen_days: int = 14
+    invite_expiry_days: int = 7
     mock_auth: bool = False
     enable_demo_auth: bool = False  # Explicit opt-in for unsigned demo tokens; never in production
     environment: str = "development"  # "development" | "staging" | "production"

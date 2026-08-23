@@ -104,6 +104,8 @@ def validate_file_magic_bytes(file_bytes: bytes, ext: str) -> None:
             raise HTTPException(status_code=400, detail="Invalid HEIC/HEIF image content or corrupted file.")
 
     # MP4 / MOV / M4V: ISO Base Media File Format (ftyp, moov, mdat, wide)
+    # Lenient sniffing accommodates fragmented MP4s, QuickTime containers, and
+    # mobile video recordings where moov/mdat/wide may precede ftyp in the header.
     elif ext in [".mp4", ".mov", ".m4v"]:
         if len(file_bytes) < 8:
             raise HTTPException(status_code=400, detail="Invalid video content or file too small.")
@@ -213,7 +215,6 @@ async def get_presigned_download_url(
         raise HTTPException(status_code=400, detail="Invalid file key.")
 
     authorized = False
-
     if user.role == UserRole.LANDLORD:
         if file_key.startswith("documents/"):
             doc_res = await session.execute(
@@ -223,10 +224,10 @@ async def get_presigned_download_url(
             )
             authorized = doc_res.scalars().first() is not None
         elif file_key.startswith("maintenance/"):
-            from sqlalchemy import or_, literal
+            from sqlalchemy import or_
             from sqlalchemy.sql import func
             maint_res = await session.execute(
-                select(MaintenanceRequest.id)
+                select(MaintenanceRequest.image_keys, MaintenanceRequest.landlord_image_keys)
                 .join(Unit, MaintenanceRequest.unit_id == Unit.id)
                 .join(Property, Unit.property_id == Property.id)
                 .where(
@@ -236,22 +237,25 @@ async def get_presigned_download_url(
                         func.cast(MaintenanceRequest.landlord_image_keys, String).contains(file_key),
                     )
                 )
-                .limit(1)
             )
-            authorized = maint_res.scalars().first() is not None
+            for img_keys, l_img_keys in maint_res.all():
+                if (img_keys and file_key in img_keys) or (l_img_keys and file_key in l_img_keys):
+                    authorized = True
+                    break
         elif file_key.startswith("announcements/"):
-            from sqlalchemy import or_
             from sqlalchemy.sql import func
             ann_res = await session.execute(
-                select(Announcement.id)
+                select(Announcement.attachment_keys)
                 .join(Property, Announcement.property_id == Property.id)
                 .where(
                     Property.owner_id == user.id,
                     func.cast(Announcement.attachment_keys, String).contains(file_key),
                 )
-                .limit(1)
             )
-            authorized = ann_res.scalars().first() is not None
+            for (att_keys,) in ann_res.all():
+                if att_keys and file_key in att_keys:
+                    authorized = True
+                    break
     elif user.role == UserRole.TENANT:
         prof_res = await session.execute(
             select(TenantProfile).where(TenantProfile.user_id == user.id, TenantProfile.is_active == True)
@@ -273,7 +277,7 @@ async def get_presigned_download_url(
                     from sqlalchemy import or_
                     from sqlalchemy.sql import func
                     maint_res = await session.execute(
-                        select(MaintenanceRequest.id)
+                        select(MaintenanceRequest.image_keys, MaintenanceRequest.landlord_image_keys)
                         .where(
                             MaintenanceRequest.tenant_id == profile.id,
                             or_(
@@ -281,21 +285,25 @@ async def get_presigned_download_url(
                                 func.cast(MaintenanceRequest.landlord_image_keys, String).contains(file_key),
                             )
                         )
-                        .limit(1)
                     )
-                    authorized = maint_res.scalars().first() is not None
+                    for img_keys, l_img_keys in maint_res.all():
+                        if (img_keys and file_key in img_keys) or (l_img_keys and file_key in l_img_keys):
+                            authorized = True
+                            break
                 elif file_key.startswith("announcements/"):
                     from sqlalchemy.sql import func
                     ann_res = await session.execute(
-                        select(Announcement.id)
+                        select(Announcement.attachment_keys)
                         .where(
                             Announcement.property_id == unit.property_id,
                             (Announcement.unit_id == None) | (Announcement.unit_id == profile.unit_id),
                             func.cast(Announcement.attachment_keys, String).contains(file_key),
                         )
-                        .limit(1)
                     )
-                    authorized = ann_res.scalars().first() is not None
+                    for (att_keys,) in ann_res.all():
+                        if att_keys and file_key in att_keys:
+                            authorized = True
+                            break
 
     if not authorized:
         raise HTTPException(status_code=403, detail="You do not have permission to access this file.")

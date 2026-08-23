@@ -5,7 +5,7 @@ import { fetchAPI } from "@/lib/api";
 
 export type ApiFetcher<T> = (signal: AbortSignal) => Promise<T>;
 
-export interface UseApiQueryOptions<T = any> {
+export interface UseApiQueryOptions<T = unknown> {
   enabled?: boolean;
   token?: string | null;
   initialData?: T;
@@ -75,17 +75,18 @@ export function useApiQuery<T>(
           setError(null);
           setIsLoading(false);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Abort errors are expected when cancelling/superseding requests
+        const errObj = err as { name?: string; message?: string } | null;
         if (
-          err?.name === "AbortError" ||
+          errObj?.name === "AbortError" ||
           controller.signal.aborted ||
           currentId !== activeRequestId.current
         ) {
           return;
         }
 
-        const message = err?.message || "Failed to load data. Please try again.";
+        const message = errObj?.message || "Failed to load data. Please try again.";
         setError(message);
         setIsLoading(false);
       }

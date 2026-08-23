@@ -30,8 +30,13 @@ class InviteStatus(str, Enum):
 
 
 def _default_expires_at() -> datetime:
-    """Invite expires 7 days from creation (naive UTC — legacy column)."""
-    return utc_now_naive() + timedelta(days=7)
+    """Invite expires in configured invite_expiry_days (default 7) from creation (naive UTC)."""
+    try:
+        from app.core.config import get_settings
+        days = get_settings().invite_expiry_days
+    except Exception:
+        days = 7
+    return utc_now_naive() + timedelta(days=days)
 
 
 class Invite(SQLModel, table=True):

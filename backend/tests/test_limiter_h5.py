@@ -62,13 +62,18 @@ def test_limiter_is_configured_with_proxy_aware_key_func():
 
 
 def test_dockerfile_launches_uvicorn_with_proxy_headers():
-    dockerfile = Path(__file__).resolve().parent.parent / "Dockerfile"
-    content = dockerfile.read_text(encoding="utf-8")
-    assert "--proxy-headers" in content, (
+    backend_dir = Path(__file__).resolve().parent.parent
+    # The uvicorn launch lives in docker-entrypoint.sh (JSON-form ENTRYPOINT);
+    # the Dockerfile must wire that entrypoint in.
+    entrypoint = (backend_dir / "docker-entrypoint.sh").read_text(encoding="utf-8")
+    assert "--proxy-headers" in entrypoint, (
         "uvicorn must be launched with --proxy-headers so rate limiting "
         "keys on the real client IP behind Railway's LB"
     )
-    assert "--forwarded-allow-ips" in content
+    assert "--forwarded-allow-ips" in entrypoint
+
+    dockerfile = (backend_dir / "Dockerfile").read_text(encoding="utf-8")
+    assert 'ENTRYPOINT ["docker-entrypoint.sh"]' in dockerfile
 
 
 def test_auth_dependency_records_user_id_on_request_state():

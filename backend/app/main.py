@@ -14,13 +14,21 @@ from urllib.parse import urlparse, urlunparse
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.core.config import get_settings
 from app.core.database import engine
+from app.core.limiter import limiter
+from app.core.security import validate_secure_environment
 from app.services.scheduler import start_scheduler, stop_scheduler
+
+from app.routers.onboarding import router as onboarding_router
+from app.routers.landlord import router as landlord_router
+from app.routers.tenant import router as tenant_router
+from app.routers.uploads import router as uploads_router
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -34,8 +42,6 @@ async def lifespan(application: FastAPI):
     - Shutdown: stop APScheduler, dispose database engine.
     """
     # --- Startup ---
-    from app.core.security import validate_secure_environment
-
     validate_secure_environment(settings)
 
     raw_url = settings.database_url
@@ -77,8 +83,6 @@ async def lifespan(application: FastAPI):
 
 settings = get_settings()
 
-from app.core.limiter import limiter
-
 app = FastAPI(
     title="Homepost API",
     description="Tenant portal for individual property owners managing 1–5 properties.",
@@ -89,10 +93,6 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS — allow the Next.js frontend to make cross-origin requests
-# FRONTEND_URL can be a single URL or comma-separated list of URLs
-# Supports regex matching for local development and Vercel preview/branch deployments.
-from fastapi.responses import JSONResponse
 
 # ---------------------------------------------------------------------------
 # Security Headers & Body Size Limit Middlewares
@@ -129,11 +129,20 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestSizeLimitMiddleware)
 
+# CORS — allow the Next.js frontend to make cross-origin requests
+# FRONTEND_URL can be a single URL or comma-separated list of URLs
+# Supports regex matching for local development; gated in production (M5)
 _raw_origins = [o.strip() for o in settings.frontend_url.split(",") if o.strip()]
+_allow_origin_regex = (
+    r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+    if settings.environment != "production"
+    else None
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_raw_origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=_allow_origin_regex,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
@@ -142,7 +151,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # ---------------------------------------------------------------------------
-# Health Check — used by Railway healthcheck and CI smoke tests
+# Health Checks — used by container orchestrators, Railway, and CI smoke tests
 # ---------------------------------------------------------------------------
 @app.get("/health", tags=["System"])
 async def health_check():
@@ -150,14 +159,15 @@ async def health_check():
     return {"status": "ok", "service": "homepost-api"}
 
 
-# ---------------------------------------------------------------------------
-# Router Registration (Phase 4+)
-# ---------------------------------------------------------------------------
-from app.routers.onboarding import router as onboarding_router
-from app.routers.landlord import router as landlord_router
-from app.routers.tenant import router as tenant_router
-from app.routers.uploads import router as uploads_router
+@app.get("/healthz", tags=["System"])
+async def healthz_check():
+    """Kubernetes/Docker standard liveness endpoint."""
+    return {"status": "ok", "service": "homepost-api"}
 
+
+# ---------------------------------------------------------------------------
+# Router Registration
+# ---------------------------------------------------------------------------
 app.include_router(onboarding_router, prefix="/api/v1")
 app.include_router(landlord_router, prefix="/api/v1")
 app.include_router(tenant_router, prefix="/api/v1")

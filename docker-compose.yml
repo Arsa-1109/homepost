@@ -6,11 +6,11 @@ services:
     container_name: tenant_portal_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: landlord
-      POSTGRES_PASSWORD: landlord
-      POSTGRES_DB: tenant_portal
+      POSTGRES_USER: ${POSTGRES_USER:-landlord}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-landlord}
+      POSTGRES_DB: ${POSTGRES_DB:-tenant_portal}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

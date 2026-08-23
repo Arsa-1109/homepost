@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
+import { errorMessage } from "@/lib/errors";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -110,9 +111,9 @@ function LandlordUnitsContent() {
         token
       );
       setUnits(Array.isArray(data) ? data : []);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load units for property:", err);
-      setUnitsError(err?.message || "Failed to load property units.");
+      setUnitsError(errorMessage(err) || "Failed to load property units.");
       setUnits([]);
     } finally {
       setUnitsLoading(false);
@@ -437,3 +438,4 @@ function LandlordUnitsContent() {
     </div>
   );
 }
+

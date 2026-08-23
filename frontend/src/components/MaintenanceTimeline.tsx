@@ -21,6 +21,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { isImageUrl } from "@/components/LightboxModal";
 
+export interface MaintenanceEventPayload {
+  old_status?: string;
+  new_status?: string;
+  old_priority?: string;
+  new_priority?: string;
+  notes?: string;
+  image_keys?: string[];
+  image_urls?: string[];
+  image_count?: number;
+}
+
 export type MaintenanceEvent = {
   id: string;
   maintenance_request_id: string;
@@ -28,7 +39,7 @@ export type MaintenanceEvent = {
   actor_name: string;
   event_type: string;
   description: string;
-  payload: any;
+  payload: MaintenanceEventPayload | null;
   created_at: string;
 };
 
@@ -187,11 +198,11 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                         {/* Status Change Badges */}
                         {event.event_type === "status_changed" && event.payload && (
                           <div className="mt-3 flex items-center gap-2 flex-wrap">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${STATUS_COLORS[event.payload.old_status?.toLowerCase()] || STATUS_COLORS.open}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${(event.payload.old_status && STATUS_COLORS[event.payload.old_status.toLowerCase()]) || STATUS_COLORS.open}`}>
                               {event.payload.old_status?.replace("_", " ")}
                             </span>
                             <ArrowRight className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]/50" />
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${STATUS_COLORS[event.payload.new_status?.toLowerCase()] || STATUS_COLORS.open}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${(event.payload.new_status && STATUS_COLORS[event.payload.new_status.toLowerCase()]) || STATUS_COLORS.open}`}>
                               {event.payload.new_status?.replace("_", " ")}
                             </span>
                           </div>
@@ -200,11 +211,11 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                         {/* Priority Change Badges */}
                         {event.event_type === "priority_changed" && event.payload && (
                           <div className="mt-3 flex items-center gap-2 flex-wrap">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${PRIORITY_COLORS[event.payload.old_priority?.toLowerCase()] || PRIORITY_COLORS.medium}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${(event.payload.old_priority && PRIORITY_COLORS[event.payload.old_priority.toLowerCase()]) || PRIORITY_COLORS.medium}`}>
                               {event.payload.old_priority?.replace("_", " ")}
                             </span>
                             <ArrowRight className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]/50" />
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${PRIORITY_COLORS[event.payload.new_priority?.toLowerCase()] || PRIORITY_COLORS.medium}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase border shadow-2xs ${(event.payload.new_priority && PRIORITY_COLORS[event.payload.new_priority.toLowerCase()]) || PRIORITY_COLORS.medium}`}>
                               {event.payload.new_priority?.replace("_", " ")}
                             </span>
                           </div>
@@ -265,11 +276,11 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                         )}
 
                         {/* Fallback for OLD events */}
-                        {event.payload?.image_count > 0 && !event.payload?.image_urls && (
+                        {Boolean(event.payload?.image_count && event.payload.image_count > 0 && !event.payload?.image_urls) && (
                           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgb(var(--ml-bg-primary))]/40 border border-dashed border-border/50">
                             <span className="text-amber-400 text-xs">🖼</span>
                             <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium italic">
-                              {event.payload.image_count} file{event.payload.image_count !== 1 ? "s" : ""} attached
+                              {event.payload?.image_count} file{event.payload?.image_count !== 1 ? "s" : ""} attached
                               <span className="ml-1 opacity-60">(preview unavailable for older records)</span>
                             </span>
                           </div>

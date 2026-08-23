@@ -1,27 +1,33 @@
 import logging
 import uuid
+from datetime import date
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
+from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from pydantic import BaseModel, Field
 from app.core.database import get_session
 from app.core.limiter import limiter
+from app.core.pagination import PaginationParams, Page
+from app.core.time import utc_now
 from app.dependencies.auth import get_current_landlord, require_non_demo_user
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.unit import Unit
-from app.models.tenant_profile import TenantProfile
-from app.models.maintenance_request import MaintenanceRequest, VALID_TRANSITIONS
-from app.models.maintenance_event import MaintenanceEvent
+from app.models.maintenance_request import MaintenanceRequest
 from app.models.announcement import Announcement
+from app.models.document import Document
+from app.models.invite import Invite
+
 from app.schemas.property import PropertyCreate, PropertyUpdate
 from app.schemas.unit import UnitCreate, UnitUpdate, UnitResponse
 from app.schemas.maintenance import MaintenanceRequestUpdate, MaintenanceRequestResponse
 from app.schemas.announcement import AnnouncementCreate, AnnouncementUpdate, AnnouncementResponse
 from app.schemas.document import DocumentCreate, DocumentResponse
+
 from app.services.email import (
-    send_status_update,
     send_approval_notification,
     send_denial_notification,
 )
@@ -30,14 +36,28 @@ from app.services.storage import (
     hydrate_announcement,
     generate_presigned_urls_batch,
 )
-from app.core.pagination import PaginationParams, Page
-from app.services.storage_cleanup import (
-    collect_property_storage_keys,
-    collect_unit_storage_keys,
-    purge_storage_keys,
-    record_cleanup_failures,
+from app.services.properties import (
+    format_address,
+    delete_property_cascade,
+    delete_unit_cascade,
+    create_property_units_batch,
+    get_unit_occupancy_maps,
+    build_unit_details_response,
 )
-from app.core.time import utc_now
+from app.services.tenants import (
+    approve_tenant_for_unit,
+    create_unit_invite,
+    deny_pending_tenant,
+    update_unit_lease,
+    remove_active_tenant,
+)
+from app.services.maintenance import (
+    process_maintenance_update,
+    fetch_maintenance_events_with_urls,
+)
+from app.services.dashboard import (
+    get_landlord_dashboard_data,
+)
 
 # require_non_demo_user at router level (H7): every mutating route on this
 # router structurally rejects demo accounts — no per-endpoint guard calls.
@@ -48,23 +68,42 @@ router = APIRouter(
 )
 logger = logging.getLogger(__name__)
 
+
+# ---------------------------------------------------------------------------
+# Request Payload Models
+# ---------------------------------------------------------------------------
+class BatchUnitCreate(BaseModel):
+    property_id: uuid.UUID
+    unit_labels: list[str] = Field(..., min_length=1, max_length=50)
+
+
+class GenerateInvitePayload(BaseModel):
+    unit_id: uuid.UUID
+    clear_data: bool = False
+    lease_start: Optional[date] = None
+    lease_end: Optional[date] = None
+    rent_due_day: Optional[int] = Field(default=None, ge=1, le=31)
+
+
+class ApproveTenantPayload(BaseModel):
+    user_id: uuid.UUID
+    unit_id: uuid.UUID
+    lease_start: Optional[date] = None
+    lease_end: Optional[date] = None
+
+
+class DenyTenantPayload(BaseModel):
+    user_id: uuid.UUID
+
+
+class UpdateLeasePayload(BaseModel):
+    lease_start: Optional[date] = None
+    lease_end: Optional[date] = None
+
+
 # ---------------------------------------------------------------------------
 # Properties
 # ---------------------------------------------------------------------------
-
-import re
-
-def format_address(address: str) -> str:
-    if not address:
-        return ""
-    formatted = address.strip()
-    formatted = re.sub(r'\bstreets\b', 'street', formatted, flags=re.IGNORECASE)
-    formatted = re.sub(r'\bdrives\b', 'drive', formatted, flags=re.IGNORECASE)
-    formatted = re.sub(r'\bavenues\b', 'avenue', formatted, flags=re.IGNORECASE)
-    words = formatted.split()
-    return ' '.join(w.capitalize() for w in words)
-
-
 @router.post("/properties", response_model=Property)
 @limiter.limit("10/minute")
 async def create_property(
@@ -79,12 +118,13 @@ async def create_property(
         prop_in.address = format_address(prop_in.address)
     if prop_in.city:
         prop_in.city = format_address(prop_in.city)
-        
+
     prop = Property(**prop_in.model_dump(), owner_id=user.id)
     session.add(prop)
     await session.commit()
     await session.refresh(prop)
     return prop
+
 
 @router.get("/properties", response_model=Page[Property])
 async def list_properties(
@@ -92,8 +132,6 @@ async def list_properties(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import func
-
     base = select(Property).where(Property.owner_id == user.id)
     total_res = await session.execute(
         select(func.count()).select_from(base.subquery())
@@ -106,8 +144,8 @@ async def list_properties(
         .limit(pagination.limit)
     )
     items = result.scalars().all()
-    return Page(items=items, total=total, limit=pagination.limit,
-                offset=pagination.offset)
+    return Page(items=items, total=total, limit=pagination.limit, offset=pagination.offset)
+
 
 @router.put("/properties/{property_id}", response_model=Property)
 @limiter.limit("20/minute")
@@ -121,7 +159,7 @@ async def update_property(
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=404, detail="Property not found")
-    
+
     update_data = prop_in.model_dump(exclude_unset=True)
     if "name" in update_data and update_data["name"]:
         update_data["name"] = format_address(update_data["name"])
@@ -129,15 +167,16 @@ async def update_property(
         update_data["address"] = format_address(update_data["address"])
     if "city" in update_data and update_data["city"]:
         update_data["city"] = format_address(update_data["city"])
-        
+
     for field, value in update_data.items():
         if value is not None:
             setattr(prop, field, value)
-            
+
     session.add(prop)
     await session.commit()
     await session.refresh(prop)
     return prop
+
 
 @router.delete("/properties/{property_id}", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit("10/minute")
@@ -148,77 +187,13 @@ async def delete_property(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-
-    prop = await session.get(Property, property_id)
-    if not prop or prop.owner_id != user.id:
-        raise HTTPException(status_code=404, detail="Property not found")
-
-    # M2: collect R2 keys BEFORE the cascade deletes remove their rows.
-    storage_keys = await collect_property_storage_keys(session, property_id)
-        
-    # Check for active tenants in any unit
-    from app.models.tenant_profile import TenantProfile
-    from app.models.unit import Unit
-    from sqlalchemy import select, delete
-    
-    units_res = await session.execute(select(Unit.id).where(Unit.property_id == property_id))
-    unit_ids = units_res.scalars().all()
-    
-    if unit_ids:
-        tenant_res = await session.execute(
-            select(TenantProfile).where(
-                TenantProfile.unit_id.in_(unit_ids),
-                TenantProfile.is_active == True
-            )
-        )
-        if tenant_res.scalars().first():
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot delete a property with occupied units. Please remove the tenants first."
-            )
-            
-        # Delete associated data for all units
-        from app.models.invite import Invite
-        from app.models.maintenance_request import MaintenanceRequest
-        from app.models.maintenance_event import MaintenanceEvent
-        from app.models.document import Document
-        
-        # Delete timeline events first to avoid FK constraint violation
-        req_res = await session.execute(select(MaintenanceRequest.id).where(MaintenanceRequest.unit_id.in_(unit_ids)))
-        req_ids = req_res.scalars().all()
-        if req_ids:
-            await session.execute(delete(MaintenanceEvent).where(MaintenanceEvent.maintenance_request_id.in_(req_ids)))
-
-        await session.execute(delete(Invite).where(Invite.unit_id.in_(unit_ids)))
-        await session.execute(delete(MaintenanceRequest).where(MaintenanceRequest.unit_id.in_(unit_ids)))
-        await session.execute(delete(Document).where(Document.unit_id.in_(unit_ids)))
-        await session.execute(delete(TenantProfile).where(TenantProfile.unit_id.in_(unit_ids)))
-        
-        # Delete the units
-        await session.execute(delete(Unit).where(Unit.property_id == property_id))
-        
-    # Delete property-level data
-    from app.models.announcement import Announcement
-    from app.models.document import Document
-    await session.execute(delete(Announcement).where(Announcement.property_id == property_id))
-    await session.execute(delete(Document).where(Document.property_id == property_id))
-    
-    await session.delete(prop)
-    await session.commit()
-
-    # M2: best-effort background R2 cleanup — never blocks the response.
-    if storage_keys:
-        background_tasks.add_task(purge_storage_keys_with_failure_tracking, storage_keys)
+    await delete_property_cascade(session, property_id, user.id, background_tasks)
     return None
+
 
 # ---------------------------------------------------------------------------
 # Units
 # ---------------------------------------------------------------------------
-class BatchUnitCreate(BaseModel):
-    property_id: uuid.UUID
-    unit_labels: list[str] = Field(..., min_length=1, max_length=50)
-
-
 @router.post("/units", response_model=Unit)
 @limiter.limit("20/minute")
 async def create_unit(
@@ -227,26 +202,22 @@ async def create_unit(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    # Ensure property belongs to landlord
     prop = await session.get(Property, unit_in.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
-    
-    # Check for duplicate unit_label in the same property
-    from sqlalchemy import func
+
     existing_result = await session.execute(
         select(Unit).where(
             Unit.property_id == unit_in.property_id,
             func.lower(func.trim(Unit.unit_label)) == func.lower(func.trim(unit_in.unit_label))
         )
     )
-    existing_unit = existing_result.scalars().first()
-    if existing_unit:
+    if existing_result.scalars().first():
         raise HTTPException(
             status_code=400,
             detail=f"A unit with label '{unit_in.unit_label}' already exists in this property."
         )
-    
+
     if unit_in.unit_label:
         unit_in.unit_label = format_address(unit_in.unit_label)
 
@@ -265,63 +236,14 @@ async def create_units_batch(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-
-    # Ensure property belongs to landlord
     prop = await session.get(Property, batch_in.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
 
-    # Validate non-empty sanitized labels and check for duplicates within the batch
-    clean_labels: list[str] = []
-    seen_lower = set()
-    for raw_label in batch_in.unit_labels:
-        stripped = raw_label.strip()
-        if not stripped:
-            continue
-        formatted = format_address(stripped)
-        lower = formatted.lower()
-        if lower in seen_lower:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Duplicate unit label '{formatted}' found within the request batch."
-            )
-        seen_lower.add(lower)
-        clean_labels.append(formatted)
-
-    if not clean_labels:
-        raise HTTPException(status_code=400, detail="At least one valid unit label must be provided.")
-
-    # Check for existing duplicates in the database for this property
-    from sqlalchemy import func
-    existing_result = await session.execute(
-        select(Unit.unit_label).where(
-            Unit.property_id == batch_in.property_id,
-            func.lower(func.trim(Unit.unit_label)).in_(list(seen_lower))
-        )
+    return await create_property_units_batch(
+        session, batch_in.property_id, user.id, batch_in.unit_labels
     )
-    existing_labels = existing_result.scalars().all()
-    if existing_labels:
-        raise HTTPException(
-            status_code=400,
-            detail=f"A unit with label '{existing_labels[0]}' already exists in this property."
-        )
 
-    # Insert all units atomically
-    created_units: list[Unit] = []
-    for label in clean_labels:
-        unit = Unit(
-            property_id=batch_in.property_id,
-            unit_label=label,
-            rent_due_day=1,
-        )
-        session.add(unit)
-        created_units.append(unit)
-
-    await session.commit()
-    for u in created_units:
-        await session.refresh(u)
-
-    return created_units
 
 @router.get("/properties/{property_id}/units", response_model=list[UnitResponse])
 async def list_units(
@@ -329,43 +251,17 @@ async def list_units(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from app.models.tenant_profile import TenantProfile
-    from app.models.invite import Invite
-
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
-    
+
     result = await session.execute(select(Unit).where(Unit.property_id == property_id))
     units = result.scalars().all()
 
-    unit_ids = [u.id for u in units]
-    occupied_unit_ids = set()
-    pending_unit_ids = set()
-
-    tenant_profile_map = {}
-    if unit_ids:
-        # Occupied
-        occ_res = await session.execute(
-            select(TenantProfile).where(
-                TenantProfile.unit_id.in_(unit_ids),
-                TenantProfile.is_active == True,
-            ).order_by(TenantProfile.created_at.desc())
-        )
-        profiles = occ_res.scalars().all()
-        for tp in profiles:
-            if tp.unit_id not in tenant_profile_map:
-                tenant_profile_map[tp.unit_id] = tp
-        occupied_unit_ids = set(tenant_profile_map.keys())
-
-        # Pending
-        inv_res = await session.execute(
-            select(Invite.unit_id).where(
-                Invite.unit_id.in_(unit_ids),
-                Invite.status == "pending"
-            )
-        )
-        pending_unit_ids = {uid for uid in inv_res.scalars().all()}
+    tenant_profile_map, pending_unit_ids = await get_unit_occupancy_maps(
+        session, [u.id for u in units]
+    )
+    occupied_unit_ids = set(tenant_profile_map.keys())
 
     response_data = []
     for u in units:
@@ -381,60 +277,15 @@ async def list_units(
 
     return response_data
 
+
 @router.get("/units/{unit_id}")
 async def get_unit_details(
     unit_id: uuid.UUID,
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from app.models.tenant_profile import TenantProfile
-    unit = await session.get(Unit, unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found.")
-        
-    prop = await session.get(Property, unit.property_id)
-    if not prop or prop.owner_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied.")
-        
-    # Check if occupied and get tenant
-    occ_res = await session.execute(
-        select(TenantProfile).where(
-            TenantProfile.unit_id == unit.id,
-            TenantProfile.is_active == True,
-        )
-    )
-    tenant_profile = occ_res.scalars().first()
-    
-    tenant_name = None
-    tenant_email = None
-    if tenant_profile:
-        tenant_user = await session.get(User, tenant_profile.user_id)
-        if tenant_user:
-            tenant_name = tenant_user.full_name
-            tenant_email = tenant_user.email
-            
-    # Check if pending invite
-    from app.models.invite import Invite
-    inv_res = await session.execute(
-        select(Invite).where(
-            Invite.unit_id == unit.id,
-            Invite.status == "pending"
-        )
-    )
-    has_pending = inv_res.first() is not None
+    return await build_unit_details_response(session, unit_id, user.id)
 
-    resp = UnitResponse.model_validate(unit)
-    resp.is_occupied = tenant_profile is not None
-    resp.has_pending = has_pending
-
-    return {
-        "unit": resp,
-        "property_name": prop.name,
-        "tenant_name": tenant_name,
-        "tenant_email": tenant_email,
-        "lease_start": (unit.lease_start.isoformat() if unit.lease_start else (tenant_profile.lease_start.isoformat() if tenant_profile and tenant_profile.lease_start else None)),
-        "lease_end": (unit.lease_end.isoformat() if unit.lease_end else (tenant_profile.lease_end.isoformat() if tenant_profile and tenant_profile.lease_end else None))
-    }
 
 @router.put("/units/{unit_id}", response_model=Unit)
 @limiter.limit("20/minute")
@@ -448,14 +299,12 @@ async def update_unit(
     unit = await session.get(Unit, unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
-        
+
     prop = await session.get(Property, unit.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
-        
-    # If label changes, check for duplicates in the same property
+
     if unit_in.unit_label and unit_in.unit_label.strip().lower() != unit.unit_label.strip().lower():
-        from sqlalchemy import func
         existing_result = await session.execute(
             select(Unit).where(
                 Unit.property_id == unit.property_id,
@@ -463,14 +312,12 @@ async def update_unit(
                 func.lower(func.trim(Unit.unit_label)) == func.lower(func.trim(unit_in.unit_label))
             )
         )
-        existing_unit = existing_result.scalars().first()
-        if existing_unit:
+        if existing_result.scalars().first():
             raise HTTPException(
                 status_code=400,
                 detail=f"A unit with label '{unit_in.unit_label}' already exists in this property."
             )
-            
-    # Update fields
+
     if unit_in.unit_label is not None:
         unit.unit_label = format_address(unit_in.unit_label)
     if unit_in.rent_due_day is not None:
@@ -479,11 +326,12 @@ async def update_unit(
         unit.lease_start = unit_in.lease_start
     if unit_in.lease_end is not None:
         unit.lease_end = unit_in.lease_end
-        
+
     session.add(unit)
     await session.commit()
     await session.refresh(unit)
     return unit
+
 
 @router.delete("/units/{unit_id}", status_code=status.HTTP_200_OK)
 @limiter.limit("10/minute")
@@ -494,72 +342,9 @@ async def delete_unit(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-
-    unit = await session.get(Unit, unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found.")
-        
-    prop = await session.get(Property, unit.property_id)
-    if not prop or prop.owner_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied.")
-
-    # M2: collect R2 keys BEFORE the cascade deletes remove their rows.
-    storage_keys = await collect_unit_storage_keys(session, unit.id)
-        
-    # Check if there is an active tenant in this unit
-    from app.models.tenant_profile import TenantProfile
-    tenant_res = await session.execute(
-        select(TenantProfile).where(
-            TenantProfile.unit_id == unit.id,
-            TenantProfile.is_active == True
-        )
-    )
-    if tenant_res.scalars().first():
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot delete an occupied unit. Please remove the tenant first."
-        )
-        
-    # Delete associated data
-    from app.models.invite import Invite
-    from app.models.maintenance_request import MaintenanceRequest
-    from app.models.maintenance_event import MaintenanceEvent
-    from app.models.document import Document
-    from sqlalchemy import delete
-    
-    # Delete timeline events first to avoid FK constraint violation
-    req_res = await session.execute(select(MaintenanceRequest.id).where(MaintenanceRequest.unit_id == unit.id))
-    req_ids = req_res.scalars().all()
-    if req_ids:
-        await session.execute(delete(MaintenanceEvent).where(MaintenanceEvent.maintenance_request_id.in_(req_ids)))
-
-    await session.execute(delete(Invite).where(Invite.unit_id == unit.id))
-    await session.execute(delete(MaintenanceRequest).where(MaintenanceRequest.unit_id == unit.id))
-    await session.execute(delete(Document).where(Document.unit_id == unit.id))
-    await session.execute(delete(TenantProfile).where(TenantProfile.unit_id == unit.id))
-    
-    await session.delete(unit)
-    await session.commit()
-
-    # M2: best-effort background R2 cleanup — never blocks the response.
-    if storage_keys:
-        background_tasks.add_task(purge_storage_keys_with_failure_tracking, storage_keys)
+    await delete_unit_cascade(session, unit_id, user.id, background_tasks)
     return {"message": "Unit deleted successfully"}
 
-
-async def purge_storage_keys_with_failure_tracking(object_keys: list[str]) -> None:
-    """
-    Background task: delete R2 objects best-effort, recording any failures.
-
-    Uses its own session so failure rows persist independently of the
-    (already committed) request transaction.
-    """
-    from app.core.database import async_session_maker
-    from app.services.storage_cleanup import purge_storage_keys
-
-    failed = await purge_storage_keys(object_keys)
-    if failed:
-        await record_cleanup_failures(failed)
 
 # ---------------------------------------------------------------------------
 # Maintenance Requests
@@ -571,9 +356,6 @@ async def list_maintenance_requests(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import func
-
-    # Get maintenance requests for landlord's properties using a single JOIN
     filters = [Property.owner_id == user.id]
     if unit_id:
         filters.append(Unit.id == unit_id)
@@ -608,167 +390,8 @@ async def list_maintenance_requests(
         await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
 
-    return Page(items=response_data, total=total, limit=pagination.limit,
-                offset=pagination.offset)
+    return Page(items=response_data, total=total, limit=pagination.limit, offset=pagination.offset)
 
-async def _validate_maintenance_update(req_in: MaintenanceRequestUpdate, db_req: MaintenanceRequest):
-    if db_req.status == "closed":
-        raise HTTPException(status_code=400, detail="Cannot modify a closed maintenance request.")
-
-    status_changed = False
-    priority_changed = False
-    notes_changed = False
-    images_changed = False
-    new_image_keys: list[str] = []
-
-    if req_in.status and req_in.status != db_req.status:
-        if req_in.status not in VALID_TRANSITIONS.get(db_req.status, []):
-            valid_states = [s.value for s in VALID_TRANSITIONS.get(db_req.status, [])]
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid status transition from '{db_req.status}' to '{req_in.status}'. "
-                       f"Valid transitions are: {valid_states}",
-            )
-        status_changed = True
-
-    if req_in.priority and req_in.priority != db_req.priority:
-        priority_changed = True
-
-    if req_in.landlord_notes is not None and req_in.landlord_notes != db_req.landlord_notes:
-        notes_changed = True
-
-    keys_to_update = req_in.landlord_image_keys if req_in.landlord_image_keys is not None else req_in.attachments
-    if keys_to_update is not None:
-        existing_keys = db_req.landlord_image_keys or []
-        new_image_keys = [k for k in keys_to_update if k not in existing_keys]
-        if keys_to_update != existing_keys:
-            images_changed = True
-
-    old_status_val: str = db_req.status.value if hasattr(db_req.status, "value") else str(db_req.status)
-    old_priority_val: str = db_req.priority.value if hasattr(db_req.priority, "value") else str(db_req.priority)
-    new_status_val: str = (
-        (req_in.status.value if hasattr(req_in.status, "value") else str(req_in.status))
-        if req_in.status else old_status_val
-    )
-    new_priority_val: str = (
-        (req_in.priority.value if hasattr(req_in.priority, "value") else str(req_in.priority))
-        if req_in.priority else old_priority_val
-    )
-
-    return (
-        status_changed, priority_changed, notes_changed, images_changed, 
-        new_image_keys, keys_to_update, old_status_val, old_priority_val, 
-        new_status_val, new_priority_val
-    )
-
-async def _apply_maintenance_mutations(
-    session: AsyncSession, 
-    db_req: MaintenanceRequest, 
-    req_in: MaintenanceRequestUpdate,
-    status_changed: bool, 
-    priority_changed: bool, 
-    notes_changed: bool, 
-    keys_to_update: list[str] | None, 
-    background_tasks: BackgroundTasks
-):
-    from datetime import datetime, timezone as _tz
-    if status_changed:
-        db_req.status = req_in.status
-        if req_in.status != "open":
-            from app.models.tenant_profile import TenantProfile
-            tenant_profile = await session.get(TenantProfile, db_req.tenant_id)
-            if tenant_profile:
-                tenant_user = await session.get(User, tenant_profile.user_id)
-                if tenant_user and tenant_user.email:
-                    background_tasks.add_task(
-                        send_status_update,
-                        tenant_email=tenant_user.email,
-                        request_title=db_req.title,
-                        new_status=req_in.status,
-                    )
-
-    if priority_changed:
-        db_req.priority = req_in.priority
-
-    if notes_changed:
-        db_req.landlord_notes = req_in.landlord_notes
-
-    if keys_to_update is not None:
-        db_req.landlord_image_keys = keys_to_update
-
-    db_req.updated_at = datetime.now(_tz.utc)
-    await session.commit()
-    await session.refresh(db_req)
-
-async def _log_maintenance_events(
-    session: AsyncSession, 
-    db_req: MaintenanceRequest, 
-    user: User, 
-    req_in: MaintenanceRequestUpdate,
-    status_changed: bool, 
-    priority_changed: bool, 
-    notes_changed: bool, 
-    images_changed: bool, 
-    new_image_keys: list[str], 
-    keys_to_update: list[str] | None, 
-    old_status_val: str, 
-    old_priority_val: str, 
-    new_status_val: str, 
-    new_priority_val: str
-):
-    events: list[MaintenanceEvent] = []
-
-    if status_changed:
-        payload: dict = {"old_status": old_status_val, "new_status": new_status_val}
-        desc_parts = [f"Landlord changed status from {old_status_val.upper()} to {new_status_val.upper()}."]
-        if notes_changed:
-            payload["notes"] = req_in.landlord_notes
-            desc_parts.append("Added notes.")
-        if images_changed:
-            payload["image_keys"] = keys_to_update
-            payload["image_count"] = len(keys_to_update) if keys_to_update is not None else 0
-            if new_image_keys:
-                desc_parts.append(f"Attached {len(new_image_keys)} file(s).")
-            else:
-                desc_parts.append("Updated attached files.")
-        events.append(MaintenanceEvent(
-            maintenance_request_id=db_req.id,
-            actor_id=user.id,
-            event_type="status_changed",
-            description=" ".join(desc_parts),
-            payload=payload,
-        ))
-    else:
-        if notes_changed:
-            events.append(MaintenanceEvent(
-                maintenance_request_id=db_req.id,
-                actor_id=user.id,
-                event_type="note_added",
-                description="Landlord updated the resolution notes." if old_status_val else "Landlord added resolution notes.",
-                payload={"notes": req_in.landlord_notes},
-            ))
-        if images_changed:
-            events.append(MaintenanceEvent(
-                maintenance_request_id=db_req.id,
-                actor_id=user.id,
-                event_type="images_attached",
-                description=f"Landlord attached {len(new_image_keys)} resolution file(s)." if new_image_keys else f"Landlord updated resolution files ({len(keys_to_update) if keys_to_update else 0} attached).",
-                payload={"image_count": len(keys_to_update) if keys_to_update else 0, "image_keys": keys_to_update},
-            ))
-
-    if priority_changed:
-        events.append(MaintenanceEvent(
-            maintenance_request_id=db_req.id,
-            actor_id=user.id,
-            event_type="priority_changed",
-            description=f"Landlord changed priority from {old_priority_val.upper()} to {new_priority_val.upper()}.",
-            payload={"old_priority": old_priority_val, "new_priority": new_priority_val},
-        ))
-
-    if events:
-        for ev in events:
-            session.add(ev)
-        await session.commit()
 
 @router.patch("/maintenance/{request_id}", response_model=MaintenanceRequestResponse)
 @limiter.limit("20/minute")
@@ -784,7 +407,6 @@ async def update_maintenance_request(
     if not db_req:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
 
-    # Ensure this request belongs to one of landlord's units
     unit = await session.get(Unit, db_req.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
@@ -794,60 +416,12 @@ async def update_maintenance_request(
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
 
-    # ---------------------------------------------------------------
-    # Phase 1: validate inputs and compute change flags
-    # ---------------------------------------------------------------
-    try:
-        (
-            status_changed, priority_changed, notes_changed, images_changed,
-            new_image_keys, keys_to_update, old_status_val, old_priority_val,
-            new_status_val, new_priority_val
-        ) = await _validate_maintenance_update(req_in, db_req)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error validating maintenance request update: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while validating the maintenance request update.",
-        )
+    updated_req = await process_maintenance_update(
+        session, db_req, user, req_in, background_tasks
+    )
 
-    # ---------------------------------------------------------------
-    # Phase 2: apply mutations and commit (this MUST always succeed)
-    # ---------------------------------------------------------------
-    try:
-        await _apply_maintenance_mutations(
-            session, db_req, req_in, status_changed, priority_changed, 
-            notes_changed, keys_to_update, background_tasks
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        await session.rollback()
-        logger.error(f"Error persisting maintenance update to database: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected database error occurred while updating the maintenance request. Please try again.",
-        )
-
-    # ---------------------------------------------------------------
-    # Phase 3: audit event logging — best-effort, never blocks response
-    # ---------------------------------------------------------------
-    try:
-        await _log_maintenance_events(
-            session, db_req, user, req_in, status_changed, priority_changed, 
-            notes_changed, images_changed, new_image_keys, keys_to_update, 
-            old_status_val, old_priority_val, new_status_val, new_priority_val
-        )
-    except Exception:
-        # Audit logging must never surface as a 500 to the client
-        try:
-            await session.rollback()
-        except Exception:
-            pass
-
-    resp = MaintenanceRequestResponse.model_validate(db_req)
-    await hydrate_maintenance_request(db_req, resp)
+    resp = MaintenanceRequestResponse.model_validate(updated_req)
+    await hydrate_maintenance_request(updated_req, resp)
     return resp
 
 
@@ -860,7 +434,7 @@ async def list_maintenance_events(
     db_req = await session.get(MaintenanceRequest, request_id)
     if not db_req:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
-        
+
     unit = await session.get(Unit, db_req.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
@@ -870,24 +444,8 @@ async def list_maintenance_events(
     if prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Access denied.")
 
-    result = await session.execute(
-        select(MaintenanceEvent, User.full_name)
-        .join(User, MaintenanceEvent.actor_id == User.id)
-        .where(MaintenanceEvent.maintenance_request_id == request_id)
-        .order_by(MaintenanceEvent.created_at.asc())
-    )
-    
-    events = []
-    for event, user_name in result.all():
-        data = event.model_dump()
-        data["actor_name"] = user_name or "Unknown User"
-        if data.get("payload") and "image_keys" in data["payload"]:
-            data["payload"]["image_urls"] = await generate_presigned_urls_batch(
-                data["payload"]["image_keys"]
-            )
-        events.append(data)
-        
-    return events
+    return await fetch_maintenance_events_with_urls(session, request_id)
+
 
 # ---------------------------------------------------------------------------
 # Announcements
@@ -903,7 +461,7 @@ async def create_announcement(
     prop = await session.get(Property, ann_in.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
-        
+
     if ann_in.unit_id:
         unit = await session.get(Unit, ann_in.unit_id)
         if not unit or unit.property_id != ann_in.property_id:
@@ -918,14 +476,13 @@ async def create_announcement(
     await hydrate_announcement(ann, resp)
     return resp
 
+
 @router.get("/announcements", response_model=Page[AnnouncementResponse])
 async def list_announcements(
     pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import func
-
     base = select(Announcement).where(Announcement.author_id == user.id)
     total_res = await session.execute(select(func.count()).select_from(base.subquery()))
     total = total_res.scalar_one()
@@ -941,8 +498,8 @@ async def list_announcements(
         resp = AnnouncementResponse.model_validate(ann)
         await hydrate_announcement(ann, resp)
         out.append(resp)
-    return Page(items=out, total=total, limit=pagination.limit,
-                offset=pagination.offset)
+    return Page(items=out, total=total, limit=pagination.limit, offset=pagination.offset)
+
 
 @router.put("/announcements/{announcement_id}", response_model=AnnouncementResponse)
 @limiter.limit("15/minute")
@@ -977,6 +534,7 @@ async def update_announcement(
     await hydrate_announcement(ann, resp)
     return resp
 
+
 @router.delete("/announcements/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit("10/minute")
 async def delete_announcement(
@@ -985,7 +543,6 @@ async def delete_announcement(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-
     ann = await session.get(Announcement, announcement_id)
     if not ann or ann.author_id != user.id:
         raise HTTPException(status_code=404, detail="Announcement not found or access denied.")
@@ -994,11 +551,10 @@ async def delete_announcement(
     await session.commit()
     return None
 
+
 # ---------------------------------------------------------------------------
 # Documents
 # ---------------------------------------------------------------------------
-from app.models.document import Document
-
 @router.post("/documents", response_model=DocumentResponse)
 @limiter.limit("20/minute")
 async def create_document_record(
@@ -1007,12 +563,10 @@ async def create_document_record(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    # Ensure property belongs to landlord
     prop = await session.get(Property, doc_in.property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
-        
-    # Validate unit_id if provided
+
     if doc_in.unit_id:
         unit = await session.get(Unit, doc_in.unit_id)
         if not unit or unit.property_id != doc_in.property_id:
@@ -1028,6 +582,7 @@ async def create_document_record(
     resp.file_url = urls[0] if urls else ""
     return resp
 
+
 @router.get("/properties/{property_id}/documents", response_model=Page[DocumentResponse])
 async def list_documents(
     property_id: uuid.UUID,
@@ -1035,9 +590,6 @@ async def list_documents(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import func
-
-    # Ensure property belongs to landlord
     prop = await session.get(Property, property_id)
     if not prop or prop.owner_id != user.id:
         raise HTTPException(status_code=403, detail="Property not found or access denied.")
@@ -1060,8 +612,8 @@ async def list_documents(
         resp.file_url = url
         response_data.append(resp)
 
-    return Page(items=response_data, total=total, limit=pagination.limit,
-                offset=pagination.offset)
+    return Page(items=response_data, total=total, limit=pagination.limit, offset=pagination.offset)
+
 
 @router.get("/units/{unit_id}/documents", response_model=Page[DocumentResponse])
 async def list_unit_documents(
@@ -1070,9 +622,6 @@ async def list_unit_documents(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import func
-
-    # Ensure unit and property belong to landlord
     unit = await session.get(Unit, unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
@@ -1098,86 +647,37 @@ async def list_unit_documents(
         resp.file_url = url
         response_data.append(resp)
 
-    return Page(items=response_data, total=total, limit=pagination.limit,
-                offset=pagination.offset)
+    return Page(items=response_data, total=total, limit=pagination.limit, offset=pagination.offset)
+
 
 # ---------------------------------------------------------------------------
-# Onboarding & Invites (Phase 4)
+# Onboarding & Invites
 # ---------------------------------------------------------------------------
-from datetime import date
-from typing import Optional
-from pydantic import BaseModel
-from app.models.invite import Invite
-from app.models.tenant_profile import TenantProfile
-from app.models.user import UserRole
-
-class GenerateInvitePayload(BaseModel):
-    unit_id: uuid.UUID
-    clear_data: bool = False
-    lease_start: Optional[date] = None
-    lease_end: Optional[date] = None
-    rent_due_day: Optional[int] = Field(default=None, ge=1, le=31)
-
-class ApproveTenantPayload(BaseModel):
-    user_id: uuid.UUID
-    unit_id: uuid.UUID
-    lease_start: Optional[date] = None
-    lease_end: Optional[date] = None
-
-class DenyTenantPayload(BaseModel):
-    user_id: uuid.UUID
-
 @router.post("/generate-invite", response_model=Invite)
 @limiter.limit("15/minute")
 async def generate_invite(
     request: Request,
     payload: GenerateInvitePayload,
     user: User = Depends(get_current_landlord),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
-
-    # Ensure unit belongs to landlord
-    unit = await session.get(Unit, payload.unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found.")
-    prop = await session.get(Property, unit.property_id)
-    if prop.owner_id != user.id:
-        raise HTTPException(status_code=403, detail="Access denied.")
-
-    if payload.clear_data:
-        from app.models.document import Document
-        from sqlmodel import select
-        # Archive all documents associated with this unit
-        docs_result = await session.execute(
-            select(Document).where(Document.unit_id == unit.id)
-        )
-        docs = docs_result.scalars().all()
-        for d in docs:
-            d.is_archived = True
-
-    if payload.rent_due_day is not None:
-        unit.rent_due_day = payload.rent_due_day
-        session.add(unit)
-
-    invite = Invite(
-        unit_id=unit.id,
-        created_by=user.id,
+    return await create_unit_invite(
+        session,
+        unit_id=payload.unit_id,
+        owner_id=user.id,
+        clear_data=payload.clear_data,
         lease_start=payload.lease_start,
         lease_end=payload.lease_end,
+        rent_due_day=payload.rent_due_day,
     )
-    session.add(invite)
-    await session.commit()
-    await session.refresh(invite)
-    return invite
+
 
 @router.get("/pending-tenants", response_model=Page[User])
 async def pending_tenants(
     pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_landlord),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
-    from sqlalchemy import func
-
     base = select(User).where(
         User.requested_landlord_id == user.id, User.role == UserRole.TENANT_PENDING
     )
@@ -1188,8 +688,8 @@ async def pending_tenants(
         base.offset(pagination.offset).limit(pagination.limit)
     )
     items = result.scalars().all()
-    return Page(items=items, total=total, limit=pagination.limit,
-                offset=pagination.offset)
+    return Page(items=items, total=total, limit=pagination.limit, offset=pagination.offset)
+
 
 @router.post("/approve-tenant")
 @limiter.limit("15/minute")
@@ -1198,62 +698,16 @@ async def approve_tenant(
     payload: ApproveTenantPayload,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
-
-    tenant = await session.get(User, payload.user_id)
-    if not tenant or tenant.requested_landlord_id != user.id or tenant.role != UserRole.TENANT_PENDING:
-        raise HTTPException(status_code=404, detail="Pending tenant request not found.")
-
-    unit = await session.get(Unit, payload.unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found.")
-    prop = await session.get(Property, unit.property_id)
-    if prop.owner_id != user.id:
-        raise HTTPException(status_code=403, detail="Unit access denied.")
-
-    # Guard: prevent double active occupancy with pessimistic row locking
-    occ_res = await session.execute(
-        select(TenantProfile)
-        .where(TenantProfile.unit_id == unit.id, TenantProfile.is_active == True)
-        .with_for_update()
+    tenant, prop, unit = await approve_tenant_for_unit(
+        session,
+        tenant_user_id=payload.user_id,
+        unit_id=payload.unit_id,
+        owner_id=user.id,
+        lease_start=payload.lease_start,
+        lease_end=payload.lease_end,
     )
-    if occ_res.scalars().first():
-        raise HTTPException(status_code=409, detail="This unit is already occupied by an active tenant.")
-
-    tenant.role = UserRole.TENANT
-    tenant.requested_landlord_id = None
-    session.add(tenant)
-
-    # Effective lease dates with fallback to unit lease dates if not provided
-    effective_lease_start = payload.lease_start if payload.lease_start is not None else unit.lease_start
-    effective_lease_end = payload.lease_end if payload.lease_end is not None else unit.lease_end
-
-    # Re-activate existing profile if user had prior tenancy, or create new
-    user_prof_stmt = select(TenantProfile).where(TenantProfile.user_id == tenant.id)
-    user_prof_res = await session.execute(user_prof_stmt)
-    profile = user_prof_res.scalar_one_or_none()
-
-    if profile:
-        profile.unit_id = unit.id
-        profile.lease_start = effective_lease_start
-        profile.lease_end = effective_lease_end
-        profile.is_active = True
-        profile.removed_at = None
-        session.add(profile)
-    else:
-        profile = TenantProfile(
-            user_id=tenant.id,
-            unit_id=unit.id,
-            lease_start=effective_lease_start,
-            lease_end=effective_lease_end,
-            is_active=True
-        )
-        session.add(profile)
-
-    unit.status = "Occupied"
-    session.add(unit)
-    await session.commit()
 
     if tenant.email:
         background_tasks.add_task(
@@ -1265,9 +719,6 @@ async def approve_tenant(
 
     return {"status": "success", "message": "Tenant approved."}
 
-class UpdateLeasePayload(BaseModel):
-    lease_start: Optional[date] = None
-    lease_end: Optional[date] = None
 
 @router.put("/units/{unit_id}/lease")
 @limiter.limit("10/minute")
@@ -1276,34 +727,13 @@ async def update_lease(
     unit_id: uuid.UUID,
     payload: UpdateLeasePayload,
     user: User = Depends(get_current_landlord),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
-    unit = await session.get(Unit, unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found.")
-    prop = await session.get(Property, unit.property_id)
-    if not prop or prop.owner_id != user.id:
-        raise HTTPException(status_code=403, detail="Unit access denied.")
-
-    unit.lease_start = payload.lease_start
-    unit.lease_end = payload.lease_end
-    session.add(unit)
-
-    # Get active tenant profile if any
-    occ_res = await session.execute(
-        select(TenantProfile).where(
-            TenantProfile.unit_id == unit.id,
-            TenantProfile.is_active == True,
-        )
+    await update_unit_lease(
+        session, unit_id, user.id, payload.lease_start, payload.lease_end
     )
-    tenant_profile = occ_res.scalars().first()
-    if tenant_profile:
-        tenant_profile.lease_start = payload.lease_start
-        tenant_profile.lease_end = payload.lease_end
-        session.add(tenant_profile)
-
-    await session.commit()
     return {"status": "success", "message": "Lease dates updated."}
+
 
 @router.post("/deny-tenant")
 @limiter.limit("15/minute")
@@ -1312,17 +742,9 @@ async def deny_tenant(
     payload: DenyTenantPayload,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_landlord),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
-
-    tenant = await session.get(User, payload.user_id)
-    if not tenant or tenant.requested_landlord_id != user.id or tenant.role != UserRole.TENANT_PENDING:
-        raise HTTPException(status_code=404, detail="Pending tenant request not found.")
-
-    tenant.role = UserRole.UNASSIGNED
-    tenant.requested_landlord_id = None
-    session.add(tenant)
-    await session.commit()
+    tenant = await deny_pending_tenant(session, payload.user_id, user.id)
 
     if tenant.email:
         background_tasks.add_task(
@@ -1334,255 +756,18 @@ async def deny_tenant(
 
 
 # ---------------------------------------------------------------------------
-# Dashboard Summary (all data in one call)
+# Dashboard Summary
 # ---------------------------------------------------------------------------
-from app.models.tenant_profile import TenantProfile
-
-async def _fetch_dashboard_properties_and_units(session: AsyncSession, user_id: uuid.UUID):
-    prop_result = await session.execute(select(Property).where(Property.owner_id == user_id))
-    properties = prop_result.scalars().all()
-    prop_ids = [p.id for p in properties]
-
-    if prop_ids:
-        unit_result = await session.execute(select(Unit).where(Unit.property_id.in_(prop_ids)))
-        all_units = unit_result.scalars().all()
-    else:
-        all_units = []
-
-    unit_ids = [u.id for u in all_units]
-
-    unit_tenant_map = {}
-    if unit_ids:
-        tenant_profile_result = await session.execute(
-            select(TenantProfile.unit_id, User.full_name, User.email)
-            .join(User, TenantProfile.user_id == User.id)
-            .where(
-                TenantProfile.unit_id.in_(unit_ids),
-                TenantProfile.is_active == True,
-            )
-            .order_by(TenantProfile.created_at.desc())
-        )
-        for uid, full_name, email in tenant_profile_result.all():
-            uid_str = str(uid)
-            if uid_str not in unit_tenant_map:
-                unit_tenant_map[uid_str] = full_name or email
-        occupied_unit_ids = set(unit_tenant_map.keys())
-    else:
-        occupied_unit_ids = set()
-
-    if unit_ids:
-        from app.models.invite import Invite
-        invite_result = await session.execute(
-            select(Invite.unit_id).where(
-                Invite.unit_id.in_(unit_ids),
-                Invite.status == "pending"
-            )
-        )
-        pending_unit_ids = {str(uid) for uid in invite_result.scalars().all()}
-    else:
-        pending_unit_ids = set()
-
-    return properties, prop_ids, all_units, unit_ids, unit_tenant_map, occupied_unit_ids, pending_unit_ids
-
-async def _fetch_dashboard_maintenance(session: AsyncSession, unit_ids: list[uuid.UUID]):
-    if not unit_ids:
-        return [], set()
-
-    from sqlalchemy import case, literal
-    priority_order = case(
-        (MaintenanceRequest.priority == "urgent", literal(1)),
-        (MaintenanceRequest.priority == "high", literal(2)),
-        (MaintenanceRequest.priority == "medium", literal(3)),
-        (MaintenanceRequest.priority == "low", literal(4)),
-        else_=literal(5)
-    )
-    urgent_result = await session.execute(
-        select(MaintenanceRequest)
-        .where(
-            MaintenanceRequest.unit_id.in_(unit_ids),
-            MaintenanceRequest.status.in_(["open", "in_progress"]),
-        )
-        .order_by(priority_order, MaintenanceRequest.updated_at.desc(), MaintenanceRequest.created_at.desc())
-    )
-    urgent_requests = urgent_result.scalars().all()
-    units_with_pending_maint = {str(r.unit_id) for r in urgent_requests}
-    return urgent_requests, units_with_pending_maint
-
-async def _fetch_dashboard_pending_tenants(session: AsyncSession, user_id: uuid.UUID):
-    pending_result = await session.execute(
-        select(User).where(
-            User.requested_landlord_id == user_id,
-            User.role == UserRole.TENANT_PENDING,
-        )
-    )
-    pending_tenants = pending_result.scalars().all()
-    return [
-        {
-            "id": str(t.id),
-            "name": t.full_name or t.email,
-            "email": t.email,
-            "unit_label": "—",
-        }
-        for t in pending_tenants
-    ]
-
-async def _fetch_dashboard_recent_activity(
-    session: AsyncSession, user_id: uuid.UUID, unit_ids: list[uuid.UUID], 
-    prop_ids: list[uuid.UUID], unit_property_name_map: dict, 
-    unit_label_map: dict, prop_name_map: dict
-):
-    activity_list = []
-    if not (unit_ids and prop_ids):
-        return activity_list
-
-    from datetime import datetime, timedelta, timezone
-    from app.models.document import Document
-    from app.models.maintenance_event import MaintenanceEvent
-    from app.models.announcement import Announcement
-    from app.schemas.activity import ActivityItem
-    
-    thirty_days_ago = utc_now() - timedelta(days=30)
-    
-    maint_events_result = await session.execute(
-        select(MaintenanceEvent, MaintenanceRequest)
-        .join(MaintenanceRequest, MaintenanceEvent.maintenance_request_id == MaintenanceRequest.id)
-        .where(
-            MaintenanceRequest.unit_id.in_(unit_ids),
-            MaintenanceEvent.created_at >= thirty_days_ago,
-            (MaintenanceEvent.actor_id == user_id) | (MaintenanceEvent.event_type.in_(["reopened", "status_changed"]))
-        )
-        .order_by(MaintenanceEvent.created_at.desc())
-        .limit(10)
-    )
-    
-    for event, r in maint_events_result.all():
-        event_meta = r.status.value if hasattr(r.status, 'value') else str(r.status)
-        if event.event_type == "reopened":
-            event_meta = "reopened"
-        
-        actor = "landlord" if event.actor_id == user_id else "tenant"
-        if event_meta == "closed" and actor == "landlord":
-            continue
-
-        activity_list.append(ActivityItem(
-            type="maintenance_update",
-            id=r.id,
-            title=r.title,
-            timestamp=event.created_at,
-            meta=event_meta,
-            actor=actor,
-            property_name=unit_property_name_map.get(str(r.unit_id), "Unknown Property"),
-            unit_label=unit_label_map.get(str(r.unit_id), "—")
-        ))
-        
-    recent_docs_result = await session.execute(
-        select(Document)
-        .where(Document.property_id.in_(prop_ids))
-        .order_by(Document.created_at.desc())
-        .limit(10)
-    )
-    
-    for d in recent_docs_result.scalars().all():
-        activity_list.append(ActivityItem(
-            type="document_upload",
-            id=d.id,
-            title=d.title,
-            timestamp=d.created_at,
-            meta=d.file_type,
-            actor="landlord",
-            property_name=prop_name_map.get(str(d.property_id), "Unknown Property"),
-            unit_label=unit_label_map.get(str(d.unit_id)) if d.unit_id else "All units"
-        ))
-        
-    recent_anns_result = await session.execute(
-        select(Announcement)
-        .where(Announcement.property_id.in_(prop_ids))
-        .order_by(Announcement.created_at.desc())
-        .limit(10)
-    )
-    
-    for a in recent_anns_result.scalars().all():
-        activity_list.append(ActivityItem(
-            type="announcement_posted",
-            id=a.id,
-            title=a.title,
-            timestamp=a.created_at,
-            meta="",
-            actor="landlord",
-            property_name=prop_name_map.get(str(a.property_id), "Unknown Property"),
-            unit_label=unit_label_map.get(str(a.unit_id)) if a.unit_id else "All units"
-        ))
-        
-    activity_list.sort(key=lambda x: x.timestamp, reverse=True)
-    return activity_list[:5]
-
-
 @router.get("/dashboard")
 async def get_dashboard_summary(
     user: User = Depends(get_current_landlord),
     session: AsyncSession = Depends(get_session),
 ):
     """
-    Returns all data needed to render the landlord dashboard bento grid:
-    - Property & unit stats (total, occupied, vacant)
-    - Urgent/high-priority open maintenance requests
-    - Pending tenant approvals
-    - Recent maintenance activity (last 5 events)
+    Returns all data needed to render the landlord dashboard bento grid.
+    Delegates aggregation to dashboard domain service.
     """
-    properties, prop_ids, all_units, unit_ids, unit_tenant_map, occupied_unit_ids, pending_unit_ids = \
-        await _fetch_dashboard_properties_and_units(session, user.id)
-
-    urgent_requests, units_with_pending_maint = await _fetch_dashboard_maintenance(session, unit_ids)
-    pending_list = await _fetch_dashboard_pending_tenants(session, user.id)
-
-    unit_label_map = {str(u.id): u.unit_label for u in all_units}
-    prop_name_map = {str(p.id): p.name for p in properties}
-    unit_property_name_map = {
-        str(u.id): prop_name_map.get(str(u.property_id), "Unknown Property")
-        for u in all_units
-    }
-
-    activity_list = await _fetch_dashboard_recent_activity(
-        session, user.id, unit_ids, prop_ids, 
-        unit_property_name_map, unit_label_map, prop_name_map
-    )
-
-    return {
-        "property_stats": {
-            "total_properties": len(properties),
-            "total_units": len(all_units),
-            "occupied_units": len(occupied_unit_ids),
-            "vacant_units": len(all_units) - len(occupied_unit_ids),
-        },
-        "units": [
-            {
-                "id": str(u.id),
-                "property_id": str(u.property_id),
-                "property_name": prop_name_map.get(str(u.property_id), "Unknown Property"),
-                "unit_label": u.unit_label,
-                "is_occupied": str(u.id) in occupied_unit_ids,
-                "tenant_name": unit_tenant_map.get(str(u.id)),
-                "has_pending_maintenance": str(u.id) in units_with_pending_maint,
-                "has_pending_invite": str(u.id) in pending_unit_ids,
-                "has_pending": str(u.id) in units_with_pending_maint,
-            }
-            for u in all_units
-        ],
-        "urgent_maintenance": [
-            {
-                "id": str(r.id),
-                "title": r.title,
-                "priority": r.priority.value if hasattr(r.priority, 'value') else str(r.priority),
-                "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
-                "unit_label": unit_label_map.get(str(r.unit_id), "—"),
-                "property_name": unit_property_name_map.get(str(r.unit_id), "—"),
-                "created_at": r.created_at.isoformat(),
-            }
-            for r in urgent_requests
-        ],
-        "pending_approvals": pending_list,
-        "recent_activity": activity_list,
-    }
+    return await get_landlord_dashboard_data(session, user.id)
 
 
 # ---------------------------------------------------------------------------
@@ -1601,54 +786,6 @@ async def remove_tenant(
     Sets is_active=False and removed_at=now() on all active TenantProfiles for this unit.
     Sets unit.status = 'Vacant'.
     """
+    return await remove_active_tenant(session, unit_id, user.id)
 
-    from app.models.tenant_profile import TenantProfile
-    from datetime import datetime, timezone
 
-    # 1. Verify landlord owns the property this unit belongs to
-    unit = await session.get(Unit, unit_id)
-    if not unit:
-        raise HTTPException(status_code=404, detail="Unit not found.")
-
-    prop = await session.get(Property, unit.property_id)
-    if not prop or prop.owner_id != user.id:
-        raise HTTPException(status_code=403, detail="Property not found or access denied.")
-
-    # 2. Find all active tenant profiles for this unit
-    statement = select(TenantProfile).where(
-        TenantProfile.unit_id == unit_id,
-        TenantProfile.is_active == True
-    )
-    result = await session.execute(statement)
-    profiles = result.scalars().all()
-
-    if not profiles:
-        raise HTTPException(status_code=404, detail="No active tenant found for this unit.")
-
-    # 3. Soft-delete the tenant profiles and reset user role to UNASSIGNED
-    now = utc_now()
-    user_ids = [profile.user_id for profile in profiles]
-    for profile in profiles:
-        profile.is_active = False
-        profile.removed_at = now
-        session.add(profile)
-
-    # Batch fetch all tenant users in a single query instead of N individual gets
-    if user_ids:
-        tenant_users_result = await session.execute(
-            select(User).where(User.id.in_(user_ids))
-        )
-        for tenant_user in tenant_users_result.scalars().all():
-            tenant_user.role = UserRole.UNASSIGNED
-            tenant_user.requested_landlord_id = None
-            session.add(tenant_user)
-
-    # 4. Reset unit status
-    unit.status = "Vacant"
-    session.add(unit)
-
-    # We do NOT delete or modify historical maintenance requests or documents.
-    
-    await session.commit()
-    
-    return {"message": "Tenant successfully removed from unit."}

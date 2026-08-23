@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { errorMessage } from "@/lib/errors";
 import { fetchAPI, api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
@@ -65,9 +66,9 @@ export default function LandlordDashboard() {
           email: p.email,
           full_name: p.name
         })));
-      } catch (err: any) {
+      } catch (err) {
         console.error("Failed to load landlord dashboard summary:", err);
-        setError(err?.message || "Failed to load dashboard data. Please try again later.");
+        setError(errorMessage(err) || "Failed to load dashboard data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -170,3 +171,4 @@ export default function LandlordDashboard() {
     </div>
   );
 }
+

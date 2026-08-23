@@ -1,5 +1,7 @@
 "use client";
 
+import { errorMessage } from "@/lib/errors";
+
 import React, { useState, useEffect } from "react";
 import { RefreshCcw, Paperclip, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -73,8 +75,8 @@ export function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModal
       toast.success("Maintenance request reopened successfully.");
       onSuccess(updatedReq);
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to reopen request.");
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to reopen request.");
     } finally {
       setSubmitting(false);
     }
@@ -178,3 +180,4 @@ export function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModal
     </Dialog>
   );
 }
+
