@@ -30,10 +30,10 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
   const [activeTenantTab, setActiveTenantTab] = useState("home");
 
   return (
-    <div className="w-full max-w-5xl mx-auto rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-border/80 glass-panel relative bg-card/85 backdrop-blur-2xl transition-all duration-300 ring-1 ring-white/10 dark:ring-white/5">
+    <div className="w-full max-w-5xl mx-auto rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-border solid-panel relative bg-card transition-all duration-300">
 
       {/* Top Interactive Browser Chrome Bar */}
-      <div className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-3.5 sm:px-6 bg-[rgb(var(--ml-bg-secondary))]/90 backdrop-blur-xl z-20 gap-2 sm:gap-4">
+      <div className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-3.5 sm:px-6 bg-[rgb(var(--ml-bg-secondary))] z-20 gap-2 sm:gap-4">
 
         {/* Left: Window Controls + Live Breadcrumb */}
         <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">

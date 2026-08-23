@@ -62,7 +62,7 @@ function ThemeToggle() {
 function PortalSkeleton() {
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 justify-center items-center opacity-60 animate-pulse px-4 min-h-[400px]">
-      <div className="w-full md:w-[440px] min-h-[300px] lg:h-[350px] rounded-xl border border-border/20 bg-card/20 backdrop-blur-md p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 md:flex-1 lg:flex-none">
+      <div className="w-full md:w-[440px] min-h-[300px] lg:h-[350px] rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 md:flex-1 lg:flex-none">
         <div className="w-16 h-16 rounded-full bg-muted/40 border border-border/10" />
         <div className="space-y-3 flex-1 w-full">
           <div className="h-6 w-2/3 bg-muted/40 rounded-md" />
@@ -72,7 +72,7 @@ function PortalSkeleton() {
         <div className="h-12 w-full bg-muted/30 rounded-lg" />
       </div>
 
-      <div className="w-full md:w-[440px] min-h-[280px] lg:h-[320px] rounded-xl border border-border/10 bg-card/10 backdrop-blur-sm p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 hidden md:flex md:flex-1 lg:flex-none">
+      <div className="w-full md:w-[440px] min-h-[280px] lg:h-[320px] rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 hidden md:flex md:flex-1 lg:flex-none">
         <div className="w-14 h-14 rounded-full bg-muted/30 border border-border/10" />
         <div className="space-y-3 flex-1 w-full">
           <div className="h-6 w-1/2 bg-muted/40 rounded-md" />

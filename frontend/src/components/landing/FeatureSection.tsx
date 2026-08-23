@@ -148,7 +148,7 @@ export function FeatureSection({
                 opacity: { duration: 0.8 },
               }}
               whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
-              className="glass-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
+              className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -194,7 +194,7 @@ export function FeatureSection({
                 opacity: { duration: 0.8 },
               }}
               whileHover={{ scale: 1.05, zIndex: 30, y: -10 }}
-              className="glass-panel rounded-xl p-10 flex flex-col items-start shadow-xl relative overflow-hidden group cursor-pointer border-accent/20 w-full transform-gpu backface-hidden antialiased"
+              className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-xl relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -240,7 +240,7 @@ export function FeatureSection({
                 opacity: { duration: 0.8 },
               }}
               whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
-              className="glass-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
+              className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
