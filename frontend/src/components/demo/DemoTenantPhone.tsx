@@ -33,7 +33,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
       <div className="w-full max-w-[390px] rounded-[48px] p-3 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black border-[3px] border-zinc-700/60 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] relative z-10 transition-all duration-300">
 
         {/* Device Screen Viewport */}
-        <div className="rounded-[38px] overflow-hidden bg-background border border-border/50 relative flex flex-col min-h-[620px] max-h-[680px]">
+        <div className="rounded-[38px] overflow-hidden bg-background border border-border/50 relative flex flex-col h-[620px] sm:h-[650px] lg:h-[680px]">
 
           {/* Top iOS/Android Status Bar */}
           <div className="h-10 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between px-6 pt-1 text-[11px] font-bold text-[rgb(var(--ml-text-primary))] z-30 select-none">
@@ -48,7 +48,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
           </div>
 
           {/* Tenant Portal Top Header (reproduced from tenant/layout.tsx) */}
-          <header className="p-3.5 flex justify-between items-center border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-20 backdrop-blur-md bg-opacity-90">
+          <header className="p-3.5 flex justify-between items-center border-b border-border bg-[rgb(var(--ml-bg-secondary))] z-20">
             <div className="flex items-center gap-1.5 font-bold text-base text-[rgb(var(--ml-text-primary))]">
               <Building2 className="size-4 text-[rgb(var(--ml-accent))]" />
               <span className="tracking-tight">Homepost</span>
@@ -67,7 +67,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
           </header>
 
           {/* Scrollable Tenant Dashboard Content (from tenant/dashboard/page.tsx) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 pb-20">
 
             {/* 1. Header Section */}
             <div className="space-y-0.5 pb-0.5">
