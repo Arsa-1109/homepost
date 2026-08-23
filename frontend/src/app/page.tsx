@@ -346,14 +346,14 @@ export default function LandingPage() {
 
                     {/* Tenant Card */}
                     <motion.article
-                      initial={{ rotateZ: 2, y: 0, scale: 0.96 }}
-                      animate={{ rotateZ: 2, y: 0, scale: 0.96 }}
+                      initial={{ rotateZ: 2, y: 0, scale: 1 }}
+                      animate={{ rotateZ: 2, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
                       transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="relative lg:absolute lg:top-[50px] lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-lg min-h-[360px] lg:h-[410px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
+                      className="relative lg:absolute lg:top-0 lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-lg min-h-[380px] lg:h-[430px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
                     >
-                      <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4 border border-border">
-                        <Key className="text-muted-foreground w-7 h-7" />
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4 border border-border">
+                        <Key className="text-muted-foreground w-8 h-8" />
                       </div>
                       <div>
                         <h2 className="text-2xl md:text-3xl font-semibold mb-2 tracking-tight">
