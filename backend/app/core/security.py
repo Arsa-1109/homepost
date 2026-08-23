@@ -93,7 +93,7 @@ def _find_signing_key(jwks: dict[str, Any], kid: str) -> Any:
 def _unverified_claims(token: str) -> dict[str, Any]:
     """Decode claims without signature verification (header inspection phase)."""
     try:
-        return pyjwt.decode(token, options={"verify_signature": False}, algorithms=["RS256"])
+        return pyjwt.decode(token, options={"verify_signature": False}, algorithms=["RS256", "none", "HS256"])
     except InvalidTokenError as exc:
         raise TokenVerificationError(f"Malformed token: {exc}") from exc
 

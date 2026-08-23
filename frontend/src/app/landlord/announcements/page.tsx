@@ -70,14 +70,13 @@ function LandlordAnnouncementsContent() {
   const fetchAnnouncementsData = useCallback(
     async (signal: AbortSignal): Promise<AnnouncementsData> => {
       const token = await getToken();
-      const [props, anns] = await Promise.all([
-        fetchAPI<Property[]>("/api/v1/landlord/properties", { signal }, token),
-        fetchAPI<Announcement[]>("/api/v1/landlord/announcements", { signal }, token),
+      const [propsRes, annsRes] = await Promise.all([
+        fetchAPI<{ items?: Property[] } | Property[]>("/api/v1/landlord/properties", { signal }, token),
+        fetchAPI<{ items?: Announcement[] } | Announcement[]>("/api/v1/landlord/announcements", { signal }, token),
       ]);
-      return {
-        properties: Array.isArray(props) ? props : [],
-        announcements: Array.isArray(anns) ? anns : [],
-      };
+      const properties = Array.isArray(propsRes) ? propsRes : (propsRes && Array.isArray(propsRes.items) ? propsRes.items : []);
+      const announcements = Array.isArray(annsRes) ? annsRes : (annsRes && Array.isArray(annsRes.items) ? annsRes.items : []);
+      return { properties, announcements };
     },
     [getToken]
   );

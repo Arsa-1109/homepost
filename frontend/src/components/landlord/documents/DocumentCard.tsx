@@ -64,6 +64,7 @@ export function DocumentCard({
             src={doc.file_url}
             alt={doc.title}
             fill
+            unoptimized
             sizes="96px"
             className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
           />

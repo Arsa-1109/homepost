@@ -70,8 +70,10 @@ function LandlordDocumentsContent() {
   const fetchPropertiesData = useCallback(
     async (signal: AbortSignal): Promise<Property[]> => {
       const token = await getToken();
-      const props = await fetchAPI<Property[]>("/api/v1/landlord/properties", { signal }, token);
-      return Array.isArray(props) ? props : [];
+      const res = await fetchAPI<{ items?: Property[] } | Property[]>("/api/v1/landlord/properties", { signal }, token);
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.items)) return res.items;
+      return [];
     },
     [getToken]
   );
@@ -110,7 +112,7 @@ function LandlordDocumentsContent() {
       const token = await getToken();
       const [unitData, docData] = await Promise.all([
         fetchAPI<Unit[]>(`/api/v1/landlord/properties/${selectedProperty}/units`, {}, token),
-        fetchAPI<Document[]>(`/api/v1/landlord/properties/${selectedProperty}/documents`, {}, token),
+        fetchAPI<{ items?: Document[] } | Document[]>(`/api/v1/landlord/properties/${selectedProperty}/documents`, {}, token),
       ]);
       const sortedUnits = (unitData || []).slice().sort((a, b) =>
         (a.unit_label || "").localeCompare(b.unit_label || "", undefined, {
@@ -119,7 +121,7 @@ function LandlordDocumentsContent() {
         })
       );
       setUnits(sortedUnits);
-      setDocuments(Array.isArray(docData) ? docData : []);
+      setDocuments(Array.isArray(docData) ? docData : (docData && Array.isArray(docData.items) ? docData.items : []));
     } catch (err) {
       console.error("Failed to load documents/units:", err);
       setDocsError(errorMessage(err) || "Failed to load documents.");

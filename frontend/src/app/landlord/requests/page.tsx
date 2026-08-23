@@ -58,14 +58,13 @@ function LandlordMaintenanceContent() {
   const fetchRequestsData = useCallback(
     async (signal: AbortSignal): Promise<LandlordRequestsData> => {
       const token = await getToken();
-      const [props, reqs] = await Promise.all([
-        fetchAPI<Property[]>("/api/v1/landlord/properties", { signal }, token),
-        fetchAPI<MaintenanceRequest[]>("/api/v1/landlord/maintenance", { signal }, token),
+      const [propsRes, reqsRes] = await Promise.all([
+        fetchAPI<{ items?: Property[] } | Property[]>("/api/v1/landlord/properties", { signal }, token),
+        fetchAPI<{ items?: MaintenanceRequest[] } | MaintenanceRequest[]>("/api/v1/landlord/maintenance", { signal }, token),
       ]);
-      return {
-        properties: Array.isArray(props) ? props : [],
-        requests: Array.isArray(reqs) ? reqs : [],
-      };
+      const properties = Array.isArray(propsRes) ? propsRes : (propsRes && Array.isArray(propsRes.items) ? propsRes.items : []);
+      const requests = Array.isArray(reqsRes) ? reqsRes : (reqsRes && Array.isArray(reqsRes.items) ? reqsRes.items : []);
+      return { properties, requests };
     },
     [getToken]
   );
@@ -275,18 +274,26 @@ function LandlordMaintenanceContent() {
           <div className="space-y-4">
             <AnimatePresence mode="wait">
               {loading ? (
-                [1, 2, 3].map((i) => (
-                  <div
-                    key={`skel-${i}`}
-                    className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="skeleton h-6 w-48 rounded-md" />
-                      <div className="skeleton h-4 w-20 rounded-md" />
+                <motion.div
+                  key="loading-skel"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-3"
+                >
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={`skel-${i}`}
+                      className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="skeleton h-6 w-48 rounded-md" />
+                        <div className="skeleton h-4 w-20 rounded-md" />
+                      </div>
+                      <div className="skeleton h-4 w-3/4 rounded-md" />
                     </div>
-                    <div className="skeleton h-4 w-3/4 rounded-md" />
-                  </div>
-                ))
+                  ))}
+                </motion.div>
               ) : requests.length === 0 && !error ? (
                 <motion.div
                   key="empty-all"
@@ -324,15 +331,23 @@ function LandlordMaintenanceContent() {
                   </p>
                 </motion.div>
               ) : (
-                paginatedRequests.map((req) => (
-                  <RequestCard
-                    key={req.id}
-                    req={req}
-                    onUpdate={refetch}
-                    defaultExpanded={req.id === idParam}
-                    isHighlighted={req.id === idParam}
-                  />
-                ))
+                <motion.div
+                  key={`page-${currentPage}-${selectedProperty}-${selectedStatusFilter}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-4"
+                >
+                  {paginatedRequests.map((req) => (
+                    <RequestCard
+                      key={req.id}
+                      req={req}
+                      onUpdate={refetch}
+                      defaultExpanded={req.id === idParam}
+                      isHighlighted={req.id === idParam}
+                    />
+                  ))}
+                </motion.div>
               )}
             </AnimatePresence>
 

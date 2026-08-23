@@ -26,7 +26,7 @@ import {
   UserPlus,
   LayoutDashboard,
 } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers";
 
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false);

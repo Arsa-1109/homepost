@@ -127,7 +127,10 @@ export async function apiFetch<T = unknown>(
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
     const clerkGlobal = getClerkGlobal();
-    const isRealUserPresent = Boolean(clerkGlobal?.user || clerkGlobal?.session?.user);
+    const isRealUserPresent = Boolean(
+      (clerkGlobal?.user && !clerkGlobal.user.id?.startsWith("mock_") && !ALLOWED_DEMO_IDS.has(clerkGlobal.user.id)) ||
+      (clerkGlobal?.session?.user && !clerkGlobal.session.user.id?.startsWith("mock_") && !ALLOWED_DEMO_IDS.has(clerkGlobal.session.user.id))
+    );
 
     if (isRealUserPresent) {
       // Clear any lingering demo state from previous sessions

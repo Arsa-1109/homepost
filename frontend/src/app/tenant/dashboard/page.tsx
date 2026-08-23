@@ -90,12 +90,14 @@ export default function TenantDashboard() {
         const token = await getToken();
         const [prof, reqs, anns] = await Promise.all([
           fetchAPI<TenantProfile>("/api/v1/tenant/profile", {}, token),
-          fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
-          fetchAPI<Announcement[]>("/api/v1/tenant/announcements", {}, token),
+          fetchAPI<{ items?: MaintenanceRequest[] } | MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
+          fetchAPI<{ items?: Announcement[] } | Announcement[]>("/api/v1/tenant/announcements", {}, token),
         ]);
+        const reqsList = Array.isArray(reqs) ? reqs : (reqs && Array.isArray(reqs.items) ? reqs.items : []);
+        const annsList = Array.isArray(anns) ? anns : (anns && Array.isArray(anns.items) ? anns.items : []);
         setProfile(prof);
-        setRequests(reqs.slice(0, 5)); // Show up to 5 recent requests
-        setAnnouncements(anns);
+        setRequests(reqsList.slice(0, 5)); // Show up to 5 recent requests
+        setAnnouncements(annsList);
       } catch (err) {
         setError(errorMessage(err) ?? "Something went wrong.");
       } finally {

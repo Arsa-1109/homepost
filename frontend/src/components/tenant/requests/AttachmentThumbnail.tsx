@@ -11,8 +11,9 @@ export interface AttachmentThumbnailProps {
 }
 
 export function AttachmentThumbnail({ url, onViewImage }: AttachmentThumbnailProps) {
+  const [hasError, setHasError] = React.useState(false);
   const pathOnly = url.split("?")[0];
-  const isImage = isImageUrl(url);
+  const isImage = isImageUrl(url) && !hasError;
   const friendlyName = getFriendlyFileName(url);
   const rawFileName = pathOnly.split("/").pop() || "Attachment";
 
@@ -40,7 +41,9 @@ export function AttachmentThumbnail({ url, onViewImage }: AttachmentThumbnailPro
           src={url}
           alt={friendlyName}
           fill
+          unoptimized
           sizes="(max-width: 640px) 80px, 96px"
+          onError={() => setHasError(true)}
           className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">

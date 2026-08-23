@@ -76,8 +76,8 @@ function AccessRequestCard({
       setUnitId("");
       try {
         const token = await getToken();
-        const data = await fetchAPI<Unit[]>(`/api/v1/landlord/properties/${propertyId}/units`, {}, token);
-        setUnits(data || []);
+        const data = await fetchAPI<{ items?: Unit[] } | Unit[]>(`/api/v1/landlord/properties/${propertyId}/units`, {}, token);
+        setUnits(Array.isArray(data) ? data : data?.items || []);
       } catch (err) {
         console.error("Failed to load units:", err);
         toast.error("Failed to load units for selected property.");
@@ -347,11 +347,11 @@ export default function AccessRequestsPage() {
     try {
       const token = await getToken();
       const [pendingRes, propsRes] = await Promise.all([
-        fetchAPI<TenantRequest[]>("/api/v1/landlord/pending-tenants", {}, token),
-        fetchAPI<Property[]>("/api/v1/landlord/properties", {}, token)
+        fetchAPI<{ items?: TenantRequest[] } | TenantRequest[]>("/api/v1/landlord/pending-tenants", {}, token),
+        fetchAPI<{ items?: Property[] } | Property[]>("/api/v1/landlord/properties", {}, token)
       ]);
-      setRequests(pendingRes || []);
-      setProperties(propsRes || []);
+      setRequests(Array.isArray(pendingRes) ? pendingRes : pendingRes?.items || []);
+      setProperties(Array.isArray(propsRes) ? propsRes : propsRes?.items || []);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load access requests.");
@@ -366,10 +366,11 @@ export default function AccessRequestsPage() {
   }, [isLoaded, getToken]);
 
   const handleRemove = (tenantId: string) => {
-    setRequests(prev => prev.filter(t => t.id !== tenantId));
+    setRequests(prev => (Array.isArray(prev) ? prev.filter(t => t.id !== tenantId) : []));
   };
 
-  const totalPages = Math.ceil(requests.length / ITEMS_PER_PAGE) || 1;
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const totalPages = Math.ceil(safeRequests.length / ITEMS_PER_PAGE) || 1;
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -379,8 +380,8 @@ export default function AccessRequestsPage() {
 
   const paginatedRequests = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return requests.slice(start, start + ITEMS_PER_PAGE);
-  }, [requests, currentPage]);
+    return safeRequests.slice(start, start + ITEMS_PER_PAGE);
+  }, [safeRequests, currentPage]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto w-full">
@@ -433,7 +434,7 @@ export default function AccessRequestsPage() {
               </div>
             ))}
           </motion.div>
-        ) : requests.length === 0 ? (
+        ) : safeRequests.length === 0 ? (
           <motion.div 
             key="empty"
             initial={{ opacity: 0, y: 10 }}
@@ -482,7 +483,7 @@ export default function AccessRequestsPage() {
       </AnimatePresence>
 
       {/* Pagination Controls Bar */}
-      {!loading && requests.length > 0 && (
+      {!loading && safeRequests.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/40">
           <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
             Showing{" "}
@@ -491,11 +492,11 @@ export default function AccessRequestsPage() {
             </span>
             –
             <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-              {Math.min(currentPage * ITEMS_PER_PAGE, requests.length)}
+              {Math.min(currentPage * ITEMS_PER_PAGE, safeRequests.length)}
             </span>{" "}
             of{" "}
             <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-              {requests.length}
+              {safeRequests.length}
             </span>{" "}
             requests
           </p>

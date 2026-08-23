@@ -49,10 +49,10 @@ const server = http.createServer((req, res) => {
   // --- onboarding / auth -------------------------------------------------
   if (path === "/api/v1/onboarding/me") {
     return reply(200, {
-      id: role === "tenant" ? "user_e2e_tenant" : "user_e2e_landlord",
-      clerk_id: "e2e_clerk_id",
-      email: `${role}@homepost.test`,
-      full_name: "E2E User",
+      id: role === "tenant" ? "user_demo_tenant_001" : "user_demo_landlord_001",
+      clerk_id: role === "tenant" ? "user_demo_tenant_001" : "user_demo_landlord_001",
+      email: role === "tenant" ? "sarah.jenkins@demo.homepost.io" : "landlord@homepost.demo",
+      full_name: role === "tenant" ? "Sarah Jenkins" : "Marcus Vance (Demo Landlord)",
       role,
       requested_landlord_id: null,
     });

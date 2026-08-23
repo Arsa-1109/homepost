@@ -26,14 +26,16 @@ export default function TenantLayout({
   const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
   const [isDemo, setIsDemo] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     setIsDemo(isDemoSession());
   }, []);
 
-  const isDemoActive = isDemo || (isLoaded && !isSignedIn);
+  const isDemoActive = mounted && (isDemo || (isLoaded && !isSignedIn));
   const isSettingsActive = pathname === "/tenant/settings" || pathname.startsWith("/tenant/settings/");
-  const showSettings = isSignedIn && !isDemo;
+  const showSettings = mounted && isSignedIn && !isDemo;
 
   const visibleTabs = NAV_TABS.filter((tab) => {
     if (tab.href === "/tenant/settings" && isDemoActive) {
@@ -67,7 +69,7 @@ export default function TenantLayout({
             </Link>
           )}
           <ThemeToggle />
-          {!isLoaded ? (
+          {!mounted || !isLoaded ? (
             <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
           ) : isSignedIn ? (
             <UserButton />

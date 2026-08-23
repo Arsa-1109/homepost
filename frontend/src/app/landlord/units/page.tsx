@@ -67,8 +67,10 @@ function LandlordUnitsContent() {
   const fetchPropertiesData = useCallback(
     async (signal: AbortSignal): Promise<Property[]> => {
       const token = await getToken();
-      const props = await fetchAPI<Property[]>("/api/v1/landlord/properties", { signal }, token);
-      return Array.isArray(props) ? props : [];
+      const res = await fetchAPI<{ items?: Property[] } | Property[]>("/api/v1/landlord/properties", { signal }, token);
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.items)) return res.items;
+      return [];
     },
     [getToken]
   );

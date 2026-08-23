@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "motion/react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/Hero";
@@ -89,6 +89,7 @@ export default function LandingPage() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
 
+  const [mounted, setMounted] = useState(false);
   const [roleSelection, setRoleSelection] = useState<"none" | "landlord" | "tenant">("none");
   const [activeFeatureRole, setActiveFeatureRole] = useState<"owner" | "tenant">("owner");
   const [tenantEmail, setTenantEmail] = useState("");
@@ -104,6 +105,7 @@ export default function LandingPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     let isMounted = true;
 
     const metadataRole = (user?.publicMetadata as ClerkPublicMetadata | undefined)?.role;
@@ -221,7 +223,9 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            {!isSignedIn ? (
+            {!mounted || !isLoaded ? (
+              <div className="w-16 h-8 rounded-lg bg-muted/20 animate-pulse" />
+            ) : !isSignedIn ? (
               <Button
                 variant="link"
                 onClick={() => router.push("/sign-in")}
@@ -456,11 +460,9 @@ export default function LandingPage() {
         />
 
         {/* Demo Dashboard Area */}
-        {IS_DEMO_MODE && (
-          <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
-            <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
-          </section>
-        )}
+        <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
+          <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
+        </section>
       </main>
 
       {/* Footer */}

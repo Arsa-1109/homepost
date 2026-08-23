@@ -265,6 +265,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                                       src={url} 
                                       alt={`Attachment ${imgIdx + 1}`} 
                                       fill
+                                      unoptimized
                                       sizes="80px"
                                       className="object-cover group-hover/img:scale-105 transition-transform duration-300"
                                     />

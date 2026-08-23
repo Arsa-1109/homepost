@@ -42,8 +42,10 @@ export default function LandlordLayout({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
   const [isDemo, setIsDemo] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const collapsed = localStorage.getItem("landlord_sidebar_collapsed") === "true";
     setIsCollapsed(collapsed);
     if (isSignedIn) {
@@ -60,7 +62,7 @@ export default function LandlordLayout({
     localStorage.setItem("landlord_sidebar_collapsed", String(nextState));
   };
 
-  const isDemoActive = isDemo || (isLoaded && !isSignedIn);
+  const isDemoActive = mounted && (isDemo || (isLoaded && !isSignedIn));
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.href === "/landlord/settings" && isDemoActive) {
       return false;
@@ -207,7 +209,7 @@ export default function LandlordLayout({
               </div>
             )}
 
-            {!isLoaded ? (
+            {!mounted || !isLoaded ? (
               <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
             ) : isSignedIn ? (
               <UserButton />
@@ -223,7 +225,7 @@ export default function LandlordLayout({
             <span>Homepost</span>
           </Link>
           <div className="flex gap-2.5 items-center">
-            {!isLoaded ? (
+            {!mounted || !isLoaded ? (
               <div className="w-7 h-7 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
             ) : isSignedIn ? (
               <UserButton />

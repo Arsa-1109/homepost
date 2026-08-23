@@ -59,6 +59,61 @@ function generatePeakPaths(
   return paths;
 }
 
+function generateRidgePaths(
+  startY: number,
+  width: number,
+  height: number,
+  count: number,
+  spacing: number,
+  waveAmp: number,
+  phaseShift: number = 0
+): string[] {
+  const paths: string[] = [];
+
+  const hash = (seed: number) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+
+  const a1 = hash(phaseShift * 1.5) * 45 + 30;
+  const p1 = hash(phaseShift * 2.2) * Math.PI * 2;
+  const a2 = hash(phaseShift * 3.3) * 35 + 15;
+  const p2 = hash(phaseShift * 4.4) * Math.PI * 2;
+  const a3 = hash(phaseShift * 5.5) * 25 + 10;
+  const p3 = hash(phaseShift * 6.6) * Math.PI * 2;
+  const a4 = hash(phaseShift * 7.1) * 15 + 5;
+  const p4 = hash(phaseShift * 8.8) * Math.PI * 2;
+
+  for (let i = 0; i < count; i++) {
+    const yOffset = startY + i * spacing;
+    const points: string[] = [];
+    const steps = 100;
+
+    points.push(`M 0 ${height}`);
+
+    for (let step = 0; step <= steps; step++) {
+      const x = (step / steps) * width;
+      const t = (step / steps) * Math.PI * 2.8;
+
+      const wave =
+        Math.sin(t + p1) * a1 +
+        Math.sin(2 * t + p2) * a2 +
+        Math.cos(0.5 * t + p3 + i * 0.05) * a3 +
+        Math.sin(4 * t + p4) * a4;
+
+      const y = yOffset + wave * waveAmp;
+      points.push(`L ${x.toFixed(1)} ${y.toFixed(1)}`);
+    }
+
+    points.push(`L ${width} ${height}`);
+    points.push("Z");
+
+    paths.push(points.join(" "));
+  }
+
+  return paths;
+}
+
 const DUNES_CONFIG = [
   {
     type: "peak" as const,
@@ -73,25 +128,24 @@ const DUNES_CONFIG = [
     waveAmp: 0.8,
     phaseShift: 1.2,
     anim: "animate-dune-drift-1",
-    blur: "blur-[100px]",
+    blur: "blur-[35px]",
     opacity: "opacity-90",
     viewBox: "0 0 1000 700",
   },
   {
-    type: "peak" as const,
+    type: "ridge" as const,
     widthBase: 85,
     heightBase: 70,
-    cx: 500,
-    cy: 350,
-    rx: 160,
-    ry: 110,
+    startY: 120,
+    viewWidth: 1000,
+    viewHeight: 700,
     count: 6,
-    spacing: 75,
-    waveAmp: 0.7,
+    spacing: 65,
+    waveAmp: 0.85,
     phaseShift: 2.5,
     anim: "animate-dune-drift-2",
-    blur: "blur-[110px]",
-    opacity: "opacity-80",
+    blur: "blur-[40px]",
+    opacity: "opacity-85",
     viewBox: "0 0 1000 700",
   },
   {
@@ -107,25 +161,24 @@ const DUNES_CONFIG = [
     waveAmp: 0.9,
     phaseShift: 3.8,
     anim: "animate-dune-drift-3",
-    blur: "blur-[100px]",
+    blur: "blur-[35px]",
     opacity: "opacity-85",
     viewBox: "0 0 1100 700",
   },
   {
-    type: "peak" as const,
-    widthBase: 50,
-    heightBase: 55,
-    cx: 400,
-    cy: 300,
-    rx: 130,
-    ry: 95,
-    count: 6,
-    spacing: 50,
+    type: "ridge" as const,
+    widthBase: 70,
+    heightBase: 60,
+    startY: 80,
+    viewWidth: 800,
+    viewHeight: 600,
+    count: 5,
+    spacing: 55,
     waveAmp: 0.8,
     phaseShift: 5.0,
-    anim: "animate-dune-drift-1",
-    blur: "blur-[95px]",
-    opacity: "opacity-85",
+    anim: "animate-dune-drift-4",
+    blur: "blur-[30px]",
+    opacity: "opacity-90",
     viewBox: "0 0 800 600",
   },
 ];
@@ -175,19 +228,34 @@ export function LandingBackground() {
   const uniqueId = useId();
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 bg-background/50">
-      {/* Background Gradients & Dunes */}
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
+      {/* Subtle ambient radial light pools */}
+      <div className="absolute top-[-10%] left-[20%] w-[50vw] h-[50vh] bg-accent/10 dark:bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[-10%] w-[60vw] h-[60vh] bg-accent/8 dark:bg-accent/4 rounded-full blur-[140px] pointer-events-none" />
+
+      {/* Topographic Sand Dune System */}
       {RANDOMIZED_DUNES.map((dune, idx) => {
-        const paths = generatePeakPaths(
-          dune.cx,
-          dune.cy,
-          dune.rx,
-          dune.ry,
-          dune.count,
-          dune.spacing,
-          dune.waveAmp,
-          dune.phaseShift
-        );
+        const paths =
+          dune.type === "peak"
+            ? generatePeakPaths(
+                dune.cx,
+                dune.cy,
+                dune.rx,
+                dune.ry,
+                dune.count,
+                dune.spacing,
+                dune.waveAmp,
+                dune.phaseShift
+              ).reverse()
+            : generateRidgePaths(
+                dune.startY,
+                dune.viewWidth,
+                dune.viewHeight,
+                dune.count,
+                dune.spacing,
+                dune.waveAmp,
+                dune.phaseShift
+              );
 
         return (
           <div
@@ -213,18 +281,22 @@ export function LandingBackground() {
                   x2="100%"
                   y2="100%"
                 >
-                  <stop offset="0%" stopColor="rgb(var(--ml-accent))" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="rgb(var(--ml-text-primary))" stopOpacity="0.05" />
+                  <stop offset="0%" stopColor="rgb(var(--ml-accent))" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="rgb(var(--ml-text-primary))" stopOpacity="0.08" />
                 </linearGradient>
               </defs>
-              {paths.map((p, pIdx) => (
-                <path
-                  key={`p-${pIdx}`}
-                  d={p}
-                  fill={`url(#grad-${uniqueId}-${idx})`}
-                  opacity={0.3 + pIdx * 0.1}
-                />
-              ))}
+              {paths.map((p, pIdx) => {
+                const opIndex = Math.min(5, Math.max(1, 5 - pIdx));
+                return (
+                  <path
+                    key={`p-${pIdx}`}
+                    d={p}
+                    fill={`rgb(var(--ml-accent) / var(--ml-dune-op-${opIndex}))`}
+                    stroke="rgb(var(--ml-accent) / 0.15)"
+                    strokeWidth="0.75"
+                  />
+                );
+              })}
             </svg>
           </div>
         );

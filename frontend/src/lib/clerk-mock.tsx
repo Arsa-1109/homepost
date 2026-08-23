@@ -11,6 +11,8 @@
 
 import React, { createContext, useContext, useMemo } from "react";
 
+import { generateDemoJWT } from "./demo-token";
+
 type MockRole = "landlord" | "tenant" | null;
 
 function getCookie(name: string): string | null {
@@ -25,7 +27,16 @@ function setCookie(name: string, value: string) {
 
 function clearMockCookies() {
   for (const name of ["mock_user_id", "mock_user_email", "mock_user_name", "mock_user_role", "mock_user_onboarding_complete"]) {
-    document.cookie = `${name}=; path=/; max-age=0`;
+    document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+  }
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("mock_user_id");
+      localStorage.removeItem("mock_user_email");
+      localStorage.removeItem("mock_user_name");
+      localStorage.removeItem("mock_user_role");
+      localStorage.removeItem("mock_user_onboarding_complete");
+    } catch {}
   }
 }
 
@@ -37,16 +48,28 @@ function readRole(): MockRole {
 const isSignedIn = () => Boolean(getCookie("mock_user_id"));
 
 function personaFor(role: Exclude<MockRole, null>) {
+  const cookieId = getCookie("mock_user_id");
+  const cookieEmail = getCookie("mock_user_email");
+  const cookieName = getCookie("mock_user_name");
+
+  if (cookieId && cookieEmail) {
+    return {
+      id: cookieId,
+      email: cookieEmail,
+      name: cookieName || (role === "landlord" ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins"),
+    };
+  }
+
   return role === "landlord"
     ? {
-        id: "user_e2e_landlord",
-        email: "e2e-landlord@homepost.test",
-        name: "E2E Landlord",
+        id: "user_demo_landlord_001",
+        email: "landlord@homepost.demo",
+        name: "Marcus Vance (Demo Landlord)",
       }
     : {
-        id: "user_e2e_tenant",
-        email: "e2e-tenant@homepost.test",
-        name: "E2E Tenant",
+        id: "user_demo_tenant_001",
+        email: "sarah.jenkins@demo.homepost.io",
+        name: "Sarah Jenkins",
       };
 }
 
@@ -78,7 +101,13 @@ export function useAuth() {
   const signedIn = useAuthState();
   const role = readRole();
   const userId = signedIn ? getCookie("mock_user_id") : null;
-  const getToken = React.useCallback(async () => (signedIn ? `e2e-mock-token-${role || "user"}` : null), [signedIn, role]);
+  const getToken = React.useCallback(async () => {
+    if (!signedIn) return null;
+    const email = getCookie("mock_user_email") || (role === "tenant" ? "sarah.jenkins@demo.homepost.io" : "landlord@homepost.demo");
+    const name = getCookie("mock_user_name") || (role === "tenant" ? "Sarah Jenkins" : "Marcus Vance");
+    const sub = getCookie("mock_user_id") || (role === "tenant" ? "user_demo_tenant_001" : "user_demo_landlord_001");
+    return generateDemoJWT(email, name, sub);
+  }, [signedIn, role]);
   return useMemo(() => ({
     isLoaded: true,
     isSignedIn: signedIn,
@@ -187,39 +216,120 @@ export function UserButton() {
   );
 }
 
-function choosePersona(role: Exclude<MockRole, null>) {
-  const persona = personaFor(role);
+function choosePersona(
+  role: Exclude<MockRole, null>,
+  customPersona?: { id: string; email: string; name: string }
+) {
+  const persona = customPersona || (role === "landlord"
+    ? {
+        id: "user_demo_landlord_001",
+        email: "landlord@homepost.demo",
+        name: "Marcus Vance (Demo Landlord)",
+      }
+    : {
+        id: "user_demo_tenant_001",
+        email: "sarah.jenkins@demo.homepost.io",
+        name: "Sarah Jenkins",
+      });
+
   setCookie("mock_user_id", persona.id);
   setCookie("mock_user_email", persona.email);
   setCookie("mock_user_name", persona.name);
   setCookie("mock_user_role", role);
   setCookie("mock_user_onboarding_complete", "true");
+
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("mock_user_id", persona.id);
+      localStorage.setItem("mock_user_email", persona.email);
+      localStorage.setItem("mock_user_name", persona.name);
+      localStorage.setItem("mock_user_role", role);
+      localStorage.setItem("mock_user_onboarding_complete", "true");
+    } catch {}
+  }
+
   const params = new URLSearchParams(window.location.search);
-  const redirect = params.get("redirect_url");
+  const redirect = params.get("redirect_url") || params.get("fallbackRedirectUrl");
   window.location.href = redirect || (role === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard");
 }
 
 function PersonaPicker() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Sign in to HomePost</h1>
-        <p className="mt-1 text-sm text-neutral-500">Offline auth mock — pick a persona.</p>
+      <div className="text-center max-w-sm">
+        <h1 className="text-2xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))]">Sign in to HomePost</h1>
+        <p className="mt-2 text-sm text-[rgb(var(--ml-text-secondary))]">
+          Development & Test Auth Mock. Select an account persona to test drive the live database:
+        </p>
       </div>
-      <div className="flex w-64 flex-col gap-3">
+      <div className="flex w-full max-w-sm flex-col gap-3">
         <button
           type="button"
-          onClick={() => choosePersona("landlord")}
-          className="rounded-xl border border-neutral-300 px-4 py-3 font-medium hover:bg-neutral-50 dark:hover:bg-neutral-900"
+          onClick={() =>
+            choosePersona("landlord", {
+              id: "user_demo_landlord_001",
+              email: "landlord@homepost.demo",
+              name: "Marcus Vance (Demo Landlord)",
+            })
+          }
+          className="flex flex-col items-start p-4 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all text-left group"
         >
-          Continue as Landlord
+          <div className="flex items-center justify-between w-full">
+            <span className="font-semibold text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+              Marcus Vance (Owner)
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] font-medium">
+              Landlord
+            </span>
+          </div>
+          <span className="text-xs text-[rgb(var(--ml-text-secondary))] mt-1">landlord@homepost.demo</span>
+          <span className="text-xs text-[rgb(var(--ml-text-tertiary))] mt-1">Portfolio: Sunset Vista & Maplewood Heights</span>
         </button>
+
         <button
           type="button"
-          onClick={() => choosePersona("tenant")}
-          className="rounded-xl border border-neutral-300 px-4 py-3 font-medium hover:bg-neutral-50 dark:hover:bg-neutral-900"
+          onClick={() =>
+            choosePersona("tenant", {
+              id: "user_demo_tenant_001",
+              email: "sarah.jenkins@demo.homepost.io",
+              name: "Sarah Jenkins",
+            })
+          }
+          className="flex flex-col items-start p-4 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all text-left group"
         >
-          Continue as Tenant
+          <div className="flex items-center justify-between w-full">
+            <span className="font-semibold text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+              Sarah Jenkins (Resident)
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-medium">
+              Tenant
+            </span>
+          </div>
+          <span className="text-xs text-[rgb(var(--ml-text-secondary))] mt-1">sarah.jenkins@demo.homepost.io</span>
+          <span className="text-xs text-[rgb(var(--ml-text-tertiary))] mt-1">Unit 101 · Maplewood Heights</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            choosePersona("tenant", {
+              id: "user_demo_tenant_002",
+              email: "alex.rivera@demo.homepost.io",
+              name: "Alex Rivera",
+            })
+          }
+          className="flex flex-col items-start p-4 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all text-left group"
+        >
+          <div className="flex items-center justify-between w-full">
+            <span className="font-semibold text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors">
+              Alex Rivera (Resident)
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-medium">
+              Tenant
+            </span>
+          </div>
+          <span className="text-xs text-[rgb(var(--ml-text-secondary))] mt-1">alex.rivera@demo.homepost.io</span>
+          <span className="text-xs text-[rgb(var(--ml-text-tertiary))] mt-1">Unit 2A · Sunset Vista</span>
         </button>
       </div>
     </main>

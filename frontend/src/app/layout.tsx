@@ -21,6 +21,15 @@ export const metadata: Metadata = {
     "A radically simple property management portal for individual owners managing 1–5 properties.",
 };
 
+const themeScript = `(function() {
+  try {
+    var stored = localStorage.getItem('theme') || 'system';
+    var isDark = stored === 'dark' || (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.add(isDark ? 'dark' : 'light');
+    document.documentElement.classList.remove(isDark ? 'light' : 'dark');
+  } catch (e) {}
+})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,6 +44,9 @@ export default function RootLayout({
         outfit.variable
       )}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body suppressHydrationWarning>
         <ClerkProvider>
           <UserSync />
