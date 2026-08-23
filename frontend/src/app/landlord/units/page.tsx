@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { shouldShowEmpty } from "@/lib/empty-state";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -99,8 +100,11 @@ function LandlordUnitsContent() {
   // Load units for selected property
   const loadUnits = useCallback(async () => {
     if (!isLoaded || !selectedProperty) {
+      // No property selected yet (auth/properties still loading): stay in
+      // skeleton state instead of flashing the "no units" empty state.
       setUnits([]);
-      setUnitsLoading(false);
+      setUnitsError(null);
+      setUnitsLoading(true);
       return;
     }
     setUnitsLoading(true);
@@ -347,7 +351,7 @@ function LandlordUnitsContent() {
                       <div className="skeleton w-full h-9 rounded-xl" />
                     </div>
                   ))
-                ) : units.length === 0 && !unitsError ? (
+                ) : shouldShowEmpty(unitsLoading, units, Boolean(unitsError)) ? (
                   <div className="col-span-full text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3">
                     <DoorOpen className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                     <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
@@ -357,7 +361,7 @@ function LandlordUnitsContent() {
                       Use the quick-add form above to create your first unit.
                     </p>
                   </div>
-                ) : filteredUnits.length === 0 && !unitsError ? (
+                ) : shouldShowEmpty(unitsLoading, filteredUnits, Boolean(unitsError)) ? (
                   <div className="col-span-full text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3">
                     <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                     <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">

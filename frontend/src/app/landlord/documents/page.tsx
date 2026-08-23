@@ -5,6 +5,7 @@ import { errorMessage } from "@/lib/errors";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { shouldShowEmpty } from "@/lib/empty-state";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -101,9 +102,12 @@ function LandlordDocumentsContent() {
 
   const loadPropertyData = useCallback(async () => {
     if (!isLoaded || !selectedProperty) {
+      // No property selected yet (auth/properties still loading): stay in
+      // skeleton state instead of flashing the "no documents" empty state.
       setUnits([]);
       setDocuments([]);
-      setDocsLoading(false);
+      setDocsError(null);
+      setDocsLoading(true);
       return;
     }
     setDocsLoading(true);
@@ -421,7 +425,7 @@ function LandlordDocumentsContent() {
                     </div>
                   ))}
                 </div>
-              ) : documents.length === 0 && !docsError ? (
+              ) : shouldShowEmpty(docsLoading, documents, Boolean(docsError)) ? (
                 <div className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-4">
                   <div className="w-14 h-14 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border flex items-center justify-center mx-auto text-[rgb(var(--ml-text-secondary))]">
                     <FolderOpen className="w-7 h-7" />
@@ -439,7 +443,7 @@ function LandlordDocumentsContent() {
                     </p>
                   </div>
                 </div>
-              ) : filteredDocuments.length === 0 && !docsError ? (
+              ) : shouldShowEmpty(docsLoading, filteredDocuments, Boolean(docsError)) ? (
                 <div className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3">
                   <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                   <p className="text-sm font-semibold text-[rgb(var(--ml-text-primary))]">

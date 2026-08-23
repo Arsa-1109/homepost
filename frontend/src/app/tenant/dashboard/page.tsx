@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { fetchAPI } from "@/lib/api";
+import { unwrapPage } from "@/lib/pagination";
 import { Wrench, Megaphone, Calendar, Plus, ArrowRight, Clock, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -93,8 +94,8 @@ export default function TenantDashboard() {
           fetchAPI<{ items?: MaintenanceRequest[] } | MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
           fetchAPI<{ items?: Announcement[] } | Announcement[]>("/api/v1/tenant/announcements", {}, token),
         ]);
-        const reqsList = Array.isArray(reqs) ? reqs : (reqs && Array.isArray(reqs.items) ? reqs.items : []);
-        const annsList = Array.isArray(anns) ? anns : (anns && Array.isArray(anns.items) ? anns.items : []);
+        const reqsList = unwrapPage(reqs);
+        const annsList = unwrapPage(anns);
         setProfile(prof);
         setRequests(reqsList.slice(0, 5)); // Show up to 5 recent requests
         setAnnouncements(annsList);

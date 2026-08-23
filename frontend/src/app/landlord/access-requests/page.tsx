@@ -69,11 +69,15 @@ function AccessRequestCard({
     if (!isLoaded || !propertyId) {
       setUnits([]);
       setUnitId("");
+      setLoadingUnits(false);
       return;
     }
+    // Set loading synchronously before the fetch so switching properties never
+    // renders a frame with the previous property's units.
+    setUnits([]);
+    setUnitId("");
+    setLoadingUnits(true);
     async function loadUnits() {
-      setLoadingUnits(true);
-      setUnitId("");
       try {
         const token = await getToken();
         const data = await fetchAPI<{ items?: Unit[] } | Unit[]>(`/api/v1/landlord/properties/${propertyId}/units`, {}, token);
