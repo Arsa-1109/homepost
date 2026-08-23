@@ -14,6 +14,8 @@ export interface UseApiQueryOptions<T = unknown> {
 export interface UseApiQueryResult<T> {
   data: T | null;
   isLoading: boolean;
+  /** True only when waiting for the query itself to become available (e.g. auth not yet loaded). */
+  isPending: boolean;
   error: string | null;
   refetch: () => Promise<void>;
   setData: React.Dispatch<React.SetStateAction<T | null>>;
@@ -31,7 +33,9 @@ export function useApiQuery<T>(
   const { enabled = true, token, initialData = null } = options;
 
   const [data, setData] = useState<T | null>(initialData);
-  const [isLoading, setIsLoading] = useState<boolean>(enabled && query !== null);
+  // A null query while enabled means the query is still pending (e.g. Clerk
+  // not yet loaded), so the hook must report loading to keep skeletons up.
+  const [isLoading, setIsLoading] = useState<boolean>(enabled);
   const [error, setError] = useState<string | null>(null);
 
   // Keep track of the active request to discard stale responses
@@ -40,8 +44,13 @@ export function useApiQuery<T>(
 
   const executeFetch = useCallback(
     async (isManualRefetch = false) => {
-      if (!enabled || query === null) {
+      if (!enabled) {
         setIsLoading(false);
+        return;
+      }
+
+      if (query === null) {
+        setIsLoading(true);
         return;
       }
 
@@ -112,6 +121,7 @@ export function useApiQuery<T>(
   return {
     data,
     isLoading,
+    isPending: isLoading && enabled && query === null,
     error,
     refetch,
     setData,

@@ -171,6 +171,64 @@ describe("useApiQuery hook", () => {
     expect(customFetcher).toHaveBeenCalledWith(expect.any(AbortSignal));
   });
 
+  it("treats a null query with enabled=true as auth-pending (skeleton state)", () => {
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy;
+
+    const { result } = renderHook(() => useApiQuery(null, [], { enabled: true }));
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isPending).toBe(true);
+    expect(result.current.data).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("reports not-loading and not-pending when the hook is disabled", () => {
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy;
+
+    const { result } = renderHook(() =>
+      useApiQuery(null, [], { enabled: false })
+    );
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isPending).toBe(false);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it("transitions from null query to a real fetcher and resolves normally", async () => {
+    const mockData = { id: "1", name: "Late Property" };
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => mockData,
+    } as unknown as Response);
+
+    let query: string | null = null;
+    const { result, rerender } = renderHook(() =>
+      useApiQuery<{ id: string; name: string }>(query, [query])
+    );
+
+    // Pending while Clerk/auth has not produced a fetcher yet
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isPending).toBe(true);
+
+    act(() => {
+      query = "/api/v1/test";
+      rerender();
+    });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.isPending).toBe(false);
+
+    await waitFor(() => {
+      expect(result.current.data).toEqual(mockData);
+    });
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
+
   it("does not fetch when enabled option is false", async () => {
     const fetchSpy = vi.fn();
     global.fetch = fetchSpy;
