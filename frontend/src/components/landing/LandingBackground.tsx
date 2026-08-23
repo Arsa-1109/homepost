@@ -2,7 +2,22 @@
 
 import React, { useId } from "react";
 
-function generatePeakPaths(
+const GOLDEN_RATIO = 1.6180339887498949;
+const EULER_NUMBER = 2.718281828459045;
+const TAU = Math.PI * 2;
+
+function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state |= 0;
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function generatePeakPaths(
   cx: number,
   cy: number,
   rx: number,
@@ -14,35 +29,45 @@ function generatePeakPaths(
 ): string[] {
   const paths: string[] = [];
 
-  const hash = (seed: number) => {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const c2 = hash(phaseShift * 1.7) * 0.45 + 0.25;
-  const s2 = hash(phaseShift * 2.3) * Math.PI * 2;
-  const c3 = hash(phaseShift * 3.1) * 0.35 + 0.15;
-  const s3 = hash(phaseShift * 4.7) * Math.PI * 2;
-  const c4 = hash(phaseShift * 5.9) * 0.25 + 0.10;
-  const s4 = hash(phaseShift * 6.8) * Math.PI * 2;
-  const c5 = hash(phaseShift * 7.2) * 0.15 + 0.05;
-  const s5 = hash(phaseShift * 8.4) * Math.PI * 2;
-
   for (let i = 0; i < count; i++) {
+    const random = mulberry32(Math.floor((phaseShift + i) * 9973));
     const R = 30 + i * spacing;
-    const points: string[] = [];
     const steps = 180;
 
+    const amp1 = random() * 0.18 + 0.10;
+    const amp2 = random() * 0.14 + 0.07;
+    const amp3 = random() * 0.09 + 0.04;
+    const phase1 = random() * TAU;
+    const phase2 = random() * TAU;
+    const phase3 = random() * TAU;
+    const skewPhase = random() * TAU;
+    const envPhase = random() * TAU;
+
+    const rawWave = (theta: number): number =>
+      Math.sin(theta + phase1) * amp1 +
+      Math.sin(theta * GOLDEN_RATIO + phase2) * amp2 +
+      Math.cos(theta * EULER_NUMBER + phase3) * amp3;
+
+    const waveAtStart = rawWave(0);
+
+    const points: string[] = [];
+
     for (let step = 0; step <= steps; step++) {
-      const theta = (step / steps) * 2 * Math.PI;
+      const theta = (step / steps) * TAU;
+      const warpedTheta = theta + 0.35 * Math.sin(theta + skewPhase);
 
+      const closeWeight =
+        theta > TAU * 0.75
+          ? ((theta - TAU * 0.75) / (TAU * 0.25)) ** 2
+          : 0;
+      const irregular = rawWave(warpedTheta);
       const wave =
-        Math.sin(2 * theta + s2) * c2 +
-        Math.cos(3 * theta + s3) * c3 +
-        Math.sin(4 * theta + s4) * c4 +
-        Math.cos(5 * theta + s5) * c5;
+        (irregular - closeWeight * (irregular - waveAtStart)) *
+        (1 + 0.35 * Math.sin(theta * 2 + envPhase));
 
-      const r = R * (1 + waveAmp * wave);
+      const jitter = (random() - 0.5) * 0.05;
+
+      const r = R * (1 + waveAmp * wave + waveAmp * jitter);
       const px = cx + Math.cos(theta) * r * (rx / 100);
       const py = cy + Math.sin(theta) * r * (ry / 100);
 
@@ -59,7 +84,7 @@ function generatePeakPaths(
   return paths;
 }
 
-function generateRidgePaths(
+export function generateRidgePaths(
   startY: number,
   width: number,
   height: number,
@@ -70,38 +95,38 @@ function generateRidgePaths(
 ): string[] {
   const paths: string[] = [];
 
-  const hash = (seed: number) => {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const a1 = hash(phaseShift * 1.5) * 45 + 30;
-  const p1 = hash(phaseShift * 2.2) * Math.PI * 2;
-  const a2 = hash(phaseShift * 3.3) * 35 + 15;
-  const p2 = hash(phaseShift * 4.4) * Math.PI * 2;
-  const a3 = hash(phaseShift * 5.5) * 25 + 10;
-  const p3 = hash(phaseShift * 6.6) * Math.PI * 2;
-  const a4 = hash(phaseShift * 7.1) * 15 + 5;
-  const p4 = hash(phaseShift * 8.8) * Math.PI * 2;
-
   for (let i = 0; i < count; i++) {
+    const random = mulberry32(Math.floor((phaseShift + i) * 7841));
     const yOffset = startY + i * spacing;
-    const points: string[] = [];
     const steps = 100;
 
+    const amp1 = random() * 30 + 25;
+    const amp2 = random() * 24 + 12;
+    const amp3 = random() * 16 + 6;
+    const phase1 = random() * TAU;
+    const phase2 = random() * TAU;
+    const phase3 = random() * TAU;
+    const skewPhase = random() * TAU;
+    const envPhase = random() * TAU;
+
+    const points: string[] = [];
     points.push(`M 0 ${height}`);
 
     for (let step = 0; step <= steps; step++) {
-      const x = (step / steps) * width;
-      const t = (step / steps) * Math.PI * 2.8;
+      const u = step / steps;
+      const x = u * width;
+      const t = u * Math.PI * 2.8;
+      const warpedT = t + 0.3 * Math.sin(t + skewPhase);
 
+      const envelope = 1 + 0.4 * Math.sin(0.37 * t + envPhase + i * 0.6);
       const wave =
-        Math.sin(t + p1) * a1 +
-        Math.sin(2 * t + p2) * a2 +
-        Math.cos(0.5 * t + p3 + i * 0.05) * a3 +
-        Math.sin(4 * t + p4) * a4;
+        Math.sin(warpedT + phase1) * amp1 +
+        Math.sin(warpedT * GOLDEN_RATIO + phase2) * amp2 +
+        Math.cos(warpedT * EULER_NUMBER * 0.5 + phase3 + i * 0.13) * amp3;
 
-      const y = yOffset + wave * waveAmp;
+      const jitter = (random() - 0.5) * 7;
+
+      const y = yOffset + (wave * envelope + jitter) * waveAmp;
       points.push(`L ${x.toFixed(1)} ${y.toFixed(1)}`);
     }
 
