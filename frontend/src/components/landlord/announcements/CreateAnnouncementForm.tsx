@@ -6,6 +6,9 @@ import { Megaphone, Paperclip, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { uploadFile } from "@/lib/upload";
+import {
+  formatAnnouncementUnitLabel,
+} from "@/lib/announcement-labels";
 import { fetchAPI } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -165,7 +168,9 @@ export function CreateAnnouncementForm({
               <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-xs text-[rgb(var(--ml-text-primary))]">
                 {selectedUnit === "all" || !selectedUnit
                   ? "All Units (Property-wide)"
-                  : `Unit ${units.find((u) => u.id === selectedUnit)?.unit_label}`}
+                  : formatAnnouncementUnitLabel(
+                      units.find((u) => u.id === selectedUnit)?.unit_label
+                    )}
               </span>
             </SelectTrigger>
             <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
@@ -174,7 +179,7 @@ export function CreateAnnouncementForm({
               </SelectItem>
               {units.map((u) => (
                 <SelectItem key={u.id} value={u.id} className="font-semibold text-xs">
-                  Unit {u.unit_label}
+                  {formatAnnouncementUnitLabel(u.unit_label)}
                 </SelectItem>
               ))}
             </SelectContent>

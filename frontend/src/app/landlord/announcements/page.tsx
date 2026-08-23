@@ -3,6 +3,10 @@
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import {
+  PROPERTY_WIDE_ANNOUNCEMENT_LABEL,
+  formatAnnouncementUnitLabel,
+} from "@/lib/announcement-labels";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { LightboxModal } from "@/components/LightboxModal";
@@ -186,9 +190,9 @@ function LandlordAnnouncementsContent() {
     properties.find((p) => p.id === selectedProperty)?.name || "Property";
 
   const getUnitLabel = (unitId: string | null | undefined) => {
-    if (!unitId) return "Property-Wide";
+    if (!unitId) return PROPERTY_WIDE_ANNOUNCEMENT_LABEL;
     const unit = units.find((u) => u.id === unitId);
-    return unit ? `Unit ${unit.unit_label}` : "Unit Specific";
+    return formatAnnouncementUnitLabel(unit?.unit_label);
   };
 
   return (

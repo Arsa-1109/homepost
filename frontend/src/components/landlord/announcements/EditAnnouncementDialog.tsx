@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { fetchAPI } from "@/lib/api";
+import { formatAnnouncementUnitLabel } from "@/lib/announcement-labels";
 import { toast } from "sonner";
 import { Announcement } from "./AnnouncementCard";
 
@@ -100,7 +101,9 @@ export function EditAnnouncementDialog({
                 <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-xs text-[rgb(var(--ml-text-primary))]">
                   {editUnitId === "all" || !editUnitId
                     ? "All Units (Property-wide)"
-                    : `Unit ${units.find((u) => u.id === editUnitId)?.unit_label}`}
+                    : formatAnnouncementUnitLabel(
+                        units.find((u) => u.id === editUnitId)?.unit_label
+                      )}
                 </span>
               </SelectTrigger>
               <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
@@ -109,7 +112,7 @@ export function EditAnnouncementDialog({
                 </SelectItem>
                 {units.map((u) => (
                   <SelectItem key={u.id} value={u.id} className="font-semibold text-xs">
-                    Unit {u.unit_label}
+                    {formatAnnouncementUnitLabel(u.unit_label)}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -5,6 +5,10 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { unwrapPage } from "@/lib/pagination";
+import {
+  PROPERTY_WIDE_ANNOUNCEMENT_LABEL,
+  formatAnnouncementUnitLabel,
+} from "@/lib/announcement-labels";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
@@ -152,6 +156,11 @@ export default function TenantAnnouncementsPage() {
   );
 }
 
+interface TenantAnnouncementsData {
+  tenantUnitLabel: string | null;
+  announcements: Announcement[];
+}
+
 function TenantAnnouncementsContent() {
   const searchParams = useSearchParams();
   const targetAnnouncementId =
@@ -169,24 +178,34 @@ function TenantAnnouncementsContent() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchAnnouncements = useCallback(
-    async (signal: AbortSignal): Promise<Announcement[]> => {
+    async (signal: AbortSignal): Promise<TenantAnnouncementsData> => {
       const token = await getToken();
-      const data = await fetchAPI<Announcement[] | { items?: Announcement[] }>(
-        "/api/v1/tenant/announcements",
-        { signal },
-        token
-      );
-      return unwrapPage<Announcement>(data);
+      const [profileData, announcementsData] = await Promise.all([
+        fetchAPI<{ unit_label?: string }>("/api/v1/tenant/profile", { signal }, token).catch(
+          () => null
+        ),
+        fetchAPI<Announcement[] | { items?: Announcement[] }>(
+          "/api/v1/tenant/announcements",
+          { signal },
+          token
+        ),
+      ]);
+      return {
+        tenantUnitLabel: profileData?.unit_label ?? null,
+        announcements: unwrapPage<Announcement>(announcementsData),
+      };
     },
     [getToken]
   );
 
-  const { data, isLoading: loading, error, refetch } = useApiQuery<Announcement[]>(
-    isLoaded ? fetchAnnouncements : null,
-    [isLoaded, fetchAnnouncements]
-  );
+  const { data, isLoading: loading, error, refetch } =
+    useApiQuery<TenantAnnouncementsData>(
+      isLoaded ? fetchAnnouncements : null,
+      [isLoaded, fetchAnnouncements]
+    );
 
-  const announcements = useMemo(() => data || [], [data]);
+  const announcements = useMemo(() => data?.announcements || [], [data]);
+  const tenantUnitLabel = data?.tenantUnitLabel ?? null;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -455,7 +474,9 @@ function TenantAnnouncementsContent() {
                                 : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
                             }`}
                           >
-                            {isUnitSpecific ? "Direct Notice" : "Property-Wide"}
+                            {ann.unit_id
+                              ? formatAnnouncementUnitLabel(tenantUnitLabel)
+                              : PROPERTY_WIDE_ANNOUNCEMENT_LABEL}
                           </span>
                         </div>
 
