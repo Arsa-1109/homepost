@@ -18,6 +18,7 @@ import { ALLOWED_DEMO_IDS, IS_DEMO_MODE } from "@/lib/demo-mode";
 import { generateDemoJWT } from "@/lib/demo-token";
 import { DEMO_ACCOUNTS } from "@/lib/demo-auth";
 import { getClerkGlobal } from "@/lib/clerk-global";
+import { isOwnAccountUserId } from "@/lib/mock-account";
 
 export interface UserRoleResponse {
   id: string;
@@ -70,8 +71,9 @@ async function getClerkToken(): Promise<string | null> {
 }
 
 /**
- * Resolve a demo bearer token — reachable only in flagged demo builds.
- * Returns null unless the stored mock identity is an allowlisted demo account.
+ * Resolve a mock bearer token — reachable only in flagged local builds.
+ * Serves the allowlisted demo accounts AND self-created "own" accounts
+ * (user_own_*), which keep full write access server-side.
  */
 function resolveDemoToken(): string | null {
   if (!IS_DEMO_MODE || typeof window === "undefined") return null;
@@ -83,7 +85,9 @@ function resolveDemoToken(): string | null {
   };
 
   const mockId = localStorage.getItem("mock_user_id") || getCookie("mock_user_id");
-  if (!mockId || !ALLOWED_DEMO_IDS.has(mockId)) return null;
+  if (!mockId) return null;
+  const isMockAccount = ALLOWED_DEMO_IDS.has(mockId) || isOwnAccountUserId(mockId);
+  if (!isMockAccount) return null;
 
   const config =
     Object.values(DEMO_ACCOUNTS).find((account) => account.userId === mockId) ?? null;

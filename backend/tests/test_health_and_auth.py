@@ -69,15 +69,17 @@ async def test_tenant_guard_missing_profile(client: AsyncClient, seed_data):
 
 
 async def test_forged_alg_none_token_rejected(client: AsyncClient, monkeypatch):
-    """In production (MOCK_AUTH=false), unsigned alg: none tokens for non-demo users MUST be rejected with 401."""
+    """In production, unsigned alg: none tokens MUST be rejected with 401 even when ENABLE_DEMO_AUTH is on."""
     import base64
     import json
     from app.core.config import get_settings
 
-    # Simulate production mode
+    # Simulate production mode (demo-auth gate can never open in production)
     settings = get_settings()
     monkeypatch.setattr(settings, "mock_auth", False)
     monkeypatch.setenv("MOCK_AUTH", "false")
+    monkeypatch.setattr(settings, "enable_demo_auth", True)
+    monkeypatch.setattr(settings, "environment", "production")
 
     header = base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode()).decode().rstrip("=")
     payload = base64.urlsafe_b64encode(json.dumps({

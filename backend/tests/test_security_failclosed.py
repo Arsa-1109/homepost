@@ -5,7 +5,9 @@ Proves that unsigned (alg:"none") tokens are rejected by default and are
 only ever accepted when ALL of the following hold:
   - ENABLE_DEMO_AUTH is explicitly true
   - environment != "production"
-  - the token's `sub` is in ALLOWED_DEMO_USER_IDS
+Any non-empty subject is then accepted (Issue #9: locally created "own"
+accounts); read-only enforcement for designated demo accounts lives in
+guard_demo_mutation, scoped to ALLOWED_DEMO_USER_IDS.
 
 Also covers:
   - single source of truth for MOCK_AUTH (no raw os.getenv consult)
@@ -64,11 +66,17 @@ async def test_alg_none_accepted_with_explicit_demo_auth(monkeypatch):
     assert payload["sub"] == DEMO_LANDLORD
 
 
-async def test_alg_none_rejected_for_non_allowlisted_sub_even_when_enabled(monkeypatch):
+async def test_alg_none_accepted_for_own_account_sub_when_enabled(monkeypatch):
+    """
+    Issue #9: with ENABLE_DEMO_AUTH explicitly true in a non-production
+    environment, unsigned tokens are accepted for ANY subject so locally
+    created ("own") accounts can authenticate. Read-only enforcement for the
+    designated demo accounts lives in guard_demo_mutation instead.
+    """
     settings = get_settings()
     monkeypatch.setattr(settings, "enable_demo_auth", True)
-    with pytest.raises(TokenVerificationError):
-        await verify_clerk_token(make_alg_none_token("user_attacker_666"))
+    payload = await verify_clerk_token(make_alg_none_token("user_own_9f1c2a3e"))
+    assert payload["sub"] == "user_own_9f1c2a3e"
 
 
 async def test_alg_none_rejected_in_production_even_with_explicit_flag(monkeypatch):

@@ -132,7 +132,9 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
        validate_secure_environment().
     2. Unsigned / 'none' algorithm tokens are accepted ONLY when
        ENABLE_DEMO_AUTH is explicitly true AND the environment is not
-       production AND the `sub` is in ALLOWED_DEMO_USER_IDS.
+       production. Any non-empty subject is accepted so locally created
+       "own" accounts work; read-only enforcement for the designated demo
+       accounts stays in guard_demo_mutation (ALLOWED_DEMO_USER_IDS).
     3. All other tokens MUST be signed with RS256 and verified against Clerk's
        JWKS, and must carry an `aud` or `azp` claim.
 
@@ -177,13 +179,17 @@ async def verify_clerk_token(token: str) -> dict[str, Any]:
         if demo_auth_allowed:
             try:
                 payload = _unverified_claims(token)
-                if payload.get("sub") in ALLOWED_DEMO_USER_IDS:
+                # Issue #9: any subject is accepted here so locally created
+                # "own" accounts (user_own_*) can authenticate. Read-only
+                # enforcement for designated demo accounts lives in
+                # guard_demo_mutation, scoped to ALLOWED_DEMO_USER_IDS.
+                if payload.get("sub"):
                     _log_demo_auth_activation_once()
                     return payload
             except TokenVerificationError:
                 pass
         raise TokenVerificationError(
-            "Unsigned tokens are strictly restricted to designated demo accounts."
+            "Unsigned tokens are restricted to explicitly enabled demo/mock authentication."
         )
 
     # Step 3: Fetch matching public key from Clerk's JWKS
