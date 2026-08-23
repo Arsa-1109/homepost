@@ -100,7 +100,7 @@ export function useApiQuery<T>(
         setIsLoading(false);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
     [enabled, query, token, ...deps]
   );
 
