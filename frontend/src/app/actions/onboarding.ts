@@ -3,6 +3,7 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 
 export async function completeOnboarding(role?: "landlord" | "tenant") {
+  if (process.env.MOCK_AUTH === "true") return;
   try {
     const { userId, getToken } = await auth();
     if (!userId) return;
@@ -44,6 +45,7 @@ export async function completeOnboarding(role?: "landlord" | "tenant") {
 }
 
 export async function resetOnboarding() {
+  if (process.env.MOCK_AUTH === "true") return;
   try {
     const { userId } = await auth();
     if (!userId) return;

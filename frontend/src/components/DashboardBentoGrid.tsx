@@ -1,71 +1,11 @@
-import React from "react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { EmptyState } from "@/components/ui/empty-state"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { AlertCircle, Activity, Home, FileText, Wrench, Zap, Key, Droplets, Plus, LucideIcon } from "lucide-react"
+"use client";
 
-function formatStatusText(str: string) {
-  if (!str) return "Unknown";
-  return str.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-}
-
-function getStatusColor(str: string) {
-  const s = (str || "").toLowerCase();
-  if (s === 'closed' || s === 'resolved') return 'text-muted-foreground';
-  return 'text-teal-600 dark:text-[#2DD4BF]';
-}
-
-const getMaintenanceIcon = (title: string): LucideIcon => {
-  const t = title.toLowerCase();
-  if (t.includes('toilet') || t.includes('flush') || t.includes('bathroom') || t.includes('plumb') || t.includes('leak') || t.includes('faucet') || t.includes('water') || t.includes('tap') || t.includes('sink') || t.includes('pipe') || t.includes('drain')) {
-    if (t.includes('toilet') || t.includes('bathroom') || t.includes('flush')) return Droplets;
-    return Wrench;
-  }
-  if (t.includes('light') || t.includes('bulb') || t.includes('electric') || t.includes('wire') || t.includes('power')) return Zap;
-  if (t.includes('key') || t.includes('lock') || t.includes('door') || t.includes('gate')) return Key;
-  return Wrench;
-};
-
-const getUnitInitials = (label: string): string => {
-  const noiseWords = new Set(["unit", "the", "a", "an", "of", "and", "or", "in", "on", "at", "to", "for", "with"]);
-  const words = label
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .split(/[\s-]+/)
-    .filter(w => w.trim() && !noiseWords.has(w));
-
-  if (words.length === 0) return "UN";
-
-  if (words.length === 1) {
-    const singleWord = words[0];
-    if (/^\d+$/.test(singleWord)) {
-      return singleWord.slice(0, 4).toUpperCase();
-    }
-    return singleWord.slice(0, 2).toUpperCase();
-  }
-
-  const first = words[0][0] || '';
-  const second = words[1][0] || '';
-  return (first + second).toUpperCase();
-};
-
-
-function formatAddress(str: string) {
-  if (!str) return "";
-  return str
-    .split(' ')
-    .map((word) => {
-      let w = word.toLowerCase();
-      if (w === 'drives') w = 'drive';
-      if (w === 'streets') w = 'street';
-      if (w === 'avenues') w = 'avenue';
-      return w.charAt(0).toUpperCase() + w.slice(1);
-    })
-    .join(' ');
-}
+import React from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ActiveMaintenanceCard, MaintenanceItem } from "@/components/dashboard/ActiveMaintenanceCard";
+import { RecentActivityCard, ActivityItem } from "@/components/dashboard/RecentActivityCard";
+import { PropertyOverviewCard } from "@/components/dashboard/PropertyOverviewCard";
+import { OccupiedUnitsCard, UnitItem } from "@/components/dashboard/OccupiedUnitsCard";
 
 export type DashboardData = {
   property_stats: {
@@ -74,36 +14,9 @@ export type DashboardData = {
     occupied_units: number;
     vacant_units: number;
   };
-  units: Array<{
-    id: string;
-    property_id: string;
-    property_name: string;
-    unit_label: string;
-    is_occupied: boolean;
-    tenant_name?: string | null;
-    has_pending_maintenance?: boolean;
-    has_pending_invite?: boolean;
-    has_pending?: boolean;
-  }>;
-  urgent_maintenance: Array<{
-    id: string;
-    title: string;
-    priority: string;
-    status: string;
-    unit_label: string;
-    property_name?: string;
-    created_at: string;
-  }>;
-  recent_activity: Array<{
-    type: "maintenance_update" | "document_upload" | "announcement_posted";
-    id: string;
-    title: string;
-    timestamp: string;
-    meta?: string;
-    actor?: string;
-    property_name?: string;
-    unit_label?: string;
-  }>;
+  units: UnitItem[];
+  urgent_maintenance: MaintenanceItem[];
+  recent_activity: ActivityItem[];
   pending_approvals?: Array<{
     id: string;
     name: string;
@@ -112,416 +25,30 @@ export type DashboardData = {
   }>;
 };
 
-interface DashboardBentoGridProps {
+export interface DashboardBentoGridProps {
   data: DashboardData;
 }
 
 export function DashboardBentoGrid({ data }: DashboardBentoGridProps) {
-  const getPriorityLeftBorder = (priority: string) => {
-    const p = priority.toLowerCase();
-    if (p === 'urgent') return 'border-l-[3px] border-l-[#FB923C]'; // Red/Orange
-    if (p === 'high') return 'border-l-[3px] border-l-[#FB923C]'; // Orange
-    if (p === 'medium') return 'border-l-[3px] border-l-[#818CF8]'; // Indigo/Amber
-    return 'border-l-[3px] border-l-muted-foreground';
-  };
-
-  const getPriorityClass = (priority: string) => {
-    const p = priority.toLowerCase();
-    if (p === 'urgent' || p === 'high') return 'bg-orange-500/10 text-orange-600 dark:bg-[rgba(251,146,60,0.12)] dark:text-[#FB923C]';
-    if (p === 'medium') return 'bg-indigo-500/10 text-indigo-600 dark:bg-[rgba(129,140,248,0.12)] dark:text-[#818CF8]';
-    return 'bg-muted text-muted-foreground';
-  };
-
-  const priorityWeight: Record<string, number> = {
-    'urgent': 1,
-    'high': 2,
-    'medium': 3,
-    'low': 4
-  };
-
-  const activeRequests = [...data.urgent_maintenance]
-    .filter(req => {
-      const s = (req.status || "").toLowerCase();
-      return s === 'open' || s === 'in_progress' || s === 'pending' || s === 'in progress';
-    })
-    .sort((a, b) => {
-      const weightA = priorityWeight[a.priority.toLowerCase()] || 99;
-      const weightB = priorityWeight[b.priority.toLowerCase()] || 99;
-      if (weightA !== weightB) return weightA - weightB;
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-
-  const displayedRequests = activeRequests.slice(0, 4);
-  const hasMoreRequests = activeRequests.length > 4;
-
-  const occupiedUnits = [...data.units]
-    .filter(u => u.is_occupied)
-    .sort((a, b) => {
-      if (a.has_pending_maintenance && !b.has_pending_maintenance) return -1;
-      if (!a.has_pending_maintenance && b.has_pending_maintenance) return 1;
-      return (a.unit_label || '').localeCompare(b.unit_label || '', undefined, { numeric: true, sensitivity: 'base' });
-    });
-
-  const displayedUnits = occupiedUnits.slice(0, 6);
-  const hasMoreUnits = occupiedUnits.length > 6;
-
-  // Calculate occupancy percentage
-  const totalUnits = data.property_stats.total_units || 0;
-  const occupiedUnitsCount = data.property_stats.occupied_units || 0;
-  const occupancyPercent = totalUnits > 0 ? Math.round((occupiedUnitsCount / totalUnits) * 100) : 0;
-  const circumference = 163.4;
-  const strokeDashoffset = circumference - (occupancyPercent / 100) * circumference;
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start animate-fade-slide-up">
-      
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
       {/* LEFT COLUMN: Maintenance & Activity */}
       <div className="md:col-span-7 flex flex-col gap-5">
-        
-        {/* Card 1 (Active Maintenance) */}
-        <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm">
-          <div className="flex items-center justify-between px-6 pb-4">
-            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
-              Active maintenance
-            </span>
-            {activeRequests.length > 0 && (
-              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border/40">
-                {activeRequests.length} open
-              </span>
-            )}
-          </div>
-          <div className="flex-1 flex flex-col justify-between">
-            {activeRequests.length === 0 ? (
-              <EmptyState 
-                icon={AlertCircle}
-                title="All Caught Up"
-                description="No active maintenance requests."
-                className="border-none bg-transparent shadow-none py-6 mx-6"
-              />
-            ) : (
-              <div>
-                <ul className="divide-y divide-border/40">
-                  {displayedRequests.map((req) => {
-                    const MaintIcon = getMaintenanceIcon(req.title);
-                    return (
-                      <li key={req.id}>
-                        <Link href={`/landlord/requests?id=${req.id}`}>
-                          <div className={cn(
-                            "flex flex-col sm:flex-row sm:items-center justify-between py-3.5 px-4 sm:px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group gap-2.5 sm:gap-4",
-                            getPriorityLeftBorder(req.priority)
-                          )}>
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <div className={cn(
-                                "w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center text-[15px] shrink-0",
-                                getPriorityClass(req.priority)
-                              )}>
-                                <MaintIcon className="w-4 h-4" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                                    {req.title}
-                                  </span>
-                                  <span className={cn('sm:hidden text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider', getPriorityClass(req.priority))}>
-                                    {req.priority}
-                                  </span>
-                                </div>
-                                <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5 truncate">
-                                  {formatAddress(req.property_name || "Unknown Property")} · Unit {req.unit_label}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pl-12 sm:pl-0">
-                              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-1">
-                                <span className={cn('hidden sm:inline-flex text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider', getPriorityClass(req.priority))}>
-                                  {req.priority}
-                                </span>
-                                <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium">
-                                  Reported {new Date(req.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                                </span>
-                              </div>
-                              <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg leading-none select-none">&rsaquo;</span>
-                            </div>
-                          </div>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {hasMoreRequests && (
-                  <div className="px-6 pt-3 pb-1 border-t border-border/40 text-center">
-                    <Link 
-                      href="/landlord/requests"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
-                    >
-                      View all active requests ({activeRequests.length}) &rarr;
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Card 2 (Recent Activity) */}
-        <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm overflow-hidden">
-          <div className="px-6 pb-4">
-            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
-              Recent activity
-            </span>
-          </div>
-          <div className="flex-1 overflow-x-hidden">
-            {(() => {
-              const filteredActivity = data.recent_activity.filter(act => {
-                if (act.meta === 'closed' && act.actor !== 'tenant') return false;
-                return true;
-              });
-              if (filteredActivity.length === 0) {
-                return (
-                  <EmptyState 
-                    icon={Activity}
-                    title="No Activity Yet"
-                    description="Recent updates will appear here."
-                    className="border-none bg-transparent shadow-none py-6 mx-6"
-                  />
-                );
-              }
-              const displayedActivity = filteredActivity.slice(0, 5);
-              return (
-                <ul className="divide-y divide-border/40">
-                  {displayedActivity.map((act, idx) => {
-                    const isReopened = act.meta === 'reopened';
-                    const isClosedByTenant = act.meta === 'closed' && act.actor === 'tenant';
-                    const isResolved = act.type === "maintenance_update" && (act.meta === 'resolved' || isClosedByTenant);
-                    let linkHref = `/landlord/requests?id=${act.id}`;
-                    if (act.type === "document_upload") {
-                      linkHref = `/landlord/documents?id=${act.id}`;
-                    } else if (act.type === "announcement_posted") {
-                      linkHref = `/landlord/announcements?id=${act.id}`;
-                    }
-                    const MaintIcon = getMaintenanceIcon(act.title);
-                    return (
-                      <li key={`${act.type}-${act.id}-${act.timestamp}-${idx}`}>
-                        <Link href={linkHref}>
-                          <div className="py-3 px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 flex gap-3.5 items-start transition-all duration-200 cursor-pointer group">
-                            <div className={cn(
-                              "w-8 h-8 rounded-xl flex items-center justify-center text-[13px] flex-shrink-0 mt-0.5",
-                              isReopened ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" :
-                              isResolved ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20"
-                            )}>
-                              {act.type === "maintenance_update" ? (
-                                <MaintIcon className="w-4 h-4" />
-                              ) : act.type === "document_upload" ? (
-                                <FileText className="w-4 h-4" />
-                              ) : (
-                                <AlertCircle className="w-4 h-4" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                                {act.title}
-                              </div>
-                              <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5">
-                                {act.property_name && (
-                                  <span className="font-semibold text-[rgb(var(--ml-text-primary))]">
-                                    {formatAddress(act.property_name)}{act.unit_label ? ` · Unit ${act.unit_label}` : ''}
-                                    {' · '}
-                                  </span>
-                                )}
-                                {act.type === "maintenance_update" ? (
-                                  isReopened ? (
-                                    <span className="font-bold text-amber-600 dark:text-amber-400">Case reopened by tenant</span>
-                                  ) : isClosedByTenant ? (
-                                    <span className="font-bold text-emerald-600 dark:text-emerald-400">Case closed by tenant</span>
-                                  ) : (
-                                    <>Status changed to <span className={cn("font-bold", getStatusColor(act.meta || ""))}>{formatStatusText(act.meta || "")}</span></>
-                                  )
-                                ) : act.type === "document_upload" ? (
-                                  <>Document uploaded</>
-                                ) : (
-                                  <>Announcement posted</>
-                                )}
-                                {' · '}{new Date(act.timestamp).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </div>
-                            </div>
-                            <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg self-center select-none ml-2">&rsaquo;</span>
-                          </div>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              );
-            })()}
-          </div>
-        </div>
+        <ActiveMaintenanceCard requests={data.urgent_maintenance} />
+        <RecentActivityCard activity={data.recent_activity} />
       </div>
 
       {/* RIGHT COLUMN: Overview & Units */}
       <div className="md:col-span-5 flex flex-col gap-5">
-        
-        {/* Card 3 (Property Overview) */}
-        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl p-6 shadow-sm">
-          <div className="pb-4">
-            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
-              Overview
-            </span>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="flex bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-2xl overflow-hidden">
-              <div className="flex-1 p-4">
-                <div className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-extrabold mb-1.5 uppercase tracking-wider">Properties</div>
-                <div className="text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] leading-none tabular-nums">{data.property_stats.total_properties}</div>
-              </div>
-              <div className="flex-1 p-4 border-l border-border/60">
-                <div className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-extrabold mb-1.5 uppercase tracking-wider">Total units</div>
-                <div className="text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] leading-none tabular-nums">{data.property_stats.total_units}</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 py-1">
-              <svg width="60" height="60" viewBox="0 0 64 64" className="flex-shrink-0">
-                <circle cx="32" cy="32" r="26" fill="none" className="stroke-zinc-200 dark:stroke-[#1E2731]" strokeWidth="8"/>
-                <circle cx="32" cy="32" r="26" fill="none" className="stroke-[rgb(var(--ml-accent))]" strokeWidth="8"
-                  strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round"
-                  transform="rotate(-90 32 32)"/>
-              </svg>
-              <div className="text-[13px] text-[rgb(var(--ml-text-secondary))] font-semibold leading-tight select-none">
-                <span className="text-[rgb(var(--ml-text-primary))] text-base font-black">{occupancyPercent}%</span> occupancy<br />across your portfolio
-              </div>
-            </div>
-
-            <div className="border-t border-border/40 pt-2 space-y-1">
-              <div className="flex justify-between items-center py-2 border-b border-border/30">
-                <div className="flex items-center gap-2.5 text-xs font-bold text-[rgb(var(--ml-text-primary))]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></span>
-                  Occupied
-                </div>
-                <div className="text-sm font-black text-[rgb(var(--ml-text-primary))] tabular-nums">{data.property_stats.occupied_units}</div>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <div className="flex items-center gap-2.5 text-xs font-bold text-[rgb(var(--ml-text-primary))]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]"></span>
-                  Vacant
-                </div>
-                <div className="text-sm font-black text-[rgb(var(--ml-text-primary))] tabular-nums">{data.property_stats.vacant_units}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4 (Occupied Units List) */}
-        <div className="flex flex-col flex-1 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-6 shadow-sm">
-          <div className="px-6 pb-4">
-            <span className="text-[10px] font-extrabold tracking-wider text-[rgb(var(--ml-text-secondary))] uppercase flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
-              Occupied Units
-            </span>
-          </div>
-          <div className="flex-1 flex flex-col justify-between">
-            {data.property_stats.total_properties === 0 ? (
-              <EmptyState 
-                icon={Home}
-                title="Portfolio Hasn't Been Created"
-                description="Add your first property to start managing units."
-                className="border-none bg-transparent shadow-none py-10 mx-6"
-                action={
-                  <Link href="/landlord/properties?add=true">
-                    <Button className="rounded-full px-6 font-bold flex items-center gap-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]">
-                      <Plus className="w-4 h-4" /> Add Property
-                    </Button>
-                  </Link>
-                }
-              />
-            ) : displayedUnits.length === 0 ? (
-              <EmptyState 
-                icon={Home}
-                title="No Occupied Units Yet"
-                description="Units with active tenants will appear here."
-                className="border-none bg-transparent shadow-none py-10 mx-6"
-                action={
-                  <Link href="/landlord/units">
-                    <Button variant="outline" className="rounded-full px-5 text-xs font-bold mt-2">
-                      Manage All Units
-                    </Button>
-                  </Link>
-                }
-              />
-            ) : (
-              <div>
-                <ul className="divide-y divide-border/40">
-                  {displayedUnits.map((unit) => {
-                    return (
-                      <li key={unit.id}>
-                        <Link href={`/landlord/units/${unit.id}`} className="block">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3.5 px-4 sm:px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group gap-2.5 sm:gap-3">
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border/40 flex items-center justify-center font-black text-xs text-[rgb(var(--ml-text-primary))] shrink-0 px-1">
-                                {getUnitInitials(unit.unit_label)}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                                  Unit {unit.unit_label}
-                                </div>
-                                <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5 truncate">
-                                  {unit.tenant_name ? `${unit.tenant_name} · ` : ''}{formatAddress(unit.property_name || "Unknown Property")}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pl-12 sm:pl-0">
-                              {unit.is_occupied ? (
-                                <div className="flex items-center gap-1.5">
-                                  {unit.has_pending_maintenance && (
-                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                      Maint.
-                                    </span>
-                                  )}
-                                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                    Occupied
-                                  </span>
-                                </div>
-                              ) : unit.has_pending_maintenance ? (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                  Pending Maint.
-                                </span>
-                              ) : unit.has_pending_invite ? (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                  Invite Sent
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-muted text-[rgb(var(--ml-text-secondary))] border border-border/40">
-                                  Vacant
-                                </span>
-                              )}
-                              <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-lg leading-none select-none">&rsaquo;</span>
-                            </div>
-                          </div>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {hasMoreUnits && (
-                  <div className="px-6 pt-3 pb-1 border-t border-border/40 text-center">
-                    <Link 
-                      href="/landlord/units"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
-                    >
-                      View all units ({data.property_stats.total_units}) &rarr;
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        <PropertyOverviewCard stats={data.property_stats} />
+        <OccupiedUnitsCard
+          totalProperties={data.property_stats.total_properties}
+          totalUnits={data.property_stats.total_units}
+          units={data.units}
+        />
       </div>
-
     </div>
-  )
+  );
 }
 
 export function DashboardBentoSkeleton() {
@@ -529,7 +56,6 @@ export function DashboardBentoSkeleton() {
     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
       {/* LEFT COLUMN: Maintenance & Activity */}
       <div className="md:col-span-7 flex flex-col gap-5">
-        {/* Card 1 (Active Maintenance) */}
         <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl py-6 shadow-sm">
           <div className="flex items-center justify-between px-6 pb-4">
             <div className="flex items-center gap-2">
@@ -562,7 +88,6 @@ export function DashboardBentoSkeleton() {
           </div>
         </div>
 
-        {/* Card 2 (Recent Activity) */}
         <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl py-6 shadow-sm overflow-hidden">
           <div className="px-6 pb-4 flex items-center gap-2">
             <Skeleton className="w-2 h-2 rounded-full" />
@@ -587,7 +112,6 @@ export function DashboardBentoSkeleton() {
 
       {/* RIGHT COLUMN: Overview & Units */}
       <div className="md:col-span-5 flex flex-col gap-5">
-        {/* Card 3 (Property Overview) */}
         <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl p-6 shadow-sm">
           <div className="pb-4 flex items-center gap-2">
             <Skeleton className="w-2 h-2 rounded-full" />
@@ -632,7 +156,6 @@ export function DashboardBentoSkeleton() {
           </div>
         </div>
 
-        {/* Card 4 (Occupied Units) */}
         <div className="flex flex-col flex-1 bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl py-6 shadow-sm">
           <div className="px-6 pb-4 flex items-center gap-2">
             <Skeleton className="w-2 h-2 rounded-full" />
@@ -658,5 +181,5 @@ export function DashboardBentoSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }

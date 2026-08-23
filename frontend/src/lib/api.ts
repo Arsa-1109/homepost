@@ -174,6 +174,7 @@ export async function apiFetch<T = unknown>(
   let response;
   try {
     response = await fetch(`${baseUrl}${path}`, {
+      credentials: options.credentials || "include",
       ...options,
       headers,
     });

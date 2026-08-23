@@ -1,20 +1,22 @@
 "use client";
 
-import { useEffect, useState, useMemo, Suspense } from "react";
+import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  Megaphone, 
-  Search, 
-  Calendar, 
+import {
+  Megaphone,
+  Search,
+  Calendar,
   CheckCircle2,
-  Building,
   FileText,
   Eye,
   DownloadIcon,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { LightboxModal, getFriendlyFileName, isImageUrl } from "@/components/LightboxModal";
 import { useAuth } from "@clerk/nextjs";
@@ -30,12 +32,12 @@ type Announcement = {
   created_at: string;
 };
 
-function AttachmentThumbnail({ 
-  url, 
-  onViewImage 
-}: { 
-  url: string; 
-  onViewImage: (url: string) => void; 
+function AttachmentThumbnail({
+  url,
+  onViewImage,
+}: {
+  url: string;
+  onViewImage: (url: string) => void;
 }) {
   const pathOnly = url.split("?")[0];
   const isImage = isImageUrl(url);
@@ -58,28 +60,31 @@ function AttachmentThumbnail({
 
   if (isImage) {
     return (
-      <div 
+      <div
         onClick={handleView}
         className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-border/60 overflow-hidden bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-text-primary))]/30 transition-all cursor-pointer flex-shrink-0 shadow-sm"
       >
-        <img 
-          src={url} 
-          alt={friendlyName} 
-          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+        <Image
+          src={url}
+          alt={friendlyName}
+          fill
+          sizes="96px"
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
-          <button 
+          <button
+            type="button"
             onClick={handleView}
             className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
             title="View full size"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
-          <a 
-            href={url} 
-            download 
+          <a
+            href={url}
+            download
             onClick={handleDownload}
-            target="_blank" 
+            target="_blank"
             rel="noopener noreferrer"
             className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
             title="Download"
@@ -92,29 +97,33 @@ function AttachmentThumbnail({
   }
 
   return (
-    <div 
+    <div
       onClick={handleView}
       className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-primary))]/40 hover:border-[rgb(var(--ml-text-primary))]/30 transition-all flex flex-col items-center justify-between p-2.5 cursor-pointer flex-shrink-0 select-none shadow-sm"
     >
       <div className="flex-1 flex items-center justify-center">
         <FileText className="w-6 h-6 text-[rgb(var(--ml-accent))]" />
       </div>
-      <span className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-semibold truncate w-full text-center" title={rawFileName}>
+      <span
+        className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-semibold truncate w-full text-center"
+        title={rawFileName}
+      >
         {friendlyName}
       </span>
       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-xl z-10">
-        <button 
+        <button
+          type="button"
           onClick={handleView}
           className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
           title="Open file"
         >
           <Eye className="w-3.5 h-3.5" />
         </button>
-        <a 
-          href={url} 
-          download 
+        <a
+          href={url}
+          download
           onClick={handleDownload}
-          target="_blank" 
+          target="_blank"
           rel="noopener noreferrer"
           className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors border border-white/10"
           title="Download"
@@ -128,7 +137,13 @@ function AttachmentThumbnail({
 
 export default function TenantAnnouncementsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">Loading announcements...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-sm font-semibold text-[rgb(var(--ml-text-secondary))]">
+          Loading announcements...
+        </div>
+      }
+    >
       <TenantAnnouncementsContent />
     </Suspense>
   );
@@ -136,39 +151,43 @@ export default function TenantAnnouncementsPage() {
 
 function TenantAnnouncementsContent() {
   const searchParams = useSearchParams();
-  const targetAnnouncementId = searchParams.get("id") || searchParams.get("announcementId");
+  const targetAnnouncementId =
+    searchParams.get("id") || searchParams.get("announcementId");
   const { isLoaded, getToken } = useAuth();
 
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "RECENT" | "PROPERTY" | "UNIT">("ALL");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "ALL" | "RECENT" | "PROPERTY" | "UNIT"
+  >("ALL");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset page when filters change
+  const fetchAnnouncements = useCallback(
+    async (signal: AbortSignal): Promise<Announcement[]> => {
+      const token = await getToken();
+      const data = await fetchAPI<Announcement[]>(
+        "/api/v1/tenant/announcements",
+        { signal },
+        token
+      );
+      return Array.isArray(data) ? data : [];
+    },
+    [getToken]
+  );
+
+  const { data, isLoading: loading, error, refetch } = useApiQuery<Announcement[]>(
+    isLoaded ? fetchAnnouncements : null,
+    [isLoaded, fetchAnnouncements]
+  );
+
+  const announcements = useMemo(() => data || [], [data]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedFilter, searchQuery]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    async function loadData() {
-      try {
-        const token = await getToken();
-        const data = await fetchAPI<Announcement[]>("/api/v1/tenant/announcements", {}, token);
-        setAnnouncements(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, [isLoaded]);
 
   const [nowTimestamp, setNowTimestamp] = useState<number>(0);
 
@@ -177,38 +196,42 @@ function TenantAnnouncementsContent() {
   }, []);
 
   const filteredAnnouncements = useMemo(() => {
-    return announcements.filter((ann) => {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        ann.title.toLowerCase().includes(query) || 
-        ann.body.toLowerCase().includes(query);
+    return announcements
+      .filter((ann) => {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          ann.title.toLowerCase().includes(query) ||
+          ann.body.toLowerCase().includes(query);
 
-      if (!matchesSearch) return false;
+        if (!matchesSearch) return false;
 
-      if (selectedFilter === "RECENT") {
-        const sevenDaysAgo = nowTimestamp - 7 * 24 * 60 * 60 * 1000;
-        return new Date(ann.created_at).getTime() >= sevenDaysAgo;
-      }
-      if (selectedFilter === "PROPERTY") {
-        return !ann.unit_id;
-      }
-      if (selectedFilter === "UNIT") {
-        return !!ann.unit_id;
-      }
-      return true;
-    }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        if (selectedFilter === "RECENT") {
+          const sevenDaysAgo = nowTimestamp - 7 * 24 * 60 * 60 * 1000;
+          return new Date(ann.created_at).getTime() >= sevenDaysAgo;
+        }
+        if (selectedFilter === "PROPERTY") {
+          return !ann.unit_id;
+        }
+        if (selectedFilter === "UNIT") {
+          return !!ann.unit_id;
+        }
+        return true;
+      })
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
   }, [announcements, searchQuery, selectedFilter, nowTimestamp]);
 
-  const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
+  const totalPages =
+    Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
 
-  // Handle deep-linking auto-expand, page navigation, highlighting, and smooth scroll
   useEffect(() => {
     if (!loading && targetAnnouncementId && announcements.length > 0) {
       const target = announcements.find((a) => a.id === targetAnnouncementId);
       if (target) {
         setHighlightedId(targetAnnouncementId);
 
-        // Reset filter/search if target would be hidden
         if (selectedFilter === "PROPERTY" && target.unit_id) {
           setSelectedFilter("ALL");
         } else if (selectedFilter === "UNIT" && !target.unit_id) {
@@ -216,13 +239,17 @@ function TenantAnnouncementsContent() {
         }
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
-          const matches = target.title.toLowerCase().includes(q) || target.body.toLowerCase().includes(q);
+          const matches =
+            target.title.toLowerCase().includes(q) ||
+            target.body.toLowerCase().includes(q);
           if (!matches) {
             setSearchQuery("");
           }
         }
 
-        const targetIndex = filteredAnnouncements.findIndex((a) => a.id === targetAnnouncementId);
+        const targetIndex = filteredAnnouncements.findIndex(
+          (a) => a.id === targetAnnouncementId
+        );
         if (targetIndex !== -1) {
           const targetPage = Math.floor(targetIndex / ITEMS_PER_PAGE) + 1;
           if (currentPage !== targetPage) {
@@ -231,7 +258,9 @@ function TenantAnnouncementsContent() {
         }
 
         const scrollTimer = setTimeout(() => {
-          const el = document.getElementById(`announcement-${targetAnnouncementId}`);
+          const el = document.getElementById(
+            `announcement-${targetAnnouncementId}`
+          );
           if (el) {
             el.scrollIntoView({ behavior: "smooth", block: "center" });
           }
@@ -247,7 +276,15 @@ function TenantAnnouncementsContent() {
         };
       }
     }
-  }, [loading, targetAnnouncementId, announcements, filteredAnnouncements, selectedFilter, searchQuery, currentPage]);
+  }, [
+    loading,
+    targetAnnouncementId,
+    announcements,
+    filteredAnnouncements,
+    selectedFilter,
+    searchQuery,
+    currentPage,
+  ]);
 
   const paginatedAnnouncements = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -263,7 +300,6 @@ function TenantAnnouncementsContent() {
       </AnimatePresence>
 
       <div className="space-y-8 max-w-4xl mx-auto pb-16">
-        {/* Header Section */}
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2 max-w-xl">
@@ -282,13 +318,12 @@ function TenantAnnouncementsContent() {
             </div>
           </div>
 
-          {/* Search & Filter Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            {/* Filter Pills */}
             <div className="flex items-center gap-2 flex-wrap pb-1 sm:pb-0">
               {(["ALL", "RECENT", "PROPERTY", "UNIT"] as const).map((filter) => (
                 <button
                   key={filter}
+                  type="button"
                   onClick={() => setSelectedFilter(filter)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
                     selectedFilter === filter
@@ -304,7 +339,6 @@ function TenantAnnouncementsContent() {
               ))}
             </div>
 
-            {/* Search Input */}
             <div className="relative flex-1 sm:w-64 sm:flex-initial">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--ml-text-secondary))]" />
               <input
@@ -316,9 +350,10 @@ function TenantAnnouncementsContent() {
               />
             </div>
           </div>
+
+          {error && <ErrorBanner message={error} onRetry={refetch} />}
         </div>
 
-        {/* Announcements List Container */}
         <div className="space-y-4">
           {announcements.length > 0 && (
             <div className="flex items-center justify-between px-1">
@@ -332,7 +367,10 @@ function TenantAnnouncementsContent() {
             <AnimatePresence mode="wait">
               {loading ? (
                 [1, 2, 3].map((i) => (
-                  <div key={`skel-${i}`} className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative">
+                  <div
+                    key={`skel-${i}`}
+                    className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative"
+                  >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className="skeleton h-5 w-24 rounded-md" />
@@ -348,7 +386,7 @@ function TenantAnnouncementsContent() {
                     </div>
                   </div>
                 ))
-              ) : announcements.length === 0 ? (
+              ) : announcements.length === 0 && !error ? (
                 <motion.div
                   key="empty-all"
                   initial={{ opacity: 0 }}
@@ -361,13 +399,15 @@ function TenantAnnouncementsContent() {
                     <CheckCircle2 className="w-7 h-7 text-emerald-500" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">You're all caught up!</h3>
+                    <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
+                      You&apos;re all caught up!
+                    </h3>
                     <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-xs mx-auto">
                       No announcements have been posted by your landlord yet. Important updates and notices will appear here.
                     </p>
                   </div>
                 </motion.div>
-              ) : filteredAnnouncements.length === 0 ? (
+              ) : filteredAnnouncements.length === 0 && !error ? (
                 <motion.div
                   key="empty-search"
                   initial={{ opacity: 0 }}
@@ -377,8 +417,12 @@ function TenantAnnouncementsContent() {
                   className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3"
                 >
                   <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
-                  <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No announcements found</p>
-                  <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Try a different search or filter.</p>
+                  <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">
+                    No announcements found
+                  </p>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
+                    Try a different search or filter.
+                  </p>
                 </motion.div>
               ) : (
                 paginatedAnnouncements.map((ann) => {
@@ -401,11 +445,13 @@ function TenantAnnouncementsContent() {
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-[10px] px-2.5 py-0.5 rounded-md border font-bold uppercase tracking-wider ${
-                            isUnitSpecific
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                              : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                          }`}>
+                          <span
+                            className={`text-[10px] px-2.5 py-0.5 rounded-md border font-bold uppercase tracking-wider ${
+                              isUnitSpecific
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                            }`}
+                          >
                             {isUnitSpecific ? "Direct Notice" : "Property-Wide"}
                           </span>
                         </div>
@@ -414,9 +460,9 @@ function TenantAnnouncementsContent() {
                           <Calendar className="w-3.5 h-3.5 opacity-60" />
                           <span>
                             {new Date(ann.created_at).toLocaleDateString(undefined, {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
                             })}
                           </span>
                         </div>
@@ -438,7 +484,11 @@ function TenantAnnouncementsContent() {
                           </span>
                           <div className="flex flex-wrap gap-2.5">
                             {ann.attachment_urls.map((url, idx) => (
-                              <AttachmentThumbnail key={idx} url={url} onViewImage={setPreviewUrl} />
+                              <AttachmentThumbnail
+                                key={idx}
+                                url={url}
+                                onViewImage={setPreviewUrl}
+                              />
                             ))}
                           </div>
                         </div>
@@ -449,7 +499,6 @@ function TenantAnnouncementsContent() {
               )}
             </AnimatePresence>
 
-            {/* Pagination Controls Bar */}
             {!loading && filteredAnnouncements.length > 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-6 border-t border-border/40">
                 <p className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
@@ -459,10 +508,7 @@ function TenantAnnouncementsContent() {
                   </span>
                   –
                   <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-                    {Math.min(
-                      currentPage * ITEMS_PER_PAGE,
-                      filteredAnnouncements.length,
-                    )}
+                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredAnnouncements.length)}
                   </span>{" "}
                   of{" "}
                   <span className="font-bold text-[rgb(var(--ml-text-primary))]">
@@ -473,6 +519,7 @@ function TenantAnnouncementsContent() {
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                     disabled={currentPage === 1}
                     className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
@@ -482,24 +529,24 @@ function TenantAnnouncementsContent() {
                   </button>
 
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (pageNum) => (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
-                            currentPage === pageNum
-                              ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
-                              : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      ),
-                    )}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                      <button
+                        type="button"
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer border flex items-center justify-center ${
+                          currentPage === pageNum
+                            ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-transparent shadow-sm"
+                            : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 hover:text-[rgb(var(--ml-text-primary))]"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                     disabled={currentPage === totalPages || totalPages === 0}
                     className="p-2 rounded-xl border border-border/60 bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-primary))] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"

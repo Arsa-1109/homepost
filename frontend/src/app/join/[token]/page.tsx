@@ -63,8 +63,8 @@ export default function JoinPage({
 
           if (user?.role === "tenant") {
             // Already a tenant, auto-complete cookie and redirect
-            await completeOnboarding();
-            router.push("/tenant/dashboard");
+            await completeOnboarding().catch(() => {});
+            window.location.href = "/tenant/dashboard";
             return;
           }
         }
@@ -85,7 +85,7 @@ export default function JoinPage({
     } finally {
       setChecking(false);
     }
-  }, [token, userId, getToken, router]);
+  }, [token, userId, getToken]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -104,8 +104,8 @@ export default function JoinPage({
     try {
       const authToken = await getToken();
       await api.post("/api/v1/onboarding/accept-invite", { token }, authToken);
-      await completeOnboarding();
-      router.push("/tenant/dashboard");
+      await completeOnboarding().catch(() => {});
+      window.location.href = "/tenant/dashboard";
     } catch (err: any) {
       const msg = err.message || "";
       if (msg.includes("invite_not_found")) {

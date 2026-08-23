@@ -23,6 +23,7 @@ const MOCK_COOKIE_NAMES = [
 ] as const;
 
 function expireMockCookies(response: NextResponse): NextResponse {
+  if (process.env.MOCK_AUTH === "true") return response;
   for (const name of MOCK_COOKIE_NAMES) {
     response.cookies.set(name, "", { path: "/", maxAge: 0 });
   }

@@ -6,6 +6,16 @@ const useMockAuth = isPlaceholder || process.env.MOCK_AUTH === "true";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**.r2.dev" },
+      { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
+      { protocol: "http", hostname: "localhost", port: "8000" },
+      { protocol: "http", hostname: "127.0.0.1", port: "8000" },
+      { protocol: "http", hostname: "localhost" },
+      { protocol: "http", hostname: "127.0.0.1" },
+    ],
+  },
   experimental: {
     optimizePackageImports: [
       "lucide-react",

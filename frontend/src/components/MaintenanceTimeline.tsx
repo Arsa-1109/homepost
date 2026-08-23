@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { fetchAPI } from "@/lib/api";
 import { motion, AnimatePresence } from "motion/react";
 import { format } from "date-fns";
@@ -249,21 +250,12 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                                   className="group/img block p-0 overflow-hidden rounded-2xl border border-border/60 bg-[rgb(var(--ml-bg-primary))] cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
                                 >
                                   <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden">
-                                    <img 
+                                    <Image 
                                       src={url} 
                                       alt={`Attachment ${imgIdx + 1}`} 
-                                      className="object-cover w-full h-full group-hover/img:scale-105 transition-transform duration-300"
-                                      onError={(e) => {
-                                        const el = e.target as HTMLImageElement;
-                                        el.style.display = "none";
-                                        const parent = el.parentElement;
-                                        if (parent) {
-                                          const ph = document.createElement("div");
-                                          ph.className = "text-[10px] text-[rgb(var(--ml-text-secondary))] p-2 text-center font-medium flex flex-col items-center gap-1";
-                                          ph.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>File';
-                                          parent.appendChild(ph);
-                                        }
-                                      }}
+                                      fill
+                                      sizes="80px"
+                                      className="object-cover group-hover/img:scale-105 transition-transform duration-300"
                                     />
                                   </div>
                                 </button>

@@ -8,8 +8,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export function RootHeader() {
   const pathname = usePathname();
 
-  // Hide the global root header on portal routes and onboarding
+  // Hide the global root header on portal routes, onboarding, and landing page
   const isPortal =
+    pathname === "/" ||
     pathname?.startsWith("/landlord") ||
     pathname?.startsWith("/tenant") ||
     pathname?.startsWith("/onboarding");
