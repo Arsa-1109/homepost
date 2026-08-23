@@ -162,7 +162,7 @@ export function ActiveMaintenanceCard({ requests }: ActiveMaintenanceCardProps) 
                               </span>
                             </div>
                             <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5 truncate">
-                              {formatAddress(req.property_name || "Unknown Property")} · Unit {req.unit_label}
+                              {formatAddress(req.property_name || "Unknown Property")} · {req.unit_label}
                             </div>
                           </div>
                         </div>

@@ -120,7 +120,7 @@ export function OccupiedUnitsCard({
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                            Unit {unit.unit_label}
+                            {unit.unit_label}
                           </div>
                           <div className="text-xs text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5 truncate">
                             {unit.tenant_name ? `${unit.tenant_name} · ` : ""}

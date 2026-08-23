@@ -234,7 +234,7 @@ function AccessRequestCard({
                       : loadingUnits 
                       ? "Loading units..." 
                       : unitId 
-                      ? `Unit ${units.find(u => u.id === unitId)?.unit_label || unitId}` 
+                      ? `${units.find(u => u.id === unitId)?.unit_label || unitId}`
                       : vacantUnits.length > 0 
                       ? `Choose Unit (${vacantUnits.length} vacant)` 
                       : "No vacant units"}
@@ -243,7 +243,7 @@ function AccessRequestCard({
                 <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border rounded-xl">
                   {vacantUnits.map(u => (
                     <SelectItem key={u.id} value={u.id} className="rounded-lg text-xs font-medium">
-                      Unit {u.unit_label}
+                      {u.unit_label}
                     </SelectItem>
                   ))}
                 </SelectContent>

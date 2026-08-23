@@ -152,14 +152,14 @@ export default function UnitDetailsPage() {
           </Link>
           <span>/</span>
           <span className="text-[rgb(var(--ml-text-primary))] font-bold">
-            Unit {unit.unit_label}
+            {unit.unit_label}
           </span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
-              Unit {unit.unit_label}
+              {unit.unit_label}
             </h1>
             <Badge
               variant="outline"

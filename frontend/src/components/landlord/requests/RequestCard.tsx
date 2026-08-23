@@ -262,7 +262,7 @@ export function RequestCard({
             <div className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] flex items-center gap-2">
               <span className="truncate">
                 {req.property_name && req.unit_label
-                  ? `${req.property_name} • Unit ${req.unit_label}`
+                  ? `${req.property_name} • ${req.unit_label}`
                   : `Unit: ${req.unit_id}`}
               </span>
             </div>

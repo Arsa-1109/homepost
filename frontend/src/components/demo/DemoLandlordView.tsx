@@ -232,7 +232,7 @@ export function DemoLandlordView({
                               {req.title}
                             </div>
                             <div className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
-                              {req.property_name} · Unit {req.unit_label}
+                              {req.property_name} · {req.unit_label}
                             </div>
                           </div>
                         </div>
@@ -292,7 +292,7 @@ export function DemoLandlordView({
                           </div>
                           <div className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5">
                             <span className="font-semibold text-[rgb(var(--ml-text-primary))]">
-                              {act.property_name}{act.unit_label ? ` · Unit ${act.unit_label}` : ""} ·{" "}
+                              {act.property_name}{act.unit_label ? ` · ${act.unit_label}` : ""} ·{" "}
                             </span>
                             {isResolved ? (
                               <span className="font-bold text-emerald-600 dark:text-emerald-400">{act.status_text}</span>
@@ -395,7 +395,7 @@ export function DemoLandlordView({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-bold text-[rgb(var(--ml-text-primary))] leading-snug truncate group-hover:text-[rgb(var(--ml-accent))] transition-colors">
-                          Unit {unit.unit_label}
+                          {unit.unit_label}
                         </div>
                         <div className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-semibold mt-0.5 truncate">
                           {unit.tenant_name} · {unit.property_name}

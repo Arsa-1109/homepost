@@ -83,7 +83,7 @@ export function EditLeaseModal({
               Set Lease Dates
             </DialogTitle>
             <DialogDescription className="text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-              Contract range for Unit {unitLabel}
+              Contract range for {unitLabel}
             </DialogDescription>
           </div>
         </div>
@@ -307,7 +307,7 @@ export function DeleteUnitModal({
                   Delete Unit
                 </DialogTitle>
                 <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
-                  Are you sure you want to delete <span className="font-bold text-[rgb(var(--ml-text-primary))]">Unit {unitLabel}</span>? All lease history, invitations, and related documents will be permanently removed.
+                  Are you sure you want to delete <span className="font-bold text-[rgb(var(--ml-text-primary))]">{unitLabel}</span>? All lease history, invitations, and related documents will be permanently removed.
                 </DialogDescription>
               </DialogHeader>
             </div>

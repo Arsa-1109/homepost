@@ -323,7 +323,7 @@ function LandlordDocumentsContent() {
                         : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
                     }`}
                   >
-                    Unit {u.unit_label}
+                    {u.unit_label}
                   </button>
                 ))}
               </div>

@@ -94,7 +94,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
             <Link
               href={`/landlord/units/${u.id}`}
               className="font-black text-lg sm:text-xl tracking-tight text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors truncate block max-w-[180px]"
-              title={`Unit ${u.unit_label}`}
+              title={u.unit_label}
             >
               {u.unit_label}
             </Link>
@@ -166,7 +166,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
                       <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
                         Are you sure you want to remove the tenant from{" "}
                         <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-                          Unit {u.unit_label}
+                          {u.unit_label}
                         </span>
                         ? This action is permanent and clears their active residency.
                       </DialogDescription>
@@ -214,7 +214,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
                       <DialogDescription className="mt-1.5 text-xs font-semibold text-[rgb(var(--ml-text-secondary))] leading-relaxed">
                         Generate a unique, secure invite link for your new tenant moving into{" "}
                         <span className="font-bold text-[rgb(var(--ml-text-primary))]">
-                          Unit {u.unit_label}
+                          {u.unit_label}
                         </span>
                         .
                       </DialogDescription>

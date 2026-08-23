@@ -149,7 +149,7 @@ export function RecentActivityCard({ activity }: RecentActivityCardProps) {
                           {act.property_name && (
                             <span className="font-semibold text-[rgb(var(--ml-text-primary))]">
                               {formatAddress(act.property_name)}
-                              {act.unit_label ? ` · Unit ${act.unit_label}` : ""}
+                              {act.unit_label ? ` · ${act.unit_label}` : ""}
                               {" · "}
                             </span>
                           )}
