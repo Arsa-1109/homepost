@@ -5,6 +5,7 @@ from sqlmodel import SQLModel
 from app.dependencies.auth import get_current_landlord, get_active_tenant_profile, get_current_user
 from app.main import app
 from app.models.announcement import Announcement
+from app.models.document import Document
 from app.models.maintenance_event import MaintenanceEvent
 from app.models.maintenance_request import MaintenanceRequest, RequestStatus, RequestPriority
 from app.models.property import Property
@@ -98,6 +99,18 @@ async def test_seed_creates_expected_entities(db_session):
     unit_specific = [a for a in announcements if a.unit_id is not None]
     assert len(property_wide) == 2
     assert len(unit_specific) == 1
+
+    # 9. Check Documents visible to the Unit 101 demo tenant
+    documents = (await db_session.execute(select(Document))).scalars().all()
+    assert len(documents) == 3
+    doc_property_wide = [d for d in documents if d.unit_id is None]
+    doc_unit_specific = [d for d in documents if d.unit_id is not None]
+    assert len(doc_property_wide) == 2
+    assert len(doc_unit_specific) == 1
+    unit101 = next(u for u in units if u.unit_label == "Unit 101")
+    assert doc_unit_specific[0].unit_id == unit101.id
+    assert all(d.file_key for d in documents)
+    assert all(d.uploaded_by == landlord.id for d in documents)
 
 
 @pytest.mark.asyncio

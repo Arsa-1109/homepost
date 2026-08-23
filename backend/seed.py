@@ -9,6 +9,7 @@ Populates realistic sample data for demo presentations and testing:
 - 2 Mock Tenants with active TenantProfiles
 - 3 Maintenance Tickets across (open, in_progress, resolved) with full MaintenanceEvents timeline
 - 3 Announcements (property-wide and unit-specific)
+- 3 Documents (2 property-wide, 1 unit-specific for Unit 101)
 
 Usage:
   python seed.py                  # Idempotent seed (skips if demo data exists)
@@ -414,6 +415,42 @@ async def _run_seed(
     session.add_all([announcement1, announcement2, announcement3])
 
     # -------------------------------------------------------------------
+    # 7. Create Documents (2 property-wide for Maplewood Heights,
+    #    1 unit-specific for Unit 101)
+    # -------------------------------------------------------------------
+    doc_house_rules = Document(
+        id=uuid.uuid4(),
+        property_id=prop1.id,
+        unit_id=None,
+        uploaded_by=landlord.id,
+        title="Maplewood Heights House Rules & Community Guidelines",
+        file_key="documents/demo/maplewood/house_rules.pdf",
+        file_type="application/pdf",
+        created_at=now - timedelta(days=30),
+    )
+    doc_waste = Document(
+        id=uuid.uuid4(),
+        property_id=prop1.id,
+        unit_id=None,
+        uploaded_by=landlord.id,
+        title="Waste Collection Schedule 2026",
+        file_key="documents/demo/maplewood/waste_schedule_2026.pdf",
+        file_type="application/pdf",
+        created_at=now - timedelta(days=14),
+    )
+    doc_lease = Document(
+        id=uuid.uuid4(),
+        property_id=prop1.id,
+        unit_id=unit101.id,
+        uploaded_by=landlord.id,
+        title="Signed Lease Agreement - Unit 101",
+        file_key="documents/demo/maplewood/unit101/lease_agreement_signed.pdf",
+        file_type="application/pdf",
+        created_at=now - timedelta(days=60),
+    )
+    session.add_all([doc_house_rules, doc_waste, doc_lease])
+
+    # -------------------------------------------------------------------
     # Commit transaction
     # -------------------------------------------------------------------
     await session.commit()
@@ -427,6 +464,7 @@ async def _run_seed(
     print(f"  Tenants:        2 ({tenant1.full_name}, {tenant2.full_name})")
     print(f"  Maintenance:    3 Tickets (1 Open, 1 In-Progress, 1 Resolved) with 8 events")
     print(f"  Announcements:  3 (2 Property-wide, 1 Unit-specific)")
+    print(f"  Documents:      3 (2 Property-wide, 1 Unit-specific)")
     print("----------------------------------------------------------------")
 
 

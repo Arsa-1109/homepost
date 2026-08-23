@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import { unwrapPage } from "@/lib/pagination";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
@@ -72,11 +73,15 @@ function TenantRequestsContent() {
       const token = await getToken();
       const [profileData, requestsData] = await Promise.all([
         fetchAPI<ProfileData>("/api/v1/tenant/profile", { signal }, token).catch(() => null),
-        fetchAPI<MaintenanceRequest[]>("/api/v1/tenant/maintenance", { signal }, token),
+        fetchAPI<MaintenanceRequest[] | { items?: MaintenanceRequest[] }>(
+          "/api/v1/tenant/maintenance",
+          { signal },
+          token
+        ),
       ]);
       return {
         profile: profileData,
-        requests: Array.isArray(requestsData) ? requestsData : [],
+        requests: unwrapPage<MaintenanceRequest>(requestsData),
       };
     },
     [getToken]

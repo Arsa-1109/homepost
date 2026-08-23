@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
+import { unwrapPage } from "@/lib/pagination";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
@@ -170,12 +171,12 @@ function TenantAnnouncementsContent() {
   const fetchAnnouncements = useCallback(
     async (signal: AbortSignal): Promise<Announcement[]> => {
       const token = await getToken();
-      const data = await fetchAPI<Announcement[]>(
+      const data = await fetchAPI<Announcement[] | { items?: Announcement[] }>(
         "/api/v1/tenant/announcements",
         { signal },
         token
       );
-      return Array.isArray(data) ? data : [];
+      return unwrapPage<Announcement>(data);
     },
     [getToken]
   );

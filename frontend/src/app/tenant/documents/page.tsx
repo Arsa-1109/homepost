@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { fetchAPI } from "@/lib/api";
+import { unwrapPage } from "@/lib/pagination";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { AnimatePresence } from "motion/react";
@@ -43,8 +44,12 @@ export default function TenantDocumentsPage() {
   const fetchDocuments = useCallback(
     async (signal: AbortSignal): Promise<Document[]> => {
       const token = await getToken();
-      const data = await fetchAPI<Document[]>("/api/v1/tenant/documents", { signal }, token);
-      return Array.isArray(data) ? data : [];
+      const data = await fetchAPI<Document[] | { items?: Document[] }>(
+        "/api/v1/tenant/documents",
+        { signal },
+        token
+      );
+      return unwrapPage<Document>(data);
     },
     [getToken]
   );
