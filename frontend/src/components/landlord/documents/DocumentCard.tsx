@@ -12,6 +12,8 @@ export interface Document {
   file_type: string;
   created_at: string;
   unit_id?: string | null;
+  unit_label?: string | null;
+  property_name?: string | null;
   file_url?: string;
 }
 

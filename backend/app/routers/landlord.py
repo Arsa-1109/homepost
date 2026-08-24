@@ -473,6 +473,11 @@ async def create_announcement(
     await session.refresh(ann)
 
     resp = AnnouncementResponse.model_validate(ann)
+    if ann.unit_id:
+        unit = await session.get(Unit, ann.unit_id)
+        if unit:
+            resp.unit_label = unit.unit_label
+    resp.property_name = prop.name
     await hydrate_announcement(ann, resp)
     return resp
 
@@ -493,9 +498,27 @@ async def list_announcements(
         .limit(pagination.limit)
     )
     anns = result.scalars().all()
+
+    unit_ids = [ann.unit_id for ann in anns if ann.unit_id]
+    prop_ids = [ann.property_id for ann in anns if ann.property_id]
+
+    units_map = {}
+    if unit_ids:
+        unit_res = await session.execute(select(Unit.id, Unit.unit_label).where(Unit.id.in_(unit_ids)))
+        units_map = {row[0]: row[1] for row in unit_res.all()}
+
+    props_map = {}
+    if prop_ids:
+        prop_res = await session.execute(select(Property.id, Property.name).where(Property.id.in_(prop_ids)))
+        props_map = {row[0]: row[1] for row in prop_res.all()}
+
     out = []
     for ann in anns:
         resp = AnnouncementResponse.model_validate(ann)
+        if ann.unit_id and ann.unit_id in units_map:
+            resp.unit_label = units_map[ann.unit_id]
+        if ann.property_id and ann.property_id in props_map:
+            resp.property_name = props_map[ann.property_id]
         await hydrate_announcement(ann, resp)
         out.append(resp)
     return Page(items=out, total=total, limit=pagination.limit, offset=pagination.offset)
@@ -518,9 +541,10 @@ async def update_announcement(
     target_prop_id = update_data.get("property_id", ann.property_id)
     target_unit_id = update_data.get("unit_id", ann.unit_id)
 
+    target_unit = None
     if target_unit_id:
-        unit = await session.get(Unit, target_unit_id)
-        if not unit or unit.property_id != target_prop_id:
+        target_unit = await session.get(Unit, target_unit_id)
+        if not target_unit or target_unit.property_id != target_prop_id:
             raise HTTPException(status_code=400, detail="Unit does not belong to the specified property.")
 
     for key, value in update_data.items():
@@ -531,6 +555,15 @@ async def update_announcement(
     await session.refresh(ann)
 
     resp = AnnouncementResponse.model_validate(ann)
+    if ann.unit_id:
+        if not target_unit or target_unit.id != ann.unit_id:
+            target_unit = await session.get(Unit, ann.unit_id)
+        if target_unit:
+            resp.unit_label = target_unit.unit_label
+    if ann.property_id:
+        prop = await session.get(Property, ann.property_id)
+        if prop:
+            resp.property_name = prop.name
     await hydrate_announcement(ann, resp)
     return resp
 
@@ -580,6 +613,11 @@ async def create_document_record(
     urls = await generate_presigned_urls_batch([doc.file_key])
     resp = DocumentResponse.model_validate(doc)
     resp.file_url = urls[0] if urls else ""
+    if doc.unit_id:
+        unit = await session.get(Unit, doc.unit_id)
+        if unit:
+            resp.unit_label = unit.unit_label
+    resp.property_name = prop.name
     return resp
 
 
@@ -605,11 +643,20 @@ async def list_documents(
     )
     docs = result.scalars().all()
 
+    unit_ids = [d.unit_id for d in docs if d.unit_id]
+    units_map = {}
+    if unit_ids:
+        unit_res = await session.execute(select(Unit.id, Unit.unit_label).where(Unit.id.in_(unit_ids)))
+        units_map = {row[0]: row[1] for row in unit_res.all()}
+
     urls = await generate_presigned_urls_batch([d.file_key for d in docs])
     response_data = []
     for d, url in zip(docs, urls):
         resp = DocumentResponse.model_validate(d)
         resp.file_url = url
+        if d.unit_id and d.unit_id in units_map:
+            resp.unit_label = units_map[d.unit_id]
+        resp.property_name = prop.name
         response_data.append(resp)
 
     return Page(items=response_data, total=total, limit=pagination.limit, offset=pagination.offset)
@@ -645,6 +692,8 @@ async def list_unit_documents(
     for d, url in zip(docs, urls):
         resp = DocumentResponse.model_validate(d)
         resp.file_url = url
+        resp.unit_label = unit.unit_label
+        resp.property_name = prop.name
         response_data.append(resp)
 
     return Page(items=response_data, total=total, limit=pagination.limit, offset=pagination.offset)

@@ -204,9 +204,10 @@ function LandlordDocumentsContent() {
     return filteredDocuments.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredDocuments, currentPage]);
 
-  const getUnitLabel = (unitId: string | null | undefined) => {
-    if (!unitId) return "Property-Wide";
-    const unit = units.find((u) => u.id === unitId);
+  const getUnitLabel = (doc: Document) => {
+    if (!doc.unit_id) return "Property-Wide";
+    if (doc.unit_label) return doc.unit_label;
+    const unit = units.find((u) => u.id === doc.unit_id);
     return unit ? unit.unit_label : "Unknown Unit";
   };
 
@@ -459,7 +460,7 @@ function LandlordDocumentsContent() {
                     <DocumentCard
                       key={doc.id}
                       doc={doc}
-                      unitLabel={getUnitLabel(doc.unit_id)}
+                      unitLabel={getUnitLabel(doc)}
                       onPreview={handleOpenPreview}
                       onDownload={handleDownload}
                     />

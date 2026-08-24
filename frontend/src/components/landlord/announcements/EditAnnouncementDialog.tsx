@@ -102,7 +102,10 @@ export function EditAnnouncementDialog({
                   {editUnitId === "all" || !editUnitId
                     ? "All Units (Property-wide)"
                     : formatAnnouncementUnitLabel(
-                        units.find((u) => u.id === editUnitId)?.unit_label
+                        units.find((u) => u.id === editUnitId)?.unit_label ||
+                          (announcement?.unit_id === editUnitId
+                            ? announcement.unit_label
+                            : null)
                       )}
                 </span>
               </SelectTrigger>

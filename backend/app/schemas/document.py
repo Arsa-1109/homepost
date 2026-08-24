@@ -15,6 +15,8 @@ class DocumentResponse(BaseModel):
     id: uuid.UUID
     property_id: uuid.UUID
     unit_id: uuid.UUID | None = None
+    unit_label: str | None = None
+    property_name: str | None = None
     uploaded_by: uuid.UUID
     title: str
     file_key: str

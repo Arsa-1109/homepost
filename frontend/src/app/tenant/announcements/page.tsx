@@ -30,6 +30,8 @@ type Announcement = {
   id: string;
   property_id: string;
   unit_id?: string | null;
+  unit_label?: string | null;
+  property_name?: string | null;
   title: string;
   body: string;
   attachment_keys?: string[];
@@ -475,7 +477,7 @@ function TenantAnnouncementsContent() {
                             }`}
                           >
                             {ann.unit_id
-                              ? formatAnnouncementUnitLabel(tenantUnitLabel)
+                              ? formatAnnouncementUnitLabel(ann.unit_label || tenantUnitLabel)
                               : PROPERTY_WIDE_ANNOUNCEMENT_LABEL}
                           </span>
                         </div>

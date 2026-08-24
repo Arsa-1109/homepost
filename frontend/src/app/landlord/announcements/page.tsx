@@ -57,7 +57,8 @@ function LandlordAnnouncementsContent() {
   const { isLoaded, getToken } = useAuth();
 
   const [selectedProperty, setSelectedProperty] = useState<string>("");
-  const [units, setUnits] = useState<Unit[]>([]);
+  const [unitsByProperty, setUnitsByProperty] = useState<Record<string, Unit[]>>({});
+  const [unitsLoading, setUnitsLoading] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -112,9 +113,11 @@ function LandlordAnnouncementsContent() {
   // Load units for selected property
   useEffect(() => {
     if (!isLoaded || !selectedProperty) return;
+    if (unitsByProperty[selectedProperty]) return;
     let isCancelled = false;
 
     async function loadUnits() {
+      setUnitsLoading(true);
       try {
         const token = await getToken();
         const unitData = await fetchAPI<Unit[]>(
@@ -129,10 +132,17 @@ function LandlordAnnouncementsContent() {
               sensitivity: "base",
             })
           );
-          setUnits(sorted);
+          setUnitsByProperty((prev) => ({
+            ...prev,
+            [selectedProperty]: sorted,
+          }));
         }
       } catch (err) {
         console.error("Failed to load units for property:", err);
+      } finally {
+        if (!isCancelled) {
+          setUnitsLoading(false);
+        }
       }
     }
 
@@ -140,7 +150,12 @@ function LandlordAnnouncementsContent() {
     return () => {
       isCancelled = true;
     };
-  }, [selectedProperty, isLoaded, getToken]);
+  }, [selectedProperty, isLoaded, getToken, unitsByProperty]);
+
+  const units = useMemo(
+    () => (selectedProperty ? unitsByProperty[selectedProperty] || [] : []),
+    [selectedProperty, unitsByProperty]
+  );
 
   const [nowTimestamp, setNowTimestamp] = useState<number>(0);
   useEffect(() => {
@@ -189,10 +204,21 @@ function LandlordAnnouncementsContent() {
   const selectedPropertyName =
     properties.find((p) => p.id === selectedProperty)?.name || "Property";
 
-  const getUnitLabel = (unitId: string | null | undefined) => {
-    if (!unitId) return PROPERTY_WIDE_ANNOUNCEMENT_LABEL;
-    const unit = units.find((u) => u.id === unitId);
-    return formatAnnouncementUnitLabel(unit?.unit_label);
+  const getUnitLabel = (ann: Announcement) => {
+    if (!ann.unit_id) return PROPERTY_WIDE_ANNOUNCEMENT_LABEL;
+    if (ann.unit_label) return formatAnnouncementUnitLabel(ann.unit_label);
+
+    const propertyUnits = ann.property_id ? unitsByProperty[ann.property_id] : units;
+    const unit = (propertyUnits || []).find((u) => u.id === ann.unit_id) || units.find((u) => u.id === ann.unit_id);
+    if (unit?.unit_label) {
+      return formatAnnouncementUnitLabel(unit.unit_label);
+    }
+
+    if (unitsLoading) {
+      return null;
+    }
+
+    return formatAnnouncementUnitLabel(undefined);
   };
 
   return (
@@ -416,8 +442,10 @@ function LandlordAnnouncementsContent() {
                   ) : (
                     paginatedAnnouncements.map((ann) => {
                       const propertyName =
-                        properties.find((p) => p.id === ann.property_id)?.name || "Property";
-                      const unitLabel = getUnitLabel(ann.unit_id);
+                        ann.property_name ||
+                        properties.find((p) => p.id === ann.property_id)?.name ||
+                        "Property";
+                      const unitLabel = getUnitLabel(ann);
 
                       return (
                         <AnnouncementCard

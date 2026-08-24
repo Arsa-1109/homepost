@@ -332,6 +332,7 @@ async def list_property_announcements(
     unit = await session.get(Unit, profile.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
+    prop = await session.get(Property, unit.property_id)
 
     scope = (
         Announcement.property_id == unit.property_id,
@@ -353,6 +354,10 @@ async def list_property_announcements(
     out = []
     for ann in anns:
         resp = AnnouncementResponse.model_validate(ann)
+        if ann.unit_id:
+            resp.unit_label = unit.unit_label
+        if prop:
+            resp.property_name = prop.name
         await hydrate_announcement(ann, resp)
         out.append(resp)
     return Page(items=out, total=total, limit=pagination.limit,
@@ -373,6 +378,7 @@ async def list_shared_documents(
     unit = await session.get(Unit, profile.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
+    prop = await session.get(Property, unit.property_id)
 
     # Return documents for this property that are either property-wide (unit_id IS NULL)
     # or specific to this tenant's unit (unit_id == unit.id)
@@ -399,6 +405,10 @@ async def list_shared_documents(
     for d, url in zip(docs, urls):
         resp = DocumentResponse.model_validate(d)
         resp.file_url = url
+        if d.unit_id:
+            resp.unit_label = unit.unit_label
+        if prop:
+            resp.property_name = prop.name
         response_data.append(resp)
 
     return Page(items=response_data, total=total, limit=pagination.limit,

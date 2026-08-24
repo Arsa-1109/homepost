@@ -21,6 +21,8 @@ class AnnouncementResponse(BaseModel):
     id: uuid.UUID
     property_id: uuid.UUID
     unit_id: uuid.UUID | None = None
+    unit_label: str | None = None
+    property_name: str | None = None
     author_id: uuid.UUID
     title: str
     body: str
