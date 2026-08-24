@@ -291,7 +291,7 @@ export function UserButton() {
   );
 }
 
-const DEMO_PERSONAS: Array<MockPersona & { role: MockRole; label: string; badgeClass: string; detail: string }> = [
+const DEMO_PERSONAS: Array<MockPersona & { role: MockRole; label: string; badgeClass: string; detail: string; ariaLabel: string }> = [
   {
     id: "user_demo_landlord_001",
     email: "landlord@homepost.demo",
@@ -300,6 +300,7 @@ const DEMO_PERSONAS: Array<MockPersona & { role: MockRole; label: string; badgeC
     label: "Marcus Vance (Owner)",
     badgeClass: "bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))]",
     detail: "Portfolio: Sunset Vista & Maplewood Heights",
+    ariaLabel: "Continue as landlord demo",
   },
   {
     id: "user_demo_tenant_001",
@@ -309,6 +310,7 @@ const DEMO_PERSONAS: Array<MockPersona & { role: MockRole; label: string; badgeC
     label: "Sarah Jenkins (Resident)",
     badgeClass: "bg-blue-500/10 text-blue-500",
     detail: "Unit 101 · Maplewood Heights",
+    ariaLabel: "Continue as tenant demo (Sarah Jenkins)",
   },
   {
     id: "user_demo_tenant_002",
@@ -318,6 +320,7 @@ const DEMO_PERSONAS: Array<MockPersona & { role: MockRole; label: string; badgeC
     label: "Alex Rivera (Resident)",
     badgeClass: "bg-blue-500/10 text-blue-500",
     detail: "Unit 2A · Sunset Vista",
+    ariaLabel: "Continue as tenant demo (Alex Rivera)",
   },
 ];
 
@@ -344,6 +347,7 @@ function DemoAccountList() {
         <button
           key={persona.id}
           type="button"
+          aria-label={persona.ariaLabel}
           onClick={() => choosePersona(persona.role, persona)}
           className="flex flex-col items-start p-4 rounded-2xl border border-border bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))] transition-all text-left group"
         >

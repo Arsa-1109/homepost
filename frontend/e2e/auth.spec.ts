@@ -21,7 +21,7 @@ test("signed-out users see the sign-in affordance; signed-in see their menu", as
   await expect(page.getByTestId("mock-signin")).toBeVisible({ timeout: 20_000 });
 
   await page.goto("/sign-in");
-  await page.getByRole("button", { name: /continue as tenant/i }).click();
+  await page.getByRole("button", { name: /continue as tenant demo \(sarah jenkins\)/i }).click();
   await page.waitForURL("**/tenant/dashboard", { timeout: 30_000 });
 
   await page.goto("/");

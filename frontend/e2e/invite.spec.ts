@@ -17,7 +17,7 @@ test("tenant can preview and accept a unit invite", async ({ page }) => {
   await page.getByRole("button", { name: /accept invite/i }).click();
   await expect(page).toHaveURL(/\/sign-in/);
 
-  await page.getByRole("button", { name: /continue as tenant/i }).click();
+  await page.getByRole("button", { name: /continue as tenant demo \(sarah jenkins\)/i }).click();
   await page.waitForURL("**/tenant/dashboard", { timeout: 30_000 });
 
   await expect(page.getByText("Unit 101")).toBeVisible({ timeout: 15_000 });
