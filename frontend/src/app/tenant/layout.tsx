@@ -116,10 +116,10 @@ export default function TenantLayout({
       </header>
 
       {/* Main content — extra bottom padding so content never hides behind tab bar */}
-      <main className="flex-1 p-3.5 sm:p-6 pb-24 max-w-full overflow-x-hidden">{children}</main>
+      <main className="flex-1 p-3.5 sm:p-6 pb-[max(6rem,calc(4rem+env(safe-area-inset-bottom)))] max-w-full overflow-x-hidden">{children}</main>
 
       {/* Bottom Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 flex justify-around items-center h-16 border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md z-50">
+      <nav className="fixed bottom-0 left-0 right-0 flex justify-around items-center min-h-[64px] border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md z-50 px-2 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
@@ -127,7 +127,7 @@ export default function TenantLayout({
             <Link
               key={tab.label}
               href={tab.href}
-              className={`flex flex-col items-center text-xs transition-colors px-3 py-1 rounded-lg ${
+              className={`flex flex-col items-center justify-center min-h-[48px] min-w-[48px] text-xs transition-colors px-2 py-1 rounded-lg touch-manipulation cursor-pointer ${
                 isActive
                   ? "text-[rgb(var(--ml-accent))]"
                   : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"

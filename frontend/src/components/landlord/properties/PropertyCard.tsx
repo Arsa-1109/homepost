@@ -44,12 +44,15 @@ export interface PropertyCardProps {
   p: Property;
   onUpdate: (updatedProperty: Property) => void;
   onDelete: (propertyId: string) => void;
+  /** Pre-fetched occupancy stats from the parent page (avoids per-card N+1 fetches). */
+  unitSummary?: PropertyUnitSummary | null;
 }
 
-export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
+export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSummary }: PropertyCardProps) {
   const { isLoaded, getToken } = useAuth();
-  const [unitSummary, setUnitSummary] = useState<PropertyUnitSummary | null>(null);
+  const [fetchedSummary, setFetchedSummary] = useState<PropertyUnitSummary | null>(null);
   const [loadingUnits, setLoadingUnits] = useState(true);
+  const unitSummary = propUnitSummary ?? fetchedSummary;
 
   // Inline Edit State
   const [isEditing, setIsEditing] = useState(false);
@@ -63,6 +66,11 @@ export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
   useEffect(() => {
     let isMounted = true;
     if (!isLoaded) return;
+    // Parent already resolved stats (or explicitly knows there are none) — skip the fetch.
+    if (propUnitSummary !== undefined && propUnitSummary !== null) {
+      setLoadingUnits(false);
+      return;
+    }
 
     async function loadUnitSummary() {
       try {
@@ -75,11 +83,11 @@ export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
         if (isMounted) {
           const total = units.length;
           const occupied = units.filter((u) => u.is_occupied).length;
-          setUnitSummary({ totalUnits: total, occupiedUnits: occupied });
+          setFetchedSummary({ totalUnits: total, occupiedUnits: occupied });
         }
       } catch (err) {
         if (isMounted) {
-          setUnitSummary({ totalUnits: 0, occupiedUnits: 0 });
+          setFetchedSummary({ totalUnits: 0, occupiedUnits: 0 });
         }
       } finally {
         if (isMounted) {
@@ -92,7 +100,7 @@ export function PropertyCard({ p, onUpdate, onDelete }: PropertyCardProps) {
     return () => {
       isMounted = false;
     };
-  }, [p.id, isLoaded, getToken]);
+  }, [p.id, isLoaded, getToken, propUnitSummary]);
 
   const handleSave = async () => {
     if (!editName.trim() || !editAddress.trim() || !editCity.trim()) {

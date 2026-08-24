@@ -10,11 +10,13 @@ import {
   formatAnnouncementUnitLabel,
 } from "@/lib/announcement-labels";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Megaphone,
   Search,
+  RotateCcw,
   Calendar,
   CheckCircle2,
   FileText,
@@ -219,10 +221,11 @@ function TenantAnnouncementsContent() {
     setNowTimestamp(Date.now());
   }, []);
 
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 150);
   const filteredAnnouncements = useMemo(() => {
     return announcements
       .filter((ann) => {
-        const query = searchQuery.toLowerCase();
+        const query = debouncedSearchQuery.toLowerCase();
         const matchesSearch =
           ann.title.toLowerCase().includes(query) ||
           ann.body.toLowerCase().includes(query);
@@ -250,6 +253,12 @@ function TenantAnnouncementsContent() {
   const totalPages =
     Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
 
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedFilter !== "ALL";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedFilter("ALL");
+  };
+
   useEffect(() => {
     if (!loading && targetAnnouncementId && announcements.length > 0) {
       const target = announcements.find((a) => a.id === targetAnnouncementId);
@@ -261,8 +270,8 @@ function TenantAnnouncementsContent() {
         } else if (selectedFilter === "UNIT" && !target.unit_id) {
           setSelectedFilter("ALL");
         }
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
+        if (debouncedSearchQuery.trim()) {
+          const q = debouncedSearchQuery.toLowerCase();
           const matches =
             target.title.toLowerCase().includes(q) ||
             target.body.toLowerCase().includes(q);
@@ -447,6 +456,16 @@ function TenantAnnouncementsContent() {
                   <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
                     Try a different search or filter.
                   </p>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                      Reset Filters
+                    </button>
+                  )}
                 </motion.div>
               ) : (
                 paginatedAnnouncements.map((ann) => {

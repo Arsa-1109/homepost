@@ -219,7 +219,7 @@ export default function TenantDashboard() {
             </div>
             <div className="text-right shrink-0">
               <span 
-                className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                className={`text-3xl sm:text-4xl font-black tracking-tight tabular-nums ${
                   rentUrgent ? "text-red-500" : "text-[rgb(var(--ml-accent))]"
                 }`}
               >
@@ -253,7 +253,7 @@ export default function TenantDashboard() {
             </div>
             <div className="text-right shrink-0">
               <span 
-                className={`text-3xl sm:text-4xl font-black tracking-tight ${
+                className={`text-3xl sm:text-4xl font-black tracking-tight tabular-nums ${
                   isLeaseExpired ? "text-red-500 text-2xl sm:text-3xl" : leaseUrgent ? "text-amber-500" : "text-[rgb(var(--ml-text-primary))]"
                 }`}
               >

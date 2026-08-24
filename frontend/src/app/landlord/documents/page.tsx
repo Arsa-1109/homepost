@@ -5,12 +5,14 @@ import { errorMessage } from "@/lib/errors";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { shouldShowEmpty } from "@/lib/empty-state";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { motion, AnimatePresence } from "motion/react";
 import {
   FileText,
   Search,
+  RotateCcw,
   Plus,
   X,
   Building,
@@ -174,6 +176,7 @@ function LandlordDocumentsContent() {
     }
   };
 
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 150);
   const filteredDocuments = useMemo(() => {
     return documents
       .filter((doc) => {
@@ -183,7 +186,7 @@ function LandlordDocumentsContent() {
 
         const matchesSearch = doc.title
           .toLowerCase()
-          .includes(searchQuery.toLowerCase());
+          .includes(debouncedSearchQuery.toLowerCase());
 
         let matchesFilter = true;
         if (selectedFilter === "PROPERTY_WIDE") {
@@ -198,6 +201,12 @@ function LandlordDocumentsContent() {
   }, [documents, searchQuery, selectedFilter, idParam]);
 
   const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE) || 1;
+
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedFilter !== "ALL";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedFilter("ALL");
+  };
 
   const paginatedDocuments = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -453,6 +462,16 @@ function LandlordDocumentsContent() {
                   <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
                     Try adjusting your search query or file filter.
                   </p>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                      Reset Filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

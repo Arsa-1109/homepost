@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
+import { useEffect, useState, useMemo, Suspense, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import {
   Building2,
@@ -28,7 +30,15 @@ import {
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { PropertyCard, Property } from "@/components/landlord/properties/PropertyCard";
+import type { PropertyUnitSummary } from "@/components/landlord/properties/PropertyCard";
 import { CreatePropertyForm } from "@/components/landlord/properties/CreatePropertyForm";
+import { useViewPreference } from "@/hooks/useViewPreference";
+import { ViewToggle } from "@/components/shared/ViewToggle";
+
+interface UnitSummaryUnits {
+  id: string;
+  is_occupied: boolean;
+}
 
 export default function LandlordPropertiesPage() {
   return (
@@ -47,9 +57,15 @@ export default function LandlordPropertiesPage() {
 function LandlordPropertiesContent() {
   const { isLoaded, getToken } = useAuth();
   const [showAddForm, setShowAddForm] = useState(false);
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("new") === "1") setShowAddForm(true);
+  }, [searchParams]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCityFilter, setSelectedCityFilter] = useState("ALL");
-  const [totalUnitsCount, setTotalUnitsCount] = useState<number | null>(null);
+  // Per-property unit stats, fetched once in a single pass (replaces per-card N+1 requests)
+  const [unitSummaries, setUnitSummaries] = useState<{ [propertyId: string]: PropertyUnitSummary }>({});
+  const summariesReadyRef = useRef(false);
 
   const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,37 +88,53 @@ function LandlordPropertiesContent() {
 
   const properties = useMemo(() => data || [], [data]);
 
-  // Load total units count across all properties
+  // Fetch all units in one pass and derive per-property occupancy stats
   useEffect(() => {
     if (!isLoaded || properties.length === 0) {
-      if (!loading && properties.length === 0) setTotalUnitsCount(0);
+      if (!loading && properties.length === 0) {
+        summariesReadyRef.current = true;
+        setUnitSummaries({});
+      }
       return;
+    }
+    if (summariesReadyRef.current) {
+      // Refetch when the property list changes after a prior successful pass
+      summariesReadyRef.current = false;
     }
 
     let isMounted = true;
-    async function loadAllUnitsCount() {
+    async function loadAllUnitStats() {
       try {
         const token = await getToken();
         const results = await Promise.allSettled(
           properties.map((p) =>
-            fetchAPI<{ id: string }[]>(`/api/v1/landlord/properties/${p.id}/units`, {}, token)
+            fetchAPI<UnitSummaryUnits[]>(`/api/v1/landlord/properties/${p.id}/units`, {}, token)
           )
         );
-        if (isMounted) {
-          let count = 0;
-          results.forEach((res) => {
-            if (res.status === "fulfilled" && Array.isArray(res.value)) {
-              count += res.value.length;
-            }
-          });
-          setTotalUnitsCount(count);
-        }
+        if (!isMounted) return;
+        const next: { [propertyId: string]: PropertyUnitSummary } = {};
+        properties.forEach((p, i) => {
+          const res = results[i];
+          if (res.status === "fulfilled" && Array.isArray(res.value)) {
+            next[p.id] = {
+              totalUnits: res.value.length,
+              occupiedUnits: res.value.filter((u) => u.is_occupied).length,
+            };
+          } else {
+            next[p.id] = { totalUnits: 0, occupiedUnits: 0 };
+          }
+        });
+        summariesReadyRef.current = true;
+        setUnitSummaries(next);
       } catch {
-        if (isMounted) setTotalUnitsCount(0);
+        if (isMounted) {
+          summariesReadyRef.current = true;
+          setUnitSummaries({});
+        }
       }
     }
 
-    loadAllUnitsCount();
+    loadAllUnitStats();
     return () => {
       isMounted = false;
     };
@@ -128,9 +160,10 @@ function LandlordPropertiesContent() {
     setCurrentPage(1);
   }, [selectedCityFilter, searchQuery]);
 
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 150);
   const filteredProperties = useMemo(() => {
     return properties.filter((p) => {
-      const q = searchQuery.toLowerCase();
+      const q = debouncedSearchQuery.toLowerCase();
       const matchesSearch =
         p.name.toLowerCase().includes(q) ||
         p.address.toLowerCase().includes(q) ||
@@ -149,10 +182,19 @@ function LandlordPropertiesContent() {
 
   const totalPages = Math.ceil(filteredProperties.length / ITEMS_PER_PAGE) || 1;
 
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedCityFilter !== "ALL";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedCityFilter("ALL");
+  };
+
   const paginatedProperties = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredProperties.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredProperties, currentPage]);
+
+  // Persisted Grid / Compact Table preference
+  const [viewMode, setViewMode] = useViewPreference("landlord_properties_view");
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
@@ -258,7 +300,7 @@ function LandlordPropertiesContent() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                 Total Properties
               </p>
-              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
+              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5 tabular-nums">
                 {properties.length}
               </p>
             </div>
@@ -269,7 +311,7 @@ function LandlordPropertiesContent() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                 Cities Covered
               </p>
-              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
+              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5 tabular-nums">
                 {uniqueCities.length}
               </p>
             </div>
@@ -280,11 +322,11 @@ function LandlordPropertiesContent() {
               <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                 Total Units
               </p>
-              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
-                {totalUnitsCount === null ? (
+              <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5 tabular-nums">
+                {Object.keys(unitSummaries).length === 0 ? (
                   <span className="skeleton h-5 w-8 rounded-md inline-block" />
                 ) : (
-                  totalUnitsCount
+                  Object.values(unitSummaries).reduce((sum, s) => sum + s.totalUnits, 0)
                 )}
               </p>
             </div>
@@ -321,9 +363,16 @@ function LandlordPropertiesContent() {
             <h2 className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
               Properties ({filteredProperties.length})
             </h2>
+            <ViewToggle value={viewMode} onChange={setViewMode} />
           </div>
         )}
 
+        {viewMode === "table" && !loading && filteredProperties.length > 0 ? (
+          <PropertiesCompactTable
+            properties={paginatedProperties}
+            unitSummaries={unitSummaries}
+          />
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <AnimatePresence mode="wait">
             {loading ? (
@@ -373,6 +422,16 @@ function LandlordPropertiesContent() {
                 <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
                   Try adjusting your search or city filter.
                 </p>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                    Reset Filters
+                  </button>
+                )}
               </div>
             ) : (
               paginatedProperties.map((p) => (
@@ -381,11 +440,13 @@ function LandlordPropertiesContent() {
                   p={p}
                   onUpdate={refetch}
                   onDelete={refetch}
+                  unitSummary={unitSummaries[p.id] ?? null}
                 />
               ))
             )}
           </AnimatePresence>
         </div>
+        )}
 
         {/* Pagination Controls */}
         {!loading && filteredProperties.length > 0 && (
@@ -447,6 +508,60 @@ function LandlordPropertiesContent() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+interface PropertiesCompactTableProps {
+  properties: Property[];
+  unitSummaries: { [propertyId: string]: PropertyUnitSummary };
+}
+
+/** Dense table alternative to the property card grid. */
+function PropertiesCompactTable({ properties, unitSummaries }: PropertiesCompactTableProps) {
+  return (
+    <div className="overflow-x-auto border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm">
+      <table className="w-full text-left text-xs">
+        <caption className="sr-only">Properties</caption>
+        <thead>
+          <tr className="border-b border-border/60 text-[10px] uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+            <th scope="col" className="px-4 py-3 font-extrabold">Property</th>
+            <th scope="col" className="px-4 py-3 font-extrabold">City</th>
+            <th scope="col" className="px-4 py-3 font-extrabold">Occupancy</th>
+            <th scope="col" className="px-4 py-3 font-extrabold hidden sm:table-cell">Address</th>
+          </tr>
+        </thead>
+        <tbody>
+          {properties.map((p) => {
+            const summary = unitSummaries[p.id];
+            return (
+              <tr
+                key={p.id}
+                className="border-b border-border/30 last:border-b-0 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-colors"
+              >
+                <td className="px-4 py-2.5 font-bold text-[rgb(var(--ml-text-primary))] max-w-[160px] truncate">
+                  <Link href={`/landlord/units?property_id=${p.id}`} title={p.name} className="hover:text-[rgb(var(--ml-accent))] transition-colors">
+                    {p.name}
+                  </Link>
+                </td>
+                <td className="px-4 py-2.5 text-[rgb(var(--ml-text-secondary))] font-semibold">{p.city}</td>
+                <td className="px-4 py-2.5 tabular-nums text-[rgb(var(--ml-text-secondary))] font-semibold">
+                  {summary ? (
+                    <>
+                      {summary.occupiedUnits}/{summary.totalUnits}
+                    </>
+                  ) : (
+                    <span className="skeleton h-3 w-10 rounded inline-block" />
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-[rgb(var(--ml-text-secondary))] hidden sm:table-cell max-w-[220px] truncate" title={p.address}>
+                  {p.address}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

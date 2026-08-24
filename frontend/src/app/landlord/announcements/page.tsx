@@ -8,12 +8,14 @@ import {
   formatAnnouncementUnitLabel,
 } from "@/lib/announcement-labels";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { LightboxModal } from "@/components/LightboxModal";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Megaphone,
   Search,
+  RotateCcw,
   Plus,
   Building,
   X,
@@ -60,6 +62,10 @@ function LandlordAnnouncementsContent() {
   const [unitsByProperty, setUnitsByProperty] = useState<Record<string, Unit[]>>({});
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [showUploadForm, setShowUploadForm] = useState(false);
+  // Auto-open composer when deep-linked (e.g. via Command Palette "New Announcement")
+  useEffect(() => {
+    if (searchParams.get("new") === "1") setShowUploadForm(true);
+  }, [searchParams]);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Edit & Delete State
@@ -162,6 +168,7 @@ function LandlordAnnouncementsContent() {
     setNowTimestamp(Date.now());
   }, []);
 
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 150);
   const filteredAnnouncements = useMemo(() => {
     return announcements
       .filter((ann) => {
@@ -172,7 +179,7 @@ function LandlordAnnouncementsContent() {
           return false;
         }
 
-        const query = searchQuery.toLowerCase();
+        const query = debouncedSearchQuery.toLowerCase();
         const matchesSearch =
           ann.title.toLowerCase().includes(query) ||
           ann.body.toLowerCase().includes(query);
@@ -195,6 +202,12 @@ function LandlordAnnouncementsContent() {
   }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam, selectedProperty]);
 
   const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
+
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedFilter !== "ALL";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedFilter("ALL");
+  };
 
   const paginatedAnnouncements = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -438,6 +451,16 @@ function LandlordAnnouncementsContent() {
                       <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                       <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">No announcements found</p>
                       <p className="text-xs text-[rgb(var(--ml-text-secondary))]">Try a different search or filter.</p>
+                      {hasActiveFilters && (
+                        <button
+                          type="button"
+                          onClick={resetFilters}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                          Reset Filters
+                        </button>
+                      )}
                     </motion.div>
                   ) : (
                     paginatedAnnouncements.map((ann) => {

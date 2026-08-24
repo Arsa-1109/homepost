@@ -14,10 +14,15 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  RotateCcw,
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { shouldShowEmpty } from "@/lib/empty-state";
+import { useViewPreference } from "@/hooks/useViewPreference";
+import { ViewToggle } from "@/components/shared/ViewToggle";
+import { UnitsCompactTable } from "@/components/landlord/units/UnitsCompactTable";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -137,12 +142,13 @@ function LandlordUnitsContent() {
   const selectedPropertyName =
     properties.find((p) => p.id === selectedProperty)?.name || "Property";
 
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 150);
   const filteredUnits = useMemo(() => {
     return units
       .filter((u) => {
         const matchesSearch = u.unit_label
           .toLowerCase()
-          .includes(searchQuery.toLowerCase());
+          .includes(debouncedSearchQuery.toLowerCase());
         if (!matchesSearch) return false;
         if (selectedFilter === "OCCUPIED") return u.is_occupied;
         if (selectedFilter === "VACANT") return !u.is_occupied;
@@ -158,6 +164,12 @@ function LandlordUnitsContent() {
 
   const totalPages = Math.ceil(filteredUnits.length / ITEMS_PER_PAGE) || 1;
 
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedFilter !== "ALL";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedFilter("ALL");
+  };
+
   const paginatedUnits = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredUnits.slice(start, start + ITEMS_PER_PAGE);
@@ -165,6 +177,9 @@ function LandlordUnitsContent() {
 
   const occupiedCount = useMemo(() => units.filter((u) => u.is_occupied).length, [units]);
   const vacantCount = useMemo(() => units.filter((u) => !u.is_occupied).length, [units]);
+
+  // Persisted Grid / Compact Table preference
+  const [viewMode, setViewMode] = useViewPreference("landlord_units_view");
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-16">
@@ -271,7 +286,7 @@ function LandlordUnitsContent() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                     Total Units
                   </p>
-                  <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
+                  <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5 tabular-nums">
                     {units.length}
                   </p>
                 </div>
@@ -282,7 +297,7 @@ function LandlordUnitsContent() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                     Occupied
                   </p>
-                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
                     {occupiedCount}
                   </p>
                 </div>
@@ -293,7 +308,7 @@ function LandlordUnitsContent() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                     Vacant
                   </p>
-                  <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">
+                  <p className="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5 tabular-nums">
                     {vacantCount}
                   </p>
                 </div>
@@ -304,7 +319,7 @@ function LandlordUnitsContent() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                     Occupancy Rate
                   </p>
-                  <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5">
+                  <p className="text-xl font-black text-[rgb(var(--ml-text-primary))] mt-0.5 tabular-nums">
                     {units.length ? Math.round((occupiedCount / units.length) * 100) : 0}%
                   </p>
                 </div>
@@ -329,9 +344,13 @@ function LandlordUnitsContent() {
                 <h2 className="text-xs font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
                   Units in {selectedPropertyName} ({filteredUnits.length})
                 </h2>
+                <ViewToggle value={viewMode} onChange={setViewMode} />
               </div>
             )}
 
+            {viewMode === "table" && !unitsLoading && filteredUnits.length > 0 ? (
+              <UnitsCompactTable units={paginatedUnits} />
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <AnimatePresence mode="wait">
                 {unitsLoading ? (
@@ -370,6 +389,16 @@ function LandlordUnitsContent() {
                     <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
                       Try adjusting your search or occupancy filter.
                     </p>
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={resetFilters}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                        Reset Filters
+                      </button>
+                    )}
                   </div>
                 ) : (
                   paginatedUnits.map((u) => (
@@ -378,6 +407,8 @@ function LandlordUnitsContent() {
                 )}
               </AnimatePresence>
             </div>
+            )}
+          </div>
 
             {/* Pagination Controls */}
             {!unitsLoading && filteredUnits.length > 0 && (
@@ -438,7 +469,6 @@ function LandlordUnitsContent() {
                 </div>
               </div>
             )}
-          </div>
         </>
       )}
     </div>

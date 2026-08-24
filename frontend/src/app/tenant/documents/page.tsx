@@ -5,6 +5,7 @@ import Image from "next/image";
 import { fetchAPI } from "@/lib/api";
 import { unwrapPage } from "@/lib/pagination";
 import { useApiQuery } from "@/hooks/useApiQuery";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { AnimatePresence } from "motion/react";
 import {
@@ -13,6 +14,7 @@ import {
   Eye,
   File,
   Search,
+  RotateCcw,
   Calendar,
   FolderOpen,
   ChevronLeft,
@@ -102,10 +104,11 @@ export default function TenantDocumentsPage() {
     }
   };
 
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 150);
   const filteredDocuments = useMemo(() => {
     return documents
       .filter((doc) => {
-        const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = doc.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
 
         const isImage = doc.file_type.startsWith("image/") || isImageUrl(doc.file_url || doc.file_key);
         const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
@@ -119,6 +122,12 @@ export default function TenantDocumentsPage() {
   }, [documents, searchQuery, selectedFilter]);
 
   const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE) || 1;
+
+  const hasActiveFilters = searchQuery.trim() !== "" || selectedFilter !== "ALL";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedFilter("ALL");
+  };
 
   const paginatedDocuments = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -306,6 +315,16 @@ export default function TenantDocumentsPage() {
             <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
               Try adjusting your search terms or filter selection.
             </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
+              >
+                <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                Reset Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

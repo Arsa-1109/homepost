@@ -25,6 +25,7 @@ import {
   LogIn,
   UserPlus,
   LayoutDashboard,
+  Plus,
 } from "lucide-react";
 import { useTheme } from "@/components/providers";
 
@@ -41,8 +42,13 @@ export function CommandPalette() {
         setOpen((prev) => !prev);
       }
     };
+    const openPalette = () => setOpen(true);
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    document.addEventListener("open-command-palette", openPalette);
+    return () => {
+      document.removeEventListener("keydown", down);
+      document.removeEventListener("open-command-palette", openPalette);
+    };
   }, []);
 
   const runCommand = React.useCallback((command: () => unknown) => {
@@ -58,6 +64,38 @@ export function CommandPalette() {
       <CommandInput placeholder="Type a command or search..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
+
+        {/* Quick Actions (role-aware) */}
+        {isLandlord && (
+          <CommandGroup heading="Quick Actions">
+            <CommandItem onSelect={() => runCommand(() => router.push("/landlord/announcements?new=1"))}>
+              <Megaphone className="mr-2 h-4 w-4" />
+              <span>New Announcement</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/landlord/units?add=1"))}>
+              <Plus className="mr-2 h-4 w-4" />
+              <span>Add Unit</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/landlord/properties?new=1"))}>
+              <Plus className="mr-2 h-4 w-4" />
+              <span>New Property</span>
+            </CommandItem>
+            <CommandItem onSelect={() => runCommand(() => router.push("/landlord/access-requests"))}>
+              <Users className="mr-2 h-4 w-4" />
+              <span>Review Access Requests</span>
+            </CommandItem>
+          </CommandGroup>
+        )}
+        {isTenant && (
+          <CommandGroup heading="Quick Actions">
+            <CommandItem onSelect={() => runCommand(() => router.push("/tenant/requests/new"))}>
+              <Wrench className="mr-2 h-4 w-4" />
+              <span>File Maintenance Request</span>
+            </CommandItem>
+          </CommandGroup>
+        )}
+
+        <CommandSeparator />
 
         {/* Landlord Navigation */}
         {isLandlord && (

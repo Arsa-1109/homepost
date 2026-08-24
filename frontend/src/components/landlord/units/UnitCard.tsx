@@ -105,7 +105,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
-                <span className={!u.lease_start || !u.lease_end ? "opacity-40 italic" : ""}>
+                <span className={(!u.lease_start || !u.lease_end ? "opacity-40 italic " : "") + "tabular-nums"}>
                   {u.lease_start && u.lease_end
                     ? `${new Date(u.lease_start).toLocaleDateString()} – ${new Date(u.lease_end).toLocaleDateString()}`
                     : "No lease period set"}

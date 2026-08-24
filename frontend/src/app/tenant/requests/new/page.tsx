@@ -2,7 +2,7 @@
 
 import { errorMessage } from "@/lib/errors";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { uploadFile } from "@/lib/upload";
@@ -12,16 +12,65 @@ import { Wrench, ChevronLeft, Upload, Image as ImageIcon, X, Send, AlertCircle }
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 
+const DRAFT_KEY = "tenant_draft_maintenance_request";
+const TITLE_MAX = 255;
+const DESCRIPTION_MAX = 2000;
+
 export default function NewRequestPage() {
   const router = useRouter();
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [images, setImages] = useState<File[]>([]);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const hydratedRef = useRef(false);
+
+  // Restore draft once on mount
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw) as { title?: string; description?: string; priority?: string };
+        if (draft.title) setTitle(draft.title);
+        if (draft.description) setDescription(draft.description);
+        if (draft.priority) setPriority(draft.priority);
+        setDraftRestored(Boolean(draft.title || draft.description));
+      }
+    } catch {
+      // Corrupt or unavailable draft — ignore
+    }
+  }, []);
+
+  // Auto-save draft on change (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        window.localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ title, description, priority })
+        );
+      } catch {
+        // Storage full/unavailable — non-critical
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [title, description, priority]);
+
+  const discardDraft = () => {
+    try {
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch {}
+    setTitle("");
+    setDescription("");
+    setPriority("medium");
+    setDraftRestored(false);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
@@ -79,6 +128,9 @@ export default function NewRequestPage() {
         }),
       }, token);
 
+      try {
+        window.localStorage.removeItem(DRAFT_KEY);
+      } catch {}
       router.push("/tenant/requests");
       router.refresh();
       toast.success("Maintenance request submitted successfully.");
@@ -118,16 +170,34 @@ export default function NewRequestPage() {
         </div>
       )}
 
+      {draftRestored && (
+        <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-3.5 rounded-2xl text-xs font-medium text-[rgb(var(--ml-text-secondary))] flex items-center justify-between gap-3 shadow-xs">
+          <span>Draft restored from your last visit.</span>
+          <button
+            type="button"
+            onClick={discardDraft}
+            className="px-3 py-1.5 rounded-lg border border-border/60 text-[10px] font-bold uppercase tracking-wider bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:border-red-400/40 hover:text-red-400 shrink-0"
+          >
+            Discard
+          </button>
+        </div>
+      )}
+
       {/* Main Form Container */}
       <form onSubmit={handleSubmit} className="bg-[rgb(var(--ml-bg-secondary))] p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-border/60 shadow-sm space-y-5 sm:space-y-6 max-w-full overflow-hidden">
         <div className="space-y-1.5">
-          <label htmlFor="issue-title" className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
-            Issue Title <span className="text-red-400">*</span>
-          </label>
-          <input 
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="issue-title" className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
+              Issue Title <span className="text-red-400">*</span>
+            </label>
+            <span aria-live="polite" className="text-[10px] font-semibold tabular-nums text-[rgb(var(--ml-text-secondary))]">
+              {title.length} / {TITLE_MAX}
+            </span>
+          </div>
+          <input
             id="issue-title"
             required
-            maxLength={255}
+            maxLength={TITLE_MAX}
             value={title}
             onChange={e => setTitle(e.target.value)}
             type="text" 
@@ -137,13 +207,18 @@ export default function NewRequestPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="issue-description" className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
-            Description <span className="text-red-400">*</span>
-          </label>
-          <textarea 
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="issue-description" className="text-[10px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider block">
+              Description <span className="text-red-400">*</span>
+            </label>
+            <span aria-live="polite" className="text-[10px] font-semibold tabular-nums text-[rgb(var(--ml-text-secondary))]">
+              {description.length} / {DESCRIPTION_MAX}
+            </span>
+          </div>
+          <textarea
             id="issue-description"
             required
-            maxLength={2000}
+            maxLength={DESCRIPTION_MAX}
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={5} 
@@ -228,6 +303,7 @@ export default function NewRequestPage() {
                   id="issue-photos"
                   type="file" 
                   accept="image/*,application/pdf,.doc,.docx,video/mp4,video/quicktime,video/webm"
+                  capture="environment"
                   multiple
                   onChange={handleImageChange}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"

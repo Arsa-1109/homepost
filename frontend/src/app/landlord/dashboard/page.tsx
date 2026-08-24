@@ -94,7 +94,7 @@ export default function LandlordDashboard() {
       setData(result);
     } catch (err) {
       console.error("Failed to approve tenant:", err);
-      alert("Failed to approve tenant. Please try again.");
+      toast.error(errorMessage(err) || "Failed to approve tenant. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

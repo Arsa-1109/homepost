@@ -174,6 +174,46 @@ export function RequestCard({
   const hasChanges =
     status !== req.status || notes.trim().length > 0 || files.length > 0;
 
+  const [isQuickAdvancing, setIsQuickAdvancing] = useState(false);
+
+  // One-click status advance (open -> in_progress -> resolved) with optimistic UI
+  const handleQuickAdvance = async () => {
+    if (isQuickAdvancing) return;
+    const nextStatus =
+      req.status === "open" ? "in_progress" : req.status === "in_progress" ? "resolved" : null;
+    if (!nextStatus) return;
+
+    const prevStatus = req.status;
+    setIsUpdating(true);
+    setIsQuickAdvancing(true);
+    setError(null);
+    setStatus(nextStatus as MaintenanceRequest["status"]); // optimistic
+
+    try {
+      await fetchAPI(`/api/v1/landlord/maintenance/${req.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      toast.success(
+        nextStatus === "in_progress"
+          ? "Work started — request is now In Progress."
+          : "Request marked as Resolved."
+      );
+      setTimelineRefreshKey((k) => k + 1);
+      onUpdate();
+    } catch (err) {
+      setStatus(prevStatus); // rollback
+      const rawMsg = errorMessage(err) || "Failed to update request";
+      toast.error(getEmpatheticErrorMessage(rawMsg));
+    } finally {
+      setIsUpdating(false);
+      setIsQuickAdvancing(false);
+    }
+  };
+
+  const quickAdvanceLabel =
+    req.status === "open" ? "Start Work" : req.status === "in_progress" ? "Mark Resolved" : null;
+
   const getStatusColor = (s: string) => {
     switch (s) {
       case "open":
@@ -284,7 +324,7 @@ export function RequestCard({
             >
               {req.priority}
             </span>
-            <span className="text-[rgb(var(--ml-text-secondary))]">
+            <span className="text-[rgb(var(--ml-text-secondary))] tabular-nums">
               {new Date(req.created_at).toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
@@ -292,16 +332,36 @@ export function RequestCard({
               })}
             </span>
           </div>
-          <button
-            type="button"
-            className="p-2 rounded-xl group/btn border border-border/30 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
-          >
+          <div className="flex items-center gap-2">
+            {quickAdvanceLabel && (
+              <button
+                type="button"
+                disabled={isQuickAdvancing || isUpdating}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuickAdvance();
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider border cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                  req.status === "open"
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/25 hover:bg-amber-500/20"
+                    : "bg-lime-500/10 text-lime-500 border-lime-500/25 hover:bg-lime-500/20"
+                }`}
+                title={quickAdvanceLabel}
+              >
+                {isQuickAdvancing ? "Saving..." : quickAdvanceLabel}
+              </button>
+            )}
+            <button
+              type="button"
+              className="p-2 rounded-xl group/btn border border-border/30 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+            >
             <ChevronDown
               className={`w-4 h-4 text-[rgb(var(--ml-text-secondary))] group-hover/btn:text-[rgb(var(--ml-accent))] transition-transform duration-300 ${
                 isExpanded ? "rotate-180" : ""
               }`}
             />
-          </button>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -378,9 +438,37 @@ export function RequestCard({
                     <h4 className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] uppercase tracking-wider mb-3">
                       Update Case Status
                     </h4>
-                    <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] mb-1.5 block uppercase tracking-wider">
-                      Status
-                    </span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] block uppercase tracking-wider">
+                        Status
+                      </span>
+                      {req.status === "open" && (
+                        <button
+                          type="button"
+                          onClick={() => setStatus("in_progress")}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                            status === "in_progress"
+                              ? "bg-amber-500/20 text-amber-400 border-amber-500/40 font-black shadow-xs"
+                              : "bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-amber-400 hover:border-amber-500/30"
+                          }`}
+                        >
+                          → Start Work (In Progress)
+                        </button>
+                      )}
+                      {req.status === "in_progress" && (
+                        <button
+                          type="button"
+                          onClick={() => setStatus("resolved")}
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                            status === "resolved"
+                              ? "bg-lime-500/20 text-lime-400 border-lime-500/40 font-black shadow-xs"
+                              : "bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-lime-400 hover:border-lime-500/30"
+                          }`}
+                        >
+                          ✓ Mark Resolved
+                        </button>
+                      )}
+                    </div>
                     <Select
                       value={status}
                       onValueChange={(val) => setStatus(val as typeof req.status)}

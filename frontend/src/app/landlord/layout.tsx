@@ -166,6 +166,15 @@ export default function LandlordLayout({
             <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
               Landlord Portal
             </span>
+            <button
+              type="button"
+              onClick={() => document.dispatchEvent(new CustomEvent("open-command-palette"))}
+              aria-label="Open command palette"
+              title="Open command palette (Ctrl+K)"
+              className="hidden lg:inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-md border border-border/60 bg-[rgb(var(--ml-bg-primary))] text-[10px] font-mono font-semibold text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-colors hover:text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/40"
+            >
+              <kbd>Ctrl K</kbd>
+            </button>
           </div>
 
           <div className="flex items-center gap-4">
@@ -243,13 +252,13 @@ export default function LandlordLayout({
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto relative">
-          <div className="p-4 md:p-6 pb-24 md:pb-20 min-h-full flex flex-col">
+          <div className="p-4 md:p-6 pb-[max(6rem,calc(4rem+env(safe-area-inset-bottom)))] md:pb-20 min-h-full flex flex-col">
             {children}
           </div>
         </main>
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-lg border-t border-border px-2 py-1 flex items-center justify-around">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-lg border-t border-border px-2 pt-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] min-h-[64px] flex items-center justify-around">
           {visibleNavItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
