@@ -1,20 +1,10 @@
 "use client";
 
-import React, { useId } from "react";
+import React from "react";
 
-const GOLDEN_RATIO = 1.6180339887498949;
-const EULER_NUMBER = 2.718281828459045;
-const TAU = Math.PI * 2;
-
-function mulberry32(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state |= 0;
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+function hashFraction(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
 }
 
 export function generatePeakPaths(
@@ -29,45 +19,30 @@ export function generatePeakPaths(
 ): string[] {
   const paths: string[] = [];
 
+  const c2 = hashFraction(phaseShift * 1.7) * 0.45 + 0.25;
+  const s2 = hashFraction(phaseShift * 2.3) * Math.PI * 2;
+  const c3 = hashFraction(phaseShift * 3.1) * 0.35 + 0.15;
+  const s3 = hashFraction(phaseShift * 4.7) * Math.PI * 2;
+  const c4 = hashFraction(phaseShift * 5.9) * 0.25 + 0.10;
+  const s4 = hashFraction(phaseShift * 6.8) * Math.PI * 2;
+  const c5 = hashFraction(phaseShift * 7.2) * 0.15 + 0.05;
+  const s5 = hashFraction(phaseShift * 8.4) * Math.PI * 2;
+
   for (let i = 0; i < count; i++) {
-    const random = mulberry32(Math.floor((phaseShift + i) * 9973));
     const R = 30 + i * spacing;
+    const points: string[] = [];
     const steps = 180;
 
-    const amp1 = random() * 0.18 + 0.10;
-    const amp2 = random() * 0.14 + 0.07;
-    const amp3 = random() * 0.09 + 0.04;
-    const phase1 = random() * TAU;
-    const phase2 = random() * TAU;
-    const phase3 = random() * TAU;
-    const skewPhase = random() * TAU;
-    const envPhase = random() * TAU;
-
-    const rawWave = (theta: number): number =>
-      Math.sin(theta + phase1) * amp1 +
-      Math.sin(theta * GOLDEN_RATIO + phase2) * amp2 +
-      Math.cos(theta * EULER_NUMBER + phase3) * amp3;
-
-    const waveAtStart = rawWave(0);
-
-    const points: string[] = [];
-
     for (let step = 0; step <= steps; step++) {
-      const theta = (step / steps) * TAU;
-      const warpedTheta = theta + 0.35 * Math.sin(theta + skewPhase);
+      const theta = (step / steps) * 2 * Math.PI;
 
-      const closeWeight =
-        theta > TAU * 0.75
-          ? ((theta - TAU * 0.75) / (TAU * 0.25)) ** 2
-          : 0;
-      const irregular = rawWave(warpedTheta);
       const wave =
-        (irregular - closeWeight * (irregular - waveAtStart)) *
-        (1 + 0.35 * Math.sin(theta * 2 + envPhase));
+        Math.sin(2 * theta + s2) * c2 +
+        Math.cos(3 * theta + s3) * c3 +
+        Math.sin(4 * theta + s4) * c4 +
+        Math.cos(5 * theta + s5) * c5;
 
-      const jitter = (random() - 0.5) * 0.05;
-
-      const r = R * (1 + waveAmp * wave + waveAmp * jitter);
+      const r = R * (1 + waveAmp * wave);
       const px = cx + Math.cos(theta) * r * (rx / 100);
       const py = cy + Math.sin(theta) * r * (ry / 100);
 
@@ -95,44 +70,35 @@ export function generateRidgePaths(
 ): string[] {
   const paths: string[] = [];
 
+  const a1 = hashFraction(phaseShift * 1.5) * 45 + 30;
+  const p1 = hashFraction(phaseShift * 2.2) * Math.PI * 2;
+  const a2 = hashFraction(phaseShift * 3.3) * 35 + 15;
+  const p2 = hashFraction(phaseShift * 4.4) * Math.PI * 2;
+  const a3 = hashFraction(phaseShift * 5.5) * 25 + 10;
+  const p3 = hashFraction(phaseShift * 6.6) * Math.PI * 2;
+  const a4 = hashFraction(phaseShift * 7.1) * 15 + 5;
+  const p4 = hashFraction(phaseShift * 8.8) * Math.PI * 2;
+
   for (let i = 0; i < count; i++) {
-    const random = mulberry32(Math.floor((phaseShift + i) * 7841));
     const yOffset = startY + i * spacing;
+    const points: string[] = [`M 0 ${height}`];
     const steps = 100;
 
-    const amp1 = random() * 30 + 25;
-    const amp2 = random() * 24 + 12;
-    const amp3 = random() * 16 + 6;
-    const phase1 = random() * TAU;
-    const phase2 = random() * TAU;
-    const phase3 = random() * TAU;
-    const skewPhase = random() * TAU;
-    const envPhase = random() * TAU;
-
-    const points: string[] = [];
-    points.push(`M 0 ${height}`);
-
     for (let step = 0; step <= steps; step++) {
-      const u = step / steps;
-      const x = u * width;
-      const t = u * Math.PI * 2.8;
-      const warpedT = t + 0.3 * Math.sin(t + skewPhase);
+      const x = (step / steps) * width;
+      const t = (step / steps) * Math.PI * 2.8;
 
-      const envelope = 1 + 0.4 * Math.sin(0.37 * t + envPhase + i * 0.6);
       const wave =
-        Math.sin(warpedT + phase1) * amp1 +
-        Math.sin(warpedT * GOLDEN_RATIO + phase2) * amp2 +
-        Math.cos(warpedT * EULER_NUMBER * 0.5 + phase3 + i * 0.13) * amp3;
+        Math.sin(t + p1) * a1 +
+        Math.sin(2 * t + p2) * a2 +
+        Math.cos(0.5 * t + p3 + i * 0.05) * a3 +
+        Math.sin(4 * t + p4) * a4;
 
-      const jitter = (random() - 0.5) * 7;
-
-      const y = yOffset + (wave * envelope + jitter) * waveAmp;
+      const y = yOffset + wave * waveAmp;
       points.push(`L ${x.toFixed(1)} ${y.toFixed(1)}`);
     }
 
-    points.push(`L ${width} ${height}`);
-    points.push("Z");
-
+    points.push(`L ${width} ${height}`, "Z");
     paths.push(points.join(" "));
   }
 
@@ -153,7 +119,7 @@ const DUNES_CONFIG = [
     waveAmp: 0.8,
     phaseShift: 1.2,
     anim: "animate-dune-drift-1",
-    blur: "blur-[35px]",
+    blur: "blur-[100px]",
     opacity: "opacity-90",
     viewBox: "0 0 1000 700",
   },
@@ -165,12 +131,12 @@ const DUNES_CONFIG = [
     viewWidth: 1000,
     viewHeight: 700,
     count: 6,
-    spacing: 65,
-    waveAmp: 0.85,
+    spacing: 75,
+    waveAmp: 0.7,
     phaseShift: 2.5,
     anim: "animate-dune-drift-2",
-    blur: "blur-[40px]",
-    opacity: "opacity-85",
+    blur: "blur-[110px]",
+    opacity: "opacity-80",
     viewBox: "0 0 1000 700",
   },
   {
@@ -186,7 +152,7 @@ const DUNES_CONFIG = [
     waveAmp: 0.9,
     phaseShift: 3.8,
     anim: "animate-dune-drift-3",
-    blur: "blur-[35px]",
+    blur: "blur-[100px]",
     opacity: "opacity-85",
     viewBox: "0 0 1100 700",
   },
@@ -198,12 +164,12 @@ const DUNES_CONFIG = [
     viewWidth: 800,
     viewHeight: 600,
     count: 5,
-    spacing: 55,
+    spacing: 50,
     waveAmp: 0.8,
     phaseShift: 5.0,
-    anim: "animate-dune-drift-4",
-    blur: "blur-[30px]",
-    opacity: "opacity-90",
+    anim: "animate-dune-drift-1",
+    blur: "blur-[95px]",
+    opacity: "opacity-85",
     viewBox: "0 0 800 600",
   },
 ];
@@ -245,13 +211,10 @@ const RANDOMIZED_DUNES = DUNES_CONFIG.map((dune, idx) => {
     left: `${xBase.toFixed(1)}vw`,
     width: `${width.toFixed(1)}vw`,
     height: `${height.toFixed(1)}vh`,
-    seed: idx * 42.17 + 8.93,
   };
 });
 
 export function LandingBackground() {
-  const uniqueId = useId();
-
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
       {/* Subtle ambient radial light pools */}
@@ -259,7 +222,7 @@ export function LandingBackground() {
       <div className="absolute top-[40%] right-[-10%] w-[60vw] h-[60vh] bg-accent/8 dark:bg-accent/4 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Topographic Sand Dune System */}
-      {RANDOMIZED_DUNES.map((dune, idx) => {
+      {RANDOMIZED_DUNES.map((dune, index) => {
         const paths =
           dune.type === "peak"
             ? generatePeakPaths(
@@ -284,8 +247,8 @@ export function LandingBackground() {
 
         return (
           <div
-            key={`dune-${idx}`}
-            className={`absolute ${dune.anim} ${dune.blur} ${dune.opacity}`}
+            key={`dune-${index}`}
+            className={`absolute transform-gpu will-change-transform ${dune.opacity} ${dune.anim} ${dune.blur}`}
             style={{
               top: dune.top,
               left: dune.left,
@@ -293,32 +256,14 @@ export function LandingBackground() {
               height: dune.height,
             }}
           >
-            <svg
-              viewBox={dune.viewBox}
-              className="w-full h-full"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <linearGradient
-                  id={`grad-${uniqueId}-${idx}`}
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
-                  <stop offset="0%" stopColor="rgb(var(--ml-accent))" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="rgb(var(--ml-text-primary))" stopOpacity="0.08" />
-                </linearGradient>
-              </defs>
-              {paths.map((p, pIdx) => {
-                const opIndex = Math.min(5, Math.max(1, 5 - pIdx));
+            <svg className="w-full h-full" viewBox={dune.viewBox}>
+              {paths.map((path, idx) => {
+                const opIndex = Math.max(1, 5 - idx);
                 return (
                   <path
-                    key={`p-${pIdx}`}
-                    d={p}
+                    key={idx}
+                    d={path}
                     fill={`rgb(var(--ml-accent) / var(--ml-dune-op-${opIndex}))`}
-                    stroke="rgb(var(--ml-accent) / 0.15)"
-                    strokeWidth="0.75"
                   />
                 );
               })}

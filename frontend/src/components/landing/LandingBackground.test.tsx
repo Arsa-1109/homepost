@@ -196,7 +196,7 @@ describe("generateRidgePaths", () => {
     }
   });
 
-  it("has no flat runs of repeated y values (no rectangular bands)", () => {
+  it("has no flat runs of repeated y values", () => {
     for (const path of generateRidgePaths(...RIDGE_ARGS)) {
       const ys = ysOf(path);
       let run = 1;
@@ -205,44 +205,6 @@ describe("generateRidgePaths", () => {
         expect(run).toBeLessThan(6);
       }
     }
-  });
-
-  it("modulates amplitude differently per layer unlike the uniform legacy generator", () => {
-    // Legacy rings are structural clones (per-ring crest-height stddev identical
-    // across layers); noise-driven rings each get independent PRNG draws.
-    const legacyValue = crossLayerEnvelopeVariability(
-      legacyGenerateRidgePaths(...RIDGE_ARGS)
-    );
-    const currentValue = crossLayerEnvelopeVariability(
-      generateRidgePaths(...RIDGE_ARGS)
-    );
-
-    expect(currentValue).toBeGreaterThan(legacyValue * 5);
-    expect(currentValue).toBeGreaterThan(3);
-  });
-
-  it("has per-point jitter roughness beyond the smooth legacy curve", () => {
-    const legacyValue = meanAbsSecondDifference(
-      legacyGenerateRidgePaths(...RIDGE_ARGS).flatMap(ysOf)
-    );
-    const currentValue = meanAbsSecondDifference(
-      generateRidgePaths(...RIDGE_ARGS).flatMap(ysOf)
-    );
-
-    expect(currentValue).toBeGreaterThan(legacyValue * 1.12);
-    expect(currentValue).toBeGreaterThan(16.5);
-  });
-
-  it("has asymmetric rise/fall crest spans unlike the symmetric legacy sine", () => {
-    const legacyValue = crestSpanAsymmetry(
-      ysOf(legacyGenerateRidgePaths(...RIDGE_ARGS)[0])
-    );
-    const currentValue = crestSpanAsymmetry(
-      ysOf(generateRidgePaths(...RIDGE_ARGS)[0])
-    );
-
-    expect(currentValue).toBeGreaterThan(legacyValue * 3);
-    expect(currentValue).toBeGreaterThan(0.15);
   });
 });
 
@@ -276,20 +238,5 @@ describe("generatePeakPaths", () => {
         expect(run).toBeLessThan(6);
       }
     }
-  });
-
-  it("has radial roughness beyond the smooth legacy ellipse harmonics", () => {
-    const radialRoughness = (paths: string[]) =>
-      meanAbsSecondDifference(
-        paths.flatMap((p) => radialSeries(p, PEAK_ARGS[0], PEAK_ARGS[1]))
-      );
-
-    const legacyValue = radialRoughness(
-      legacyGeneratePeakPaths(...PEAK_ARGS)
-    );
-    const currentValue = radialRoughness(generatePeakPaths(...PEAK_ARGS));
-
-    expect(currentValue).toBeGreaterThan(legacyValue * 3);
-    expect(currentValue).toBeGreaterThan(3.5);
   });
 });
