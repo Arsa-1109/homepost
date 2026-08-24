@@ -66,7 +66,7 @@ function LandlordUnitsContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "OCCUPIED" | "VACANT">("ALL");
 
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch properties via useApiQuery
@@ -182,7 +182,7 @@ function LandlordUnitsContent() {
   const [viewMode, setViewMode] = useViewPreference("landlord_units_view");
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-16">
+    <div className="space-y-8 max-w-7xl mx-auto pb-16">
       {/* Header Section */}
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -351,27 +351,45 @@ function LandlordUnitsContent() {
             {viewMode === "table" && !unitsLoading && filteredUnits.length > 0 ? (
               <UnitsCompactTable units={paginatedUnits} />
             ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <AnimatePresence mode="wait">
                 {unitsLoading ? (
-                  [1, 2, 3, 4].map((i) => (
-                    <div
-                      key={`skel-${i}`}
-                      className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between min-h-[240px] space-y-4"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="skeleton w-24 h-6 rounded-lg" />
-                        <div className="skeleton w-16 h-5 rounded-full" />
+                  <motion.div
+                    key="units-skeleton-loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
+                  >
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={`skel-${i}`}
+                        className="h-60 sm:h-64 w-full bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-3xl p-6 flex flex-col justify-between shadow-sm overflow-hidden"
+                      >
+                        <div>
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="skeleton h-6 w-28 rounded-xl" />
+                            <div className="skeleton h-6 w-20 rounded-full" />
+                          </div>
+                          <div className="space-y-2 mt-3.5">
+                            <div className="skeleton h-4 w-36 rounded-md" />
+                            <div className="skeleton h-4 w-44 rounded-md" />
+                          </div>
+                        </div>
+                        <div className="space-y-2 mt-auto pt-4 border-t border-border/30">
+                          <div className="skeleton h-9 w-full rounded-xl" />
+                          <div className="skeleton h-9 w-full rounded-xl" />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <div className="skeleton w-32 h-4 rounded-md" />
-                        <div className="skeleton w-28 h-4 rounded-md" />
-                      </div>
-                      <div className="skeleton w-full h-9 rounded-xl" />
-                    </div>
-                  ))
+                    ))}
+                  </motion.div>
                 ) : shouldShowEmpty(unitsLoading, units, Boolean(unitsError)) ? (
-                  <div className="col-span-full text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3">
+                  <motion.div
+                    key="empty-units"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3"
+                  >
                     <DoorOpen className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                     <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
                       No units in this property
@@ -379,9 +397,15 @@ function LandlordUnitsContent() {
                     <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
                       Use the quick-add form above to create your first unit.
                     </p>
-                  </div>
+                  </motion.div>
                 ) : shouldShowEmpty(unitsLoading, filteredUnits, Boolean(unitsError)) ? (
-                  <div className="col-span-full text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3">
+                  <motion.div
+                    key="empty-search"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3"
+                  >
                     <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
                     <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">
                       No units found
@@ -399,14 +423,41 @@ function LandlordUnitsContent() {
                         Reset Filters
                       </button>
                     )}
-                  </div>
+                  </motion.div>
                 ) : (
-                  paginatedUnits.map((u) => (
-                    <UnitCard key={u.id} u={u} onRefresh={loadUnits} />
-                  ))
+                  <motion.div
+                    key={`units-grid-${selectedProperty}-${selectedFilter}-${currentPage}`}
+                    initial="hidden"
+                    animate="show"
+                    exit={{ opacity: 0 }}
+                    variants={{
+                      hidden: { opacity: 0 },
+                      show: {
+                        opacity: 1,
+                        transition: { staggerChildren: 0.06 },
+                      },
+                    }}
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
+                  >
+                    {paginatedUnits.map((u) => (
+                      <motion.div
+                        key={u.id}
+                        className="h-full"
+                        variants={{
+                          hidden: { opacity: 0, y: 14 },
+                          show: {
+                            opacity: 1,
+                            y: 0,
+                            transition: { duration: 0.25, ease: "easeOut" },
+                          },
+                        }}
+                      >
+                        <UnitCard u={u} onRefresh={loadUnits} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 )}
               </AnimatePresence>
-            </div>
             )}
           </div>
 

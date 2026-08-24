@@ -166,15 +166,6 @@ export default function LandlordLayout({
             <span className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
               Landlord Portal
             </span>
-            <button
-              type="button"
-              onClick={() => document.dispatchEvent(new CustomEvent("open-command-palette"))}
-              aria-label="Open command palette"
-              title="Open command palette (Ctrl+K)"
-              className="hidden lg:inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-md border border-border/60 bg-[rgb(var(--ml-bg-primary))] text-[10px] font-mono font-semibold text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-colors hover:text-[rgb(var(--ml-text-primary))] hover:border-[rgb(var(--ml-text-primary))]/40"
-            >
-              <kbd>Ctrl K</kbd>
-            </button>
           </div>
 
           <div className="flex items-center gap-4">

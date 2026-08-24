@@ -93,7 +93,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
           <div className="space-y-1.5 flex-1 min-w-0">
             <Link
               href={`/landlord/units/${u.id}`}
-              className="font-black text-lg sm:text-xl tracking-tight text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors truncate block max-w-[180px]"
+              className="font-black text-lg sm:text-xl tracking-tight text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors truncate block"
               title={u.unit_label}
             >
               {u.unit_label}
