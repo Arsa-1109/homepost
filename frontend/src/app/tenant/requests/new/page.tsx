@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { Wrench, ChevronLeft, Upload, Image as ImageIcon, X, Send, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
+import { isDemoSession } from "@/lib/demo-auth";
 
 const DRAFT_KEY = "tenant_draft_maintenance_request";
 const TITLE_MAX = 255;
@@ -21,6 +22,7 @@ export default function NewRequestPage() {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isDemo, setIsDemo] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -31,6 +33,7 @@ export default function NewRequestPage() {
 
   // Restore draft once on mount
   useEffect(() => {
+    setIsDemo(isDemoSession());
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     try {
@@ -106,6 +109,16 @@ export default function NewRequestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isDemoSession()) {
+      toast.info("Demo Mode: Request creation simulated to protect shared demo data.");
+      try {
+        window.localStorage.removeItem(DRAFT_KEY);
+      } catch {}
+      router.push("/tenant/requests");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -162,6 +175,15 @@ export default function NewRequestPage() {
           </p>
         </div>
       </div>
+
+      {isDemo && (
+        <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium flex items-center gap-2.5 shadow-xs">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>
+            You are currently in <strong>Resident Demo Mode (Read-Only)</strong>. Ticket submission will be simulated.
+          </span>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-3 shadow-xs">

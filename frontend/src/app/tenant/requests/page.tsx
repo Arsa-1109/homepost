@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 import { TenantRequestCard, MaintenanceRequest } from "@/components/tenant/requests/TenantRequestCard";
 import { ReopenModal } from "@/components/tenant/requests/ReopenModal";
+import { isDemoSession } from "@/lib/demo-auth";
 
 interface ProfileData {
   is_active: boolean;
@@ -163,6 +164,12 @@ function TenantRequestsContent() {
   };
 
   const executeCloseRequest = async (requestId: string) => {
+    if (isDemoSession()) {
+      toast.info("Demo Mode: Modifications are disabled in shared preview mode.");
+      setClosingId(null);
+      setConfirmClose(null);
+      return;
+    }
     setClosingId(requestId);
     try {
       await fetchAPI<MaintenanceRequest>(

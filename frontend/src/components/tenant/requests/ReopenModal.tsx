@@ -10,6 +10,7 @@ import { uploadFiles } from "@/lib/upload";
 import { fetchAPI } from "@/lib/api";
 import { toast } from "sonner";
 import { MaintenanceRequest } from "./TenantRequestCard";
+import { isDemoSession } from "@/lib/demo-auth";
 
 export interface ReopenModalProps {
   open: boolean;
@@ -51,6 +52,12 @@ export function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModal
     e.preventDefault();
     if (!notes.trim()) {
       toast.error("Please provide a reason/comment for reopening this request.");
+      return;
+    }
+
+    if (isDemoSession()) {
+      toast.info("Demo Mode: Modifications are disabled in shared preview mode.");
+      onClose();
       return;
     }
 

@@ -48,11 +48,10 @@ export default function LandlordLayout({
     setMounted(true);
     const collapsed = localStorage.getItem("landlord_sidebar_collapsed") === "true";
     setIsCollapsed(collapsed);
-    if (isSignedIn) {
+    const demo = isDemoSession();
+    setIsDemo(demo);
+    if (!demo && isSignedIn) {
       sanitizeSession(true);
-      setIsDemo(false);
-    } else {
-      setIsDemo(isDemoSession());
     }
   }, [isSignedIn]);
 
@@ -62,7 +61,7 @@ export default function LandlordLayout({
     localStorage.setItem("landlord_sidebar_collapsed", String(nextState));
   };
 
-  const isDemoActive = mounted && (isDemo || (isLoaded && !isSignedIn));
+  const isDemoActive = mounted && (isDemo || (isLoaded && !isSignedIn && isDemoSession()));
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.href === "/landlord/settings" && isDemoActive) {
       return false;
@@ -160,6 +159,44 @@ export default function LandlordLayout({
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Persistent Demo Mode Banner across all screen sizes */}
+        {isDemoActive && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 flex items-center justify-between text-xs text-amber-500 font-medium z-50 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span className="font-bold">Demo Mode:</span>
+              <span className="text-[rgb(var(--ml-text-secondary))] hidden sm:inline">Browsing as Marcus Vance (Property Owner)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  startDemoSession("tenant");
+                  window.location.href = "/tenant/dashboard";
+                }}
+                className="h-6 px-2 text-[11px] font-bold text-amber-500 hover:text-amber-400 hover:bg-amber-500/15 rounded-md cursor-pointer"
+              >
+                Switch to Resident Demo &rarr;
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  clearDemoSession();
+                  window.location.href = "/";
+                }}
+                className="h-6 px-2 text-[11px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 rounded-md cursor-pointer"
+              >
+                Exit
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Desktop Header */}
         <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md">
           <div className="flex items-center gap-2">
