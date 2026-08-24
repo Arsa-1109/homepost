@@ -207,42 +207,16 @@ export default function LandlordLayout({
 
           <div className="flex items-center gap-4">
             {isDemoActive && (
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-[10px]">
-                    MV
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none text-[11px]">Marcus Vance</span>
-                  </div>
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                    DEMO
-                  </span>
+              <div className="hidden sm:flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-xs">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-[10px]">
+                  MV
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    startDemoSession("tenant");
-                    window.location.href = "/tenant/dashboard";
-                  }}
-                  className="text-xs h-8 rounded-lg border-border hover:border-[rgb(var(--ml-accent))] cursor-pointer px-2.5"
-                  title="Switch to Resident Demo"
-                >
-                  Resident Demo
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    clearDemoSession();
-                    window.location.href = "/";
-                  }}
-                  className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2.5 cursor-pointer"
-                  title="Exit Demo Mode"
-                >
-                  Exit Demo
-                </Button>
+                <div className="flex flex-col text-left">
+                  <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none text-[11px]">Marcus Vance</span>
+                </div>
+                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                  DEMO
+                </span>
               </div>
             )}
 

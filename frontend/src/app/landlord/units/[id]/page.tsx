@@ -80,13 +80,27 @@ export default function UnitDetailsPage() {
       const token = await getToken();
       const [unitRes, maintRes, docsRes] = await Promise.all([
         fetchAPI<UnitDetail>(`/api/v1/landlord/units/${unitId}`, { signal }, token),
-        fetchAPI<MaintenanceRequest[]>(`/api/v1/landlord/maintenance?unit_id=${unitId}`, { signal }, token),
-        fetchAPI<Document[]>(`/api/v1/landlord/units/${unitId}/documents`, { signal }, token),
+        fetchAPI<{ items: MaintenanceRequest[] } | MaintenanceRequest[]>(
+          `/api/v1/landlord/maintenance?unit_id=${unitId}`,
+          { signal },
+          token
+        ),
+        fetchAPI<{ items: Document[] } | Document[]>(
+          `/api/v1/landlord/units/${unitId}/documents`,
+          { signal },
+          token
+        ),
       ]);
+      const maintList = Array.isArray(maintRes)
+        ? maintRes
+        : (maintRes as { items: MaintenanceRequest[] })?.items || [];
+      const docsList = Array.isArray(docsRes)
+        ? docsRes
+        : (docsRes as { items: Document[] })?.items || [];
       return {
         unitData: unitRes,
-        maintenanceRequests: Array.isArray(maintRes) ? maintRes : [],
-        documents: Array.isArray(docsRes) ? docsRes : [],
+        maintenanceRequests: maintList,
+        documents: docsList,
       };
     },
     [unitId, getToken]
@@ -258,6 +272,11 @@ export default function UnitDetailsPage() {
     ? new Date(new Date(lease_end).setHours(23, 59, 59, 999)) < new Date()
     : false;
 
+  const unitLabel = unit.unit_label.trim();
+  const displayUnitTitle = unitLabel.toLowerCase().startsWith("unit")
+    ? unitLabel
+    : `Unit ${unitLabel}`;
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-16">
       {/* Header Hero Section */}
@@ -268,7 +287,7 @@ export default function UnitDetailsPage() {
               <Building className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" /> {property_name}
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))] flex items-center gap-3">
-              Unit {unit.unit_label}
+              {displayUnitTitle}
               {unit.is_occupied ? (
                 <Badge
                   variant="outline"
@@ -458,8 +477,18 @@ export default function UnitDetailsPage() {
             </div>
 
             {maintenanceRequests.length === 0 ? (
-              <div className="p-10 text-center border border-dashed border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-                No maintenance requests reported for this unit.
+              <div className="p-8 sm:p-10 text-center border border-dashed border-border/70 rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-3">
+                <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20 shadow-xs">
+                  <Wrench className="size-5" />
+                </div>
+                <div className="space-y-1 max-w-sm">
+                  <h3 className="font-extrabold text-sm text-[rgb(var(--ml-text-primary))]">
+                    All Clear — No Open Requests
+                  </h3>
+                  <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                    No active maintenance issues or repair tickets have been submitted for this unit.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -509,8 +538,25 @@ export default function UnitDetailsPage() {
             </div>
 
             {documents.length === 0 ? (
-              <div className="p-10 text-center border border-dashed border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] text-xs font-semibold text-[rgb(var(--ml-text-secondary))]">
-                No documents uploaded for this unit yet.
+              <div className="p-8 sm:p-10 text-center border border-dashed border-border/70 rounded-3xl bg-[rgb(var(--ml-bg-secondary))]/60 backdrop-blur-sm flex flex-col items-center justify-center space-y-3">
+                <div className="size-12 rounded-2xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] flex items-center justify-center border border-[rgb(var(--ml-accent))]/20 shadow-xs">
+                  <FileText className="size-5" />
+                </div>
+                <div className="space-y-1 max-w-sm">
+                  <h3 className="font-extrabold text-sm text-[rgb(var(--ml-text-primary))]">
+                    No Documents Uploaded
+                  </h3>
+                  <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                    Lease agreements, property notices, and compliance records for this unit will appear here.
+                  </p>
+                </div>
+                <Link
+                  href={`/landlord/documents`}
+                  className="mt-1 px-4 py-2 bg-[rgb(var(--ml-bg-primary))] border border-border/70 hover:border-[rgb(var(--ml-accent))] text-[rgb(var(--ml-text-primary))] text-xs font-bold rounded-xl transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer hover:bg-[rgb(var(--ml-bg-tertiary))]"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[rgb(var(--ml-accent))]" />
+                  <span>Upload Document</span>
+                </Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
