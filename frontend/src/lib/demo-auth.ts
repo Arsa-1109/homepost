@@ -15,6 +15,7 @@
 
 import { ALLOWED_DEMO_IDS, IS_DEMO_MODE } from "@/lib/demo-mode";
 import { generateDemoJWT } from "@/lib/demo-token";
+import { isOwnAccountUserId } from "@/lib/mock-account";
 
 export interface DemoSessionConfig {
   email: string;
@@ -75,22 +76,34 @@ export function startDemoSession(role: "owner" | "tenant"): string {
 export function isDemoSession(): boolean {
   if (!IS_DEMO_MODE || typeof window === "undefined") return false;
   const clerk = (window as any).Clerk;
-  // If a live Clerk user is present (not mock or demo)
-  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_IDS.has(clerk.user.id)) {
+  // If a live Clerk user is present (not mock, demo, or own account)
+  if (
+    clerk?.user?.id &&
+    !clerk.user.id.startsWith("mock_") &&
+    !ALLOWED_DEMO_IDS.has(clerk.user.id) &&
+    !isOwnAccountUserId(clerk.user.id)
+  ) {
     return false;
   }
 
   const mockId = localStorage.getItem("mock_user_id");
   const hasMockCookie = document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
   const effectiveId = mockId || hasMockCookie;
-  return Boolean(effectiveId && ALLOWED_DEMO_IDS.has(effectiveId));
+  return Boolean(
+    effectiveId && (ALLOWED_DEMO_IDS.has(effectiveId) || isOwnAccountUserId(effectiveId))
+  );
 }
 
 export function sanitizeSession(isSignedIn?: boolean): void {
   if (typeof window === "undefined") return;
   const clerk = (window as any).Clerk;
-  // Only sanitize demo session if a live Clerk user is authenticated
-  if (clerk?.user?.id && !clerk.user.id.startsWith("mock_") && !ALLOWED_DEMO_IDS.has(clerk.user.id)) {
+  // Only sanitize demo session if a live Clerk user is authenticated (not mock, demo, or own account)
+  if (
+    clerk?.user?.id &&
+    !clerk.user.id.startsWith("mock_") &&
+    !ALLOWED_DEMO_IDS.has(clerk.user.id) &&
+    !isOwnAccountUserId(clerk.user.id)
+  ) {
     clearDemoSession();
   }
 }

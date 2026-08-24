@@ -7,6 +7,8 @@
  * designated demo ids).
  */
 
+import { generateDemoJWT } from "./demo-token";
+
 export const OWN_ACCOUNT_ID_PREFIX = "user_own_";
 
 export type MockRole = "landlord" | "tenant";
@@ -57,5 +59,18 @@ export function persistMockSession(persona: MockPersona, role: MockRole): void {
     localStorage.setItem("mock_user_name", persona.name);
     localStorage.setItem("mock_user_role", role);
     localStorage.setItem("mock_user_onboarding_complete", "true");
+
+    const mockToken = generateDemoJWT(persona.email, persona.name, persona.id);
+    (window as any).Clerk = {
+      loaded: true,
+      session: {
+        getToken: async () => mockToken,
+      },
+      user: {
+        id: persona.id,
+        fullName: persona.name,
+        primaryEmailAddress: { emailAddress: persona.email },
+      },
+    };
   } catch {}
 }

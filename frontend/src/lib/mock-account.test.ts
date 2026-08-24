@@ -60,4 +60,23 @@ describe("persistMockSession", () => {
     expect(isOwnAccountUserId(ownId)).toBe(true);
     expect(isOwnAccountUserId("user_demo_landlord_001")).toBe(false);
   });
+
+  it("attaches mock session to window.Clerk with getToken generator", async () => {
+    const id = createOwnAccountId();
+
+    persistMockSession(
+      { id, email: "tenant@example.test", name: "Own Account Tenant" },
+      "tenant",
+    );
+
+    const clerk = (window as any).Clerk;
+    expect(clerk).toBeDefined();
+    expect(clerk.user.id).toBe(id);
+    expect(clerk.user.fullName).toBe("Own Account Tenant");
+    expect(clerk.user.primaryEmailAddress.emailAddress).toBe("tenant@example.test");
+    
+    const token = await clerk.session.getToken();
+    expect(token).toBeDefined();
+    expect(typeof token).toBe("string");
+  });
 });

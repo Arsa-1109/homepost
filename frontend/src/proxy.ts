@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { ALLOWED_DEMO_IDS, IS_DEMO_MODE } from "@/lib/demo-mode";
+import { isOwnAccountUserId } from "@/lib/mock-account";
 
 // Public routes — no auth required at the edge
 const isPublicRoute = createRouteMatcher([
@@ -23,7 +24,7 @@ const MOCK_COOKIE_NAMES = [
 ] as const;
 
 function expireMockCookies(response: NextResponse): NextResponse {
-  if (process.env.MOCK_AUTH === "true") return response;
+  if (process.env.MOCK_AUTH === "true" || IS_DEMO_MODE) return response;
   for (const name of MOCK_COOKIE_NAMES) {
     response.cookies.set(name, "", { path: "/", maxAge: 0 });
   }
@@ -49,39 +50,64 @@ export default clerkMiddleware(async (auth, req) => {
     const demoParam = url.searchParams.get("demo");
     const mockUserIdCookie = req.cookies.get("mock_user_id")?.value;
     const mockUserRoleCookie = req.cookies.get("mock_user_role")?.value;
-    const isDemo =
-      Boolean(
-        demoParam === "owner" ||
-          demoParam === "landlord" ||
-          demoParam === "tenant" ||
-          (mockUserIdCookie && ALLOWED_DEMO_IDS.has(mockUserIdCookie))
-      );
+    const isOwnAccount = isOwnAccountUserId(mockUserIdCookie);
+    const isKnownDemoId = Boolean(mockUserIdCookie && ALLOWED_DEMO_IDS.has(mockUserIdCookie));
+
+    const isDemo = Boolean(
+      demoParam === "owner" ||
+        demoParam === "landlord" ||
+        demoParam === "tenant" ||
+        isKnownDemoId ||
+        isOwnAccount
+    );
 
     if (isDemo) {
       let activeRole =
         mockUserRoleCookie || (pathname.startsWith("/tenant") ? "tenant" : "landlord");
-      if (demoParam === "tenant" || pathname.startsWith("/tenant")) {
+      if (demoParam === "tenant") {
         activeRole = "tenant";
-      } else if (
-        demoParam === "owner" ||
-        demoParam === "landlord" ||
-        pathname.startsWith("/landlord")
-      ) {
+      } else if (demoParam === "owner" || demoParam === "landlord") {
         activeRole = "landlord";
       }
 
-      const isLandlord = activeRole === "landlord";
-      const demoId = isLandlord ? "user_demo_landlord_001" : "user_demo_tenant_001";
-      const demoEmail = isLandlord ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io";
-      const demoName = isLandlord ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins";
+      let userId: string;
+      let userEmail: string;
+      let userName: string;
+
+      if (isOwnAccount) {
+        userId = mockUserIdCookie!;
+        userEmail =
+          req.cookies.get("mock_user_email")?.value ||
+          (activeRole === "landlord" ? "landlord@custom.test" : "tenant@custom.test");
+        userName =
+          req.cookies.get("mock_user_name")?.value ||
+          (activeRole === "landlord" ? "Custom Landlord" : "Custom Tenant");
+      } else if (mockUserIdCookie === "user_demo_tenant_002") {
+        userId = "user_demo_tenant_002";
+        userEmail = "alex.rivera@demo.homepost.io";
+        userName = "Alex Rivera";
+      } else {
+        const isLandlord = activeRole === "landlord";
+        userId = isLandlord ? "user_demo_landlord_001" : "user_demo_tenant_001";
+        userEmail = isLandlord ? "landlord@homepost.demo" : "sarah.jenkins@demo.homepost.io";
+        userName = isLandlord ? "Marcus Vance (Demo Landlord)" : "Sarah Jenkins";
+      }
+
+      // Role-based route guard for mock/demo sessions
+      if (pathname.startsWith("/landlord") && activeRole === "tenant") {
+        return NextResponse.redirect(new URL("/tenant/dashboard", req.url));
+      }
+      if (pathname.startsWith("/tenant") && activeRole === "landlord") {
+        return NextResponse.redirect(new URL("/landlord/dashboard", req.url));
+      }
 
       // If navigating to generic /dashboard in demo mode, redirect to appropriate role dashboard
       if (pathname === "/dashboard") {
-        const targetDashboard = isLandlord ? "/landlord/dashboard" : "/tenant/dashboard";
+        const targetDashboard = activeRole === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard";
         const redirectRes = NextResponse.redirect(new URL(targetDashboard, req.url));
-        redirectRes.cookies.set("mock_user_id", demoId, { path: "/", maxAge: 604800, sameSite: "lax" });
-        redirectRes.cookies.set("mock_user_email", demoEmail, { path: "/", maxAge: 604800, sameSite: "lax" });
-        redirectRes.cookies.set("mock_user_name", demoName, { path: "/", maxAge: 604800, sameSite: "lax" });
+        redirectRes.cookies.set("mock_user_id", userId, { path: "/", maxAge: 604800, sameSite: "lax" });
+        redirectRes.cookies.set("mock_user_email", userEmail, { path: "/", maxAge: 604800, sameSite: "lax" });
+        redirectRes.cookies.set("mock_user_name", userName, { path: "/", maxAge: 604800, sameSite: "lax" });
         redirectRes.cookies.set("mock_user_role", activeRole, { path: "/", maxAge: 604800, sameSite: "lax" });
         redirectRes.cookies.set("mock_user_onboarding_complete", "true", { path: "/", maxAge: 604800, sameSite: "lax" });
         return redirectRes;
@@ -90,9 +116,9 @@ export default clerkMiddleware(async (auth, req) => {
       const response = NextResponse.next();
       // Ensure cookies are synchronized on response
       if (!mockUserIdCookie || mockUserRoleCookie !== activeRole) {
-        response.cookies.set("mock_user_id", demoId, { path: "/", maxAge: 604800, sameSite: "lax" });
-        response.cookies.set("mock_user_email", demoEmail, { path: "/", maxAge: 604800, sameSite: "lax" });
-        response.cookies.set("mock_user_name", demoName, { path: "/", maxAge: 604800, sameSite: "lax" });
+        response.cookies.set("mock_user_id", userId, { path: "/", maxAge: 604800, sameSite: "lax" });
+        response.cookies.set("mock_user_email", userEmail, { path: "/", maxAge: 604800, sameSite: "lax" });
+        response.cookies.set("mock_user_name", userName, { path: "/", maxAge: 604800, sameSite: "lax" });
         response.cookies.set("mock_user_role", activeRole, { path: "/", maxAge: 604800, sameSite: "lax" });
         response.cookies.set("mock_user_onboarding_complete", "true", { path: "/", maxAge: 604800, sameSite: "lax" });
       }

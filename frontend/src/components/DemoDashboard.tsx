@@ -52,10 +52,6 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
               homepost.app/<span className="text-[rgb(var(--ml-text-primary))] font-semibold">{selectedRole === "owner" ? "landlord/dashboard" : "tenant/dashboard"}</span>
             </span>
           </div>
-
-          <span className="hidden xl:inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/20">
-            <Sparkles className="w-2.5 h-2.5" /> 1:1 Live Preview
-          </span>
         </div>
 
         {/* Center: Interactive Role Switcher */}
@@ -154,10 +150,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
       {/* Bottom Instant Launch Banner Bar */}
       <div className="p-3.5 sm:px-6 bg-[rgb(var(--ml-bg-secondary))] border-t border-border/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs z-20">
         <div className="flex items-center gap-2 text-[rgb(var(--ml-text-secondary))] font-medium text-center sm:text-left">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-          <span>Interactive 1:1 replica with live sample data. Explore full app in one click:</span>
         </div>
-
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {selectedRole === "owner" ? (
             <Button
