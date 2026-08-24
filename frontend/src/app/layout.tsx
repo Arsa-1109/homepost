@@ -45,6 +45,7 @@ export default function RootLayout({
       )}
     >
       <head>
+        <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body suppressHydrationWarning>
@@ -54,7 +55,6 @@ export default function RootLayout({
             attribute="class"
             defaultTheme="system"
             enableSystem
-            disableTransitionOnChange={true}
           >
             <RootHeader />
             {children}

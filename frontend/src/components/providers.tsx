@@ -76,13 +76,12 @@ export function ThemeProvider({
     ? systemTheme || "light"
     : (theme as "light" | "dark");
 
-  const applyTheme = React.useCallback(
+  // Track first application so initial paint/hydration never animates
+  const hasAppliedRef = React.useRef(false);
+
+  const applyDom = React.useCallback(
     (targetTheme: "light" | "dark") => {
       const root = document.documentElement;
-      if (disableTransitionOnChange) {
-        root.classList.add("disable-transitions");
-      }
-
       const attributes = Array.isArray(attribute) ? attribute : [attribute];
       for (const attr of attributes) {
         if (attr === "class") {
@@ -92,15 +91,47 @@ export function ThemeProvider({
           root.setAttribute(attr, targetTheme);
         }
       }
-
-      if (disableTransitionOnChange) {
-        window.getComputedStyle(root).opacity;
-        requestAnimationFrame(() => {
-          root.classList.remove("disable-transitions");
-        });
-      }
     },
-    [attribute, disableTransitionOnChange]
+    [attribute]
+  );
+
+  const applyTheme = React.useCallback(
+    (targetTheme: "light" | "dark") => {
+      const root = document.documentElement;
+      const isFirstApply = !hasAppliedRef.current;
+      hasAppliedRef.current = true;
+
+      const reducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Initial mount / hydration / forced no-animation: swap instantly
+      // with CSS transitions suppressed to avoid any flash or stutter.
+      if (
+        isFirstApply ||
+        disableTransitionOnChange ||
+        reducedMotion ||
+        typeof document.startViewTransition !== "function"
+      ) {
+        root.classList.add("theme-switching");
+        applyDom(targetTheme);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            root.classList.remove("theme-switching");
+          });
+        });
+        return;
+      }
+
+      // Smooth path: View Transitions API cross-fades the whole document
+      // snapshot; CSS color transitions are suppressed during the swap so
+      // the two mechanisms don't compete.
+      document.startViewTransition(() => {
+        root.classList.add("theme-switching");
+        applyDom(targetTheme);
+      });
+    },
+    [applyDom, disableTransitionOnChange]
   );
 
   React.useEffect(() => {

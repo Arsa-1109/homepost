@@ -190,11 +190,16 @@
 
 /* ============================================================
    Smooth Theme Transition
+   ============================================================
+   CSS fallback for browsers without the View Transitions API.
+   The provider adds `.theme-switching` on <html> while swapping
+   theme classes (initial load, reduced motion, or during a view
+   transition) so these transitions never fight or double-animate.
    ============================================================ */
-*, ::backdrop, ::after, ::before {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+*, *::before, *::after, ::backdrop {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, outline-color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+  transition-duration: 250ms;
 }
 
 /* Ensure interactive hover/focus states remain snappy (150ms) */
@@ -209,6 +214,32 @@ textarea:focus,
 [role="option"]:hover,
 .group:hover * {
   transition-duration: 150ms !important;
+}
+
+/* Suppress all color transitions while the theme class is being swapped */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+/* ============================================================
+   View Transitions — theme switch cross-fade
+   Progressive enhancement: only applies when the provider wraps
+   the swap in document.startViewTransition().
+   ============================================================ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 /* ============================================================
