@@ -312,17 +312,21 @@ function TenantRequestsContent() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="rounded-2xl sm:rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       <div className="w-12 h-12 rounded-2xl skeleton shrink-0" />
                       <div className="flex-1 space-y-2 min-w-0">
                         <div className="flex items-center gap-3">
-                          <div className="h-5 w-44 sm:w-56 rounded-lg skeleton" />
+                          <div className="h-5 w-48 sm:w-64 rounded-lg skeleton" />
                           <div className="h-5 w-20 rounded-full skeleton" />
                         </div>
-                        <div className="h-4 w-36 rounded-md skeleton" />
+                        <div className="h-4 w-40 rounded-md skeleton" />
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="h-8 w-24 rounded-xl skeleton" />
+                      <div className="h-8 w-8 rounded-xl skeleton" />
                     </div>
                   </div>
                 ))}

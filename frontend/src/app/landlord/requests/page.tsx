@@ -278,19 +278,28 @@ function LandlordMaintenanceContent() {
                   key="loading-skel"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-3"
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  className="space-y-4"
                 >
-                  {[1, 2, 3].map((i) => (
+                  {[1, 2, 3, 4].map((i) => (
                     <div
                       key={`skel-${i}`}
-                      className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3"
+                      className="rounded-2xl sm:rounded-3xl bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="skeleton h-6 w-48 rounded-md" />
-                        <div className="skeleton h-4 w-20 rounded-md" />
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-2xl skeleton shrink-0" />
+                        <div className="flex-1 space-y-2 min-w-0">
+                          <div className="flex items-center gap-3">
+                            <div className="h-5 w-48 sm:w-64 rounded-lg skeleton" />
+                            <div className="h-5 w-20 rounded-full skeleton" />
+                          </div>
+                          <div className="h-4 w-40 rounded-md skeleton" />
+                        </div>
                       </div>
-                      <div className="skeleton h-4 w-3/4 rounded-md" />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="h-8 w-24 rounded-xl skeleton" />
+                        <div className="h-8 w-8 rounded-xl skeleton" />
+                      </div>
                     </div>
                   ))}
                 </motion.div>
