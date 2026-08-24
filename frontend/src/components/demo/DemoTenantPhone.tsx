@@ -33,10 +33,10 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
       <div className="w-full max-w-[390px] rounded-[48px] p-3 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black border-[3px] border-zinc-700/60 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] relative z-10 transition-all duration-300">
 
         {/* Device Screen Viewport */}
-        <div className="rounded-[38px] overflow-hidden bg-background border border-border/50 relative flex flex-col h-[620px] sm:h-[650px] lg:h-[680px]">
+        <div className="rounded-[38px] overflow-hidden bg-background border border-border/50 relative flex flex-col h-[620px] sm:h-[650px] lg:h-[680px] isolate transform-gpu">
 
           {/* Top iOS/Android Status Bar */}
-          <div className="h-10 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between px-6 pt-1 text-[11px] font-bold text-[rgb(var(--ml-text-primary))] z-30 select-none">
+          <div className="h-10 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between px-6 pt-1 text-[11px] font-bold text-[rgb(var(--ml-text-primary))] z-30 select-none rounded-t-[37px]">
             <span>9:41</span>
             {/* Dynamic Island / Camera Pill */}
             <div className="w-24 h-4 bg-black rounded-full mx-auto" />
@@ -190,7 +190,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
           </div>
 
           {/* 6. Mobile Bottom Navigation Bar (from tenant/layout.tsx) */}
-          <nav className="absolute bottom-0 left-0 right-0 h-14 border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md flex items-center justify-around z-30 px-2">
+          <nav className="absolute bottom-0 left-0 right-0 h-16 pb-2.5 pt-1.5 border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md flex items-center justify-around z-30 px-2 rounded-b-[37px] overflow-hidden">
             {TENANT_TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -199,7 +199,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
                   className={cn(
-                    "flex flex-col items-center justify-center text-[10px] font-medium transition-all px-2 py-1 rounded-lg cursor-pointer",
+                    "flex flex-col items-center justify-center text-[10px] font-medium transition-all px-2 py-0.5 rounded-lg cursor-pointer",
                     isActive
                       ? "text-[rgb(var(--ml-accent))] font-bold"
                       : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
@@ -216,8 +216,8 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
           </nav>
 
           {/* Phone Bottom Home Indicator */}
-          <div className="absolute bottom-1 left-0 right-0 flex justify-center z-40 pointer-events-none">
-            <div className="w-24 h-1 bg-muted-foreground/30 rounded-full" />
+          <div className="absolute bottom-1.5 left-0 right-0 flex justify-center z-40 pointer-events-none">
+            <div className="w-28 h-1 bg-foreground/25 rounded-full" />
           </div>
 
         </div>
