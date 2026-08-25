@@ -128,6 +128,11 @@ export async function apiFetch<T = unknown>(
   // Strip trailing slash to avoid double slashes
   baseUrl = baseUrl.replace(/\/$/, "");
 
+  // Suppress API requests and errors while the browser unloads during demo exit
+  if (typeof window !== "undefined" && (window as unknown as { __isExitingDemo?: boolean }).__isExitingDemo) {
+    return new Promise(() => {}) as Promise<T>;
+  }
+
   let activeToken = token;
   if (!activeToken && typeof window !== "undefined") {
     const clerkGlobal = getClerkGlobal();

@@ -141,6 +141,11 @@ export function getDemoUser(): {
  * with missing auth. The wipe then runs via a macrotask, guaranteeing it
  * executes even if navigation teardown races pending timers.
  */
+export function isExitingDemo(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean((window as unknown as { __isExitingDemo?: boolean }).__isExitingDemo);
+}
+
 export async function exitDemoSession(redirectUrl: string = "/"): Promise<void> {
   if (typeof window === "undefined") return;
 
@@ -151,6 +156,10 @@ export async function exitDemoSession(redirectUrl: string = "/"): Promise<void> 
     mockId && (ALLOWED_DEMO_IDS.has(mockId) || isOwnAccountUserId(mockId))
   );
   if (!hasActiveDemo) return;
+
+  // Mark teardown state and notify UI immediately
+  (window as unknown as { __isExitingDemo?: boolean }).__isExitingDemo = true;
+  window.dispatchEvent(new CustomEvent("homepost:exit-demo"));
 
   // 1. Leave first — the current document stops rendering immediately.
   window.location.assign(redirectUrl);

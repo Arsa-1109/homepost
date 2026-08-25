@@ -42,6 +42,7 @@ export default function LandlordLayout({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
   const [isDemo, setIsDemo] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -53,6 +54,10 @@ export default function LandlordLayout({
     if (!demo && isSignedIn) {
       sanitizeSession(true);
     }
+
+    const handleExit = () => setIsExiting(true);
+    window.addEventListener("homepost:exit-demo", handleExit);
+    return () => window.removeEventListener("homepost:exit-demo", handleExit);
   }, [isSignedIn]);
 
   const toggleCollapse = () => {
@@ -377,6 +382,15 @@ export default function LandlordLayout({
           </Sheet>
         </nav>
       </div>
+
+      {isExiting && (
+        <div className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200">
+          <div className="size-8 rounded-full border-2 border-[rgb(var(--ml-accent))] border-t-transparent animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+            Exiting demo...
+          </p>
+        </div>
+      )}
     </div>
   );
 }
