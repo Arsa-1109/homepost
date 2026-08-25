@@ -171,11 +171,27 @@ export function useClerk() {
 }
 
 export function SignedIn({ children }: { children: React.ReactNode }) {
-  return useAuthState() ? <>{children}</> : null;
+  const [mounted, setMounted] = React.useState(false);
+  const signedIn = useAuthState();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+  return signedIn ? <>{children}</> : null;
 }
 
 export function SignedOut({ children }: { children: React.ReactNode }) {
-  return useAuthState() ? null : <>{children}</>;
+  const [mounted, setMounted] = React.useState(false);
+  const signedIn = useAuthState();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+  return signedIn ? null : <>{children}</>;
 }
 
 export function Show({
@@ -185,7 +201,14 @@ export function Show({
   when: "signed-in" | "signed-out";
   children: React.ReactNode;
 }) {
+  const [mounted, setMounted] = React.useState(false);
   const signedIn = useAuthState();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
   return (when === "signed-in") === signedIn ? <>{children}</> : null;
 }
 
