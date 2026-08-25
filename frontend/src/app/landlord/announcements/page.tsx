@@ -472,7 +472,7 @@ function LandlordAnnouncementsContent() {
                     </motion.div>
                   ) : (
                     <motion.div
-                      key={`announcements-list-${currentPage}-${selectedProperty}-${filterType}`}
+                      key={`announcements-list-${currentPage}-${selectedProperty}-${selectedFilter}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0, transition: { duration: 0.15 } }}

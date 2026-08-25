@@ -131,6 +131,35 @@ export function getDemoUser(): {
   };
 }
 
+/**
+ * Cleanly exit an active demo session and return to the landing page.
+ *
+ * Ordering matters (regression: exit used to flash an "access denied" error
+ * state). The redirect is initiated FIRST, so the browser commits to leaving
+ * the current document before any credentials are wiped — no render of the
+ * still-mounted protected layout ever observes "demo gone" and re-fetches
+ * with missing auth. The wipe then runs via a macrotask, guaranteeing it
+ * executes even if navigation teardown races pending timers.
+ */
+export async function exitDemoSession(redirectUrl: string = "/"): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  const mockId =
+    localStorage.getItem("mock_user_id") ||
+    document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
+  const hasActiveDemo = Boolean(
+    mockId && (ALLOWED_DEMO_IDS.has(mockId) || isOwnAccountUserId(mockId))
+  );
+  if (!hasActiveDemo) return;
+
+  // 1. Leave first — the current document stops rendering immediately.
+  window.location.assign(redirectUrl);
+
+  // 2. Then wipe, deferred to a macrotask after navigation handoff.
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  clearDemoSession();
+}
+
 export function clearDemoSession(): void {
   if (typeof window === "undefined") return;
   const mockId = localStorage.getItem("mock_user_id") || document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];

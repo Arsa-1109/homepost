@@ -454,7 +454,7 @@ function LandlordPropertiesContent() {
             </motion.div>
           ) : (
             <motion.div
-              key={`properties-grid-${currentPage}-${selectedCity}-${searchQuery}`}
+              key={`properties-grid-${currentPage}-${selectedCityFilter}-${searchQuery}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, transition: { duration: 0.15 } }}

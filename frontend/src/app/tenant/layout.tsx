@@ -16,7 +16,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { isDemoSession, clearDemoSession, startDemoSession } from "@/lib/demo-auth";
+import { isDemoSession, exitDemoSession, startDemoSession } from "@/lib/demo-auth";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -153,8 +153,7 @@ export default function TenantLayout({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    clearDemoSession();
-                    window.location.href = "/";
+                    exitDemoSession();
                   }}
                   className="w-full text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-400 h-7 rounded-lg cursor-pointer"
                 >
@@ -195,8 +194,7 @@ export default function TenantLayout({
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  clearDemoSession();
-                  window.location.href = "/";
+                  exitDemoSession();
                 }}
                 className="h-6 px-2 text-[11px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 rounded-md cursor-pointer"
               >
@@ -246,8 +244,7 @@ export default function TenantLayout({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    clearDemoSession();
-                    window.location.href = "/";
+                    exitDemoSession();
                   }}
                   className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2 cursor-pointer"
                   title="Exit Demo Mode"
@@ -333,8 +330,7 @@ export default function TenantLayout({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    clearDemoSession();
-                    window.location.href = "/";
+                    exitDemoSession();
                   }}
                   className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2 cursor-pointer"
                   title="Exit Demo Mode"

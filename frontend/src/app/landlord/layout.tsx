@@ -19,7 +19,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { isDemoSession, clearDemoSession, startDemoSession, sanitizeSession } from "@/lib/demo-auth";
+import { isDemoSession, exitDemoSession, startDemoSession, sanitizeSession } from "@/lib/demo-auth";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -144,8 +144,7 @@ export default function LandlordLayout({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    clearDemoSession();
-                    window.location.href = "/";
+                    exitDemoSession();
                   }}
                   className="w-full text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-400 h-7 rounded-lg cursor-pointer"
                 >
@@ -186,8 +185,7 @@ export default function LandlordLayout({
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  clearDemoSession();
-                  window.location.href = "/";
+                  exitDemoSession();
                 }}
                 className="h-6 px-2 text-[11px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 rounded-md cursor-pointer"
               >
@@ -367,8 +365,7 @@ export default function LandlordLayout({
                     variant="ghost"
                     onClick={() => {
                       setIsMoreOpen(false);
-                      clearDemoSession();
-                      window.location.href = "/";
+                      exitDemoSession();
                     }}
                     className="w-full justify-start text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 h-11 rounded-xl cursor-pointer"
                   >
