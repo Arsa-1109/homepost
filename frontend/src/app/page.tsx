@@ -6,6 +6,7 @@ import { errorMessage } from "@/lib/errors";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "@/components/providers";
@@ -227,22 +228,22 @@ export default function LandingPage() {
               <div className="w-16 h-8 rounded-lg bg-muted/20 animate-pulse" />
             ) : !isSignedIn ? (
               <Button
+                asChild
                 variant="link"
-                onClick={() => router.push("/sign-in")}
                 data-testid="mock-signin"
                 className="text-sm font-medium text-accent"
               >
-                Log in
+                <Link href="/sign-in">Log in</Link>
               </Button>
             ) : (
               <div className="flex items-center gap-3">
                 {hasRole ? (
                   <Button
+                    asChild
                     variant="link"
-                    onClick={() => router.push("/dashboard")}
                     className="text-sm font-medium text-accent"
                   >
-                    Dashboard
+                    <Link href="/dashboard">Dashboard</Link>
                   </Button>
                 ) : (
                   <a
@@ -278,10 +279,12 @@ export default function LandingPage() {
             >
               <h2 className="text-2xl sm:text-3xl font-bold">Welcome back!</h2>
               <Button
-                onClick={() => router.push("/dashboard")}
+                asChild
                 className="px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
               >
-                Go to Dashboard <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Link href="/dashboard" className="flex items-center gap-3">
+                  Go to Dashboard <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                </Link>
               </Button>
             </motion.div>
           ) : (

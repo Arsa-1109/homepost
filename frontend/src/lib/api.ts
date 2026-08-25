@@ -92,10 +92,17 @@ function resolveDemoToken(): string | null {
   const config =
     Object.values(DEMO_ACCOUNTS).find((account) => account.userId === mockId) ?? null;
 
+  const role =
+    localStorage.getItem("mock_user_role") ||
+    getCookie("mock_user_role") ||
+    config?.role ||
+    undefined;
+
   return generateDemoJWT(
     localStorage.getItem("mock_user_email") || getCookie("mock_user_email") || config?.email || "",
     localStorage.getItem("mock_user_name") || getCookie("mock_user_name") || config?.name || "",
     mockId,
+    role
   );
 }
 

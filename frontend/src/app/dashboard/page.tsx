@@ -67,7 +67,7 @@ export default function DashboardRedirect() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!userId) {
-      router.push("/sign-in");
+      window.location.replace("/sign-in");
       return;
     }
 

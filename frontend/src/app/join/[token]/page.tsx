@@ -62,13 +62,6 @@ export default function JoinPage({
         if (authToken) {
           const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", authToken);
           setCurrentUser(user);
-
-          if (user?.role === "tenant") {
-            // Already a tenant, auto-complete cookie and redirect
-            await completeOnboarding().catch(() => {});
-            window.location.href = "/tenant/dashboard";
-            return;
-          }
         }
       }
     } catch (err: unknown) {

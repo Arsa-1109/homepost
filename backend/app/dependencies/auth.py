@@ -126,14 +126,19 @@ async def get_current_user(
                 await session.refresh(user)
 
     if user is None:
+        initial_role = UserRole.UNASSIGNED
+        if (settings.mock_auth and settings.environment != "production") and payload.get("role"):
+            if payload.get("role") == "landlord":
+                initial_role = UserRole.LANDLORD
+            elif payload.get("role") == "tenant":
+                initial_role = UserRole.TENANT
+
         # Auto-create on first API call (Clerk → PostgreSQL sync).
-        # Email stays NULL when Clerk provides none — unique constraint treats
-        # NULLs as distinct, so email-less signups never collide.
         user = User(
             clerk_id=clerk_id,
             email=payload.get("email") or None,
             full_name=payload.get("name", ""),
-            role=UserRole.UNASSIGNED,
+            role=initial_role,
         )
         session.add(user)
         try:
@@ -151,6 +156,31 @@ async def get_current_user(
             session.add(user)
             await session.commit()
         await session.refresh(user)
+
+        if initial_role == UserRole.TENANT:
+            stmt = select(TenantProfile).where(TenantProfile.user_id == user.id)
+            res = await session.execute(stmt)
+            if not res.scalar_one_or_none():
+                prof = TenantProfile(user_id=user.id, unit_id=None, is_active=True)
+                session.add(prof)
+                await session.commit()
+
+    elif (settings.mock_auth and settings.environment != "production") and payload.get("role") and user.role == UserRole.UNASSIGNED:
+        if payload.get("role") == "landlord":
+            user.role = UserRole.LANDLORD
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
+        elif payload.get("role") == "tenant":
+            user.role = UserRole.TENANT
+            session.add(user)
+            stmt = select(TenantProfile).where(TenantProfile.user_id == user.id)
+            res = await session.execute(stmt)
+            if not res.scalar_one_or_none():
+                prof = TenantProfile(user_id=user.id, unit_id=None, is_active=True)
+                session.add(prof)
+            await session.commit()
+            await session.refresh(user)
 
     return user
 
@@ -202,17 +232,16 @@ async def get_current_tenant_profile(
     session: AsyncSession = Depends(get_session),
 ) -> TenantProfile:
     """
-    Ensure the current user is an active tenant and return their profile.
+    Ensure the current user is a tenant (or pending tenant) and return their profile.
 
     The returned TenantProfile contains unit_id — this is the anchor for
     all data isolation. Every tenant query downstream should filter by
     profile.unit_id.
 
     Raises:
-        403: User is not a tenant.
-        404: Tenant has no active tenancy (deactivated or never assigned).
+        403: User is not a tenant or pending tenant.
     """
-    if user.role != UserRole.TENANT:
+    if user.role not in (UserRole.TENANT, UserRole.TENANT_PENDING):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
@@ -223,7 +252,7 @@ async def get_current_tenant_profile(
 
     statement = select(TenantProfile).where(
         TenantProfile.user_id == user.id
-    ).order_by(TenantProfile.created_at.desc())
+    )
     result = await session.execute(statement)
     profile = result.scalars().first()
 

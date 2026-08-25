@@ -46,7 +46,6 @@ export default function RootLayout({
     >
       <head>
         <meta name="color-scheme" content="light dark" />
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body suppressHydrationWarning>
         <ClerkProvider>

@@ -76,12 +76,11 @@ export function startDemoSession(role: "owner" | "tenant"): string {
 export function isDemoSession(): boolean {
   if (!IS_DEMO_MODE || typeof window === "undefined") return false;
   const clerk = (window as any).Clerk;
-  // If a live Clerk user is present (not mock, demo, or own account)
+  // If a live Clerk user is present (not mock or demo)
   if (
     clerk?.user?.id &&
     !clerk.user.id.startsWith("mock_") &&
-    !ALLOWED_DEMO_IDS.has(clerk.user.id) &&
-    !isOwnAccountUserId(clerk.user.id)
+    !ALLOWED_DEMO_IDS.has(clerk.user.id)
   ) {
     return false;
   }
@@ -90,19 +89,18 @@ export function isDemoSession(): boolean {
   const hasMockCookie = document.cookie.match(/(^|;\s*)mock_user_id=([^;]*)/)?.[2];
   const effectiveId = mockId || hasMockCookie;
   return Boolean(
-    effectiveId && (ALLOWED_DEMO_IDS.has(effectiveId) || isOwnAccountUserId(effectiveId))
+    effectiveId && ALLOWED_DEMO_IDS.has(effectiveId)
   );
 }
 
 export function sanitizeSession(isSignedIn?: boolean): void {
   if (typeof window === "undefined") return;
   const clerk = (window as any).Clerk;
-  // Only sanitize demo session if a live Clerk user is authenticated (not mock, demo, or own account)
+  // Only sanitize demo session if a live Clerk user or own account is authenticated
   if (
     clerk?.user?.id &&
     !clerk.user.id.startsWith("mock_") &&
-    !ALLOWED_DEMO_IDS.has(clerk.user.id) &&
-    !isOwnAccountUserId(clerk.user.id)
+    !ALLOWED_DEMO_IDS.has(clerk.user.id)
   ) {
     clearDemoSession();
   }

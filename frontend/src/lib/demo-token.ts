@@ -13,15 +13,18 @@ function encodeBase64Url(value: string): string {
     .replace(/=+$/, "");
 }
 
-export function generateDemoJWT(email: string, name: string, sub: string): string {
+export function generateDemoJWT(email: string, name: string, sub: string, role?: string): string {
   const header = { alg: "none", typ: "JWT" };
-  const payload = {
+  const payload: Record<string, any> = {
     sub,
     email,
     name,
     iss: "https://test.clerk.dev",
     exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 7, // 7 days
   };
+  if (role) {
+    payload.role = role;
+  }
 
   return `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}.`;
 }

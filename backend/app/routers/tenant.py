@@ -4,8 +4,8 @@ from sqlmodel import select
 import uuid
 
 from app.core.database import get_session
-from app.dependencies.auth import get_current_tenant_profile, get_active_tenant_profile
-from app.models.user import User
+from app.dependencies.auth import get_current_user, get_current_tenant_profile, get_active_tenant_profile
+from app.models.user import User, UserRole
 from app.models.tenant_profile import TenantProfile
 from app.models.property import Property
 from app.models.unit import Unit
@@ -41,6 +41,30 @@ async def get_my_profile(
     Return the tenant's current unit, property, and lease details.
     Used by the dashboard to compute rent-due and lease-expiry countdowns.
     """
+    user = await session.get(User, profile.user_id)
+    if not profile.unit_id:
+        requested_landlord_email = None
+        requested_landlord_name = None
+        if user and user.role == UserRole.TENANT_PENDING and user.requested_landlord_id:
+            landlord = await session.get(User, user.requested_landlord_id)
+            if landlord:
+                requested_landlord_email = landlord.email
+                requested_landlord_name = landlord.full_name
+
+        return {
+            "unit_label": "Unassigned",
+            "property_name": "No Active Tenancy",
+            "property_address": "",
+            "property_city": "",
+            "lease_start": None,
+            "lease_end": None,
+            "rent_due_day": 1,
+            "is_active": profile.is_active,
+            "is_pending_approval": user.role == UserRole.TENANT_PENDING if user else False,
+            "requested_landlord_email": requested_landlord_email,
+            "requested_landlord_name": requested_landlord_name,
+        }
+
     unit = await session.get(Unit, profile.unit_id)
     if not unit:
         raise HTTPException(status_code=404, detail="Unit not found.")
@@ -56,6 +80,9 @@ async def get_my_profile(
         "lease_end": profile.lease_end.isoformat() if profile.lease_end else None,
         "rent_due_day": unit.rent_due_day,
         "is_active": profile.is_active,
+        "is_pending_approval": False,
+        "requested_landlord_email": None,
+        "requested_landlord_name": None,
     }
 
 # ---------------------------------------------------------------------------
@@ -70,6 +97,12 @@ async def submit_maintenance_request(
     profile: TenantProfile = Depends(get_active_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
+    if not profile.unit_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must be linked to an active unit before submitting maintenance requests."
+        )
+
     req = MaintenanceRequest(
         **req_in.model_dump(),
         tenant_id=profile.id,
@@ -325,6 +358,9 @@ async def list_property_announcements(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
+    if not profile.unit_id:
+        return Page(items=[], total=0, limit=pagination.limit, offset=pagination.offset)
+
     from sqlmodel import or_
     from sqlalchemy import func
 
@@ -372,6 +408,9 @@ async def list_shared_documents(
     profile: TenantProfile = Depends(get_current_tenant_profile),
     session: AsyncSession = Depends(get_session),
 ):
+    if not profile.unit_id:
+        return Page(items=[], total=0, limit=pagination.limit, offset=pagination.offset)
+
     from sqlalchemy import func
 
     # First, get the unit to find the property_id

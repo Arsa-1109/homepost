@@ -9,6 +9,7 @@ import { uploadFile } from "@/lib/upload";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Wrench, ChevronLeft, Upload, Image as ImageIcon, X, Send, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
 import { isDemoSession } from "@/lib/demo-auth";
@@ -23,6 +24,7 @@ export default function NewRequestPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isDemo, setIsDemo] = useState(false);
+  const [isUnlinked, setIsUnlinked] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -34,6 +36,17 @@ export default function NewRequestPage() {
   // Restore draft once on mount
   useEffect(() => {
     setIsDemo(isDemoSession());
+    async function checkProfile() {
+      try {
+        const token = await getToken();
+        const profile = await fetchAPI<{ property_name?: string; unit_label?: string }>("/api/v1/tenant/profile", {}, token);
+        if (!profile || profile.property_name === "No Active Tenancy" || profile.unit_label === "Unassigned") {
+          setIsUnlinked(true);
+        }
+      } catch {}
+    }
+    checkProfile();
+
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     try {
@@ -48,7 +61,7 @@ export default function NewRequestPage() {
     } catch {
       // Corrupt or unavailable draft — ignore
     }
-  }, []);
+  }, [getToken]);
 
   // Auto-save draft on change (debounced)
   useEffect(() => {
@@ -202,6 +215,24 @@ export default function NewRequestPage() {
           >
             Discard
           </button>
+        </div>
+      )}
+      {isUnlinked && (
+        <div className="p-5 sm:p-6 rounded-3xl border border-amber-500/30 bg-amber-500/10 space-y-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+            <h3 className="font-bold text-sm text-[rgb(var(--ml-text-primary))]">
+              No Active Tenancy Linked
+            </h3>
+          </div>
+          <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+            You must be linked to an active unit before submitting repair requests. Please connect to your home from the dashboard first.
+          </p>
+          <Button asChild size="sm" className="rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer">
+            <Link href="/tenant/dashboard">
+              Go to Dashboard &rarr;
+            </Link>
+          </Button>
         </div>
       )}
 

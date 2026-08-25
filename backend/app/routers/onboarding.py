@@ -104,6 +104,41 @@ async def register_landlord(
     return {"status": "success", "message": "Registered as Landlord."}
 
 
+@router.post("/register-tenant")
+@limiter.limit("5/minute")
+async def register_tenant(
+    request: Request,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    if user.role != UserRole.UNASSIGNED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User has already selected a role."
+        )
+
+    user.role = UserRole.TENANT
+    session.add(user)
+
+    # Ensure a clean slate TenantProfile exists
+    statement = select(TenantProfile).where(TenantProfile.user_id == user.id)
+    res = await session.execute(statement)
+    profile = res.scalar_one_or_none()
+    if not profile:
+        profile = TenantProfile(
+            user_id=user.id,
+            unit_id=None,
+            is_active=True,
+        )
+        session.add(profile)
+    else:
+        profile.is_active = True
+        session.add(profile)
+
+    await session.commit()
+    return {"status": "success", "message": "Registered as Tenant."}
+
+
 @router.post("/reset-role")
 @limiter.limit("5/minute")
 async def reset_role(
@@ -136,7 +171,21 @@ async def reset_role(
         session.add(user)
         await session.commit()
         return {"status": "success", "message": "Role reset to unassigned."}
-    
+
+    elif user.role == UserRole.TENANT:
+        statement = select(TenantProfile).where(TenantProfile.user_id == user.id)
+        result = await session.execute(statement)
+        profile = result.scalar_one_or_none()
+        if profile and profile.unit_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot reset role. You are actively linked to a unit."
+            )
+        user.role = UserRole.UNASSIGNED
+        session.add(user)
+        await session.commit()
+        return {"status": "success", "message": "Role reset to unassigned."}
+
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -153,11 +202,21 @@ async def request_access(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    if user.role != UserRole.UNASSIGNED:
+    if user.role == UserRole.LANDLORD:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User has already selected a role."
+            detail="Landlords cannot request tenant access."
         )
+
+    if user.role == UserRole.TENANT:
+        statement = select(TenantProfile).where(TenantProfile.user_id == user.id)
+        result = await session.execute(statement)
+        profile = result.scalar_one_or_none()
+        if profile and profile.unit_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You are already linked to an active unit."
+            )
 
     # Find the landlord by email
     statement = select(User).where(User.email == payload.landlord_email, User.role == UserRole.LANDLORD)
@@ -302,12 +361,6 @@ async def accept_invite(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Landlords cannot accept tenant invites."
-        )
-
-    if user.role not in [UserRole.UNASSIGNED, UserRole.TENANT_PENDING]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User cannot accept an invite in their current state."
         )
 
     # Find the invite

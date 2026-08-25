@@ -1,7 +1,7 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { UserButton } from "./clerk-mock";
 
 function setMockCookies() {
@@ -128,5 +128,113 @@ describe("mock UserButton", () => {
     await user.click(trigger);
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+import { SignIn, SignUp } from "./clerk-mock";
+
+describe("mock SignIn and SignUp with Custom Account Maker", () => {
+  let originalLocation: Location;
+
+  beforeEach(() => {
+    originalLocation = window.location;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: {
+        href: "http://localhost/sign-in",
+        search: "",
+        protocol: "http:",
+        hostname: "localhost",
+      },
+    });
+    vi.spyOn(global, "fetch").mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        text: async () => JSON.stringify({ status: "success" }),
+      } as Response)
+    );
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: originalLocation,
+    });
+    for (const name of [
+      "mock_user_id",
+      "mock_user_email",
+      "mock_user_name",
+      "mock_user_role",
+      "mock_user_onboarding_complete",
+    ]) {
+      document.cookie = `${name}=; path=/; max-age=0`;
+    }
+  });
+
+  it("renders SignIn with Demo Personas by default and switches to Custom Account Maker", async () => {
+    const user = userEvent.setup();
+    render(<SignIn />);
+
+    // Demo personas are rendered
+    expect(screen.getByText("Marcus Vance (Owner)")).toBeInTheDocument();
+    expect(screen.getByText("Sarah Jenkins (Resident)")).toBeInTheDocument();
+
+    // Click Custom Account tab
+    const customTab = screen.getByTestId("mock-tab-custom");
+    await user.click(customTab);
+
+    // Now Custom Account Maker is rendered
+    expect(screen.getByTestId("own-account-form")).toBeInTheDocument();
+    expect(screen.getByTestId("own-account-name")).toBeInTheDocument();
+    expect(screen.getByTestId("own-account-email")).toBeInTheDocument();
+  });
+
+  it("renders SignUp with Custom Account Maker by default", async () => {
+    render(<SignUp />);
+
+    expect(screen.getByTestId("own-account-form")).toBeInTheDocument();
+    expect(screen.getByText(/1-Click.*Launchers/i)).toBeInTheDocument();
+  });
+
+  it("creates custom account via form and sets mock session", async () => {
+    const user = userEvent.setup();
+    render(<SignUp />);
+
+    const nameInput = screen.getByTestId("own-account-name");
+    const emailInput = screen.getByTestId("own-account-email");
+    const tenantRoleBtn = screen.getByTestId("own-account-role-tenant");
+    const submitBtn = screen.getByTestId("own-account-submit");
+
+    await user.type(nameInput, "Custom Resident");
+    await user.type(emailInput, "resident@test.local");
+    await user.click(tenantRoleBtn);
+
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(cookieValue("mock_user_name")).toBe("Custom Resident");
+      expect(cookieValue("mock_user_email")).toBe("resident@test.local");
+      expect(cookieValue("mock_user_role")).toBe("tenant");
+      expect(cookieValue("mock_user_id")).toMatch(/^user_own_/);
+      expect(window.location.href).toBe("/tenant/dashboard");
+    });
+  });
+
+  it("allows instant 1-click quick landlord account generation", async () => {
+    const user = userEvent.setup();
+    render(<SignUp />);
+
+    const quickLandlordBtn = screen.getByRole("button", { name: /quick landlord/i });
+    await user.click(quickLandlordBtn);
+
+    await waitFor(() => {
+      expect(cookieValue("mock_user_role")).toBe("landlord");
+      expect(cookieValue("mock_user_id")).toMatch(/^user_own_/);
+      expect(window.location.href).toBe("/landlord/dashboard");
+    });
   });
 });

@@ -7,8 +7,25 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { fetchAPI } from "@/lib/api";
 import { unwrapPage } from "@/lib/pagination";
-import { Wrench, Megaphone, Calendar, Plus, ArrowRight, Clock, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
+import { 
+  Wrench, 
+  Megaphone, 
+  Calendar, 
+  Plus, 
+  ArrowRight, 
+  Clock, 
+  ShieldCheck, 
+  CheckCircle2, 
+  AlertCircle,
+  Mail,
+  KeyRound,
+  Send,
+  RefreshCw,
+  Building2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 type TenantProfile = {
   unit_label: string;
@@ -19,6 +36,9 @@ type TenantProfile = {
   lease_end: string | null;
   rent_due_day: number;
   is_active: boolean;
+  is_pending_approval?: boolean;
+  requested_landlord_email?: string | null;
+  requested_landlord_name?: string | null;
 };
 
 type MaintenanceRequest = {
@@ -76,37 +96,112 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function TenantDashboard() {
+  const router = useRouter();
   const [profile, setProfile] = useState<TenantProfile | null>(null);
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Unlinked tenant form states
+  const [landlordEmail, setLandlordEmail] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [requestError, setRequestError] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+
   const { isLoaded, getToken } = useAuth();
+
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = await getToken();
+      const [profRes, reqsRes, annsRes] = await Promise.allSettled([
+        fetchAPI<TenantProfile>("/api/v1/tenant/profile", {}, token),
+        fetchAPI<{ items?: MaintenanceRequest[] } | MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
+        fetchAPI<{ items?: Announcement[] } | Announcement[]>("/api/v1/tenant/announcements", {}, token),
+      ]);
+
+      if (profRes.status === "fulfilled") {
+        setProfile(profRes.value);
+      } else {
+        throw profRes.reason;
+      }
+
+      if (reqsRes.status === "fulfilled") {
+        const reqsList = unwrapPage(reqsRes.value);
+        setRequests(reqsList.slice(0, 5));
+      } else {
+        setRequests([]);
+      }
+
+      if (annsRes.status === "fulfilled") {
+        const annsList = unwrapPage(annsRes.value);
+        setAnnouncements(annsList);
+      } else {
+        setAnnouncements([]);
+      }
+    } catch (err) {
+      setError(errorMessage(err) ?? "Something went wrong loading your dashboard.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!isLoaded) return;
-    async function loadAll() {
-      try {
-        const token = await getToken();
-        const [prof, reqs, anns] = await Promise.all([
-          fetchAPI<TenantProfile>("/api/v1/tenant/profile", {}, token),
-          fetchAPI<{ items?: MaintenanceRequest[] } | MaintenanceRequest[]>("/api/v1/tenant/maintenance", {}, token),
-          fetchAPI<{ items?: Announcement[] } | Announcement[]>("/api/v1/tenant/announcements", {}, token),
-        ]);
-        const reqsList = unwrapPage(reqs);
-        const annsList = unwrapPage(anns);
-        setProfile(prof);
-        setRequests(reqsList.slice(0, 5)); // Show up to 5 recent requests
-        setAnnouncements(annsList);
-      } catch (err) {
-        setError(errorMessage(err) ?? "Something went wrong.");
-      } finally {
-        setLoading(false);
-      }
-    }
     loadAll();
   }, [isLoaded, getToken]);
+
+  const handleRequestAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!landlordEmail.trim() || isRequesting) return;
+    setIsRequesting(true);
+    setRequestError("");
+    try {
+      const token = await getToken();
+      await fetchAPI("/api/v1/onboarding/request-access", {
+        method: "POST",
+        body: JSON.stringify({ landlord_email: landlordEmail.trim() }),
+      }, token);
+      toast.success("Access request sent to landlord!");
+      setLandlordEmail("");
+      await loadAll();
+    } catch (err) {
+      const msg = errorMessage(err) ?? "Could not send access request. Please verify the landlord email.";
+      setRequestError(msg);
+      toast.error(msg);
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
+  const handleRedeemCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    const raw = inviteCode.trim();
+    if (!raw) return;
+    // Extract token if user pasted full URL (e.g. /join/tok_123 or https://.../join/tok_123)
+    const tokenMatch = raw.match(/\/join\/([^/?#]+)/);
+    const token = tokenMatch ? tokenMatch[1] : raw;
+    router.push(`/join/${encodeURIComponent(token)}`);
+  };
+
+  const handleCancelRequest = async () => {
+    setIsCancelling(true);
+    try {
+      const token = await getToken();
+      await fetchAPI("/api/v1/onboarding/reset-role", {
+        method: "POST",
+      }, token);
+      toast.success("Access request cancelled.");
+      await loadAll();
+    } catch (err) {
+      toast.error(errorMessage(err) ?? "Failed to cancel request.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -131,12 +226,175 @@ export default function TenantDashboard() {
 
   if (error) {
     return (
-      <div className="max-w-xl mx-auto space-y-4 pt-8">
-        <div className="p-6 rounded-3xl border border-red-500/20 bg-red-500/10 text-center">
-          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-          <p className="text-red-500 font-bold mb-1">Could not load your dashboard</p>
-          <p className="text-xs text-[rgb(var(--ml-text-secondary))]">{error}</p>
+      <div className="max-w-xl mx-auto space-y-4 pt-8 animate-fade-slide-up">
+        <div className="p-6 rounded-3xl border border-border/80 bg-[rgb(var(--ml-bg-secondary))] text-center space-y-3 shadow-sm">
+          <AlertCircle className="w-8 h-8 text-amber-500 mx-auto" />
+          <div>
+            <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
+              Could not load your dashboard
+            </h3>
+            <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-1">
+              {error}
+            </p>
+          </div>
+          <Button
+            onClick={() => void loadAll()}
+            className="rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer mt-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            Retry
+          </Button>
         </div>
+      </div>
+    );
+  }
+
+  const isUnlinked = !profile || !profile.property_name || profile.property_name === "No Active Tenancy" || profile.unit_label === "Unassigned";
+
+  // Unlinked / Pending Activation State
+  if (isUnlinked) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto animate-fade-slide-up pb-16">
+        {profile?.is_pending_approval ? (
+          <div className="p-6 sm:p-8 rounded-3xl border border-amber-500/30 bg-amber-500/5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-amber-500/15 text-amber-400">
+                <Clock className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">
+                  Access Request Pending
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold text-[rgb(var(--ml-text-primary))]">
+                  Awaiting Landlord Approval
+                </h2>
+              </div>
+            </div>
+            <p className="text-sm text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-xl">
+              You requested access from{" "}
+              <strong className="text-[rgb(var(--ml-text-primary))] font-semibold">
+                {profile.requested_landlord_email || "your landlord"}
+              </strong>
+              . Once your landlord approves your request and links your unit, your maintenance portal, announcements, and lease documents will activate automatically.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Button
+                onClick={() => void loadAll()}
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-amber-500/30 text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                Check Approval Status
+              </Button>
+              <Button
+                onClick={() => void handleCancelRequest()}
+                disabled={isCancelling}
+                variant="ghost"
+                size="sm"
+                className="rounded-xl text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 cursor-pointer text-xs"
+              >
+                {isCancelling ? "Cancelling..." : "Cancel Request / Change Landlord"}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
+                Connect to Your Home
+              </h1>
+              <p className="text-sm text-[rgb(var(--ml-text-secondary))] max-w-xl">
+                Your tenant account is active, but not linked to a property yet. Request access from your landlord or redeem an invitation code below to activate your portal.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Option 1: Request access by landlord email */}
+              <div className="p-6 rounded-3xl border border-border/80 bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between space-y-4 shadow-sm hover:border-[rgb(var(--ml-accent))]/40 transition-all">
+                <div className="space-y-2">
+                  <div className="w-10 h-10 rounded-2xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] flex items-center justify-center">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-[rgb(var(--ml-text-primary))]">
+                    Request Access by Email
+                  </h3>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                    Enter the email address of your property owner or manager. We&apos;ll notify them to approve your tenancy and link your unit.
+                  </p>
+                </div>
+
+                <form onSubmit={handleRequestAccess} className="space-y-3 pt-2">
+                  <input
+                    type="email"
+                    required
+                    value={landlordEmail}
+                    onChange={(e) => setLandlordEmail(e.target.value)}
+                    placeholder="landlord@example.com"
+                    className="w-full rounded-xl border border-border/80 bg-[rgb(var(--ml-bg-primary))] px-3.5 py-2.5 text-xs text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-tertiary))] focus:border-[rgb(var(--ml-accent))] focus:outline-none focus:ring-1 focus:ring-[rgb(var(--ml-accent))]/30 transition-all"
+                    disabled={isRequesting}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!landlordEmail.trim() || isRequesting}
+                    className="w-full h-10 rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {isRequesting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        Sending Request...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Send className="w-3.5 h-3.5" />
+                        Send Access Request
+                      </span>
+                    )}
+                  </Button>
+                  {requestError && (
+                    <p className="text-[11px] text-red-500 font-medium">{requestError}</p>
+                  )}
+                </form>
+              </div>
+
+              {/* Option 2: Redeem invite token/link */}
+              <div className="p-6 rounded-3xl border border-border/80 bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between space-y-4 shadow-sm hover:border-blue-500/40 transition-all">
+                <div className="space-y-2">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-base text-[rgb(var(--ml-text-primary))]">
+                    Have an Invite Code?
+                  </h3>
+                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed">
+                    If your landlord sent you a lease invitation link or code, enter or paste it here to link your unit immediately.
+                  </p>
+                </div>
+
+                <form onSubmit={handleRedeemCode} className="space-y-3 pt-2">
+                  <input
+                    type="text"
+                    required
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder="Paste invite token or full URL"
+                    className="w-full rounded-xl border border-border/80 bg-[rgb(var(--ml-bg-primary))] px-3.5 py-2.5 text-xs text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-tertiary))] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all font-mono"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!inviteCode.trim()}
+                    className="w-full h-10 rounded-xl bg-blue-500 text-white font-bold text-xs hover:bg-blue-400 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5" />
+                      Join Property &amp; Unit
+                    </span>
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

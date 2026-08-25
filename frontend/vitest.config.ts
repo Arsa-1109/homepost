@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     pool: "forks",
+    fileParallelism: false,
     include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["./vitest.setup.ts"],
   },
