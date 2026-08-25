@@ -126,10 +126,22 @@ export function ThemeProvider({
       // Smooth path: View Transitions API cross-fades the whole document
       // snapshot; CSS color transitions are suppressed during the swap so
       // the two mechanisms don't compete.
-      document.startViewTransition(() => {
+      try {
+        const transition = document.startViewTransition(() => {
+          root.classList.add("theme-switching");
+          applyDom(targetTheme);
+        });
+        transition?.ready?.catch?.(() => {});
+        transition?.finished?.catch?.(() => {});
+      } catch {
         root.classList.add("theme-switching");
         applyDom(targetTheme);
-      });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            root.classList.remove("theme-switching");
+          });
+        });
+      }
     },
     [applyDom, disableTransitionOnChange]
   );

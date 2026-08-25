@@ -394,25 +394,33 @@ function LandlordAnnouncementsContent() {
               <div className="space-y-4">
                 <AnimatePresence mode="wait">
                   {loading ? (
-                    [1, 2, 3].map((i) => (
-                      <div
-                        key={`skel-${i}`}
-                        className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="skeleton h-5 w-24 rounded-md" />
-                            <div className="skeleton h-5 w-20 rounded-md" />
+                    <motion.div
+                      key="announcements-loading-skeleton"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      className="space-y-4"
+                    >
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={`skel-${i}`}
+                          className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="skeleton h-5 w-24 rounded-md" />
+                              <div className="skeleton h-5 w-20 rounded-md" />
+                            </div>
+                            <div className="skeleton h-4 w-16 rounded-md" />
                           </div>
-                          <div className="skeleton h-4 w-16 rounded-md" />
+                          <div className="space-y-2 pt-1">
+                            <div className="skeleton h-6 w-3/4 rounded-lg" />
+                            <div className="skeleton h-4 w-full rounded-md mt-2" />
+                            <div className="skeleton h-4 w-5/6 rounded-md" />
+                          </div>
                         </div>
-                        <div className="space-y-2 pt-1">
-                          <div className="skeleton h-6 w-3/4 rounded-lg" />
-                          <div className="skeleton h-4 w-full rounded-md mt-2" />
-                          <div className="skeleton h-4 w-5/6 rounded-md" />
-                        </div>
-                      </div>
-                    ))
+                      ))}
+                    </motion.div>
                   ) : announcements.length === 0 && !error ? (
                     <motion.div
                       key="empty-all"
@@ -463,25 +471,33 @@ function LandlordAnnouncementsContent() {
                       )}
                     </motion.div>
                   ) : (
-                    paginatedAnnouncements.map((ann) => {
-                      const propertyName =
-                        ann.property_name ||
-                        properties.find((p) => p.id === ann.property_id)?.name ||
-                        "Property";
-                      const unitLabel = getUnitLabel(ann);
+                    <motion.div
+                      key={`announcements-list-${currentPage}-${selectedProperty}-${filterType}`}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      className="space-y-4"
+                    >
+                      {paginatedAnnouncements.map((ann) => {
+                        const propertyName =
+                          ann.property_name ||
+                          properties.find((p) => p.id === ann.property_id)?.name ||
+                          "Property";
+                        const unitLabel = getUnitLabel(ann);
 
-                      return (
-                        <AnnouncementCard
-                          key={ann.id}
-                          announcement={ann}
-                          propertyName={propertyName}
-                          unitLabel={unitLabel}
-                          onEdit={setEditingAnnouncement}
-                          onDelete={setDeletingAnnouncement}
-                          onViewImage={setPreviewUrl}
-                        />
-                      );
-                    })
+                        return (
+                          <AnnouncementCard
+                            key={ann.id}
+                            announcement={ann}
+                            propertyName={propertyName}
+                            unitLabel={unitLabel}
+                            onEdit={setEditingAnnouncement}
+                            onDelete={setDeletingAnnouncement}
+                            onViewImage={setPreviewUrl}
+                          />
+                        );
+                      })}
+                    </motion.div>
                   )}
                 </AnimatePresence>
 

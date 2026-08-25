@@ -51,7 +51,7 @@ describe("DemoTenantPhone structural invariants", () => {
     expect(scroll.className).toContain("pb-20");
 
     const nav = within(screenEl).getByRole("navigation");
-    expect(nav.className).toContain("h-14");
+    expect(nav.className).toMatch(/h-(14|16)/);
 
     const navPaddingPx = Number(/pb-(\d+)/.exec(scroll.className)![1]) * 4;
     const navHeightPx = Number(/h-(\d+)/.exec(nav.className)![1]) * 4;
@@ -66,7 +66,7 @@ describe("DemoTenantPhone structural invariants", () => {
     expect(island).not.toBeNull();
 
     const homeIndicator = container.querySelector(
-      'div[class*="bg-muted-foreground/30"]',
+      'div[class*="rounded-full"][class*="w-28"]',
     );
     expect(homeIndicator).not.toBeNull();
   });

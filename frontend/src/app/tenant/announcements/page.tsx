@@ -399,26 +399,34 @@ function TenantAnnouncementsContent() {
           <div className="space-y-4">
             <AnimatePresence mode="wait">
               {loading ? (
-                [1, 2, 3].map((i) => (
-                  <div
-                    key={`skel-${i}`}
-                    className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="skeleton h-5 w-24 rounded-md" />
+                <motion.div
+                  key="tenant-announcements-loading-skeleton"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  className="space-y-4"
+                >
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={`skel-${i}`}
+                      className="p-6 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="skeleton h-5 w-24 rounded-md" />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="skeleton h-4 w-16 rounded-md" />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="skeleton h-4 w-16 rounded-md" />
+                      <div className="space-y-2 pt-1">
+                        <div className="skeleton h-6 w-3/4 rounded-lg" />
+                        <div className="skeleton h-4 w-full rounded-md mt-2" />
+                        <div className="skeleton h-4 w-5/6 rounded-md" />
                       </div>
                     </div>
-                    <div className="space-y-2 pt-1">
-                      <div className="skeleton h-6 w-3/4 rounded-lg" />
-                      <div className="skeleton h-4 w-full rounded-md mt-2" />
-                      <div className="skeleton h-4 w-5/6 rounded-md" />
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </motion.div>
               ) : announcements.length === 0 && !error ? (
                 <motion.div
                   key="empty-all"
@@ -468,79 +476,83 @@ function TenantAnnouncementsContent() {
                   )}
                 </motion.div>
               ) : (
-                paginatedAnnouncements.map((ann) => {
-                  const isUnitSpecific = !!ann.unit_id;
-                  const isHighlighted = highlightedId === ann.id;
+                <motion.div
+                  key={`tenant-announcements-list-${currentPage}-${selectedFilter}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  className="space-y-4"
+                >
+                  {paginatedAnnouncements.map((ann) => {
+                    const isUnitSpecific = !ann.unit_id;
+                    const isHighlighted = highlightedId === ann.id;
 
-                  return (
-                    <motion.div
-                      id={`announcement-${ann.id}`}
-                      key={ann.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.1 }}
-                      className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-all duration-300 space-y-3 relative group ${
-                        isHighlighted
-                          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
-                          : "border-border/60"
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span
-                            className={`text-[10px] px-2.5 py-0.5 rounded-md border font-bold uppercase tracking-wider ${
-                              isUnitSpecific
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-                            }`}
-                          >
-                            {ann.unit_id
-                              ? formatAnnouncementUnitLabel(ann.unit_label || tenantUnitLabel)
-                              : PROPERTY_WIDE_ANNOUNCEMENT_LABEL}
-                          </span>
-                        </div>
+                    return (
+                      <div
+                        id={`announcement-${ann.id}`}
+                        key={ann.id}
+                        className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-all duration-300 space-y-3 relative group ${
+                          isHighlighted
+                            ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+                            : "border-border/60"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className={`text-[10px] px-2.5 py-0.5 rounded-md border font-bold uppercase tracking-wider ${
+                                isUnitSpecific
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                                  : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                              }`}
+                            >
+                              {ann.unit_id
+                                ? formatAnnouncementUnitLabel(ann.unit_label || tenantUnitLabel)
+                                : PROPERTY_WIDE_ANNOUNCEMENT_LABEL}
+                            </span>
+                          </div>
 
-                        <div className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-text-secondary))] font-medium">
-                          <Calendar className="w-3.5 h-3.5 opacity-60" />
-                          <span>
-                            {new Date(ann.created_at).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <h3 className="font-bold text-lg text-[rgb(var(--ml-text-primary))] leading-snug">
-                          {ann.title}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap leading-relaxed">
-                          {ann.body}
-                        </p>
-                      </div>
-
-                      {ann.attachment_urls && ann.attachment_urls.length > 0 && (
-                        <div className="pt-2 border-t border-border/30 space-y-2">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/70 block">
-                            Attachments ({ann.attachment_urls.length})
-                          </span>
-                          <div className="flex flex-wrap gap-2.5">
-                            {ann.attachment_urls.map((url, idx) => (
-                              <AttachmentThumbnail
-                                key={idx}
-                                url={url}
-                                onViewImage={setPreviewUrl}
-                              />
-                            ))}
+                          <div className="flex items-center gap-1.5 text-xs text-[rgb(var(--ml-text-secondary))] font-medium">
+                            <Calendar className="w-3.5 h-3.5 opacity-60" />
+                            <span>
+                              {new Date(ann.created_at).toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </motion.div>
-                  );
-                })
+
+                        <div className="space-y-2">
+                          <h3 className="font-bold text-lg text-[rgb(var(--ml-text-primary))] leading-snug">
+                            {ann.title}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-[rgb(var(--ml-text-secondary))] whitespace-pre-wrap leading-relaxed">
+                            {ann.body}
+                          </p>
+                        </div>
+
+                        {ann.attachment_urls && ann.attachment_urls.length > 0 && (
+                          <div className="pt-2 border-t border-border/30 space-y-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]/70 block">
+                              Attachments ({ann.attachment_urls.length})
+                            </span>
+                            <div className="flex flex-wrap gap-2.5">
+                              {ann.attachment_urls.map((url, idx) => (
+                                <AttachmentThumbnail
+                                  key={idx}
+                                  url={url}
+                                  onViewImage={setPreviewUrl}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </motion.div>
               )}
             </AnimatePresence>
 

@@ -373,10 +373,16 @@ function LandlordPropertiesContent() {
             unitSummaries={unitSummaries}
           />
         ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <AnimatePresence mode="wait">
-            {loading ? (
-              [1, 2, 3].map((i) => (
+          {loading ? (
+            <motion.div
+              key="properties-loading-skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            >
+              {[1, 2, 3].map((i) => (
                 <div
                   key={`skel-${i}`}
                   className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between min-h-[260px] space-y-4"
@@ -391,50 +397,70 @@ function LandlordPropertiesContent() {
                   </div>
                   <div className="skeleton w-full h-8 rounded-xl" />
                 </div>
-              ))
-            ) : properties.length === 0 && !error ? (
-              <div className="col-span-full text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border flex items-center justify-center mx-auto text-[rgb(var(--ml-text-secondary))]">
-                  <Building2 className="w-7 h-7" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
-                    No properties added yet
-                  </h3>
-                  <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-xs mx-auto">
-                    Add your first property to start managing units, leases, and tenant communications.
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setShowAddForm(true)}
-                  className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-5 py-2 cursor-pointer inline-flex items-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+              ))}
+            </motion.div>
+          ) : properties.length === 0 && !error ? (
+            <motion.div
+              key="properties-empty-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-4"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[rgb(var(--ml-bg-tertiary))] border border-border flex items-center justify-center mx-auto text-[rgb(var(--ml-text-secondary))]">
+                <Building2 className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
+                  No properties added yet
+                </h3>
+                <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed max-w-xs mx-auto">
+                  Add your first property to start managing units, leases, and tenant communications.
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowAddForm(true)}
+                className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-5 py-2 cursor-pointer inline-flex items-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Property</span>
+              </Button>
+            </motion.div>
+          ) : filteredProperties.length === 0 && !error ? (
+            <motion.div
+              key="properties-empty-search"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3"
+            >
+              <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
+              <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">
+                No properties found
+              </p>
+              <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
+                Try adjusting your search or city filter.
+              </p>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Property</span>
-                </Button>
-              </div>
-            ) : filteredProperties.length === 0 && !error ? (
-              <div className="col-span-full text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-sm mx-auto space-y-3">
-                <Search className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
-                <p className="text-sm font-bold text-[rgb(var(--ml-text-primary))]">
-                  No properties found
-                </p>
-                <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                  Try adjusting your search or city filter.
-                </p>
-                {hasActiveFilters && (
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                    Reset Filters
-                  </button>
-                )}
-              </div>
-            ) : (
-              paginatedProperties.map((p) => (
+                  <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                  Reset Filters
+                </button>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`properties-grid-${currentPage}-${selectedCity}-${searchQuery}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            >
+              {paginatedProperties.map((p) => (
                 <PropertyCard
                   key={p.id}
                   p={p}
@@ -442,10 +468,10 @@ function LandlordPropertiesContent() {
                   onDelete={refetch}
                   unitSummary={unitSummaries[p.id] ?? null}
                 />
-              ))
-            )}
-          </AnimatePresence>
-        </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
         )}
 
         {/* Pagination Controls */}
