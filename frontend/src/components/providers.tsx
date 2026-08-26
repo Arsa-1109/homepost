@@ -82,6 +82,7 @@ export function ThemeProvider({
   const applyDom = React.useCallback(
     (targetTheme: "light" | "dark") => {
       const root = document.documentElement;
+      root.style.colorScheme = targetTheme;
       const attributes = Array.isArray(attribute) ? attribute : [attribute];
       for (const attr of attributes) {
         if (attr === "class") {

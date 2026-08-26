@@ -25,8 +25,16 @@ const themeScript = `(function() {
   try {
     var stored = localStorage.getItem('theme') || 'system';
     var isDark = stored === 'dark' || (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.classList.add(isDark ? 'dark' : 'light');
-    document.documentElement.classList.remove(isDark ? 'light' : 'dark');
+    var root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      root.style.colorScheme = 'dark';
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+    }
   } catch (e) {}
 })();`;
 
@@ -46,6 +54,7 @@ export default function RootLayout({
     >
       <head>
         <meta name="color-scheme" content="light dark" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body suppressHydrationWarning>
         <ClerkProvider>
