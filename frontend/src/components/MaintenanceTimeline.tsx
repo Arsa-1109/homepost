@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { 
   CheckCircle2, 
   MessageSquare, 
-  Image as ImageIcon, 
+  Paperclip,
   AlertTriangle, 
   PlusCircle, 
   RefreshCcw,
@@ -19,6 +19,7 @@ import {
   Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AttachmentThumbnail } from "@/components/landlord/requests/AttachmentThumbnail";
 import { isImageUrl } from "@/components/LightboxModal";
 
 export interface MaintenanceEventPayload {
@@ -107,7 +108,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
       case "note_added":
         return <MessageSquare className="h-3.5 w-3.5 text-[rgb(var(--ml-accent))]" />;
       case "images_attached":
-        return <ImageIcon className="h-3.5 w-3.5 text-[rgb(var(--ml-accent))]" />;
+        return <Paperclip className="h-3.5 w-3.5 text-[rgb(var(--ml-accent))]" />;
       default:
         return <Clock className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />;
     }
@@ -238,39 +239,26 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                           </div>
                         )}
 
-                        {/* Attached Images Container */}
+                        {/* Attached Files Container */}
                         {event.payload?.image_urls && event.payload.image_urls.length > 0 && (
                           <div className="mt-4 pt-3 border-t border-border/30">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] block mb-2 flex items-center gap-1.5">
-                              <ImageIcon className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]" />
-                              Attached Files
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))] block mb-2.5 flex items-center gap-1.5">
+                              <Paperclip className="w-3 h-3 text-[rgb(var(--ml-text-secondary))]" />
+                              Attached Files ({event.payload.image_urls.length})
                             </span>
                             <div className="flex flex-wrap gap-2.5">
                               {event.payload.image_urls.map((url: string, imgIdx: number) => (
-                                <button 
-                                  key={imgIdx} 
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (isImageUrl(url) && onViewImage) {
-                                      onViewImage(url);
+                                <AttachmentThumbnail
+                                  key={imgIdx}
+                                  url={url}
+                                  onViewImage={(targetUrl) => {
+                                    if (onViewImage) {
+                                      onViewImage(targetUrl);
                                     } else {
-                                      window.open(url, "_blank");
+                                      window.open(targetUrl, "_blank");
                                     }
                                   }}
-                                  className="group/img block p-0 overflow-hidden rounded-2xl border border-border/60 bg-[rgb(var(--ml-bg-primary))] cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
-                                >
-                                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center overflow-hidden">
-                                    <Image 
-                                      src={url} 
-                                      alt={`Attachment ${imgIdx + 1}`} 
-                                      fill
-                                      unoptimized
-                                      sizes="80px"
-                                      className="object-cover group-hover/img:scale-105 transition-transform duration-300"
-                                    />
-                                  </div>
-                                </button>
+                                />
                               ))}
                             </div>
                           </div>
@@ -279,7 +267,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                         {/* Fallback for OLD events */}
                         {Boolean(event.payload?.image_count && event.payload.image_count > 0 && !event.payload?.image_urls) && (
                           <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgb(var(--ml-bg-primary))]/40 border border-dashed border-border/50">
-                            <span className="text-amber-400 text-xs">🖼</span>
+                            <Paperclip className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                             <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium italic">
                               {event.payload?.image_count} file{event.payload?.image_count !== 1 ? "s" : ""} attached
                               <span className="ml-1 opacity-60">(preview unavailable for older records)</span>

@@ -12,7 +12,12 @@ import {
   Calendar,
   Wrench,
   FileText,
-  DownloadIcon,
+  FileImage,
+  Video,
+  FileSpreadsheet,
+  File,
+  Eye,
+  Download,
   ChevronLeft,
   ChevronRight,
   Building,
@@ -22,6 +27,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { MaintenanceRequest, RequestCard } from "@/components/landlord/requests/RequestCard";
+import { LightboxModal, getFileTypeInfo } from "@/components/LightboxModal";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
@@ -71,6 +77,11 @@ export default function UnitDetailsPage() {
   const [isEditLeaseOpen, setIsEditLeaseOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    title: string;
+    fileType?: string;
+  } | null>(null);
 
   const [maintenancePage, setMaintenancePage] = useState(1);
   const MAINTENANCE_ITEMS_PER_PAGE = 3;
@@ -560,42 +571,92 @@ export default function UnitDetailsPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="p-5 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 shadow-sm hover:border-[rgb(var(--ml-text-primary))]/20 transition-all"
-                  >
-                    <div className="p-3 bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] rounded-2xl border border-[rgb(var(--ml-accent))]/20 shrink-0">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <p
-                        className="font-bold text-xs sm:text-sm truncate text-[rgb(var(--ml-text-primary))]"
-                        title={doc.title}
-                      >
-                        {doc.title}
-                      </p>
-                      <p className="text-[10px] font-semibold text-[rgb(var(--ml-text-secondary))] tabular-nums">
-                        {new Date(doc.created_at).toLocaleDateString()}
-                      </p>
-                      {doc.file_url && (
-                        <a
-                          href={doc.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline pt-1"
+                {documents.map((doc) => {
+                  const fileInfo = getFileTypeInfo(doc.file_url, doc.file_type);
+                  const renderIcon = () => {
+                    switch (fileInfo.category) {
+                      case "video":
+                        return <Video className="w-5 h-5 text-violet-400" />;
+                      case "pdf":
+                        return <FileText className="w-5 h-5 text-rose-500" />;
+                      case "doc":
+                        return <FileText className="w-5 h-5 text-blue-500" />;
+                      case "sheet":
+                        return <FileSpreadsheet className="w-5 h-5 text-emerald-400" />;
+                      case "image":
+                        return <FileImage className="w-5 h-5 text-emerald-500" />;
+                      default:
+                        return <File className="w-5 h-5 text-slate-400" />;
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={doc.id}
+                      className="p-4 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] flex items-start gap-4 shadow-sm hover:border-[rgb(var(--ml-text-primary))]/20 transition-all"
+                    >
+                      <div className={`p-3 bg-gradient-to-br ${fileInfo.gradientClass} rounded-2xl border border-white/10 shrink-0`}>
+                        {renderIcon()}
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.2 rounded-md ${fileInfo.badgeClass}`}>
+                            {fileInfo.label}
+                          </span>
+                        </div>
+                        <p
+                          className="font-bold text-xs sm:text-sm truncate text-[rgb(var(--ml-text-primary))]"
+                          title={doc.title}
                         >
-                          <DownloadIcon className="w-3.5 h-3.5" /> Download
-                        </a>
-                      )}
+                          {doc.title}
+                        </p>
+                        <p className="text-[10px] font-semibold text-[rgb(var(--ml-text-secondary))] tabular-nums">
+                          {new Date(doc.created_at).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        {doc.file_url && (
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewDoc({ url: doc.file_url, title: doc.title, fileType: doc.file_type })}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-text-primary))] hover:text-[rgb(var(--ml-accent))] transition-colors cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> View
+                            </button>
+                            <span className="text-border/80 text-xs">•</span>
+                            <a
+                              href={doc.file_url}
+                              download={doc.title}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5" /> Download
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
         </div>
       </div>
+
+      {/* Lightbox Preview Modal */}
+      {previewDoc && (
+        <LightboxModal
+          url={previewDoc.url}
+          title={previewDoc.title}
+          fileType={previewDoc.fileType}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
 
       {/* Modals */}
       <EditLeaseModal

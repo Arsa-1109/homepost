@@ -45,4 +45,30 @@ describe("DocumentCard", () => {
     expect(card).toBeInTheDocument();
     expect(card?.className).toContain("ring-2");
   });
+
+  it("renders video badge and label for video files", () => {
+    const mockVideoDoc: Document = {
+      id: "doc-2",
+      title: "Property Inspection Video",
+      file_key: "documents/walkthrough.mp4",
+      file_type: "video/mp4",
+      created_at: "2026-08-24T12:00:00Z",
+      unit_id: null,
+      unit_label: null,
+      property_name: "Maplewood Heights",
+    };
+
+    render(
+      <DocumentCard
+        doc={mockVideoDoc}
+        unitLabel="Property-Wide"
+        onPreview={vi.fn()}
+        onDownload={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Property Inspection Video")).toBeInTheDocument();
+    expect(screen.getByText("Property-Wide")).toBeInTheDocument();
+    expect(screen.getAllByText("VIDEO").length).toBeGreaterThanOrEqual(1);
+  });
 });

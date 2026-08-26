@@ -10,9 +10,12 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { AnimatePresence } from "motion/react";
 import {
   FileText,
+  FileImage,
+  Video,
+  FileSpreadsheet,
+  File,
   Download,
   Eye,
-  File,
   Search,
   RotateCcw,
   Calendar,
@@ -21,7 +24,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LightboxModal, isImageUrl } from "@/components/LightboxModal";
+import { LightboxModal, getFileTypeInfo, isImageUrl } from "@/components/LightboxModal";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 
@@ -109,13 +112,11 @@ export default function TenantDocumentsPage() {
     return documents
       .filter((doc) => {
         const matchesSearch = doc.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        const fileInfo = getFileTypeInfo(doc.file_url || doc.file_key, doc.file_type);
 
-        const isImage = doc.file_type.startsWith("image/") || isImageUrl(doc.file_url || doc.file_key);
-        const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
-
-        if (selectedFilter === "PDF") return matchesSearch && isPdf;
-        if (selectedFilter === "IMAGE") return matchesSearch && isImage;
-        if (selectedFilter === "OTHER") return matchesSearch && !isPdf && !isImage;
+        if (selectedFilter === "PDF") return matchesSearch && fileInfo.category === "pdf";
+        if (selectedFilter === "IMAGE") return matchesSearch && fileInfo.category === "image";
+        if (selectedFilter === "OTHER") return matchesSearch && fileInfo.category !== "pdf" && fileInfo.category !== "image";
         return matchesSearch;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -134,11 +135,28 @@ export default function TenantDocumentsPage() {
     return filteredDocuments.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredDocuments, currentPage]);
 
-  const renderPreview = (doc: Document) => {
-    const isImage = doc.file_type.startsWith("image/") || isImageUrl(doc.file_url || doc.file_key);
-    const isPdf = doc.file_type === "application/pdf" || doc.file_key.endsWith(".pdf");
+  const renderFileIcon = (category: string) => {
+    switch (category) {
+      case "video":
+        return <Video className="h-6 w-6 text-violet-400" />;
+      case "pdf":
+        return <FileText className="h-6 w-6 text-rose-500" />;
+      case "doc":
+        return <FileText className="h-6 w-6 text-blue-500" />;
+      case "sheet":
+        return <FileSpreadsheet className="h-6 w-6 text-emerald-400" />;
+      case "image":
+        return <FileImage className="h-6 w-6 text-emerald-500" />;
+      default:
+        return <File className="h-6 w-6 text-slate-400" />;
+    }
+  };
 
-    if (isImage && doc.file_url) {
+  const renderPreview = (doc: Document) => {
+    const fileInfo = getFileTypeInfo(doc.file_url || doc.file_key, doc.file_type);
+    const isImg = isImageUrl(doc.file_url || doc.file_key, doc.file_type);
+
+    if (isImg && doc.file_url) {
       return (
         <div className="relative w-full h-full bg-muted/30 flex items-center justify-center overflow-hidden">
           <Image
@@ -154,51 +172,16 @@ export default function TenantDocumentsPage() {
       );
     }
 
-    if (isPdf) {
-      return (
-        <div className="w-full h-full bg-gradient-to-br from-rose-500/15 via-red-500/10 to-rose-950/20 text-rose-500 dark:text-rose-400 flex flex-col items-center justify-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
-          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 shadow-sm">
-            <FileText className="h-6 w-6 text-rose-500" />
-          </div>
-          <span className="text-[10px] font-black tracking-widest uppercase text-rose-500/90 dark:text-rose-300">
-            PDF
-          </span>
-        </div>
-      );
-    }
-
     return (
-      <div className="w-full h-full bg-gradient-to-br from-indigo-500/15 via-blue-500/10 to-indigo-950/20 text-indigo-500 dark:text-indigo-400 flex flex-col items-center justify-center gap-1.5 transition-transform duration-300 group-hover:scale-105">
-        <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shadow-sm">
-          <File className="h-6 w-6 text-indigo-500" />
+      <div className={`w-full h-full bg-gradient-to-br ${fileInfo.gradientClass} flex flex-col items-center justify-center gap-1.5 transition-transform duration-300 group-hover:scale-105`}>
+        <div className="p-2.5 rounded-xl bg-white/10 border border-white/10 shadow-sm">
+          {renderFileIcon(fileInfo.category)}
         </div>
-        <span className="text-[10px] font-black tracking-widest uppercase text-indigo-500/90 dark:text-indigo-300">
-          DOC
+        <span className={`text-[10px] font-black tracking-widest uppercase ${fileInfo.colorClass}`}>
+          {fileInfo.label}
         </span>
       </div>
     );
-  };
-
-  const getFileBadge = (fileType: string, fileKey: string) => {
-    if (fileType.startsWith("image/") || isImageUrl(fileKey))
-      return {
-        label: "Image",
-        color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-      };
-    if (fileType === "application/pdf" || fileKey.endsWith(".pdf"))
-      return {
-        label: "PDF",
-        color: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-      };
-    if (fileType.includes("word") || fileType.includes("officedocument"))
-      return {
-        label: "Word",
-        color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      };
-    return {
-      label: "File",
-      color: "bg-slate-500/10 text-slate-400 border-slate-500/20",
-    };
   };
 
   return (
@@ -329,7 +312,7 @@ export default function TenantDocumentsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {paginatedDocuments.map((doc) => {
-              const badge = getFileBadge(doc.file_type, doc.file_key);
+              const fileInfo = getFileTypeInfo(doc.file_url || doc.file_key, doc.file_type);
               return (
                 <div
                   key={doc.id}
@@ -347,9 +330,9 @@ export default function TenantDocumentsPage() {
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="space-y-1">
                         <span
-                          className={`inline-block text-[10px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider ${badge.color}`}
+                          className={`inline-block text-[10px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider ${fileInfo.badgeClass}`}
                         >
-                          {badge.label}
+                          {fileInfo.label}
                         </span>
                         <h3 className="font-bold text-base text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-text-primary))]/80 transition-colors line-clamp-2 leading-tight">
                           {doc.title}

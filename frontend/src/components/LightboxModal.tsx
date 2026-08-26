@@ -11,10 +11,26 @@ import {
   ExternalLink,
   FileText,
   File,
-  FileCode,
   FileImage,
+  Video,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+export function isVideoUrl(url: string, fileType?: string): boolean {
+  if (fileType?.startsWith("video/")) return true;
+  if (!url) return false;
+  if (url.startsWith("data:video/")) return true;
+  const lowerUrl = url.toLowerCase();
+  const pathPart = lowerUrl.split("?")[0];
+  return (
+    /\.(mp4|webm|mov|m4v|ogv|ogg|3gp|mkv|avi)$/i.test(pathPart) ||
+    lowerUrl.includes("/video/") ||
+    lowerUrl.includes("/videos/") ||
+    lowerUrl.includes("video=") ||
+    lowerUrl.includes("type=video")
+  );
+}
 
 export function isImageUrl(url: string, fileType?: string): boolean {
   if (fileType?.startsWith("image/")) return true;
@@ -25,14 +41,14 @@ export function isImageUrl(url: string, fileType?: string): boolean {
   // Explicit non-image extension check to prevent false positives
   if (
     pathPart.match(
-      /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|tar|gz|txt|csv|json|xml)$/i,
+      /\.(pdf|doc|docx|xls|xlsx|csv|txt|mp4|webm|mov|m4v|ogv|ogg|3gp|mkv|zip|rar)$/i,
     )
   ) {
     return false;
   }
 
   // Image extension check
-  if (pathPart.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp|tiff|avif)$/i)) {
+  if (pathPart.match(/\.(jpeg|jpg|gif|png|webp|svg|bmp|tiff|heic|heif|avif)$/i)) {
     return true;
   }
 
@@ -54,22 +70,138 @@ export function isPdfUrl(url: string, fileType?: string): boolean {
   );
 }
 
-export function isTextUrl(url: string, fileType?: string): boolean {
-  if (fileType?.startsWith("text/")) return true;
+export function isSpreadsheetUrl(url: string, fileType?: string): boolean {
+  if (
+    fileType?.includes("spreadsheet") ||
+    fileType?.includes("excel") ||
+    fileType === "text/csv"
+  ) {
+    return true;
+  }
   if (!url) return false;
   const pathPart = url.split("?")[0].toLowerCase();
-  return /\.(txt|csv|json|log|md|xml)$/i.test(pathPart);
+  return /\.(xlsx|xls|csv)$/i.test(pathPart);
 }
 
-export function getFriendlyFileName(url: string) {
+export function isDocUrl(url: string, fileType?: string): boolean {
+  if (
+    fileType?.includes("word") ||
+    fileType?.includes("officedocument") ||
+    fileType?.includes("msword") ||
+    fileType?.includes("opendocument") ||
+    fileType?.startsWith("text/")
+  ) {
+    return true;
+  }
+  if (!url) return false;
+  const pathPart = url.split("?")[0].toLowerCase();
+  return /\.(doc|docx|odt|pages|rtf|txt)$/i.test(pathPart);
+}
+
+export type FileCategory =
+  | "image"
+  | "video"
+  | "pdf"
+  | "doc"
+  | "sheet"
+  | "file";
+
+export interface FileTypeInfo {
+  category: FileCategory;
+  label: string;
+  colorClass: string;
+  badgeClass: string;
+  gradientClass: string;
+}
+
+export function getFileTypeInfo(url: string, fileType?: string): FileTypeInfo {
+  if (isVideoUrl(url, fileType)) {
+    return {
+      category: "video",
+      label: "VIDEO",
+      colorClass: "text-violet-400",
+      badgeClass: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+      gradientClass: "from-violet-500/15 via-purple-500/10 to-violet-950/20",
+    };
+  }
+
+  if (isPdfUrl(url, fileType)) {
+    return {
+      category: "pdf",
+      label: "PDF",
+      colorClass: "text-rose-500",
+      badgeClass: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+      gradientClass: "from-rose-500/15 via-red-500/10 to-rose-950/20",
+    };
+  }
+
+  if (isImageUrl(url, fileType)) {
+    return {
+      category: "image",
+      label: "Image",
+      colorClass: "text-emerald-500",
+      badgeClass: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      gradientClass: "from-emerald-500/15 via-green-500/10 to-emerald-950/20",
+    };
+  }
+
+  if (isDocUrl(url, fileType)) {
+    return {
+      category: "doc",
+      label: "DOC",
+      colorClass: "text-blue-500",
+      badgeClass: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      gradientClass: "from-blue-500/15 via-sky-500/10 to-blue-950/20",
+    };
+  }
+
+  if (isSpreadsheetUrl(url, fileType)) {
+    return {
+      category: "sheet",
+      label: "SHEET",
+      colorClass: "text-emerald-400",
+      badgeClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      gradientClass: "from-emerald-500/15 via-teal-500/10 to-emerald-950/20",
+    };
+  }
+
+  return {
+    category: "file",
+    label: "File",
+    colorClass: "text-slate-400",
+    badgeClass: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+    gradientClass: "from-slate-500/15 via-zinc-500/10 to-slate-950/20",
+  };
+}
+
+export function getFriendlyFileName(url: string, fileType?: string) {
   try {
+    const fileInfo = getFileTypeInfo(url, fileType);
     const pathPart = url.split("?")[0];
     const decodedPath = decodeURIComponent(pathPart);
     const baseName = decodedPath.split("/").pop() || "";
-    if (!baseName) return "Document";
 
     const lastDot = baseName.lastIndexOf(".");
     const ext = lastDot > -1 ? baseName.substring(lastDot) : "";
+
+    const getDefaultFallback = () => {
+      switch (fileInfo.category) {
+        case "image":
+          return `Image${ext || ".jpg"}`;
+        case "video":
+          return `Video${ext || ".mp4"}`;
+        case "pdf":
+          return `Document${ext || ".pdf"}`;
+        case "doc":
+          return `Document${ext || ".docx"}`;
+        case "sheet":
+          return `Spreadsheet${ext || ".xlsx"}`;
+        default:
+          return `File${ext}`;
+      }
+    };
+
+    if (!baseName) return getDefaultFallback();
 
     const uuidRegex =
       /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -86,8 +218,7 @@ export function getFriendlyFileName(url: string) {
       nameWithoutUuid = nameWithoutUuid.replace(/^[-_.]+|[-_.]+$/g, "");
 
       if (!nameWithoutUuid.trim()) {
-        const isImg = isImageUrl(url);
-        return isImg ? `Photo${ext}` : `Document${ext}`;
+        return getDefaultFallback();
       }
 
       if (nameWithoutUuid.length > 20) {
@@ -102,7 +233,21 @@ export function getFriendlyFileName(url: string) {
     }
     return baseName;
   } catch (e) {
-    return "Document";
+    const fileInfo = getFileTypeInfo(url, fileType);
+    switch (fileInfo.category) {
+      case "image":
+        return "Image.jpg";
+      case "video":
+        return "Video.mp4";
+      case "pdf":
+        return "Document.pdf";
+      case "doc":
+        return "Document.docx";
+      case "sheet":
+        return "Spreadsheet.xlsx";
+      default:
+        return "File";
+    }
   }
 }
 
@@ -121,10 +266,11 @@ export function LightboxModal({
   onClose,
   onDownload,
 }: LightboxModalProps) {
-  const displayTitle = title || getFriendlyFileName(url);
+  const displayTitle = title || getFriendlyFileName(url, fileType);
+  const fileInfo = getFileTypeInfo(url, fileType);
   const isImage = isImageUrl(url, fileType);
+  const isVideo = isVideoUrl(url, fileType);
   const isPdf = isPdfUrl(url, fileType);
-  const isText = isTextUrl(url, fileType);
 
   // Zoom & Pan state for images
   const [zoom, setZoom] = useState(1);
@@ -288,14 +434,18 @@ export function LightboxModal({
       >
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <div className="p-2 rounded-xl bg-white/10 text-white shrink-0">
-            {isImage ? (
+            {fileInfo.category === "image" ? (
               <FileImage className="w-4 h-4 text-emerald-400" />
-            ) : isPdf ? (
+            ) : fileInfo.category === "video" ? (
+              <Video className="w-4 h-4 text-violet-400" />
+            ) : fileInfo.category === "pdf" ? (
               <FileText className="w-4 h-4 text-rose-400" />
-            ) : isText ? (
-              <FileCode className="w-4 h-4 text-blue-400" />
+            ) : fileInfo.category === "doc" ? (
+              <FileText className="w-4 h-4 text-blue-400" />
+            ) : fileInfo.category === "sheet" ? (
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
             ) : (
-              <File className="w-4 h-4 text-amber-400" />
+              <File className="w-4 h-4 text-slate-400" />
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -306,13 +456,17 @@ export function LightboxModal({
               {displayTitle}
             </h3>
             <p className="text-[10px] text-white/60 uppercase tracking-wider font-semibold truncate">
-              {isImage
+              {fileInfo.category === "image"
                 ? "Image Preview"
-                : isPdf
-                  ? "PDF Document"
-                  : isText
-                    ? "Text Document"
-                    : "File"}
+                : fileInfo.category === "video"
+                  ? "Video Preview"
+                  : fileInfo.category === "pdf"
+                    ? "PDF Document"
+                    : fileInfo.category === "doc"
+                      ? "Word Document"
+                      : fileInfo.category === "sheet"
+                        ? "Spreadsheet"
+                        : "File"}
             </p>
           </div>
         </div>
@@ -378,24 +532,23 @@ export function LightboxModal({
           {onDownload ? (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onDownload();
               }}
-              className="h-8 sm:h-9 px-2 sm:px-3 gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:text-white hover:bg-white/10 rounded-xl cursor-pointer touch-manipulation"
+              className="size-8 sm:size-9 text-white/80 hover:text-white hover:bg-white/10 rounded-xl cursor-pointer touch-manipulation"
               title="Download file"
               aria-label="Download file"
             >
-              <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">Download</span>
+              <Download className="w-4 h-4" />
             </Button>
           ) : (
             <Button
               asChild
               variant="ghost"
-              size="sm"
-              className="h-8 sm:h-9 px-2 sm:px-3 gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:text-white hover:bg-white/10 rounded-xl cursor-pointer touch-manipulation"
+              size="icon"
+              className="size-8 sm:size-9 text-white/80 hover:text-white hover:bg-white/10 rounded-xl cursor-pointer touch-manipulation"
             >
               <a
                 href={url}
@@ -406,23 +559,21 @@ export function LightboxModal({
                 title="Download file"
                 aria-label="Download file"
               >
-                <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Download</span>
+                <Download className="w-4 h-4" />
               </a>
             </Button>
           )}
 
-          <div className="w-px h-4 bg-white/20 mx-0.5 sm:mx-1" />
-
-          {/* Close button */}
+          {/* Close Modal Button */}
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="size-8 sm:size-9 text-white hover:bg-white/20 rounded-xl bg-white/10 cursor-pointer touch-manipulation active:scale-95"
-            aria-label="Close preview"
+            className="size-8 sm:size-9 text-white/80 hover:text-white hover:bg-white/10 rounded-xl cursor-pointer touch-manipulation"
+            title="Close viewer (Esc)"
+            aria-label="Close viewer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
       </motion.div>
@@ -462,6 +613,25 @@ export function LightboxModal({
               onClick={(e) => e.stopPropagation()}
             />
           </div>
+        ) : isVideo ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.2 }}
+            className="relative flex items-center justify-center max-h-[82vh] max-w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              src={url}
+              controls
+              autoPlay
+              playsInline
+              className="max-h-[80vh] max-w-full rounded-2xl outline-none"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </motion.div>
         ) : isPdf ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -474,21 +644,6 @@ export function LightboxModal({
             <iframe
               src={`${url}#toolbar=1&navpanes=0`}
               className="w-full h-full rounded-2xl border-0 bg-white"
-              title={displayTitle}
-            />
-          </motion.div>
-        ) : isText ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
-            className="w-full h-full max-h-[82vh] rounded-2xl overflow-hidden bg-[#181818] border border-white/10 shadow-2xl p-4 sm:p-6 text-white cursor-default"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <iframe
-              src={url}
-              className="w-full h-full rounded-xl border-0 bg-white/5 text-white"
               title={displayTitle}
             />
           </motion.div>
@@ -519,7 +674,10 @@ export function LightboxModal({
             <div className="pt-2 flex flex-col sm:flex-row gap-2.5 justify-center">
               {onDownload ? (
                 <Button
-                  onClick={onDownload}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload();
+                  }}
                   className="w-full rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs gap-2 h-10 hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer shadow-md"
                 >
                   <Download className="w-4 h-4" />
@@ -535,6 +693,7 @@ export function LightboxModal({
                     download={displayTitle}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Download className="w-4 h-4" />
                     Download File
