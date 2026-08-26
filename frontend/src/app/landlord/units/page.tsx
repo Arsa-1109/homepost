@@ -15,7 +15,9 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  Plus,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { fetchAPI } from "@/lib/api";
 import { useApiQuery } from "@/hooks/useApiQuery";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -32,7 +34,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { UnitCard, Unit } from "@/components/landlord/units/UnitCard";
-import { CreateUnitForm } from "@/components/landlord/units/CreateUnitForm";
+import { CreateUnitModal } from "@/components/landlord/units/CreateUnitModal";
 
 type Property = {
   id: string;
@@ -62,6 +64,7 @@ function LandlordUnitsContent() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [unitsError, setUnitsError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<"ALL" | "OCCUPIED" | "VACANT">("ALL");
@@ -226,6 +229,17 @@ function LandlordUnitsContent() {
                 </Select>
               ) : null}
             </div>
+
+            {properties.length > 0 && (
+              <Button
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="h-11 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-black font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 whitespace-nowrap cursor-pointer shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 transition-all duration-200 active:scale-[0.98]"
+              >
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>Add Unit</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -328,15 +342,6 @@ function LandlordUnitsContent() {
             </div>
           )}
 
-          {/* Unit Creation Section */}
-          <CreateUnitForm
-            selectedProperty={selectedProperty}
-            selectedPropertyName={selectedPropertyName}
-            onSuccess={(newUnits) => {
-              setUnits((prev) => [...prev, ...newUnits]);
-            }}
-          />
-
           {/* Units Grid */}
           <div className="space-y-4">
             {units.length > 0 && (
@@ -388,15 +393,27 @@ function LandlordUnitsContent() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="text-center py-16 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-3"
+                    className="text-center py-14 px-6 border border-border/40 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] shadow-sm max-w-md mx-auto space-y-4"
                   >
-                    <DoorOpen className="w-8 h-8 text-[rgb(var(--ml-text-secondary))] mx-auto opacity-50" />
-                    <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
-                      No units in this property
-                    </h3>
-                    <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
-                      Use the quick-add form above to create your first unit.
-                    </p>
+                    <div className="w-12 h-12 rounded-2xl bg-[rgb(var(--ml-accent))]/10 border border-[rgb(var(--ml-accent))]/20 flex items-center justify-center mx-auto text-[rgb(var(--ml-accent))]">
+                      <DoorOpen className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">
+                        No units in {selectedPropertyName}
+                      </h3>
+                      <p className="text-xs text-[rgb(var(--ml-text-secondary))] max-w-xs mx-auto">
+                        Get started by adding your first unit or generating multiple units in bulk.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="h-10 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-black font-extrabold text-xs inline-flex items-center gap-2 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer transition-all active:scale-[0.98]"
+                    >
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
+                      <span>Add Your First Unit</span>
+                    </Button>
                   </motion.div>
                 ) : shouldShowEmpty(unitsLoading, filteredUnits, Boolean(unitsError)) ? (
                   <motion.div
@@ -522,6 +539,18 @@ function LandlordUnitsContent() {
             )}
         </>
       )}
+
+      {/* Create Unit Modal & Mobile Sheet */}
+      <CreateUnitModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        selectedProperty={selectedProperty}
+        selectedPropertyName={selectedPropertyName}
+        existingUnits={units}
+        onSuccess={(newUnits) => {
+          setUnits((prev) => [...prev, ...newUnits]);
+        }}
+      />
     </div>
   );
 }
