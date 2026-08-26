@@ -12,6 +12,7 @@ export interface MaintenanceItem {
   priority: string;
   status: string;
   unit_label: string;
+  property_id?: string;
   property_name?: string;
   created_at: string;
 }
@@ -131,7 +132,7 @@ export function ActiveMaintenanceCard({ requests }: ActiveMaintenanceCardProps) 
                 const MaintIcon = getMaintenanceIcon(req.title);
                 return (
                   <li key={req.id}>
-                    <Link href={`/landlord/requests?id=${req.id}`}>
+                    <Link href={`/landlord/requests?id=${req.id}${req.property_id ? `&property_id=${req.property_id}` : ""}`}>
                       <div
                         className={cn(
                           "flex flex-col sm:flex-row sm:items-center justify-between py-3.5 px-4 sm:px-6 hover:bg-[rgb(var(--ml-bg-tertiary))]/50 transition-all duration-200 cursor-pointer group gap-2.5 sm:gap-4",

@@ -57,6 +57,7 @@ function LandlordDocumentsContent() {
   const { isLoaded, getToken } = useAuth();
 
   const [selectedProperty, setSelectedProperty] = useState<string>("");
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
@@ -180,10 +181,6 @@ function LandlordDocumentsContent() {
   const filteredDocuments = useMemo(() => {
     return documents
       .filter((doc) => {
-        if (idParam && doc.id !== idParam) {
-          return false;
-        }
-
         const matchesSearch = doc.title
           .toLowerCase()
           .includes(debouncedSearchQuery.toLowerCase());
@@ -198,7 +195,50 @@ function LandlordDocumentsContent() {
         return matchesSearch && matchesFilter;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [documents, searchQuery, selectedFilter, idParam]);
+  }, [documents, searchQuery, selectedFilter]);
+
+  // Adjust filter when deep-linked document is loaded
+  useEffect(() => {
+    if (idParam && documents.length > 0) {
+      const targetDoc = documents.find((d) => d.id === idParam);
+      if (targetDoc) {
+        if (
+          (selectedFilter === "PROPERTY_WIDE" && targetDoc.unit_id) ||
+          (selectedFilter !== "ALL" && selectedFilter !== "PROPERTY_WIDE" && targetDoc.unit_id !== selectedFilter)
+        ) {
+          setSelectedFilter("ALL");
+        }
+      }
+    }
+  }, [idParam, documents, selectedFilter]);
+
+  // Deep linking: calculate target page, highlight and auto scroll
+  useEffect(() => {
+    if (!docsLoading && idParam && documents.length > 0 && filteredDocuments.length > 0) {
+      const index = filteredDocuments.findIndex((d) => d.id === idParam);
+      if (index !== -1) {
+        const page = Math.floor(index / ITEMS_PER_PAGE) + 1;
+        setCurrentPage(page);
+        setHighlightedId(idParam);
+
+        const scrollTimer = setTimeout(() => {
+          const el = document.getElementById(`document-${idParam}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 200);
+
+        const highlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+        }, 3500);
+
+        return () => {
+          clearTimeout(scrollTimer);
+          clearTimeout(highlightTimer);
+        };
+      }
+    }
+  }, [idParam, docsLoading, documents, filteredDocuments, ITEMS_PER_PAGE]);
 
   const totalPages = Math.ceil(filteredDocuments.length / ITEMS_PER_PAGE) || 1;
 
@@ -351,19 +391,6 @@ function LandlordDocumentsContent() {
             </div>
           )}
 
-          {idParam && (
-            <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
-              <span>Showing a specific document.</span>
-              <button
-                type="button"
-                onClick={() => router.replace("/landlord/documents")}
-                className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
-              >
-                Clear Filter
-              </button>
-            </div>
-          )}
-
           {propsError && <ErrorBanner message={propsError} onRetry={refetchProps} />}
           {docsError && <ErrorBanner message={docsError} onRetry={loadPropertyData} />}
         </div>
@@ -482,6 +509,7 @@ function LandlordDocumentsContent() {
                       unitLabel={getUnitLabel(doc)}
                       onPreview={handleOpenPreview}
                       onDownload={handleDownload}
+                      isHighlighted={doc.id === highlightedId}
                     />
                   ))}
                 </div>

@@ -54,8 +54,9 @@ async def test_validate_maintenance_update_closed_rejects(db_session: AsyncSessi
 
 @pytest.mark.asyncio
 async def test_dashboard_service_data(db_session: AsyncSession, seed_data):
-    """get_landlord_dashboard_data aggregates property stats, urgent maintenance, and units accurately."""
+    """get_landlord_dashboard_data aggregates property stats, urgent maintenance, and units accurately with property_id."""
     landlord = seed_data["landlord"]
+    prop = seed_data["property"]
     data = await get_landlord_dashboard_data(db_session, landlord.id)
 
     assert "property_stats" in data
@@ -63,3 +64,8 @@ async def test_dashboard_service_data(db_session: AsyncSession, seed_data):
     assert "urgent_maintenance" in data
     assert "recent_activity" in data
     assert data["property_stats"]["total_properties"] >= 1
+
+    for item in data["urgent_maintenance"]:
+        assert "property_id" in item
+        if item["property_id"]:
+            assert item["property_id"] == str(prop.id)

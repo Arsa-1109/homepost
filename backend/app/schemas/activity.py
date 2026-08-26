@@ -12,5 +12,6 @@ class ActivityItem(BaseModel):
     timestamp: datetime
     meta: Optional[str] = None
     actor: Optional[str] = None
+    property_id: Optional[uuid.UUID] = None
     property_name: Optional[str] = None
     unit_label: Optional[str] = None

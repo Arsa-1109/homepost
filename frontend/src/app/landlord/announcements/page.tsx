@@ -57,23 +57,29 @@ function LandlordAnnouncementsContent() {
   const idParam = searchParams.get("id");
   const router = useRouter();
   const { isLoaded, getToken } = useAuth();
-
+  const [selectedFilter, setSelectedFilter] = useState<
+    "ALL" | "RECENT" | "PROPERTY" | "UNIT"
+  >("ALL");
   const [selectedProperty, setSelectedProperty] = useState<string>("");
-  const [unitsByProperty, setUnitsByProperty] = useState<Record<string, Unit[]>>({});
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  const [unitsByProperty, setUnitsByProperty] = useState<
+    Record<string, Unit[]>
+  >({});
   const [unitsLoading, setUnitsLoading] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [editingAnnouncement, setEditingAnnouncement] =
+    useState<Announcement | null>(null);
+  const [deletingAnnouncement, setDeletingAnnouncement] =
+    useState<Announcement | null>(null);
   const [showUploadForm, setShowUploadForm] = useState(false);
+
   // Auto-open composer when deep-linked (e.g. via Command Palette "New Announcement")
   useEffect(() => {
     if (searchParams.get("new") === "1") setShowUploadForm(true);
   }, [searchParams]);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  // Edit & Delete State
-  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
-  const [deletingAnnouncement, setDeletingAnnouncement] = useState<Announcement | null>(null);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "RECENT" | "PROPERTY" | "UNIT">("ALL");
 
   const ITEMS_PER_PAGE = 5;
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,16 +106,41 @@ function LandlordAnnouncementsContent() {
   const properties = useMemo(() => data?.properties || [], [data]);
   const announcements = useMemo(() => data?.announcements || [], [data]);
 
-  // Set initial selectedProperty when properties load
+  const propIdParam = searchParams.get("property_id");
+
+  // Set initial selectedProperty when properties load or deep link is present
   useEffect(() => {
-    if (properties.length > 0) {
+    if (properties.length === 0) {
+      setSelectedProperty("");
+      return;
+    }
+
+    if (idParam && announcements.length > 0) {
+      const targetAnn = announcements.find((a) => a.id === idParam);
+      if (targetAnn && targetAnn.property_id) {
+        if (properties.some((p) => p.id === targetAnn.property_id)) {
+          setSelectedProperty(targetAnn.property_id);
+        }
+        // Adjust filter so target is never hidden
+        if (
+          (selectedFilter === "PROPERTY" && targetAnn.unit_id) ||
+          (selectedFilter === "UNIT" && !targetAnn.unit_id) ||
+          selectedFilter === "RECENT"
+        ) {
+          setSelectedFilter("ALL");
+        }
+        return;
+      }
+    }
+
+    if (propIdParam && properties.some((p) => p.id === propIdParam)) {
+      setSelectedProperty(propIdParam);
+    } else {
       setSelectedProperty((prev) =>
         properties.some((p) => p.id === prev) ? prev : properties[0].id
       );
-    } else {
-      setSelectedProperty("");
     }
-  }, [properties]);
+  }, [properties, announcements, idParam, propIdParam, selectedFilter]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -175,9 +206,6 @@ function LandlordAnnouncementsContent() {
         if (selectedProperty && ann.property_id !== selectedProperty) {
           return false;
         }
-        if (idParam && ann.id !== idParam) {
-          return false;
-        }
 
         const query = debouncedSearchQuery.toLowerCase();
         const matchesSearch =
@@ -199,7 +227,35 @@ function LandlordAnnouncementsContent() {
         return true;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [announcements, searchQuery, selectedFilter, nowTimestamp, idParam, selectedProperty]);
+  }, [announcements, searchQuery, selectedFilter, nowTimestamp, selectedProperty]);
+
+  // Deep linking: calculate target page, highlight and auto scroll
+  useEffect(() => {
+    if (!loading && idParam && announcements.length > 0 && filteredAnnouncements.length > 0) {
+      const index = filteredAnnouncements.findIndex((a) => a.id === idParam);
+      if (index !== -1) {
+        const page = Math.floor(index / ITEMS_PER_PAGE) + 1;
+        setCurrentPage(page);
+        setHighlightedId(idParam);
+
+        const scrollTimer = setTimeout(() => {
+          const el = document.getElementById(`announcement-${idParam}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 200);
+
+        const highlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+        }, 3500);
+
+        return () => {
+          clearTimeout(scrollTimer);
+          clearTimeout(highlightTimer);
+        };
+      }
+    }
+  }, [loading, idParam, announcements, filteredAnnouncements, ITEMS_PER_PAGE]);
 
   const totalPages = Math.ceil(filteredAnnouncements.length / ITEMS_PER_PAGE) || 1;
 
@@ -329,19 +385,6 @@ function LandlordAnnouncementsContent() {
               />
             </div>
           </div>
-
-          {idParam && (
-            <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
-              <span>Showing a specific announcement.</span>
-              <button
-                type="button"
-                onClick={() => router.replace("/landlord/announcements")}
-                className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
-              >
-                Clear Filter
-              </button>
-            </div>
-          )}
 
           {error && <ErrorBanner message={error} onRetry={refetch} />}
         </div>
@@ -494,6 +537,7 @@ function LandlordAnnouncementsContent() {
                             onEdit={setEditingAnnouncement}
                             onDelete={setDeletingAnnouncement}
                             onViewImage={setPreviewUrl}
+                            isHighlighted={ann.id === highlightedId}
                           />
                         );
                       })}

@@ -132,6 +132,7 @@ async def fetch_dashboard_recent_activity(
     unit_property_name_map: dict,
     unit_label_map: dict,
     prop_name_map: dict,
+    unit_property_id_map: dict | None = None,
 ) -> list[ActivityItem]:
     """
     Build cross-domain activity timeline across maintenance, documents, and announcements.
@@ -139,6 +140,9 @@ async def fetch_dashboard_recent_activity(
     activity_list = []
     if not (unit_ids and prop_ids):
         return activity_list
+
+    if unit_property_id_map is None:
+        unit_property_id_map = {}
 
     thirty_days_ago = utc_now() - timedelta(days=30)
 
@@ -170,6 +174,7 @@ async def fetch_dashboard_recent_activity(
             timestamp=event.created_at,
             meta=event_meta,
             actor=actor,
+            property_id=unit_property_id_map.get(str(r.unit_id)),
             property_name=unit_property_name_map.get(str(r.unit_id), "Unknown Property"),
             unit_label=unit_label_map.get(str(r.unit_id), "—")
         ))
@@ -189,6 +194,7 @@ async def fetch_dashboard_recent_activity(
             timestamp=d.created_at,
             meta=d.file_type,
             actor="landlord",
+            property_id=d.property_id,
             property_name=prop_name_map.get(str(d.property_id), "Unknown Property"),
             unit_label=unit_label_map.get(str(d.unit_id)) if d.unit_id else "All units"
         ))
@@ -208,6 +214,7 @@ async def fetch_dashboard_recent_activity(
             timestamp=a.created_at,
             meta="",
             actor="landlord",
+            property_id=a.property_id,
             property_name=prop_name_map.get(str(a.property_id), "Unknown Property"),
             unit_label=unit_label_map.get(str(a.unit_id)) if a.unit_id else "All units"
         ))
@@ -229,6 +236,7 @@ async def get_landlord_dashboard_data(session: AsyncSession, user_id: uuid.UUID)
     pending_list = await fetch_dashboard_pending_tenants(session, user_id)
 
     unit_label_map = {str(u.id): u.unit_label for u in all_units}
+    unit_property_id_map = {str(u.id): u.property_id for u in all_units}
     prop_name_map = {str(p.id): p.name for p in properties}
     unit_property_name_map = {
         str(u.id): prop_name_map.get(str(u.property_id), "Unknown Property")
@@ -237,7 +245,8 @@ async def get_landlord_dashboard_data(session: AsyncSession, user_id: uuid.UUID)
 
     activity_list = await fetch_dashboard_recent_activity(
         session, user_id, unit_ids, prop_ids,
-        unit_property_name_map, unit_label_map, prop_name_map
+        unit_property_name_map, unit_label_map, prop_name_map,
+        unit_property_id_map
     )
 
     return {
@@ -267,6 +276,7 @@ async def get_landlord_dashboard_data(session: AsyncSession, user_id: uuid.UUID)
                 "title": r.title,
                 "priority": r.priority.value if hasattr(r.priority, 'value') else str(r.priority),
                 "status": r.status.value if hasattr(r.status, 'value') else str(r.status),
+                "property_id": str(unit_property_id_map.get(str(r.unit_id))) if unit_property_id_map.get(str(r.unit_id)) else None,
                 "unit_label": unit_label_map.get(str(r.unit_id), "—"),
                 "property_name": unit_property_name_map.get(str(r.unit_id), "—"),
                 "created_at": r.created_at.isoformat(),

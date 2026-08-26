@@ -370,7 +370,7 @@ async def list_maintenance_requests(
     total = total_res.scalar_one()
 
     query = (
-        select(MaintenanceRequest, Property.name, Unit.unit_label)
+        select(MaintenanceRequest, Property.id, Property.name, Unit.unit_label)
         .join(Unit, MaintenanceRequest.unit_id == Unit.id)
         .join(Property, Unit.property_id == Property.id)
         .where(*filters)
@@ -383,8 +383,9 @@ async def list_maintenance_requests(
     requests = req_result.all()
 
     response_data = []
-    for r, prop_name, unit_label in requests:
+    for r, prop_id, prop_name, unit_label in requests:
         resp = MaintenanceRequestResponse.model_validate(r)
+        resp.property_id = prop_id
         resp.property_name = prop_name
         resp.unit_label = unit_label
         await hydrate_maintenance_request(r, resp)
@@ -421,6 +422,9 @@ async def update_maintenance_request(
     )
 
     resp = MaintenanceRequestResponse.model_validate(updated_req)
+    resp.property_id = prop.id
+    resp.property_name = prop.name
+    resp.unit_label = unit.unit_label
     await hydrate_maintenance_request(updated_req, resp)
     return resp
 

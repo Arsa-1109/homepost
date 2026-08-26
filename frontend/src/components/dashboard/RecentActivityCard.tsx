@@ -13,6 +13,7 @@ export interface ActivityItem {
   timestamp: string;
   meta?: string;
   actor?: string;
+  property_id?: string;
   property_name?: string;
   unit_label?: string;
 }
@@ -112,11 +113,12 @@ export function RecentActivityCard({ activity }: RecentActivityCardProps) {
               const isResolved =
                 act.type === "maintenance_update" &&
                 (act.meta === "resolved" || isClosedByTenant);
-              let linkHref = `/landlord/requests?id=${act.id}`;
+              const propParam = act.property_id ? `&property_id=${act.property_id}` : "";
+              let linkHref = `/landlord/requests?id=${act.id}${propParam}`;
               if (act.type === "document_upload") {
-                linkHref = `/landlord/documents?id=${act.id}`;
+                linkHref = `/landlord/documents?id=${act.id}${propParam}`;
               } else if (act.type === "announcement_posted") {
-                linkHref = `/landlord/announcements?id=${act.id}`;
+                linkHref = `/landlord/announcements?id=${act.id}${propParam}`;
               }
               const MaintIcon = getMaintenanceIcon(act.title);
               return (

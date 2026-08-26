@@ -69,4 +69,22 @@ describe("AnnouncementCard", () => {
     const pulseElement = container.querySelector(".animate-pulse");
     expect(pulseElement).toBeInTheDocument();
   });
+
+  it("applies highlight styling and assigns correct DOM id when isHighlighted is true", () => {
+    const { container } = render(
+      <AnnouncementCard
+        announcement={mockAnnouncement}
+        propertyName="Maplewood Heights"
+        unitLabel="Unit 101"
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onViewImage={vi.fn()}
+        isHighlighted={true}
+      />
+    );
+
+    const card = container.querySelector("#announcement-ann-1");
+    expect(card).toBeInTheDocument();
+    expect(card?.className).toContain("ring-2");
+  });
 });

@@ -22,6 +22,7 @@ export interface DocumentCardProps {
   unitLabel: string;
   onPreview: (doc: Document) => void;
   onDownload: (fileKey: string, title: string) => void;
+  isHighlighted?: boolean;
 }
 
 export function DocumentCard({
@@ -29,6 +30,7 @@ export function DocumentCard({
   unitLabel,
   onPreview,
   onDownload,
+  isHighlighted = false,
 }: DocumentCardProps) {
   const getFileBadge = (fileType: string, fileKey: string) => {
     if (fileType.startsWith("image/"))
@@ -101,7 +103,14 @@ export function DocumentCard({
   };
 
   return (
-    <div className="group relative flex flex-col justify-between p-4 border border-border/60 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
+    <div
+      id={`document-${doc.id}`}
+      className={`group relative flex flex-col justify-between p-4 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+        isHighlighted
+          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+          : "border-border/60"
+      }`}
+    >
       <div className="flex gap-4 items-start">
         {/* Thumbnail Preview */}
         <div

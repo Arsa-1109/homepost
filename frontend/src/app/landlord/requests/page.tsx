@@ -47,6 +47,7 @@ function LandlordMaintenanceContent() {
   const { isLoaded, getToken } = useAuth();
 
   const [selectedProperty, setSelectedProperty] = useState<string>("");
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<
     "ALL" | "ACTIVE" | "RESOLVED" | "URGENT"
@@ -77,16 +78,55 @@ function LandlordMaintenanceContent() {
   const properties = useMemo(() => data?.properties || [], [data]);
   const requests = useMemo(() => data?.requests || [], [data]);
 
-  // Set initial selected property
+  const propIdParam = searchParams.get("property_id");
+
+  // Sync selected property and status filter when deep linked or properties load
   useEffect(() => {
-    if (properties.length > 0) {
+    if (properties.length === 0) {
+      setSelectedProperty("");
+      return;
+    }
+
+    if (idParam && requests.length > 0) {
+      const targetReq = requests.find((r) => r.id === idParam);
+      if (targetReq) {
+        let matchedProp = null;
+        if (targetReq.property_id) {
+          matchedProp = properties.find((p) => p.id === targetReq.property_id);
+        }
+        if (!matchedProp && propIdParam) {
+          matchedProp = properties.find((p) => p.id === propIdParam);
+        }
+        if (!matchedProp && targetReq.property_name) {
+          matchedProp = properties.find(
+            (p) => p.name.trim().toLowerCase() === targetReq.property_name?.trim().toLowerCase()
+          );
+        }
+        if (matchedProp) {
+          setSelectedProperty(matchedProp.id);
+        }
+
+        // Adjust filter so target is never hidden
+        if (targetReq.status === "resolved" || targetReq.status === "closed") {
+          setSelectedStatusFilter((prev) => (prev === "ACTIVE" || prev === "URGENT" ? "ALL" : prev));
+        } else if (
+          (targetReq.priority === "low" || targetReq.priority === "medium") &&
+          selectedStatusFilter === "URGENT"
+        ) {
+          setSelectedStatusFilter("ALL");
+        }
+        return;
+      }
+    }
+
+    if (propIdParam && properties.some((p) => p.id === propIdParam)) {
+      setSelectedProperty(propIdParam);
+    } else {
       setSelectedProperty((prev) =>
         properties.some((p) => p.id === prev) ? prev : properties[0].id
       );
-    } else {
-      setSelectedProperty("");
     }
-  }, [properties]);
+  }, [properties, requests, idParam, propIdParam, selectedStatusFilter]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -96,15 +136,13 @@ function LandlordMaintenanceContent() {
   const filteredRequests = useMemo(() => {
     return requests
       .filter((req) => {
-        if (selectedProperty && req.property_name) {
+        if (selectedProperty && req.property_id) {
+          if (req.property_id !== selectedProperty) return false;
+        } else if (selectedProperty && req.property_name) {
           const matchedProp = properties.find((p) => p.id === selectedProperty);
-          if (matchedProp && req.property_name !== matchedProp.name) {
+          if (matchedProp && req.property_name.trim().toLowerCase() !== matchedProp.name.trim().toLowerCase()) {
             return false;
           }
-        }
-
-        if (idParam && req.id !== idParam) {
-          return false;
         }
 
         const query = searchQuery.toLowerCase();
@@ -137,7 +175,35 @@ function LandlordMaintenanceContent() {
         if (pDiff !== 0) return pDiff;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-  }, [requests, searchQuery, selectedStatusFilter, idParam, selectedProperty, properties]);
+  }, [requests, searchQuery, selectedStatusFilter, selectedProperty, properties]);
+
+  // Deep linking: calculate target page, highlight and auto scroll
+  useEffect(() => {
+    if (!loading && idParam && requests.length > 0 && filteredRequests.length > 0) {
+      const index = filteredRequests.findIndex((r) => r.id === idParam);
+      if (index !== -1) {
+        const page = Math.floor(index / ITEMS_PER_PAGE) + 1;
+        setCurrentPage(page);
+        setHighlightedId(idParam);
+
+        const scrollTimer = setTimeout(() => {
+          const el = document.getElementById(`request-${idParam}`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 200);
+
+        const highlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+        }, 3500);
+
+        return () => {
+          clearTimeout(scrollTimer);
+          clearTimeout(highlightTimer);
+        };
+      }
+    }
+  }, [loading, idParam, requests, filteredRequests, ITEMS_PER_PAGE]);
 
   const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE) || 1;
 
@@ -238,19 +304,6 @@ function LandlordMaintenanceContent() {
             />
           </div>
         </div>
-
-        {idParam && (
-          <div className="mt-4 flex items-center bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-semibold px-4 py-2 rounded-xl">
-            <span>Showing a specific maintenance case.</span>
-            <button
-              type="button"
-              onClick={() => router.replace("/landlord/requests")}
-              className="ml-auto underline decoration-blue-500/30 hover:decoration-blue-500 underline-offset-2"
-            >
-              Clear Filter
-            </button>
-          </div>
-        )}
 
         {error && <ErrorBanner message={error} onRetry={refetch} />}
       </div>
@@ -353,7 +406,7 @@ function LandlordMaintenanceContent() {
                       req={req}
                       onUpdate={refetch}
                       defaultExpanded={req.id === idParam}
-                      isHighlighted={req.id === idParam}
+                      isHighlighted={req.id === highlightedId}
                     />
                   ))}
                 </motion.div>

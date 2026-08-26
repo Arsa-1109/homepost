@@ -32,6 +32,7 @@ export interface MaintenanceRequest {
   landlord_notes?: string;
   landlord_image_urls?: string[];
   landlord_image_keys?: string[];
+  property_id?: string;
   property_name?: string;
   unit_label?: string;
 }
