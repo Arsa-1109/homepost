@@ -37,6 +37,13 @@ export interface MaintenanceRequest {
   unit_label?: string;
 }
 
+export const STATUS_LABELS: Record<string, string> = {
+  open: "Open",
+  in_progress: "In Progress",
+  resolved: "Resolved",
+  closed: "Closed",
+};
+
 const VALID_TRANSITIONS: Record<string, string[]> = {
   open: ["in_progress"],
   in_progress: ["resolved"],
@@ -272,7 +279,7 @@ export function RequestCard({
   return (
     <div
       id={`request-${req.id}`}
-      className={`rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border flex flex-col overflow-hidden group/card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+      className={`rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border flex flex-col overflow-hidden group/card transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
         isHighlighted
           ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
           : "border-border/60"
@@ -297,7 +304,7 @@ export function RequestCard({
                   req.status
                 )}`}
               >
-                {req.status.replace("_", " ")}
+                {STATUS_LABELS[req.status] ?? req.status.replace("_", " ")}
               </span>
             </div>
             <div className="text-sm font-medium text-[rgb(var(--ml-text-secondary))] flex items-center gap-2">
@@ -476,7 +483,9 @@ export function RequestCard({
                       disabled={req.status === "closed"}
                     >
                       <SelectTrigger className="w-full bg-[rgb(var(--ml-bg-primary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/30 transition-colors h-11 rounded-xl">
-                        <SelectValue placeholder="Select Status" />
+                        <SelectValue placeholder="Select Status">
+                          {STATUS_LABELS[status] ?? status}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="bg-[rgb(var(--ml-bg-secondary))] border-border/40 rounded-xl">
                         {["open", "in_progress", "resolved", "closed"].map((opt) => {
@@ -489,9 +498,7 @@ export function RequestCard({
                               disabled={!isAllowed}
                               className="rounded-lg text-xs font-semibold"
                             >
-                              {opt === "in_progress"
-                                ? "In Progress"
-                                : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                              {STATUS_LABELS[opt] ?? opt}
                             </SelectItem>
                           );
                         })}

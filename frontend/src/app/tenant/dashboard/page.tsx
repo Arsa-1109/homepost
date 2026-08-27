@@ -426,7 +426,7 @@ export default function TenantDashboard() {
       {latestAnnouncement && (
         <Link 
           href={`/tenant/announcements?id=${latestAnnouncement.id}`}
-          className="group block p-5 rounded-3xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)]"
+          className="group block p-5 rounded-3xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)]"
         >
           <div className="flex items-start gap-3.5">
             <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-400 shrink-0 mt-0.5">
@@ -457,7 +457,7 @@ export default function TenantDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Rent Due Card */}
         <div 
-          className={`p-5 sm:p-6 rounded-3xl border transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] ${
+          className={`p-5 sm:p-6 rounded-3xl border transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] ${
             rentUrgent
               ? "bg-red-500/10 border-red-500/30 text-red-500"
               : "bg-[rgb(var(--ml-bg-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/20"
@@ -489,7 +489,7 @@ export default function TenantDashboard() {
 
         {/* Lease Expiration Card */}
         <div 
-          className={`p-5 sm:p-6 rounded-3xl border transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] ${
+          className={`p-5 sm:p-6 rounded-3xl border transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] ${
             isLeaseExpired
               ? "bg-red-500/10 border-red-500/30 text-red-500"
               : leaseUrgent
@@ -566,7 +566,7 @@ export default function TenantDashboard() {
               <Link
                 key={req.id}
                 href={`/tenant/requests?id=${req.id}`}
-                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-3xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] gap-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
+                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-3xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] gap-3 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
               >
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-2">

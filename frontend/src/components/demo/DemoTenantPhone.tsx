@@ -168,7 +168,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
                             ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
                             : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                         )}>
-                          {req.status}
+                          {req.status.replace("_", " ")}
                         </span>
                         <span className="text-[9px] text-[rgb(var(--ml-text-secondary))] font-medium capitalize">
                           {req.priority}

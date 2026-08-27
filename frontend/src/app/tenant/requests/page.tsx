@@ -272,7 +272,7 @@ function TenantRequestsContent() {
                   type="button"
                   key={filter.id}
                   onClick={() => handleFilterChange(filter.id as Parameters<typeof handleFilterChange>[0])}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-400 ease-out cursor-pointer whitespace-nowrap border ${
                     selectedFilter === filter.id
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
                       : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"

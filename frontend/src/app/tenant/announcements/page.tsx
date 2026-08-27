@@ -399,7 +399,7 @@ function TenantAnnouncementsContent() {
                   key={filter}
                   type="button"
                   onClick={() => setSelectedFilter(filter)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-400 ease-out cursor-pointer whitespace-nowrap border ${
                     selectedFilter === filter
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
                       : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
@@ -532,7 +532,7 @@ function TenantAnnouncementsContent() {
                       <div
                         id={`announcement-${ann.id}`}
                         key={ann.id}
-                        className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-all duration-300 space-y-3 relative group ${
+                        className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] space-y-3 relative group ${
                           isHighlighted
                             ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
                             : "border-border/60"
