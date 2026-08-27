@@ -333,7 +333,7 @@ export function CreateUnitModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onClick={onClose}
             className="fixed inset-0 bg-black/65 backdrop-blur-xs transition-opacity"
             aria-hidden="true"
@@ -344,7 +344,7 @@ export function CreateUnitModal({
             initial={{ y: "100%", opacity: 0.8 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            transition={{ type: "spring", damping: 26, stiffness: 220 }}
             className="relative w-full sm:max-w-lg max-h-[92vh] sm:max-h-[85vh] bg-[rgb(var(--ml-bg-secondary))] border border-border/80 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-10"
             onClick={(e) => e.stopPropagation()}
             role="dialog"

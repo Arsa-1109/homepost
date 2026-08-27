@@ -90,7 +90,7 @@ export function FeatureSection({
             <motion.div
               layoutId="activeFeatureUnderline"
               className="absolute -bottom-6 left-0 right-0 mx-auto w-[80%] h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-80 shadow-[0_0_20px_rgb(var(--ml-accent))] blur-[1px]"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: "spring", stiffness: 200, damping: 24 }}
             />
           )}
         </button>
@@ -119,7 +119,7 @@ export function FeatureSection({
             <motion.div
               layoutId="activeFeatureUnderline"
               className="absolute -bottom-6 left-0 right-0 mx-auto w-[80%] h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-80 shadow-[0_0_20px_rgb(var(--ml-accent))] blur-[1px]"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: "spring", stiffness: 200, damping: 24 }}
             />
           )}
         </button>
@@ -142,10 +142,10 @@ export function FeatureSection({
               viewport={{ once: true, margin: "-50px" }}
               transition={{
                 type: "spring",
-                stiffness: 100,
+                stiffness: 90,
                 damping: 20,
                 mass: 1.2,
-                opacity: { duration: 0.8 },
+                opacity: { duration: 0.9 },
               }}
               whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
               className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
@@ -153,10 +153,10 @@ export function FeatureSection({
               <AnimatePresence mode="wait">
                 <motion.div
                   key={FEATURE_CONTENT[activeFeatureRole][0].id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col items-start"
                 >
                   <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
@@ -188,10 +188,10 @@ export function FeatureSection({
               viewport={{ once: true, margin: "-50px" }}
               transition={{
                 type: "spring",
-                stiffness: 100,
+                stiffness: 90,
                 damping: 20,
                 mass: 1,
-                opacity: { duration: 0.8 },
+                opacity: { duration: 0.9 },
               }}
               whileHover={{ scale: 1.05, zIndex: 30, y: -10 }}
               className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-xl relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
@@ -199,10 +199,10 @@ export function FeatureSection({
               <AnimatePresence mode="wait">
                 <motion.div
                   key={FEATURE_CONTENT[activeFeatureRole][1].id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
                   className="flex flex-col items-start"
                 >
                   <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
@@ -234,10 +234,10 @@ export function FeatureSection({
               viewport={{ once: true, margin: "-50px" }}
               transition={{
                 type: "spring",
-                stiffness: 100,
+                stiffness: 90,
                 damping: 20,
                 mass: 1,
-                opacity: { duration: 0.8 },
+                opacity: { duration: 0.9 },
               }}
               whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
               className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
@@ -245,10 +245,10 @@ export function FeatureSection({
               <AnimatePresence mode="wait">
                 <motion.div
                   key={FEATURE_CONTENT[activeFeatureRole][2].id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, delay: 0.1 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
                   className="flex flex-col items-start"
                 >
                   <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">

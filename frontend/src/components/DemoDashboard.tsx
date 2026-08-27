@@ -114,7 +114,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
               initial={{ opacity: 0, scale: 0.98, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: -8 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-1 overflow-hidden"
             >
               <DemoLandlordView
@@ -134,7 +134,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
               initial={{ opacity: 0, scale: 0.96, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -12 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-1 items-center justify-center p-4 sm:p-8 lg:p-10 relative"
             >
               <DemoTenantPhone

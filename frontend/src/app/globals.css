@@ -201,10 +201,10 @@
 *, *::before, *::after, ::backdrop {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, outline-color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 250ms;
+  transition-duration: 300ms;
 }
 
-/* Ensure interactive hover/focus states remain snappy (150ms) */
+/* Ensure interactive hover/focus states remain smooth & responsive (200ms) */
 a:hover, 
 button:hover, 
 button:focus,
@@ -215,7 +215,7 @@ textarea:focus,
 [role="menuitem"]:hover,
 [role="option"]:hover,
 .group:hover * {
-  transition-duration: 150ms !important;
+  transition-duration: 200ms !important;
 }
 
 /* Suppress all color transitions while the theme class is being swapped */
@@ -232,7 +232,7 @@ html.theme-switching *::after {
    ============================================================ */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 250ms;
+  animation-duration: 300ms;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -258,11 +258,11 @@ html.theme-switching *::after {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.35s ease-out forwards;
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ============================================================

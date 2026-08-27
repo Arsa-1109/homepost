@@ -416,7 +416,8 @@ export function LightboxModal({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.18 } }}
+      exit={{ opacity: 0, transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] } }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/92 backdrop-blur-md p-3 sm:p-6 cursor-pointer touch-none select-none"
       onClick={onClose}
       onMouseMove={handleMouseMove}
@@ -429,6 +430,7 @@ export function LightboxModal({
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-6xl flex items-center justify-between gap-2.5 sm:gap-4 z-50 py-2 px-3 sm:px-5 rounded-2xl bg-[#151515]/95 border border-white/10 backdrop-blur-md text-white shadow-xl cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
@@ -597,7 +599,7 @@ export function LightboxModal({
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               src={url}
               alt={displayTitle}
               className={`object-contain max-w-full max-h-[78vh] w-auto h-auto rounded-xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] border border-white/10 ${
@@ -618,7 +620,7 @@ export function LightboxModal({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="relative flex items-center justify-center max-h-[82vh] max-w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
@@ -637,7 +639,7 @@ export function LightboxModal({
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="w-full h-full max-h-[82vh] rounded-2xl overflow-hidden bg-[#1e1e1e] border border-white/10 shadow-2xl flex flex-col cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
@@ -652,7 +654,7 @@ export function LightboxModal({
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-md p-8 rounded-3xl bg-[#181818] border border-white/10 shadow-2xl text-center space-y-5 text-white cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
