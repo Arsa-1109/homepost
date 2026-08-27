@@ -55,7 +55,7 @@ function CommandDialog({
       </DialogHeader>
       <DialogContent
         className={cn(
-          "top-[18%] translate-y-0 w-full max-w-[calc(100%-1.5rem)] sm:max-w-xl md:max-w-2xl rounded-2xl sm:rounded-3xl border border-border/80 bg-[rgb(var(--ml-bg-secondary))] shadow-[0_24px_80px_rgba(0,0,0,0.25)] p-0 overflow-hidden outline-none duration-200 animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "top-[18%] translate-y-0 w-full max-w-[calc(100%-1.5rem)] sm:max-w-xl md:max-w-2xl rounded-2xl sm:rounded-3xl border border-border/80 bg-[rgb(var(--ml-bg-secondary))] shadow-[0_24px_80px_rgba(0,0,0,0.25)] p-0 overflow-hidden outline-none duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] animate-in fade-in-0 zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         showCloseButton={showCloseButton}

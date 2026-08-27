@@ -158,7 +158,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
             <div className="relative pl-4 space-y-6 mt-6 pb-2">
@@ -173,7 +173,7 @@ export function MaintenanceTimeline({ requestId, userType, refreshKey = 0, onVie
                       key={event.id}
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      transition={{ delay: idx * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                       className="relative flex items-start gap-4"
                     >
                       {/* Node Icon Circle (24px wide, ring-4 stays completely inside container with 16px left padding) */}

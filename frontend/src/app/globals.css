@@ -257,11 +257,11 @@ html.theme-switching *::after {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.35s ease-out forwards;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 .animate-scaleIn {
-  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: scaleIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ============================================================

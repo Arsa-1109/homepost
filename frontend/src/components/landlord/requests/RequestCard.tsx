@@ -380,7 +380,7 @@ export function RequestCard({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden border-t border-border/40 bg-[rgb(var(--ml-bg-tertiary))]/30"
           >
             <div className="p-6 sm:p-8">
