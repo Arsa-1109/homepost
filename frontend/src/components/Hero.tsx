@@ -20,24 +20,24 @@ export function Hero() {
   const { contextSafe } = useGSAP({ scope: container });
 
   useGSAP(() => {
-    // 1. Entrance Animation (graceful & cinematic)
+    // 1. Entrance Animation (snappy & non-blocking)
     const enterTl = gsap.timeline();
 
     enterTl.fromTo(titleRef.current,
       { y: 30, opacity: 0.7, scale: 0.96 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.9, ease: "power3.out" }
+      { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }
     );
 
     enterTl.fromTo(dividerRef.current,
       { scaleX: 0, opacity: 0.7 },
-      { scaleX: 1, opacity: 1, duration: 0.7, ease: "power3.out" },
-      "-=0.5"
+      { scaleX: 1, opacity: 1, duration: 0.4, ease: "power2.out" },
+      "-=0.3"
     );
 
     enterTl.fromTo(subtitleRef.current,
       { y: 15, opacity: 0.7 },
-      { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
-      "-=0.5"
+      { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
+      "-=0.3"
     );
 
     // 2. Continuous 3D Floating Animation
@@ -59,7 +59,7 @@ export function Hero() {
         // This eliminates the "dead zone" and makes it pin instantly upon scrolling.
         start: () => `top top+=${container.current?.getBoundingClientRect().top || 128}`,
         end: "+=150%", // How long the pin lasts
-        scrub: 1.5,
+        scrub: 1.2,
         pin: true,
         pinSpacing: false, // THIS enables the parallax "slide over" effect!
       }
@@ -71,18 +71,18 @@ export function Hero() {
       ease: "power2.in",
     }, 0);
 
-    // Fade out Homepost text with smooth, relaxed pacing
+    // Fade out Homepost text at the precise speed requested
     scrollTl.to(titleScrollRef.current, {
       opacity: 0,
-      duration: 0.45,
+      duration: 0.17,
       ease: "power2.inOut",
     }, 0);
 
-    // Fade out divider and subtitle gracefully
+    // Fade out divider and subtitle even faster (half the speed)
     scrollTl.to([dividerScrollRef.current, subtitleScrollRef.current], {
       opacity: 0,
       y: -50,
-      duration: 0.35,
+      duration: 0.15,
       ease: "power2.inOut",
     }, 0);
 

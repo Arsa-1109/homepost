@@ -301,7 +301,6 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     className="w-full relative min-h-auto lg:h-[520px] flex flex-col md:flex-row lg:block gap-8 max-w-5xl mx-auto perspective-[1200px]"
                   >
                     {/* Owner Card */}
@@ -309,7 +308,7 @@ export default function LandingPage() {
                       initial={{ rotateZ: -1, y: 0, scale: 1 }}
                       animate={{ rotateZ: -1, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.04, rotateZ: -1, rotateX: 4, rotateY: 4, y: -10, zIndex: 50 }}
-                      transition={{ type: "spring", stiffness: 90, damping: 18, mass: 1 }}
+                      transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
                       className="relative lg:absolute lg:top-0 lg:left-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-xl min-h-[380px] lg:h-[430px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
                     >
                       <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
@@ -353,7 +352,7 @@ export default function LandingPage() {
                       initial={{ rotateZ: 2, y: 0, scale: 1 }}
                       animate={{ rotateZ: 2, y: 0, scale: 1 }}
                       whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
-                      transition={{ type: "spring", stiffness: 90, damping: 18, mass: 1 }}
+                      transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
                       className="relative lg:absolute lg:top-0 lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-lg min-h-[380px] lg:h-[430px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
                     >
                       <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4 border border-border">
@@ -401,7 +400,6 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
                     animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
                     exit={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     onSubmit={handleTenantSubmit}
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-2xl bg-card border border-border shadow-xl rounded-2xl p-5 sm:p-8 md:p-12 flex flex-col items-start justify-center z-40 min-h-[420px]"
                   >
