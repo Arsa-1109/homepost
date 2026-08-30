@@ -17,10 +17,9 @@ const tenantCard = extractCard("Tenant");
 
 describe("role selection card structural parity", () => {
   it.each([
-    ["min-height", "min-h-[380px]"],
-    ["desktop height", "lg:h-[430px]"],
-    ["icon circle size", "w-16 h-16 rounded-full"],
-    ["icon glyph size", "w-8 h-8"],
+    ["min-height", "min-h-[290px]"],
+    ["icon circle size", "w-12 h-12 rounded-xl"],
+    ["icon glyph size", "w-6 h-6"],
   ] as const)("%s is identical on both cards", (_label, fragment) => {
     for (const [name, card] of [
       ["owner", ownerCard],
@@ -34,8 +33,8 @@ describe("role selection card structural parity", () => {
     }
   });
 
-  it.each(["scale: 0.96", "lg:top-[50px]", "lg:h-[410px]", "w-14 h-14"])(
-    "disproportion artifact %q is absent",
+  it.each(["min-h-[380px]", "lg:h-[430px]", "Try Owner Demo", "Try Resident Demo"])(
+    "disproportion/demo artifact %q is absent",
     (fragment) => {
       expect(ownerCard).not.toContain(fragment);
       expect(tenantCard).not.toContain(fragment);
@@ -47,12 +46,6 @@ describe("role selection card structural parity", () => {
       .map((m) => m[1]);
     const cardScales = restingScales.slice(0, 2);
     expect(cardScales).toEqual(["1", "1"]);
-  });
-
-  it("both cards share the same desktop vertical position", () => {
-    expect(tenantCard).toMatch(/lg:top-0\b/);
-    expect(ownerCard).toMatch(/lg:top-0\b/);
-    expect(PAGE_SOURCE.slice(0)).not.toContain("lg:top-[");
   });
 
   it("CTAs stay bottom-aligned within each card regardless of content length", () => {
@@ -71,7 +64,7 @@ describe("role selection card structural parity", () => {
 
   it("preserves intentional per-role differentiation", () => {
     expect(ownerCard).toContain("rotateZ: -1");
-    expect(tenantCard).toContain("rotateZ: 2");
+    expect(tenantCard).toContain("rotateZ: 1");
     expect(ownerCard).toContain("Building2");
     expect(tenantCard).toContain("<Key ");
   });

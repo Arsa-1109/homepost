@@ -62,24 +62,24 @@ function ThemeToggle() {
 
 function PortalSkeleton() {
   return (
-    <div className="w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-8 justify-center items-center opacity-60 animate-pulse px-4 min-h-[400px]">
-      <div className="w-full md:w-[440px] min-h-[300px] lg:h-[350px] rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 md:flex-1 lg:flex-none">
-        <div className="w-16 h-16 rounded-full bg-muted/40 border border-border/10" />
+    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-6 justify-center items-center opacity-60 animate-pulse px-4">
+      <div className="w-full md:flex-1 min-h-[290px] rounded-2xl border border-border bg-card p-6 sm:p-7 flex flex-col justify-between">
+        <div className="w-12 h-12 rounded-xl bg-muted/40 border border-border/10 mb-4" />
         <div className="space-y-3 flex-1 w-full">
           <div className="h-6 w-2/3 bg-muted/40 rounded-md" />
           <div className="h-4 w-5/6 bg-muted/20 rounded-md" />
           <div className="h-4 w-3/4 bg-muted/20 rounded-md" />
         </div>
-        <div className="h-12 w-full bg-muted/30 rounded-lg" />
+        <div className="h-11 w-full bg-muted/30 rounded-xl mt-4" />
       </div>
 
-      <div className="w-full md:w-[440px] min-h-[280px] lg:h-[320px] rounded-xl border border-border bg-card p-6 sm:p-8 lg:p-10 flex flex-col justify-between gap-6 hidden md:flex md:flex-1 lg:flex-none">
-        <div className="w-14 h-14 rounded-full bg-muted/30 border border-border/10" />
+      <div className="w-full md:flex-1 min-h-[290px] rounded-2xl border border-border bg-card p-6 sm:p-7 flex flex-col justify-between hidden md:flex">
+        <div className="w-12 h-12 rounded-xl bg-muted/30 border border-border/10 mb-4" />
         <div className="space-y-3 flex-1 w-full">
           <div className="h-6 w-1/2 bg-muted/40 rounded-md" />
           <div className="h-4 w-4/5 bg-muted/20 rounded-md" />
         </div>
-        <div className="h-12 w-full bg-muted/30 rounded-lg" />
+        <div className="h-11 w-full bg-muted/30 rounded-xl mt-4" />
       </div>
     </div>
   );
@@ -267,7 +267,7 @@ export default function LandingPage() {
         {/* Role Selection Area */}
         <section
           id="role-selection"
-          className="max-w-6xl w-full mx-auto relative min-h-[450px] sm:min-h-[500px] mb-20 sm:mb-28 md:mb-32 z-20 flex justify-center mt-12 sm:mt-24 md:mt-48"
+          className="max-w-5xl w-full mx-auto relative min-h-[340px] mb-16 sm:mb-24 z-20 flex justify-center mt-8 sm:mt-16 md:mt-24"
         >
           {hasRole === null ? (
             <PortalSkeleton />
@@ -275,7 +275,7 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-8 sm:p-12 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
+              className="p-8 sm:p-10 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
             >
               <h2 className="text-2xl sm:text-3xl font-bold">Welcome back!</h2>
               <Button
@@ -288,37 +288,37 @@ export default function LandingPage() {
               </Button>
             </motion.div>
           ) : (
-            <div className="w-full relative min-h-[460px] lg:h-[560px] flex flex-col lg:block gap-8 max-w-5xl mx-auto px-2 sm:px-4">
+            <div className="w-full relative flex flex-col items-center gap-8 max-w-4xl mx-auto px-4">
               {error && (
-                <div className="absolute top-[-60px] left-1/2 -translate-x-1/2 w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
+                <div className="w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
                   {error}
                 </div>
               )}
 
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {roleSelection === "none" && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
-                    className="w-full relative min-h-auto lg:h-[520px] flex flex-col md:flex-row lg:block gap-8 max-w-5xl mx-auto perspective-[1200px]"
+                    className="w-full flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto"
                   >
                     {/* Owner Card */}
                     <motion.article
                       initial={{ rotateZ: -1, y: 0, scale: 1 }}
                       animate={{ rotateZ: -1, y: 0, scale: 1 }}
-                      whileHover={{ scale: 1.04, rotateZ: -1, rotateX: 4, rotateY: 4, y: -10, zIndex: 50 }}
-                      transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="relative lg:absolute lg:top-0 lg:left-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-xl min-h-[380px] lg:h-[430px] z-30 focus-within:ring-2 focus-within:ring-accent origin-bottom-left group"
+                      whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                      className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-accent/40 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
                     >
-                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
-                        <Building2 className="text-accent w-8 h-8" />
-                      </div>
                       <div>
-                        <h2 className="text-2xl md:text-3xl font-semibold mb-2 tracking-tight">
+                        <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
+                          <Building2 className="text-accent w-6 h-6" />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
                           I am a Property Owner
                         </h2>
-                        <p className="text-sm sm:text-base text-muted-foreground mb-6 font-medium">
+                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
                           Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.
                         </p>
                       </div>
@@ -327,42 +327,29 @@ export default function LandingPage() {
                           type="button"
                           onClick={handleLandlordSelect}
                           isLoading={isSubmitting && roleSelection === "none"}
-                          className="w-full py-3.5 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
+                          className="w-full py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold text-sm sm:text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
                         >
                           Enter Owner Portal
                         </Button>
-                        {IS_DEMO_MODE && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleLaunchDemo("owner")}
-                            isLoading={launchingDemo === "owner"}
-                            className="w-full py-2.5 h-auto rounded-lg border border-[rgb(var(--ml-accent))]/30 bg-[rgb(var(--ml-accent))]/5 hover:bg-[rgb(var(--ml-accent))]/15 text-[rgb(var(--ml-accent))] font-bold text-sm transition-all flex items-center justify-center gap-1.5"
-                          >
-                            <Sparkles className="w-4 h-4" />
-                            <span>Try Owner Demo</span>
-                            <span className="text-xs opacity-75 font-normal ml-0.5">(Instant Access)</span>
-                          </Button>
-                        )}
                       </div>
                     </motion.article>
 
                     {/* Tenant Card */}
                     <motion.article
-                      initial={{ rotateZ: 2, y: 0, scale: 1 }}
-                      animate={{ rotateZ: 2, y: 0, scale: 1 }}
-                      whileHover={{ scale: 1.02, rotateZ: 2, rotateX: -4, rotateY: -4, y: -10, zIndex: 50 }}
-                      transition={{ type: "spring", stiffness: 120, damping: 20, mass: 1 }}
-                      className="relative lg:absolute lg:top-0 lg:right-[5%] w-full md:flex-1 lg:w-[440px] bg-card border border-border rounded-xl p-6 sm:p-8 lg:p-9 flex flex-col items-start justify-between shadow-lg min-h-[380px] lg:h-[430px] z-20 focus-within:ring-2 focus-within:ring-accent origin-bottom-right group"
+                      initial={{ rotateZ: 1, y: 0, scale: 1 }}
+                      animate={{ rotateZ: 1, y: 0, scale: 1 }}
+                      whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                      className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-border/80 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
                     >
-                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4 border border-border">
-                        <Key className="text-muted-foreground w-8 h-8" />
-                      </div>
                       <div>
-                        <h2 className="text-2xl md:text-3xl font-semibold mb-2 tracking-tight">
+                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border">
+                          <Key className="text-muted-foreground w-6 h-6" />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
                           I am a Tenant
                         </h2>
-                        <p className="text-sm sm:text-base text-muted-foreground mb-6 font-medium">
+                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
                           Submit requests, view announcements, and access important documents securely.
                         </p>
                       </div>
@@ -371,52 +358,37 @@ export default function LandingPage() {
                           type="button"
                           variant="outline"
                           onClick={() => setRoleSelection("tenant")}
-                          className="w-full py-3.5 h-auto rounded-lg text-foreground font-semibold text-base hover:bg-muted hover:border-border"
+                          className="w-full py-3 h-auto rounded-xl border border-border bg-background/80 hover:bg-muted text-foreground font-semibold text-sm sm:text-base shadow-sm transition-all"
                         >
                           Access Tenant Portal
                         </Button>
-                        {IS_DEMO_MODE && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleLaunchDemo("tenant")}
-                            isLoading={launchingDemo === "tenant"}
-                            className="w-full py-2.5 h-auto rounded-lg border border-border/80 bg-background/60 hover:bg-muted/60 text-foreground font-bold text-sm transition-all flex items-center justify-center gap-1.5"
-                          >
-                            <Sparkles className="w-4 h-4 text-[rgb(var(--ml-accent))]" />
-                            <span>Try Resident Demo</span>
-                            <span className="text-xs text-muted-foreground font-normal ml-0.5">(Instant Access)</span>
-                          </Button>
-                        )}
                       </div>
                     </motion.article>
                   </motion.div>
                 )}
-              </AnimatePresence>
 
-              <AnimatePresence>
                 {roleSelection === "tenant" && (
                   <motion.form
-                    initial={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
-                    animate={{ opacity: 1, y: 0, scale: 1, x: "-50%" }}
-                    exit={{ opacity: 0, y: 30, scale: 0.95, x: "-50%" }}
+                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.98 }}
                     onSubmit={handleTenantSubmit}
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-2xl bg-card border border-border shadow-xl rounded-2xl p-5 sm:p-8 md:p-12 flex flex-col items-start justify-center z-40 min-h-[420px]"
+                    className="w-full max-w-xl bg-card border border-border shadow-xl rounded-2xl p-6 sm:p-8 flex flex-col items-start justify-center z-40"
                   >
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-muted flex items-center justify-center mb-6 sm:mb-8 border border-border mx-auto">
-                      <Key className="text-muted-foreground w-7 h-7 sm:w-8 sm:h-8" />
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border mx-auto">
+                      <Key className="text-muted-foreground w-6 h-6" />
                     </div>
-                    <h2 className="text-2xl sm:text-3xl font-semibold mb-3 sm:mb-4 tracking-tight w-full text-center">
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 w-full text-center">
                       Tenant Access
                     </h2>
-                    <p className="text-center w-full text-sm sm:text-base text-muted-foreground font-medium mb-6 sm:mb-8">
+                    <p className="text-center w-full text-sm text-muted-foreground mb-6">
                       Enter your landlord&apos;s email address to connect with their portal.
                     </p>
 
-                    <div className="w-full mb-6 sm:mb-8">
+                    <div className="w-full mb-6">
                       <label
                         htmlFor="landlord-email"
-                        className="block text-sm font-semibold mb-2.5 sm:mb-3 text-foreground tracking-wide"
+                        className="block text-sm font-medium mb-2 text-foreground"
                       >
                         Landlord&apos;s Email Address
                       </label>
@@ -429,22 +401,22 @@ export default function LandingPage() {
                         required
                         inputMode="email"
                         autoComplete="email"
-                        className="w-full p-3.5 sm:p-4 rounded-lg border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-base sm:text-lg font-medium shadow-inner placeholder:text-muted-foreground/40"
+                        className="w-full p-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-sm sm:text-base placeholder:text-muted-foreground/40"
                       />
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => setRoleSelection("none")}
-                        className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 h-auto rounded-lg font-semibold hover:bg-muted hover:border-border"
+                        className="w-full sm:w-auto px-6 py-3 h-auto rounded-xl font-semibold hover:bg-muted"
                       >
                         Back
                       </Button>
                       <Button
                         type="submit"
                         isLoading={isSubmitting}
-                        className="flex-1 w-full px-6 sm:px-8 py-3.5 sm:py-4 h-auto rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold hover:text-white hover:shadow-none hover:translate-y-0"
+                        className="flex-1 w-full px-6 py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold hover:opacity-90 hover:text-white"
                       >
                         Request Access
                       </Button>

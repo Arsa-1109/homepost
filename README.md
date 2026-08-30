@@ -120,7 +120,6 @@ Rental/
 
 ## 🧪 Testing Suites
 
----
 Homepost includes comprehensive automated testing across all layers:
 
 ### Backend Tests (`pytest`)
