@@ -29,11 +29,19 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('units', sa.Column('lease_start', sa.Date(), nullable=True))
-    op.add_column('units', sa.Column('lease_end', sa.Date(), nullable=True))
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    unit_cols = {c['name'] for c in inspector.get_columns('units')}
+
+    if 'lease_start' not in unit_cols:
+        op.add_column('units', sa.Column('lease_start', sa.Date(), nullable=True))
+    if 'lease_end' not in unit_cols:
+        op.add_column('units', sa.Column('lease_end', sa.Date(), nullable=True))
+
     with op.batch_alter_table('users') as batch_op:
         batch_op.alter_column('email', existing_type=sa.String(length=320), nullable=True)
-    if op.get_bind().dialect.name == 'sqlite':
+
+    if conn.dialect.name == 'sqlite':
         with op.batch_alter_table('tenant_profiles') as batch_op:
             batch_op.create_unique_constraint(
                 'tenant_profiles_user_id_key', ['user_id']
@@ -41,10 +49,17 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    if op.get_bind().dialect.name == 'sqlite':
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    unit_cols = {c['name'] for c in inspector.get_columns('units')}
+
+    if conn.dialect.name == 'sqlite':
         with op.batch_alter_table('tenant_profiles') as batch_op:
             batch_op.drop_constraint('tenant_profiles_user_id_key', type_='unique')
     with op.batch_alter_table('users') as batch_op:
         batch_op.alter_column('email', existing_type=sa.String(length=320), nullable=False)
-    op.drop_column('units', 'lease_end')
-    op.drop_column('units', 'lease_start')
+    if 'lease_end' in unit_cols:
+        op.drop_column('units', 'lease_end')
+    if 'lease_start' in unit_cols:
+        op.drop_column('units', 'lease_start')
+
