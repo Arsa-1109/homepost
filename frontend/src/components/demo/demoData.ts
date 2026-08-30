@@ -12,14 +12,13 @@ import {
 } from "lucide-react";
 
 export const LANDLORD_NAV_ITEMS = [
-  { id: "Dashboard",       label: "Dashboard",       href: "/landlord/dashboard",       icon: LayoutDashboard },
-  { id: "Properties",      label: "Properties",      href: "/landlord/properties",      icon: Building2 },
-  { id: "Units",           label: "Units",           href: "/landlord/units",           icon: Home },
-  { id: "Requests",        label: "Requests",        href: "/landlord/requests",        icon: Wrench },
-  { id: "Announcements",   label: "Announcements",   href: "/landlord/announcements",   icon: Megaphone },
-  { id: "Documents",       label: "Documents",       href: "/landlord/documents",       icon: FileText },
-  { id: "Access Requests", label: "Access Requests", href: "/landlord/access-requests", icon: UserCheck },
-  { id: "Settings",        label: "Settings",        href: "/landlord/settings",        icon: Settings2 },
+  { id: "Dashboard",       label: "Dashboard",       href: "/landlord/dashboard",       icon: LayoutDashboard, description: "Overview of properties, units & cashflow" },
+  { id: "Properties",      label: "Properties",      href: "/landlord/properties",      icon: Building2,       description: "Manage property listings & addresses" },
+  { id: "Units",           label: "Units",           href: "/landlord/units",           icon: Home,            description: "Occupancy, leases & unit details" },
+  { id: "Requests",        label: "Requests",        href: "/landlord/requests",        icon: Wrench,          description: "Maintenance & tenant work orders" },
+  { id: "Announcements",   label: "Announcements",   href: "/landlord/announcements",   icon: Megaphone,       description: "Broadcast updates to your residents" },
+  { id: "Documents",       label: "Documents",       href: "/landlord/documents",       icon: FileText,        description: "Upload and view leases & property files" },
+  { id: "Access Requests", label: "Access Requests", href: "/landlord/access-requests", icon: UserCheck,       description: "Review and approve applicant join requests" },
 ];
 
 export const LANDLORD_ACTIVE_REQUESTS = [
@@ -70,17 +69,6 @@ export const LANDLORD_RECENT_ACTIVITY = [
   },
   {
     id: "act-3",
-    type: "maintenance_update",
-    title: "Broken balcony door latch",
-    property_name: "Maplewood Heights",
-    unit_label: "101",
-    status_text: "Case closed by tenant",
-    status_type: "closed",
-    date: "10 Aug 2026",
-    icon: Wrench,
-  },
-  {
-    id: "act-4",
     type: "announcement_posted",
     title: "Scheduled Plumbing Riser Inspection",
     property_name: "Maplewood Heights",

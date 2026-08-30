@@ -5,13 +5,18 @@ import {
   Battery,
   Building2,
   Calendar,
+  ChevronRight,
   Clock,
+  Droplets,
+  FileText,
+  Home,
   Megaphone,
-  Settings,
+  Plus,
   Signal,
   Sun,
   Wifi,
   Wrench,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,12 +59,6 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
               <span className="tracking-tight">Homepost</span>
             </div>
             <div className="flex gap-2 items-center">
-              <button
-                onClick={() => onLaunchDemo("/tenant/settings")}
-                className="size-7 rounded-lg flex items-center justify-center bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border cursor-pointer hover:text-[rgb(var(--ml-text-primary))]"
-              >
-                <Settings className="size-3.5" />
-              </button>
               <div className="size-7 rounded-lg flex items-center justify-center bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border">
                 <Sun className="size-3.5" />
               </div>

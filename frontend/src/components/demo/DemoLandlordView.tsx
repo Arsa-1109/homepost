@@ -1,15 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import {
   Building2,
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
   Megaphone,
+  Menu,
   Sun,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   LANDLORD_ACTIVE_REQUESTS,
@@ -36,11 +40,12 @@ export function DemoLandlordView({
   onSelectTab,
   onLaunchDemo,
 }: DemoLandlordViewProps) {
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const strokeDashoffset =
     RING_CIRCUMFERENCE - (OCCUPANCY_PERCENT / 100) * RING_CIRCUMFERENCE;
 
   return (
-    <>
+    <div className="relative w-full flex flex-1 overflow-hidden">
       {/* Collapsible Sidebar (reproduced from landlord/layout.tsx) */}
       <aside className={cn(
         "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 shrink-0 relative select-none",
@@ -103,9 +108,9 @@ export function DemoLandlordView({
       </aside>
 
       {/* Main Landlord Content View */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[rgb(var(--ml-bg-primary))]">
+      <div className="flex-1 flex flex-col min-w-0 bg-[rgb(var(--ml-bg-primary))]">
         {/* Desktop Top Header Bar (from landlord/layout.tsx header) */}
-        <header className="h-14 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] hidden md:flex sticky top-0 z-10">
+        <header className="h-14 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] hidden md:flex sticky top-0 z-10 shrink-0">
           <div className="font-bold text-base text-[rgb(var(--ml-text-primary))] capitalize">
             {activeTab}
           </div>
@@ -119,8 +124,24 @@ export function DemoLandlordView({
           </div>
         </header>
 
+        {/* Mobile Top Header Bar (from landlord/layout.tsx mobile header) */}
+        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-10">
+          <div className="flex items-center gap-2 text-sm font-bold text-[rgb(var(--ml-text-primary))]">
+            <Building2 className="size-4.5 text-[rgb(var(--ml-accent))]" />
+            <span>Homepost</span>
+          </div>
+          <div className="flex gap-2 items-center">
+            <div className="w-6.5 h-6.5 rounded-full bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/40 flex items-center justify-center text-[11px] font-bold">
+              MV
+            </div>
+            <div className="p-1 rounded-lg border border-border bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))]">
+              <Sun className="w-3 h-3" />
+            </div>
+          </div>
+        </header>
+
         {/* Dashboard Inner Body (DashboardHeader + Action Banner + Bento Grid) */}
-        <div className="p-4 sm:p-6 lg:p-7 flex flex-col gap-5 max-w-7xl mx-auto w-full">
+        <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 max-w-7xl mx-auto w-full pb-6">
 
           {/* Dashboard Header (from DashboardHeader.tsx) */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-1 border-b border-border/40">
@@ -233,14 +254,6 @@ export function DemoLandlordView({
                       </div>
                     );
                   })}
-                </div>
-                <div className="px-5 pt-3 border-t border-border/40 text-center">
-                  <button
-                    onClick={() => onLaunchDemo("/landlord/requests")}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
-                  >
-                    View all active requests (2) &rarr;
-                  </button>
                 </div>
               </div>
 
@@ -398,14 +411,6 @@ export function DemoLandlordView({
                     </div>
                   ))}
                 </div>
-                <div className="px-5 pt-3 border-t border-border/40 text-center">
-                  <button
-                    onClick={() => onLaunchDemo("/landlord/units")}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
-                  >
-                    View all units (4) &rarr;
-                  </button>
-                </div>
               </div>
 
             </div>
@@ -413,7 +418,137 @@ export function DemoLandlordView({
           </div>
 
         </div>
+
+        {/* Mobile Bottom Navigation Bar (exact match to landlord/layout.tsx) */}
+        <nav className="md:hidden sticky bottom-0 left-0 right-0 z-30 bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-lg border-t border-border px-2 pt-1.5 pb-2 min-h-[58px] flex items-center justify-around">
+          {LANDLORD_NAV_ITEMS.slice(0, 4).map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onSelectTab(item.id);
+                  onLaunchDemo(item.href || `/landlord/${item.id.toLowerCase().replace(/\s+/g, "-")}`);
+                }}
+                className={cn(
+                  "flex flex-col items-center justify-center min-h-[44px] min-w-[44px] px-2 py-1 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer touch-manipulation",
+                  isActive
+                    ? "text-[rgb(var(--ml-accent))]"
+                    : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
+                )}
+              >
+                <Icon className={cn("size-4.5 transition-transform", isActive && "scale-110 text-[rgb(var(--ml-accent))]")} />
+                <span className="truncate max-w-[64px] tracking-tight mt-0.5">{item.label}</span>
+              </button>
+            );
+          })}
+
+          {/* 5th Tab: More Button */}
+          <button
+            type="button"
+            onClick={() => setIsMoreOpen(!isMoreOpen)}
+            className={cn(
+              "flex flex-col items-center justify-center min-h-[44px] min-w-[44px] px-2 py-1 rounded-xl text-[10px] font-semibold transition-all duration-200 cursor-pointer touch-manipulation",
+              (isMoreOpen || LANDLORD_NAV_ITEMS.slice(4).some((item) => activeTab === item.id))
+                ? "text-[rgb(var(--ml-accent))]"
+                : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
+            )}
+            aria-label="More navigation options"
+          >
+            <Menu className={cn("size-4.5 transition-transform", (isMoreOpen || LANDLORD_NAV_ITEMS.slice(4).some((item) => activeTab === item.id)) && "scale-110 text-[rgb(var(--ml-accent))]")} />
+            <span className="truncate max-w-[64px] tracking-tight mt-0.5">More</span>
+          </button>
+        </nav>
+
+        {/* Frame-Contained "More" Slide-up Drawer strictly inside Demo Window */}
+        <AnimatePresence>
+          {isMoreOpen && (
+            <>
+              {/* Contained Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMoreOpen(false)}
+                className="absolute inset-0 z-40 bg-black/60 backdrop-blur-xs cursor-pointer"
+              />
+
+              {/* Contained Drawer Panel */}
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 250 }}
+                className="absolute bottom-0 inset-x-0 z-50 bg-[rgb(var(--ml-bg-secondary))] border-t border-border rounded-t-3xl p-5 shadow-2xl max-h-[80%] overflow-y-auto"
+              >
+                {/* Drag Handle */}
+                <div
+                  onClick={() => setIsMoreOpen(false)}
+                  className="mx-auto w-12 h-1.5 rounded-full bg-border/80 mb-4 cursor-pointer hover:bg-border transition-colors"
+                />
+
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-[rgb(var(--ml-text-primary))]">More Options</h3>
+                    <p className="text-xs text-[rgb(var(--ml-text-secondary))] mt-0.5">
+                      Property management tools and settings
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsMoreOpen(false)}
+                    className="p-1.5 rounded-lg border border-border text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Cohesive Full-Width List Cards */}
+                <div className="flex flex-col gap-2.5">
+                  {LANDLORD_NAV_ITEMS.slice(4).map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setIsMoreOpen(false);
+                          onSelectTab(item.id);
+                          onLaunchDemo(item.href || `/landlord/${item.id.toLowerCase().replace(/\s+/g, "-")}`);
+                        }}
+                        className={cn(
+                          "flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 cursor-pointer active:scale-[0.99] text-left w-full",
+                          isActive
+                            ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] border-[rgb(var(--ml-accent))]/40 shadow-sm"
+                            : "bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))] border-border/70 hover:bg-[rgb(var(--ml-bg-tertiary))] hover:border-border"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={cn(
+                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                            isActive 
+                              ? "bg-[rgb(var(--ml-accent))]/15 text-[rgb(var(--ml-accent))]" 
+                              : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/50"
+                          )}>
+                            <Icon className="size-4.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-xs leading-tight truncate">{item.label}</div>
+                            <div className="text-[11px] text-[rgb(var(--ml-text-secondary))] mt-0.5 truncate">
+                              {item.description || "Property management tools & settings"}
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className={cn("size-4 shrink-0 transition-transform ml-2", isActive ? "text-[rgb(var(--ml-accent))]" : "text-[rgb(var(--ml-text-secondary))] opacity-60")} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
-    </>
+    </div>
   );
 }

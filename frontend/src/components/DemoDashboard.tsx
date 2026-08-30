@@ -30,13 +30,13 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
   const [activeTenantTab, setActiveTenantTab] = useState("home");
 
   return (
-    <div className="w-full max-w-5xl mx-auto rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-border solid-panel relative bg-card transition-all duration-300">
+    <div className="w-full max-w-6xl mx-auto rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-border solid-panel relative bg-card transition-all duration-300">
 
       {/* Top Interactive Browser Chrome Bar */}
-      <div className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-3.5 sm:px-6 bg-[rgb(var(--ml-bg-secondary))] z-20 gap-2 sm:gap-4">
+      <div className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-3 sm:px-6 bg-[rgb(var(--ml-bg-secondary))] z-20 gap-2 sm:gap-4">
 
-        {/* Left: Window Controls + Live Breadcrumb */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+        {/* Left: Window Controls + Live Breadcrumb (Desktop Only) */}
+        <div className="hidden sm:flex items-center gap-2.5 sm:gap-3.5 min-w-0">
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="w-3 h-3 rounded-full bg-red-500/80 border border-red-600/30 inline-block" />
             <span className="w-3 h-3 rounded-full bg-amber-500/80 border border-amber-600/30 inline-block" />
@@ -103,7 +103,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
       </div>
 
       {/* Main Interactive Stage with Animated Role Transitions */}
-      <div className="relative min-h-[580px] flex flex-col bg-[rgb(var(--ml-bg-primary))] overflow-hidden">
+      <div className="relative flex flex-col bg-[rgb(var(--ml-bg-primary))] overflow-hidden">
         <AnimatePresence mode="wait">
           {selectedRole === "owner" ? (
             /* ===============================================================
@@ -115,7 +115,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: -8 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-1 overflow-hidden"
+              className="flex flex-1 w-full overflow-hidden"
             >
               <DemoLandlordView
                 isSidebarCollapsed={isSidebarCollapsed}
