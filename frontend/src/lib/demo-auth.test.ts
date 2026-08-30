@@ -1,20 +1,22 @@
 /**
- * C5 — demo-auth sanitization specs (flag OFF: NEXT_PUBLIC_DEMO_MODE unset).
+ * C5 — demo-auth sanitization specs (flag OFF: NEXT_PUBLIC_DEMO_MODE="false").
  *
  * With the build-time flag off, every demo *creation* path must be inert:
  * no cookies, no localStorage, no fabricated tokens. Cleanup helpers stay
  * active so stale demo state from older bundles is still wiped.
  */
+process.env.NEXT_PUBLIC_DEMO_MODE = "false";
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import {
+const {
   clearDemoSession,
   getDemoUser,
   isDemoSession,
   sanitizeSession,
   startDemoSession,
-} from "@/lib/demo-auth";
-import { DEMO_ACCOUNTS } from "@/lib/demo-auth";
+  DEMO_ACCOUNTS,
+} = await import("@/lib/demo-auth");
 
 function plantStaleMockState() {
   document.cookie = "mock_user_id=user_demo_landlord_001; path=/; max-age=600";

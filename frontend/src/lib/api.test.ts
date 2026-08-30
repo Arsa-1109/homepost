@@ -6,10 +6,12 @@
  *    (the backend then rejects cleanly with 401).
  *  - flag ON: only a valid allowlisted demo session may attach a token.
  */
+process.env.NEXT_PUBLIC_DEMO_MODE = "false";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { apiFetch } from "@/lib/api";
-import { clearDemoSession } from "@/lib/demo-auth";
+const { apiFetch } = await import("@/lib/api");
+const { clearDemoSession } = await import("@/lib/demo-auth");
 
 const fetchMock = vi.fn(
   async (_input: RequestInfo | URL, _init?: RequestInit): Promise<Response> =>

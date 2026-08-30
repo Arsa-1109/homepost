@@ -6,7 +6,7 @@
  * constant is statically unreachable / tree-shakeable.
  */
 
-export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+export const IS_DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
 
 export const ALLOWED_DEMO_IDS: ReadonlySet<string> = new Set([
   "user_demo_landlord_001",
