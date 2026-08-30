@@ -6,11 +6,13 @@ services:
     region: oregon # Render free tier default region
     dockerContext: backend
     dockerfilePath: backend/Dockerfile
-    # Render overrides the start command so we can run Alembic migrations on startup
-    startCommand: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    # Render start command: run Alembic migrations, seed initial demo data, then start uvicorn
+    startCommand: sh -c "alembic upgrade head && python seed.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
         sync: false
+      - key: ENABLE_DEMO_AUTH
+        value: "true"
       - key: CLERK_JWKS_URL
         sync: false
       - key: CLERK_ISSUER

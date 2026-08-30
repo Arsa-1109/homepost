@@ -95,10 +95,11 @@ async def _run_seed(
     landlord_email: str,
     clean_first: bool,
 ) -> None:
+    existing_user = None
     if clean_first:
         await clean_database(session)
     else:
-        # Check if demo landlord already exists for idempotency
+        # Check if demo landlord and properties already exist for idempotency
         existing_user = (
             await session.execute(
                 select(User).where(User.clerk_id == landlord_clerk_id)
@@ -106,11 +107,17 @@ async def _run_seed(
         ).scalars().first()
 
         if existing_user:
-            print(
-                f"[INFO] Demo landlord '{landlord_clerk_id}' already exists. "
-                "Use '--clean' or '--reset' to wipe and re-seed."
-            )
-            return
+            existing_prop = (
+                await session.execute(
+                    select(Property).where(Property.owner_id == existing_user.id)
+                )
+            ).scalars().first()
+            if existing_prop:
+                print(
+                    f"[INFO] Demo landlord '{landlord_clerk_id}' with properties already exists. "
+                    "Use '--clean' or '--reset' to wipe and re-seed."
+                )
+                return
 
     now = datetime.now(timezone.utc)
     print("[SEED] Seeding HomePost demo database...")
@@ -118,38 +125,60 @@ async def _run_seed(
     # -------------------------------------------------------------------
     # 1. Create Users (1 Landlord, 2 Mock Tenants)
     # -------------------------------------------------------------------
-    landlord = User(
-        id=uuid.uuid4(),
-        clerk_id=landlord_clerk_id,
-        email=landlord_email,
-        full_name="Marcus Vance (Demo Landlord)",
-        role=UserRole.LANDLORD,
-        created_at=now - timedelta(days=90),
-        updated_at=now - timedelta(days=90),
-    )
-    session.add(landlord)
+    if existing_user:
+        landlord = existing_user
+        if landlord.role != UserRole.LANDLORD:
+            landlord.role = UserRole.LANDLORD
+            session.add(landlord)
+    else:
+        landlord = User(
+            id=uuid.uuid4(),
+            clerk_id=landlord_clerk_id,
+            email=landlord_email,
+            full_name="Marcus Vance (Demo Landlord)",
+            role=UserRole.LANDLORD,
+            created_at=now - timedelta(days=90),
+            updated_at=now - timedelta(days=90),
+        )
+        session.add(landlord)
 
-    tenant1 = User(
-        id=uuid.uuid4(),
-        clerk_id=DEFAULT_TENANT_1_CLERK_ID,
-        email=DEFAULT_TENANT_1_EMAIL,
-        full_name="Sarah Jenkins",
-        role=UserRole.TENANT,
-        created_at=now - timedelta(days=60),
-        updated_at=now - timedelta(days=60),
-    )
-    session.add(tenant1)
+    existing_tenant1 = (
+        await session.execute(
+            select(User).where(User.clerk_id == DEFAULT_TENANT_1_CLERK_ID)
+        )
+    ).scalars().first()
+    if existing_tenant1:
+        tenant1 = existing_tenant1
+    else:
+        tenant1 = User(
+            id=uuid.uuid4(),
+            clerk_id=DEFAULT_TENANT_1_CLERK_ID,
+            email=DEFAULT_TENANT_1_EMAIL,
+            full_name="Sarah Jenkins",
+            role=UserRole.TENANT,
+            created_at=now - timedelta(days=60),
+            updated_at=now - timedelta(days=60),
+        )
+        session.add(tenant1)
 
-    tenant2 = User(
-        id=uuid.uuid4(),
-        clerk_id=DEFAULT_TENANT_2_CLERK_ID,
-        email=DEFAULT_TENANT_2_EMAIL,
-        full_name="Alex Rivera",
-        role=UserRole.TENANT,
-        created_at=now - timedelta(days=45),
-        updated_at=now - timedelta(days=45),
-    )
-    session.add(tenant2)
+    existing_tenant2 = (
+        await session.execute(
+            select(User).where(User.clerk_id == DEFAULT_TENANT_2_CLERK_ID)
+        )
+    ).scalars().first()
+    if existing_tenant2:
+        tenant2 = existing_tenant2
+    else:
+        tenant2 = User(
+            id=uuid.uuid4(),
+            clerk_id=DEFAULT_TENANT_2_CLERK_ID,
+            email=DEFAULT_TENANT_2_EMAIL,
+            full_name="Alex Rivera",
+            role=UserRole.TENANT,
+            created_at=now - timedelta(days=45),
+            updated_at=now - timedelta(days=45),
+        )
+        session.add(tenant2)
     await session.flush()
 
     # -------------------------------------------------------------------

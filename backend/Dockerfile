@@ -30,10 +30,11 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Copy only production application code and migrations
+# Copy only production application code, migrations, and seed helper
 COPY --chown=appuser:appgroup alembic.ini ./
 COPY --chown=appuser:appgroup alembic ./alembic
 COPY --chown=appuser:appgroup app ./app
+COPY --chown=appuser:appgroup seed.py ./
 
 # Copy entrypoint script and ensure executable permissions
 COPY --chown=appuser:appgroup docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -48,6 +49,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request, os; port=os.environ.get('PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health')" || exit 1
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+
 
 

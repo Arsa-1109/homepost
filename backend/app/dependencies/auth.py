@@ -127,7 +127,11 @@ async def get_current_user(
 
     if user is None:
         initial_role = UserRole.UNASSIGNED
-        if (settings.mock_auth and settings.environment != "production") and payload.get("role"):
+        if (
+            (settings.mock_auth and settings.environment != "production")
+            or settings.enable_demo_auth
+            or clerk_id in ALLOWED_DEMO_USER_IDS
+        ) and payload.get("role"):
             if payload.get("role") == "landlord":
                 initial_role = UserRole.LANDLORD
             elif payload.get("role") == "tenant":
@@ -165,7 +169,11 @@ async def get_current_user(
                 session.add(prof)
                 await session.commit()
 
-    elif (settings.mock_auth and settings.environment != "production") and payload.get("role") and user.role == UserRole.UNASSIGNED:
+    elif (
+        (settings.mock_auth and settings.environment != "production")
+        or settings.enable_demo_auth
+        or clerk_id in ALLOWED_DEMO_USER_IDS
+    ) and payload.get("role") and user.role == UserRole.UNASSIGNED:
         if payload.get("role") == "landlord":
             user.role = UserRole.LANDLORD
             session.add(user)
@@ -174,13 +182,15 @@ async def get_current_user(
         elif payload.get("role") == "tenant":
             user.role = UserRole.TENANT
             session.add(user)
+            await session.commit()
+            await session.refresh(user)
             stmt = select(TenantProfile).where(TenantProfile.user_id == user.id)
             res = await session.execute(stmt)
             if not res.scalar_one_or_none():
                 prof = TenantProfile(user_id=user.id, unit_id=None, is_active=True)
                 session.add(prof)
-            await session.commit()
-            await session.refresh(user)
+                await session.commit()
+
 
     return user
 

@@ -4,6 +4,9 @@ set -e
 # Run database migrations
 alembic upgrade head
 
+# Seed initial demo data (idempotent; safe across cold starts)
+python seed.py || echo "Demo seed completed or skipped"
+
 # If arguments were passed (e.g. from Render startCommand or Docker CMD), execute them
 if [ "$#" -gt 0 ]; then
     exec "$@"

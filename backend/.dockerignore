@@ -39,8 +39,7 @@ pytest.ini
 .coverage.*
 test-results/
 
-# Development / seed scripts (not shipped to production runtime)
-seed.py
+# Development scripts (not shipped to production runtime)
 apply_migration.py
 
 # Local databases & logs

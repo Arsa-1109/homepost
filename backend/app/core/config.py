@@ -88,7 +88,7 @@ class Settings(BaseSettings):
     max_reopen_days: int = 14
     invite_expiry_days: int = 7
     mock_auth: bool = False
-    enable_demo_auth: bool = False  # Explicit opt-in for unsigned demo tokens; never in production
+    enable_demo_auth: bool = True  # Enable allowlisted demo tokens for live demos
     environment: str = "development"  # "development" | "staging" | "production"
 
     # --- Upload Constraints ---
