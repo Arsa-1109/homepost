@@ -35,18 +35,19 @@ COPY --chown=appuser:appgroup alembic.ini ./
 COPY --chown=appuser:appgroup alembic ./alembic
 COPY --chown=appuser:appgroup app ./app
 
+# Copy entrypoint script and ensure executable permissions
+COPY --chown=appuser:appgroup docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 USER appuser
 
-# Expose port (Railway injects $PORT at runtime)
+# Expose port (Render/Railway injects $PORT at runtime)
 EXPOSE 8000
 
-# Container healthcheck using the /healthz endpoint
+# Container healthcheck using the /health endpoint
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python -c "import urllib.request, os; port=os.environ.get('PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{port}/healthz')" || exit 1
+  CMD python -c "import urllib.request, os; port=os.environ.get('PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health')" || exit 1
 
-# --proxy-headers: honor X-Forwarded-For from Railway's LB so rate limiting
-# and request.client reflect the real client IP (audit finding H5).
-# JSON-form CMD (with a shell entrypoint script) keeps signal handling sane.
-COPY --chown=appuser:appgroup docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
 
