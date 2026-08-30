@@ -60,30 +60,14 @@ function ThemeToggle() {
   );
 }
 
-function PortalSkeleton() {
-  return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col md:flex-row gap-6 justify-center items-center opacity-60 animate-pulse px-4">
-      <div className="w-full md:flex-1 min-h-[290px] rounded-2xl border border-border bg-card p-6 sm:p-7 flex flex-col justify-between">
-        <div className="w-12 h-12 rounded-xl bg-muted/40 border border-border/10 mb-4" />
-        <div className="space-y-3 flex-1 w-full">
-          <div className="h-6 w-2/3 bg-muted/40 rounded-md" />
-          <div className="h-4 w-5/6 bg-muted/20 rounded-md" />
-          <div className="h-4 w-3/4 bg-muted/20 rounded-md" />
-        </div>
-        <div className="h-11 w-full bg-muted/30 rounded-xl mt-4" />
-      </div>
-
-      <div className="w-full md:flex-1 min-h-[290px] rounded-2xl border border-border bg-card p-6 sm:p-7 flex flex-col justify-between hidden md:flex">
-        <div className="w-12 h-12 rounded-xl bg-muted/30 border border-border/10 mb-4" />
-        <div className="space-y-3 flex-1 w-full">
-          <div className="h-6 w-1/2 bg-muted/40 rounded-md" />
-          <div className="h-4 w-4/5 bg-muted/20 rounded-md" />
-        </div>
-        <div className="h-11 w-full bg-muted/30 rounded-xl mt-4" />
-      </div>
-    </div>
-  );
-}
+const getInitialRoleState = (): boolean => {
+  if (typeof document !== "undefined") {
+    const cookieRole = document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2];
+    const cookieComplete = document.cookie.includes("mock_user_onboarding_complete=true");
+    return cookieRole === "landlord" || cookieRole === "tenant" || cookieComplete;
+  }
+  return false;
+};
 
 export default function LandingPage() {
   const router = useRouter();
@@ -97,7 +81,7 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [launchingDemo, setLaunchingDemo] = useState<"owner" | "tenant" | null>(null);
   const [error, setError] = useState("");
-  const [hasRole, setHasRole] = useState<boolean | null>(null);
+  const [hasRole, setHasRole] = useState<boolean>(getInitialRoleState);
 
   const handleLaunchDemo = (role: "owner" | "tenant", targetRoute?: string) => {
     setLaunchingDemo(role);
@@ -136,41 +120,23 @@ export default function LandingPage() {
         try {
           const token = await getToken();
           const me = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
-          if (isMounted) {
-            if (me && me.role && me.role !== "none" && me.role !== "unassigned") {
-              setHasRole(true);
-              if (IS_DEMO_MODE && typeof window !== "undefined") {
-                document.cookie = `mock_user_role=${me.role}; path=/; max-age=604800; SameSite=Lax`;
-                document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
-              }
-            } else if (!metadataRole && !metadataComplete && !cookieRole) {
-              setHasRole(false);
+          if (isMounted && me && me.role && me.role !== "none" && me.role !== "unassigned") {
+            setHasRole(true);
+            if (IS_DEMO_MODE && typeof window !== "undefined") {
+              document.cookie = `mock_user_role=${me.role}; path=/; max-age=604800; SameSite=Lax`;
+              document.cookie = "mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax";
             }
           }
         } catch (err) {
-          if (isMounted && !metadataRole && !metadataComplete && !cookieRole) {
-            setHasRole(false);
-          }
+          // ignore background check failure
         }
       };
       checkRole();
-    } else if (isLoaded && !isSignedIn) {
-      setHasRole(false);
     }
     return () => {
       isMounted = false;
     };
   }, [isLoaded, isSignedIn, user, getToken]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (hasRole === null && (!isLoaded || !isSignedIn)) {
-        setHasRole(false);
-      }
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [hasRole, isLoaded, isSignedIn]);
 
   const handleLandlordSelect = async () => {
     if (!isLoaded) return;
@@ -274,163 +240,176 @@ export default function LandingPage() {
           id="role-selection"
           className="max-w-5xl w-full mx-auto relative min-h-[340px] mb-16 sm:mb-24 z-20 flex justify-center mt-8 sm:mt-16 md:mt-24"
         >
-          {hasRole === null ? (
-            <PortalSkeleton />
-          ) : hasRole ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-8 sm:p-10 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
-            >
-              <h2 className="text-2xl sm:text-3xl font-bold">Welcome back!</h2>
-              <Button
-                asChild
-                className="px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
+          <AnimatePresence mode="wait">
+            {hasRole ? (
+              <motion.div
+                key="welcome-back-card"
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="p-8 sm:p-10 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
               >
-                <Link href="/dashboard" className="flex items-center gap-3">
-                  Go to Dashboard <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
-                </Link>
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="w-full relative flex flex-col items-center gap-8 max-w-4xl mx-auto px-4">
-              {error && (
-                <div className="w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
-                  {error}
-                </div>
-              )}
+                <h2 className="text-2xl sm:text-3xl font-bold">Welcome back!</h2>
+                <Button
+                  asChild
+                  className="px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
+                >
+                  <Link href="/dashboard" className="flex items-center gap-3">
+                    Go to Dashboard <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </Link>
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="role-selection-wrapper"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full relative flex flex-col items-center gap-8 max-w-4xl mx-auto px-4"
+              >
+                {error && (
+                  <div className="w-full max-w-lg bg-destructive text-destructive-foreground p-4 rounded-xl text-center font-medium z-50">
+                    {error}
+                  </div>
+                )}
 
-              <AnimatePresence mode="wait">
-                {roleSelection === "none" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="w-full flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto"
-                  >
-                    {/* Owner Card */}
-                    <motion.article
-                      initial={{ rotateZ: -1, y: 0, scale: 1 }}
-                      animate={{ rotateZ: -1, y: 0, scale: 1 }}
-                      whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                      className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-accent/40 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
+                <AnimatePresence mode="wait">
+                  {roleSelection === "none" && (
+                    <motion.div
+                      key="cards-grid"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -12 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="w-full flex flex-col md:flex-row items-stretch justify-center gap-6 max-w-4xl mx-auto"
                     >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
-                          <Building2 className="text-accent w-6 h-6" />
+                      {/* Owner Card */}
+                      <motion.article
+                        initial={{ rotateZ: -1, y: 0, scale: 1 }}
+                        animate={{ rotateZ: -1, y: 0, scale: 1 }}
+                        whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-accent/40 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
+                      >
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
+                            <Building2 className="text-accent w-6 h-6" />
+                          </div>
+                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
+                            I am a Property Owner
+                          </h2>
+                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
+                            Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.
+                          </p>
                         </div>
-                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
-                          I am a Property Owner
-                        </h2>
-                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
-                          Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.
-                        </p>
+                        <div className="flex flex-col gap-2.5 w-full mt-auto">
+                          <Button
+                            type="button"
+                            onClick={handleLandlordSelect}
+                            isLoading={isSubmitting && roleSelection === "none"}
+                            className="w-full py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold text-sm sm:text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
+                          >
+                            Enter Owner Portal
+                          </Button>
+                        </div>
+                      </motion.article>
+
+                      {/* Tenant Card */}
+                      <motion.article
+                        initial={{ rotateZ: 1, y: 0, scale: 1 }}
+                        animate={{ rotateZ: 1, y: 0, scale: 1 }}
+                        whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-border/80 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
+                      >
+                        <div>
+                          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border">
+                            <Key className="text-muted-foreground w-6 h-6" />
+                          </div>
+                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
+                            I am a Tenant
+                          </h2>
+                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
+                            Submit requests, view announcements, and access important documents securely.
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2.5 w-full mt-auto">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setRoleSelection("tenant")}
+                            className="w-full py-3 h-auto rounded-xl border border-border bg-background/80 hover:bg-muted text-foreground font-semibold text-sm sm:text-base shadow-sm transition-all"
+                          >
+                            Access Tenant Portal
+                          </Button>
+                        </div>
+                      </motion.article>
+                    </motion.div>
+                  )}
+
+                  {roleSelection === "tenant" && (
+                    <motion.form
+                      key="tenant-form"
+                      initial={{ opacity: 0, y: 12, scale: 0.99 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -12, scale: 0.99 }}
+                      onSubmit={handleTenantSubmit}
+                      className="w-full max-w-xl bg-card border border-border shadow-xl rounded-2xl p-6 sm:p-8 flex flex-col items-start justify-center z-40"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border mx-auto">
+                        <Key className="text-muted-foreground w-6 h-6" />
                       </div>
-                      <div className="flex flex-col gap-2.5 w-full mt-auto">
-                        <Button
-                          type="button"
-                          onClick={handleLandlordSelect}
-                          isLoading={isSubmitting && roleSelection === "none"}
-                          className="w-full py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold text-sm sm:text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
+                      <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 w-full text-center">
+                        Tenant Access
+                      </h2>
+                      <p className="text-center w-full text-sm text-muted-foreground mb-6">
+                        Enter your landlord&apos;s email address to connect with their portal.
+                      </p>
+
+                      <div className="w-full mb-6">
+                        <label
+                          htmlFor="landlord-email"
+                          className="block text-sm font-medium mb-2 text-foreground"
                         >
-                          Enter Owner Portal
-                        </Button>
+                          Landlord&apos;s Email Address
+                        </label>
+                        <input
+                          id="landlord-email"
+                          type="email"
+                          value={tenantEmail}
+                          onChange={(e) => setTenantEmail(e.target.value)}
+                          placeholder="landlord@example.com"
+                          required
+                          inputMode="email"
+                          autoComplete="email"
+                          className="w-full p-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-sm sm:text-base placeholder:text-muted-foreground/40"
+                        />
                       </div>
-                    </motion.article>
-
-                    {/* Tenant Card */}
-                    <motion.article
-                      initial={{ rotateZ: 1, y: 0, scale: 1 }}
-                      animate={{ rotateZ: 1, y: 0, scale: 1 }}
-                      whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                      className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-border/80 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
-                    >
-                      <div>
-                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border">
-                          <Key className="text-muted-foreground w-6 h-6" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
-                          I am a Tenant
-                        </h2>
-                        <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
-                          Submit requests, view announcements, and access important documents securely.
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-2.5 w-full mt-auto">
+                      <div className="flex flex-col sm:flex-row gap-3 w-full">
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => setRoleSelection("tenant")}
-                          className="w-full py-3 h-auto rounded-xl border border-border bg-background/80 hover:bg-muted text-foreground font-semibold text-sm sm:text-base shadow-sm transition-all"
+                          onClick={() => setRoleSelection("none")}
+                          className="w-full sm:w-auto px-6 py-3 h-auto rounded-xl font-semibold hover:bg-muted"
                         >
-                          Access Tenant Portal
+                          Back
+                        </Button>
+                        <Button
+                          type="submit"
+                          isLoading={isSubmitting}
+                          className="flex-1 w-full px-6 py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold hover:opacity-90 hover:text-white"
+                        >
+                          Request Access
                         </Button>
                       </div>
-                    </motion.article>
-                  </motion.div>
-                )}
-
-                {roleSelection === "tenant" && (
-                  <motion.form
-                    initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.98 }}
-                    onSubmit={handleTenantSubmit}
-                    className="w-full max-w-xl bg-card border border-border shadow-xl rounded-2xl p-6 sm:p-8 flex flex-col items-start justify-center z-40"
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border mx-auto">
-                      <Key className="text-muted-foreground w-6 h-6" />
-                    </div>
-                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 w-full text-center">
-                      Tenant Access
-                    </h2>
-                    <p className="text-center w-full text-sm text-muted-foreground mb-6">
-                      Enter your landlord&apos;s email address to connect with their portal.
-                    </p>
-
-                    <div className="w-full mb-6">
-                      <label
-                        htmlFor="landlord-email"
-                        className="block text-sm font-medium mb-2 text-foreground"
-                      >
-                        Landlord&apos;s Email Address
-                      </label>
-                      <input
-                        id="landlord-email"
-                        type="email"
-                        value={tenantEmail}
-                        onChange={(e) => setTenantEmail(e.target.value)}
-                        placeholder="landlord@example.com"
-                        required
-                        inputMode="email"
-                        autoComplete="email"
-                        className="w-full p-3 rounded-xl border border-border bg-background focus:ring-2 focus:ring-accent/50 focus:border-accent outline-none transition-all text-foreground text-sm sm:text-base placeholder:text-muted-foreground/40"
-                      />
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3 w-full">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setRoleSelection("none")}
-                        className="w-full sm:w-auto px-6 py-3 h-auto rounded-xl font-semibold hover:bg-muted"
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        type="submit"
-                        isLoading={isSubmitting}
-                        className="flex-1 w-full px-6 py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold hover:opacity-90 hover:text-white"
-                      >
-                        Request Access
-                      </Button>
-                    </div>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
 
         {/* Features Section */}
