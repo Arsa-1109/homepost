@@ -188,26 +188,19 @@ function LandlordDocumentsContent() {
         let matchesFilter = true;
         if (selectedFilter === "PROPERTY_WIDE") {
           matchesFilter = !doc.unit_id;
-        } else if (selectedFilter !== "ALL") {
-          matchesFilter = doc.unit_id === selectedFilter;
         }
 
         return matchesSearch && matchesFilter;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [documents, searchQuery, selectedFilter]);
+  }, [documents, debouncedSearchQuery, selectedFilter]);
 
   // Adjust filter when deep-linked document is loaded
   useEffect(() => {
     if (idParam && documents.length > 0) {
       const targetDoc = documents.find((d) => d.id === idParam);
-      if (targetDoc) {
-        if (
-          (selectedFilter === "PROPERTY_WIDE" && targetDoc.unit_id) ||
-          (selectedFilter !== "ALL" && selectedFilter !== "PROPERTY_WIDE" && targetDoc.unit_id !== selectedFilter)
-        ) {
-          setSelectedFilter("ALL");
-        }
+      if (targetDoc && selectedFilter === "PROPERTY_WIDE" && targetDoc.unit_id) {
+        setSelectedFilter("ALL");
       }
     }
   }, [idParam, documents, selectedFilter]);
@@ -362,20 +355,6 @@ function LandlordDocumentsContent() {
                 >
                   Property-Wide
                 </button>
-                {units.map((u) => (
-                  <button
-                    type="button"
-                    key={u.id}
-                    onClick={() => setSelectedFilter(u.id)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-400 ease-out cursor-pointer whitespace-nowrap border ${
-                      selectedFilter === u.id
-                        ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
-                        : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
-                    }`}
-                  >
-                    {u.unit_label}
-                  </button>
-                ))}
               </div>
 
               <div className="relative flex-1 sm:w-64 sm:flex-initial">

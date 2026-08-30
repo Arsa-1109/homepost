@@ -227,7 +227,7 @@ function LandlordAnnouncementsContent() {
         return true;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [announcements, searchQuery, selectedFilter, nowTimestamp, selectedProperty]);
+  }, [announcements, debouncedSearchQuery, selectedFilter, nowTimestamp, selectedProperty]);
 
   // Deep linking: calculate target page, highlight and auto scroll
   useEffect(() => {
