@@ -353,7 +353,7 @@ export default function TenantLayout({
         </main>
 
         {/* Mobile Bottom Tab Bar (visible ONLY on mobile md:hidden) */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center min-h-[64px] border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md z-50 px-2 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex justify-around items-center min-h-[64px] border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md z-50 px-2 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-auto">
           {visibleNavItems.map((tab) => {
             const Icon = tab.icon;
             const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");

@@ -7,7 +7,7 @@
 
 "use client";
 
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, formatInviteError } from "@/lib/errors";
 
 import { use, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -65,19 +65,8 @@ export default function JoinPage({
         }
       }
     } catch (err: unknown) {
-      const errObj = err as { message?: string } | null;
-      const msg = errObj?.message || "";
-      if (msg.includes("invite_not_found")) {
-        setError("This invite link is invalid or doesn't exist.");
-      } else if (msg.includes("invite_expired")) {
-        setError("This invite link has expired. Please ask your landlord for a new one.");
-      } else if (msg.includes("invite_already_used")) {
-        setError("This invite link has already been used.");
-      } else if (msg.includes("invite_inactive")) {
-        setError("This invite link is no longer active.");
-      } else {
-        setError(msg || "Failed to load invitation details.");
-      }
+      const msg = errorMessage(err);
+      setError(formatInviteError(msg));
     } finally {
       setChecking(false);
     }
@@ -104,17 +93,7 @@ export default function JoinPage({
       window.location.href = "/tenant/dashboard";
     } catch (err) {
       const msg = errorMessage(err);
-      if (msg.includes("invite_not_found")) {
-        setError("This invite link is invalid or doesn't exist.");
-      } else if (msg.includes("invite_expired")) {
-        setError("This invite link has expired. Please ask your landlord for a new one.");
-      } else if (msg.includes("invite_already_used")) {
-        setError("This invite link has already been used.");
-      } else if (msg.includes("invite_inactive")) {
-        setError("This invite link is no longer active.");
-      } else {
-        setError(msg || "Failed to accept invite. Please try again.");
-      }
+      setError(formatInviteError(msg));
       setAccepting(false);
     }
   };

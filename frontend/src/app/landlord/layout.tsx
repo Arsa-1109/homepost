@@ -11,6 +11,7 @@ import {
   Wrench, 
   Megaphone, 
   FileText, 
+  UserCheck,
   Settings2, 
   ChevronLeft, 
   ChevronRight 
@@ -23,13 +24,14 @@ import { isDemoSession, exitDemoSession, startDemoSession, sanitizeSession } fro
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { label: "Dashboard",     icon: LayoutDashboard, href: "/landlord/dashboard", description: "Overview of properties, units & cashflow" },
-  { label: "Properties",    icon: Building2,       href: "/landlord/properties", description: "Manage property listings & addresses" },
-  { label: "Units",         icon: Home,            href: "/landlord/units", description: "Occupancy, leases & unit details" },
-  { label: "Requests",      icon: Wrench,          href: "/landlord/requests", description: "Maintenance & tenant work orders" },
-  { label: "Announcements", icon: Megaphone,       href: "/landlord/announcements", description: "Broadcast updates to your residents" },
-  { label: "Documents",     icon: FileText,        href: "/landlord/documents", description: "Upload and view leases & property files" },
-  { label: "Settings",      icon: Settings2,       href: "/landlord/settings", description: "Account preferences & profile setup" },
+  { label: "Dashboard",       icon: LayoutDashboard, href: "/landlord/dashboard", description: "Overview of properties, units & cashflow" },
+  { label: "Properties",      icon: Building2,       href: "/landlord/properties", description: "Manage property listings & addresses" },
+  { label: "Units",           icon: Home,            href: "/landlord/units", description: "Occupancy, leases & unit details" },
+  { label: "Requests",        icon: Wrench,          href: "/landlord/requests", description: "Maintenance & tenant work orders" },
+  { label: "Announcements",   icon: Megaphone,       href: "/landlord/announcements", description: "Broadcast updates to your residents" },
+  { label: "Documents",       icon: FileText,        href: "/landlord/documents", description: "Upload and view leases & property files" },
+  { label: "Access Requests", icon: UserCheck,       href: "/landlord/access-requests", description: "Review and approve applicant join requests" },
+  { label: "Settings",        icon: Settings2,       href: "/landlord/settings", description: "Account preferences & profile setup" },
 ];
 
 export default function LandlordLayout({
@@ -263,7 +265,7 @@ export default function LandlordLayout({
         </main>
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-lg border-t border-border px-2 pt-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] min-h-[64px] flex items-center justify-around">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-lg border-t border-border px-2 pt-1.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] min-h-[64px] flex items-center justify-around pointer-events-auto">
           {visibleNavItems.slice(0, 4).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");

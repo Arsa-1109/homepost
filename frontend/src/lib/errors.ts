@@ -24,3 +24,30 @@ export function errorStatus(err: unknown): number | null {
   }
   return null;
 }
+
+/** Translate technical invite error slugs into user-friendly, empathetic copy. */
+export function formatInviteError(codeOrMessage: string): string {
+  const msg = codeOrMessage.toLowerCase();
+  if (msg.includes("unit_already_occupied")) {
+    return "This unit is already occupied by another resident. Please contact your property owner if you believe this is an error.";
+  }
+  if (msg.includes("invite_not_found")) {
+    return "This invite link is invalid or doesn't exist.";
+  }
+  if (msg.includes("invite_expired")) {
+    return "This invite link has expired. Please ask your landlord for a new one.";
+  }
+  if (msg.includes("invite_already_used")) {
+    return "This invite link has already been used.";
+  }
+  if (msg.includes("invite_inactive")) {
+    return "This invite link is no longer active.";
+  }
+  if (msg.includes("rate_limit_exceeded") || msg.includes("too_many_requests")) {
+    return "Too many requests. Please wait a moment and try again.";
+  }
+  if (msg.includes("unauthorized") || msg.includes("forbidden")) {
+    return "You do not have permission to join this unit.";
+  }
+  return codeOrMessage || "Failed to process invitation. Please try again.";
+}

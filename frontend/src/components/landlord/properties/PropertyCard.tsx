@@ -310,8 +310,9 @@ export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSumma
             <Button
               type="button"
               variant="outline"
+              autoFocus
               onClick={() => setShowDeleteDialog(false)}
-              className="rounded-xl text-xs font-bold"
+              className="rounded-xl text-xs font-bold cursor-pointer"
             >
               Cancel
             </Button>
