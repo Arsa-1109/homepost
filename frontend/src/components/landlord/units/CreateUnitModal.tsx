@@ -26,7 +26,7 @@ export interface CreateUnitModalProps {
   onClose: () => void;
   selectedProperty: string;
   selectedPropertyName: string;
-  existingUnits?: (Unit | string)[];
+  existingUnits?: (Partial<Unit> | string | { unit_label: string })[];
   onSuccess: (newUnits: Unit[]) => void;
 }
 
@@ -79,7 +79,10 @@ function useHoldPress(action: () => void, { initialDelay = 300, interval = 70 } 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const actionRef = useRef(action);
-  actionRef.current = action;
+
+  useEffect(() => {
+    actionRef.current = action;
+  }, [action]);
 
   const stop = useCallback(() => {
     if (timerRef.current) {

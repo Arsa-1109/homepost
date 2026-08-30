@@ -6,6 +6,7 @@ import { Megaphone, Paperclip, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { uploadFile } from "@/lib/upload";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import {
   formatAnnouncementUnitLabel,
 } from "@/lib/announcement-labels";
@@ -31,6 +32,8 @@ export interface CreateAnnouncementFormProps {
   onCancel: () => void;
 }
 
+const DRAFT_KEY = "landlord_draft_announcement";
+
 export function CreateAnnouncementForm({
   properties,
   selectedProperty,
@@ -39,9 +42,19 @@ export function CreateAnnouncementForm({
   onSuccess,
   onCancel,
 }: CreateAnnouncementFormProps) {
-  const [selectedUnit, setSelectedUnit] = useState<string>("");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+  const {
+    values,
+    updateField,
+    isDraftRestored,
+    discardDraft,
+    clearDraft,
+  } = useFormDraft(DRAFT_KEY, {
+    title: "",
+    body: "",
+    selectedUnit: "",
+  });
+
+  const { title, body, selectedUnit } = values;
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -105,9 +118,7 @@ export function CreateAnnouncementForm({
         body: JSON.stringify(payload),
       });
 
-      setTitle("");
-      setBody("");
-      setSelectedUnit("");
+      clearDraft();
       setAttachments([]);
       toast.success("Announcement posted successfully!");
       onSuccess();
@@ -133,6 +144,20 @@ export function CreateAnnouncementForm({
             Broadcasting to <span className="font-semibold text-[rgb(var(--ml-text-primary))]">{selectedPropertyName}</span>
           </p>
         </div>
+        {isDraftRestored && (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+              Draft Restored
+            </span>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 underline transition-colors cursor-pointer"
+            >
+              Discard
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -162,7 +187,7 @@ export function CreateAnnouncementForm({
           </label>
           <Select
             value={selectedUnit || "all"}
-            onValueChange={(val) => setSelectedUnit(val === "all" ? "" : (val as string))}
+            onValueChange={(val) => updateField("selectedUnit", val === "all" ? "" : (val as string))}
           >
             <SelectTrigger className="bg-[rgb(var(--ml-bg-primary))]/80 border-border/60 rounded-xl h-11">
               <span className="flex flex-1 text-left line-clamp-1 truncate font-semibold text-xs text-[rgb(var(--ml-text-primary))]">
@@ -194,7 +219,7 @@ export function CreateAnnouncementForm({
         <input
           required
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => updateField("title", e.target.value)}
           placeholder="e.g. Scheduled Water Maintenance"
           className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50"
         />
@@ -207,7 +232,7 @@ export function CreateAnnouncementForm({
         <textarea
           required
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={(e) => updateField("body", e.target.value)}
           placeholder="Write your announcement details here..."
           rows={4}
           className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50 resize-y"

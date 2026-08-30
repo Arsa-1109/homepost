@@ -11,6 +11,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { uploadFile } from "@/lib/upload";
+import { useFormDraft } from "@/hooks/useFormDraft";
 import { fetchAPI } from "@/lib/api";
 import { toast } from "sonner";
 import { Document } from "./DocumentCard";
@@ -28,6 +29,8 @@ export interface UploadDocumentFormProps {
   onCancel: () => void;
 }
 
+const DRAFT_KEY = "landlord_draft_document";
+
 export function UploadDocumentForm({
   selectedProperty,
   selectedPropertyName,
@@ -35,9 +38,19 @@ export function UploadDocumentForm({
   onSuccess,
   onCancel,
 }: UploadDocumentFormProps) {
-  const [title, setTitle] = useState("");
+  const {
+    values,
+    updateField,
+    isDraftRestored,
+    discardDraft,
+    clearDraft,
+  } = useFormDraft(DRAFT_KEY, {
+    title: "",
+    selectedUnit: "all",
+  });
+
+  const { title, selectedUnit } = values;
   const [file, setFile] = useState<File | null>(null);
-  const [selectedUnit, setSelectedUnit] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -64,9 +77,8 @@ export function UploadDocumentForm({
         body: JSON.stringify(payload),
       });
 
-      setTitle("");
+      clearDraft();
       setFile(null);
-      setSelectedUnit("");
       toast.success("Document uploaded successfully!");
       onSuccess(newDoc);
     } catch (err) {
@@ -94,6 +106,20 @@ export function UploadDocumentForm({
             </span>
           </p>
         </div>
+        {isDraftRestored && (
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+              Draft Restored
+            </span>
+            <button
+              type="button"
+              onClick={discardDraft}
+              className="text-[10px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 underline transition-colors cursor-pointer"
+            >
+              Discard
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -108,7 +134,7 @@ export function UploadDocumentForm({
             id="doc-title"
             required
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => updateField("title", e.target.value)}
             placeholder="e.g. Move-in Checklist 2026"
             className="w-full bg-[rgb(var(--ml-bg-primary))]/80 border border-border/60 rounded-xl p-3 text-xs font-medium text-[rgb(var(--ml-text-primary))] outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all placeholder:text-[rgb(var(--ml-text-secondary))]/50"
           />
@@ -123,7 +149,7 @@ export function UploadDocumentForm({
           </label>
           <Select
             value={selectedUnit || "all"}
-            onValueChange={(val) => setSelectedUnit(val as string)}
+            onValueChange={(val) => updateField("selectedUnit", val as string)}
           >
             <SelectTrigger
               id="select-doc-unit"

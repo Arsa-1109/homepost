@@ -60,7 +60,7 @@ jobs:
         run: python -m pytest -v
 
   frontend-lint:
-    name: Frontend Lint & Build
+    name: Frontend Test, Lint & Build
     runs-on: ubuntu-latest
 
     defaults:
@@ -82,6 +82,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Test
+        run: npm test
 
       - name: Build
         env:

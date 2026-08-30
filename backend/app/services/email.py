@@ -28,8 +28,8 @@ settings = get_settings()
 
 resend.api_key = settings.resend_api_key
 
-# Sender address — sandbox email since no custom domain is verified
-FROM_EMAIL = "Homepost <onboarding@resend.dev>"
+# Sender address — defaults to sandbox or custom verified domain from settings
+FROM_EMAIL = settings.email_from or "Homepost <onboarding@resend.dev>"
 
 
 def _send_email(to: str, subject: str, html_body: str) -> None:

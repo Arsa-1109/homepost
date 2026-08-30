@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { fetchAPI } from "@/lib/api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { toast } from "sonner";
 
 export interface Unit {
@@ -383,8 +384,12 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
                           }
                         );
                         const link = `${window.location.origin}/join/${res.token}`;
-                        navigator.clipboard.writeText(link);
-                        toast.success("Invite link copied to clipboard!");
+                        const copied = await copyToClipboard(link);
+                        if (copied) {
+                          toast.success("Invite link copied to clipboard!");
+                        } else {
+                          toast.info(`Invite link generated: ${link}`);
+                        }
                         setIsDialogOpen(false);
                         onRefresh();
                       } catch (err) {

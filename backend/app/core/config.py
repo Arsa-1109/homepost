@@ -81,6 +81,7 @@ class Settings(BaseSettings):
 
     # --- Resend ---
     resend_api_key: str = ""
+    email_from: str = "Homepost <onboarding@resend.dev>"
 
     # --- App ---
     frontend_url: str = "http://localhost:3000"
