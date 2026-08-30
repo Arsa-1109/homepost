@@ -20,7 +20,7 @@ import { TENANT_REQUESTS, TENANT_TABS } from "@/components/demo/demoData";
 interface DemoTenantPhoneProps {
   activeTab: string;
   onSelectTab: (tab: string) => void;
-  onLaunchDemo: () => void;
+  onLaunchDemo: (route?: string) => void;
 }
 
 export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTenantPhoneProps) {
@@ -54,9 +54,12 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
               <span className="tracking-tight">Homepost</span>
             </div>
             <div className="flex gap-2 items-center">
-              <div className="size-7 rounded-lg flex items-center justify-center bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border">
+              <button
+                onClick={() => onLaunchDemo("/tenant/settings")}
+                className="size-7 rounded-lg flex items-center justify-center bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border cursor-pointer hover:text-[rgb(var(--ml-text-primary))]"
+              >
                 <Settings className="size-3.5" />
-              </div>
+              </button>
               <div className="size-7 rounded-lg flex items-center justify-center bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border">
                 <Sun className="size-3.5" />
               </div>
@@ -80,7 +83,10 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
             </div>
 
             {/* 2. Latest Announcement Banner */}
-            <div className="p-3.5 rounded-2xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-200 cursor-pointer">
+            <div 
+              onClick={() => onLaunchDemo("/tenant/announcements")}
+              className="p-3.5 rounded-2xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-200 cursor-pointer"
+            >
               <div className="flex items-start gap-2.5">
                 <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 shrink-0 mt-0.5">
                   <Megaphone className="w-4 h-4" />
@@ -138,7 +144,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
 
             {/* 4. Primary Full-Width CTA: New Maintenance Request */}
             <Button
-              onClick={onLaunchDemo}
+              onClick={() => onLaunchDemo("/tenant/requests/new")}
               className="w-full h-11 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs shadow-sm cursor-pointer transition-all duration-200 hover:bg-[rgb(var(--ml-accent))] hover:text-black flex items-center justify-center gap-2"
             >
               <Wrench className="w-3.5 h-3.5" />
@@ -158,6 +164,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
                 {TENANT_REQUESTS.map((req) => (
                   <div
                     key={req.id}
+                    onClick={() => onLaunchDemo("/tenant/requests")}
                     className="p-3 rounded-2xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between gap-2 hover:border-[rgb(var(--ml-accent))]/40 transition-all cursor-pointer"
                   >
                     <div className="min-w-0 flex-1 space-y-0.5">
@@ -197,7 +204,10 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onSelectTab(tab.id)}
+                  onClick={() => {
+                    onSelectTab(tab.id);
+                    onLaunchDemo(tab.href || `/tenant/${tab.id}`);
+                  }}
                   className={cn(
                     "flex flex-col items-center justify-center text-[10px] font-medium transition-all px-2 py-0.5 rounded-lg cursor-pointer",
                     isActive

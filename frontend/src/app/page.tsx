@@ -99,10 +99,10 @@ export default function LandingPage() {
   const [error, setError] = useState("");
   const [hasRole, setHasRole] = useState<boolean | null>(null);
 
-  const handleLaunchDemo = (role: "owner" | "tenant") => {
+  const handleLaunchDemo = (role: "owner" | "tenant", targetRoute?: string) => {
     setLaunchingDemo(role);
-    const targetUrl = startDemoSession(role);
-    window.location.href = targetUrl;
+    const defaultUrl = startDemoSession(role);
+    window.location.href = targetRoute || defaultUrl;
   };
 
   useEffect(() => {

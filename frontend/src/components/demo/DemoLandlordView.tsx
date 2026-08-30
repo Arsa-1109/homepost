@@ -23,7 +23,7 @@ interface DemoLandlordViewProps {
   onToggleSidebar: () => void;
   activeTab: string;
   onSelectTab: (tab: string) => void;
-  onLaunchDemo: () => void;
+  onLaunchDemo: (route?: string) => void;
 }
 
 const OCCUPANCY_PERCENT = 50;
@@ -77,7 +77,10 @@ export function DemoLandlordView({
               return (
                 <button
                   key={item.id}
-                  onClick={() => onSelectTab(item.id)}
+                  onClick={() => {
+                    onSelectTab(item.id);
+                    onLaunchDemo(item.href || `/landlord/${item.id.toLowerCase().replace(/\s+/g, "-")}`);
+                  }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer text-left group",
                     isSidebarCollapsed && "justify-center px-0",
@@ -90,16 +93,6 @@ export function DemoLandlordView({
                   <Icon className={cn("size-4 shrink-0 transition-transform group-hover:scale-105", isActive && "text-[rgb(var(--ml-accent))]")} />
                   {!isSidebarCollapsed && (
                     <span className="truncate flex-1 font-semibold">{item.label}</span>
-                  )}
-                  {!isSidebarCollapsed && item.badge && (
-                    <span className={cn(
-                      "text-[10px] font-extrabold px-1.5 py-0.2 rounded-full border",
-                      item.badgeColor === "amber"
-                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                        : "bg-muted text-[rgb(var(--ml-text-secondary))] border-border/40"
-                    )}>
-                      {item.badge}
-                    </span>
                   )}
                 </button>
               );
@@ -146,14 +139,14 @@ export function DemoLandlordView({
 
             <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={onLaunchDemo}
+                onClick={() => onLaunchDemo("/landlord/units")}
                 className="text-xs font-bold border border-border/60 text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <UserPlus className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />
                 Invite Tenant
               </button>
               <button
-                onClick={onLaunchDemo}
+                onClick={() => onLaunchDemo("/landlord/announcements")}
                 className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3.5 py-2 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all duration-200 flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <Megaphone className="h-3.5 w-3.5" />
@@ -181,7 +174,7 @@ export function DemoLandlordView({
               </div>
             </div>
             <button
-              onClick={onLaunchDemo}
+              onClick={() => onLaunchDemo("/landlord/access-requests")}
               className="px-3 py-1.5 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all"
             >
               Review Requests
@@ -243,7 +236,7 @@ export function DemoLandlordView({
                 </div>
                 <div className="px-5 pt-3 border-t border-border/40 text-center">
                   <button
-                    onClick={onLaunchDemo}
+                    onClick={() => onLaunchDemo("/landlord/requests")}
                     className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
                   >
                     View all active requests (2) &rarr;
@@ -407,7 +400,7 @@ export function DemoLandlordView({
                 </div>
                 <div className="px-5 pt-3 border-t border-border/40 text-center">
                   <button
-                    onClick={onLaunchDemo}
+                    onClick={() => onLaunchDemo("/landlord/units")}
                     className="inline-flex items-center gap-1 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
                   >
                     View all units (4) &rarr;

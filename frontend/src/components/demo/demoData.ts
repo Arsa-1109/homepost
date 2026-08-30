@@ -12,14 +12,14 @@ import {
 } from "lucide-react";
 
 export const LANDLORD_NAV_ITEMS = [
-  { id: "Dashboard",       label: "Dashboard",       icon: LayoutDashboard, badge: null },
-  { id: "Properties",      label: "Properties",      icon: Building2,       badge: "2" },
-  { id: "Units",           label: "Units",           icon: Home,            badge: "4" },
-  { id: "Requests",        label: "Requests",        icon: Wrench,          badge: "3", badgeColor: "amber" },
-  { id: "Announcements",   label: "Announcements",   icon: Megaphone,       badge: null },
-  { id: "Documents",       label: "Documents",       icon: FileText,        badge: null },
-  { id: "Access Requests", label: "Access Requests", icon: UserCheck,       badge: "1", badgeColor: "amber" },
-  { id: "Settings",        label: "Settings",        icon: Settings2,       badge: null },
+  { id: "Dashboard",       label: "Dashboard",       href: "/landlord/dashboard",       icon: LayoutDashboard },
+  { id: "Properties",      label: "Properties",      href: "/landlord/properties",      icon: Building2 },
+  { id: "Units",           label: "Units",           href: "/landlord/units",           icon: Home },
+  { id: "Requests",        label: "Requests",        href: "/landlord/requests",        icon: Wrench },
+  { id: "Announcements",   label: "Announcements",   href: "/landlord/announcements",   icon: Megaphone },
+  { id: "Documents",       label: "Documents",       href: "/landlord/documents",       icon: FileText },
+  { id: "Access Requests", label: "Access Requests", href: "/landlord/access-requests", icon: UserCheck },
+  { id: "Settings",        label: "Settings",        href: "/landlord/settings",        icon: Settings2 },
 ];
 
 export const LANDLORD_ACTIVE_REQUESTS = [
@@ -112,10 +112,10 @@ export const LANDLORD_OCCUPIED_UNITS = [
 ];
 
 export const TENANT_TABS = [
-  { id: "home",     label: "Home",     icon: Home },
-  { id: "requests", label: "Requests", icon: Wrench },
-  { id: "news",     label: "News",     icon: Megaphone },
-  { id: "docs",     label: "Docs",     icon: FileText },
+  { id: "home",     label: "Home",     href: "/tenant/dashboard",     icon: Home },
+  { id: "requests", label: "Requests", href: "/tenant/requests",      icon: Wrench },
+  { id: "news",     label: "News",     href: "/tenant/announcements", icon: Megaphone },
+  { id: "docs",     label: "Docs",     href: "/tenant/documents",     icon: FileText },
 ];
 
 export const TENANT_REQUESTS = [

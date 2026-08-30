@@ -10,7 +10,7 @@ import { DemoTenantPhone } from "@/components/demo/DemoTenantPhone";
 
 interface DemoDashboardProps {
   role?: "owner" | "tenant";
-  onLaunchDemo?: (role: "owner" | "tenant") => void;
+  onLaunchDemo?: (role: "owner" | "tenant", targetRoute?: string) => void;
 }
 
 export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardProps) {
@@ -122,7 +122,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 activeTab={activeLandlordTab}
                 onSelectTab={setActiveLandlordTab}
-                onLaunchDemo={() => onLaunchDemo?.("owner")}
+                onLaunchDemo={(route) => onLaunchDemo?.("owner", route)}
               />
             </motion.div>
           ) : (
@@ -140,7 +140,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
               <DemoTenantPhone
                 activeTab={activeTenantTab}
                 onSelectTab={setActiveTenantTab}
-                onLaunchDemo={() => onLaunchDemo?.("tenant")}
+                onLaunchDemo={(route) => onLaunchDemo?.("tenant", route)}
               />
             </motion.div>
           )}
