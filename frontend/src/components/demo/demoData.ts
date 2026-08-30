@@ -6,18 +6,20 @@ import {
   LayoutDashboard,
   Megaphone,
   Settings2,
+  UserCheck,
   Wrench,
   Zap,
 } from "lucide-react";
 
 export const LANDLORD_NAV_ITEMS = [
-  { id: "Dashboard",     label: "Dashboard",     icon: LayoutDashboard, badge: null },
-  { id: "Properties",    label: "Properties",    icon: Building2,       badge: "2" },
-  { id: "Units",         label: "Units",         icon: Home,            badge: "4" },
-  { id: "Requests",      label: "Requests",      icon: Wrench,          badge: "3", badgeColor: "amber" },
-  { id: "Announcements", label: "Announcements", icon: Megaphone,       badge: null },
-  { id: "Documents",     label: "Documents",     icon: FileText,        badge: null },
-  { id: "Settings",      label: "Settings",      icon: Settings2,       badge: null },
+  { id: "Dashboard",       label: "Dashboard",       icon: LayoutDashboard, badge: null },
+  { id: "Properties",      label: "Properties",      icon: Building2,       badge: "2" },
+  { id: "Units",           label: "Units",           icon: Home,            badge: "4" },
+  { id: "Requests",        label: "Requests",        icon: Wrench,          badge: "3", badgeColor: "amber" },
+  { id: "Announcements",   label: "Announcements",   icon: Megaphone,       badge: null },
+  { id: "Documents",       label: "Documents",       icon: FileText,        badge: null },
+  { id: "Access Requests", label: "Access Requests", icon: UserCheck,       badge: "1", badgeColor: "amber" },
+  { id: "Settings",        label: "Settings",        icon: Settings2,       badge: null },
 ];
 
 export const LANDLORD_ACTIVE_REQUESTS = [

@@ -106,23 +106,13 @@ export function DemoLandlordView({
             })}
           </nav>
 
-          {/* Sidebar Bottom Indicator */}
-          {!isSidebarCollapsed && (
-            <div className="pt-4 border-t border-border/60 px-4 flex items-center justify-between text-[11px] text-[rgb(var(--ml-text-secondary))]">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live Database
-              </span>
-              <span className="font-mono text-[10px] opacity-70">v2.4</span>
-            </div>
-          )}
         </div>
       </aside>
 
       {/* Main Landlord Content View */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[rgb(var(--ml-bg-primary))]">
         {/* Desktop Top Header Bar (from landlord/layout.tsx header) */}
-        <header className="h-14 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] hidden md:flex sticky top-0 z-10 backdrop-blur-md bg-opacity-90">
+        <header className="h-14 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] hidden md:flex sticky top-0 z-10">
           <div className="font-bold text-base text-[rgb(var(--ml-text-primary))] capitalize">
             {activeTab}
           </div>

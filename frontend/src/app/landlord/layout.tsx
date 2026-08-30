@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { isDemoSession, exitDemoSession, startDemoSession, sanitizeSession } from "@/lib/demo-auth";
+import { DemoHeaderMenu } from "@/components/demo/DemoHeaderMenu";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -124,84 +125,11 @@ export default function LandlordLayout({
               );
             })}
           </nav>
-
-          {/* Desktop Demo Controls */}
-          {isDemoActive && !isCollapsed && (
-            <div className="p-3 mx-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2 mt-auto">
-              <div className="flex items-center gap-1.5 font-bold text-amber-500 text-[11px] tracking-wide uppercase">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                Demo Mode
-              </div>
-              <p className="text-[11px] text-[rgb(var(--ml-text-secondary))] leading-tight">
-                Previewing as Property Owner (Marcus Vance).
-              </p>
-              <div className="pt-1 flex flex-col gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    startDemoSession("tenant");
-                    window.location.href = "/tenant/dashboard";
-                  }}
-                  className="w-full text-xs h-7 rounded-lg border-amber-500/30 hover:bg-amber-500/15 text-amber-500 hover:text-amber-400 cursor-pointer"
-                >
-                  Switch to Resident Demo
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    exitDemoSession();
-                  }}
-                  className="w-full text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-400 h-7 rounded-lg cursor-pointer"
-                >
-                  Exit Demo
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </aside>
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Persistent Demo Mode Banner across all screen sizes */}
-        {isDemoActive && (
-          <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 flex items-center justify-between text-xs text-amber-500 font-medium z-50 shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-              </span>
-              <span className="font-bold">Demo Mode:</span>
-              <span className="text-[rgb(var(--ml-text-secondary))] hidden sm:inline">Browsing as Marcus Vance (Property Owner)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  startDemoSession("tenant");
-                  window.location.href = "/tenant/dashboard";
-                }}
-                className="h-6 px-2 text-[11px] font-bold text-amber-500 hover:text-amber-400 hover:bg-amber-500/15 rounded-md cursor-pointer"
-              >
-                Switch to Resident Demo &rarr;
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  exitDemoSession();
-                }}
-                className="h-6 px-2 text-[11px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 rounded-md cursor-pointer"
-              >
-                Exit
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Desktop Header */}
         <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md">
           <div className="flex items-center gap-2">
@@ -212,22 +140,17 @@ export default function LandlordLayout({
 
           <div className="flex items-center gap-4">
             {isDemoActive && (
-              <div className="hidden sm:flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-xs">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-[10px]">
-                  MV
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none text-[11px]">Marcus Vance</span>
-                </div>
-                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">
-                  DEMO
-                </span>
-              </div>
+              <DemoHeaderMenu
+                role="landlord"
+                name="Marcus Vance"
+                email="landlord@homepost.demo"
+                initials="MV"
+              />
             )}
 
             {!mounted || !isLoaded ? (
               <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
-            ) : isSignedIn ? (
+            ) : isSignedIn && !isDemoActive ? (
               <UserButton />
             ) : null}
             <ThemeToggle />
@@ -241,17 +164,19 @@ export default function LandlordLayout({
             <span>Homepost</span>
           </Link>
           <div className="flex gap-2.5 items-center">
+            {isDemoActive && (
+              <DemoHeaderMenu
+                role="landlord"
+                name="Marcus Vance"
+                email="landlord@homepost.demo"
+                initials="MV"
+                isMobile
+              />
+            )}
             {!mounted || !isLoaded ? (
               <div className="w-7 h-7 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
-            ) : isSignedIn ? (
+            ) : isSignedIn && !isDemoActive ? (
               <UserButton />
-            ) : isDemoActive ? (
-              <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-0.5 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-white font-bold flex items-center justify-center text-[10px]">
-                  MV
-                </div>
-                <span className="text-[10px] font-bold text-amber-500">DEMO</span>
-              </div>
             ) : null}
             <ThemeToggle />
           </div>

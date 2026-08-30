@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isDemoSession, exitDemoSession, startDemoSession } from "@/lib/demo-auth";
+import { DemoHeaderMenu } from "@/components/demo/DemoHeaderMenu";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -131,84 +132,11 @@ export default function TenantLayout({
               );
             })}
           </nav>
-
-          {/* Desktop Demo Controls */}
-          {isDemoActive && !isCollapsed && (
-            <div className="p-3 mx-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs space-y-2 mt-auto">
-              <div className="flex items-center gap-1.5 font-bold text-purple-400 text-[11px] tracking-wide uppercase">
-                <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                Demo Mode
-              </div>
-              <p className="text-[11px] text-[rgb(var(--ml-text-secondary))] leading-tight">
-                Previewing as Resident (Sarah Jenkins).
-              </p>
-              <div className="pt-1 flex flex-col gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    startDemoSession("owner");
-                    window.location.href = "/landlord/dashboard";
-                  }}
-                  className="w-full text-xs h-7 rounded-lg border-purple-500/30 hover:bg-purple-500/15 text-purple-400 hover:text-purple-300 cursor-pointer"
-                >
-                  Switch to Owner Demo
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    exitDemoSession();
-                  }}
-                  className="w-full text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-400 h-7 rounded-lg cursor-pointer"
-                >
-                  Exit Demo
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </aside>
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Persistent Demo Mode Banner across all screen sizes */}
-        {isDemoActive && (
-          <div className="bg-purple-500/10 border-b border-purple-500/20 px-4 py-1.5 flex items-center justify-between text-xs text-purple-400 font-medium z-50 shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-400"></span>
-              </span>
-              <span className="font-bold">Resident Demo (Read-Only):</span>
-              <span className="text-[rgb(var(--ml-text-secondary))] hidden sm:inline">Browsing as Sarah Jenkins</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  startDemoSession("owner");
-                  window.location.href = "/landlord/dashboard";
-                }}
-                className="h-6 px-2 text-[11px] font-bold text-purple-400 hover:text-purple-300 hover:bg-purple-500/15 rounded-md cursor-pointer"
-              >
-                Switch to Owner Demo &rarr;
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  exitDemoSession();
-                }}
-                className="h-6 px-2 text-[11px] font-bold text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 rounded-md cursor-pointer"
-              >
-                Exit
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Desktop Header (hidden on mobile, visible on md+) */}
         <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-40 backdrop-blur-md">
           <div className="flex items-center gap-2">
@@ -219,51 +147,19 @@ export default function TenantLayout({
 
           <div className="flex items-center gap-4">
             {isDemoActive && (
-              <div className="hidden sm:flex items-center gap-2">
-                <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white font-bold flex items-center justify-center text-[10px]">
-                    SJ
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none text-[11px]">
-                      Sarah Jenkins
-                    </span>
-                  </div>
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                    DEMO
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    startDemoSession("owner");
-                    window.location.href = "/landlord/dashboard";
-                  }}
-                  className="text-xs h-8 rounded-lg border-border hover:border-[rgb(var(--ml-accent))] cursor-pointer px-2"
-                  title="Switch to Owner Demo"
-                >
-                  Owner Demo
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    exitDemoSession();
-                  }}
-                  className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2 cursor-pointer"
-                  title="Exit Demo Mode"
-                >
-                  Exit
-                </Button>
-              </div>
+              <DemoHeaderMenu
+                role="tenant"
+                name="Sarah Jenkins"
+                email="sarah.jenkins@demo.homepost.io"
+                initials="SJ"
+              />
             )}
 
             <ThemeToggle />
 
             {!mounted || !isLoaded ? (
               <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
-            ) : isSignedIn ? (
+            ) : isSignedIn && !isDemoActive ? (
               <UserButton />
             ) : null}
           </div>
@@ -299,50 +195,20 @@ export default function TenantLayout({
                 />
               </Link>
             )}
+            {isDemoActive && (
+              <DemoHeaderMenu
+                role="tenant"
+                name="Sarah Jenkins"
+                email="sarah.jenkins@demo.homepost.io"
+                initials="SJ"
+                isMobile
+              />
+            )}
             <ThemeToggle />
             {!mounted || !isLoaded ? (
               <div className="w-8 h-8 rounded-full bg-[rgb(var(--ml-bg-tertiary))] animate-pulse border border-border shrink-0" />
-            ) : isSignedIn ? (
+            ) : isSignedIn && !isDemoActive ? (
               <UserButton />
-            ) : isDemoActive ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full bg-[rgb(var(--ml-bg-tertiary))] border border-border text-xs shadow-sm">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white font-bold flex items-center justify-center text-[10px]">
-                    SJ
-                  </div>
-                  <div className="hidden sm:flex flex-col text-left">
-                    <span className="font-semibold text-[rgb(var(--ml-text-primary))] leading-none text-[11px]">
-                      Sarah Jenkins
-                    </span>
-                  </div>
-                  <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/30">
-                    DEMO
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    startDemoSession("owner");
-                    window.location.href = "/landlord/dashboard";
-                  }}
-                  className="hidden sm:inline-flex text-xs h-8 rounded-lg border-border hover:border-[rgb(var(--ml-accent))] cursor-pointer px-2"
-                  title="Switch to Owner Demo"
-                >
-                  Owner Demo
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    exitDemoSession();
-                  }}
-                  className="text-xs text-[rgb(var(--ml-text-secondary))] hover:text-red-500 h-8 px-2 cursor-pointer"
-                  title="Exit Demo Mode"
-                >
-                  Exit
-                </Button>
-              </div>
             ) : null}
           </div>
         </header>
