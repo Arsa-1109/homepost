@@ -1,13 +1,41 @@
 name: Render Keep Alive
+
 on:
   schedule:
-    # Runs every 10 minutes
+    # Runs every 10 minutes to prevent Render's 15-min inactivity spin-down
     - cron: '*/10 * * * *'
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+    inputs:
+      target_url:
+        description: 'Target URL to ping (optional override)'
+        required: false
+        type: string
+
 jobs:
   ping:
+    name: Ping Backend Health
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Homepost Render Health Endpoint
+      - name: Ping Homepost Health Endpoint
+        env:
+          BACKEND_URL: ${{ inputs.target_url || secrets.RENDER_BACKEND_URL || secrets.BACKEND_URL }}
         run: |
-          curl -s -f https://<your-render-app-name>.onrender.com/health || echo "Ping failed or starting up"
+          if [ -z "$BACKEND_URL" ]; then
+            echo "::warning ::No RENDER_BACKEND_URL or BACKEND_URL secret configured in GitHub repo secrets."
+            exit 0
+          fi
+          
+          # Clean URL trailing slash and append /health
+          BASE_URL="${BACKEND_URL%/}"
+          TARGET_URL="${BASE_URL}/health"
+          
+          echo "Pinging ${TARGET_URL}..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$TARGET_URL" || echo "000")
+          
+          echo "HTTP Response Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "Render instance is active and warm! (Status: $HTTP_STATUS)"
+          else
+            echo "::warning ::Ping returned status $HTTP_STATUS (instance may be waking up or warming up)."
+          fi
+

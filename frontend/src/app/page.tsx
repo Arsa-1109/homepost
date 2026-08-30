@@ -107,6 +107,11 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMounted(true);
+    // Pre-warm backend on page load (eliminates free tier cold start delay)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    if (apiUrl && !apiUrl.includes("localhost") && !apiUrl.includes("127.0.0.1")) {
+      fetch(`${apiUrl.replace(/\/$/, "")}/health`, { mode: "no-cors" }).catch(() => {});
+    }
     let isMounted = true;
 
     const metadataRole = (user?.publicMetadata as ClerkPublicMetadata | undefined)?.role;
