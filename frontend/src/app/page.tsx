@@ -25,7 +25,13 @@ import { startDemoSession } from "@/lib/demo-auth";
 import { IS_DEMO_MODE } from "@/lib/demo-mode";
 import { api, UserRoleResponse } from "@/lib/api";
 import { LandingBackground } from "@/components/landing/LandingBackground";
-import { FeatureSection } from "@/components/landing/FeatureSection";
+
+const FeatureSection = dynamic(
+  () => import("@/components/landing/FeatureSection").then((m) => m.FeatureSection),
+  {
+    loading: () => <div className="w-full h-80 rounded-3xl bg-muted/10 animate-pulse my-12" />,
+  }
+);
 
 const DemoDashboard = dynamic(
   () => import("@/components/DemoDashboard").then((m) => m.DemoDashboard),
@@ -91,10 +97,19 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMounted(true);
-    // Pre-warm backend on page load (eliminates free tier cold start delay)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    if (apiUrl && !apiUrl.includes("localhost") && !apiUrl.includes("127.0.0.1")) {
-      fetch(`${apiUrl.replace(/\/$/, "")}/health`, { mode: "no-cors" }).catch(() => {});
+    // Pre-warm backend during idle time (eliminates cold start without blocking mobile rendering)
+    const warmBackend = () => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      if (apiUrl && !apiUrl.includes("localhost") && !apiUrl.includes("127.0.0.1")) {
+        fetch(`${apiUrl.replace(/\/$/, "")}/health`, { mode: "no-cors" }).catch(() => {});
+      }
+    };
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(warmBackend);
+      } else {
+        setTimeout(warmBackend, 2000);
+      }
     }
     let isMounted = true;
 
@@ -413,13 +428,18 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <FeatureSection
-          activeFeatureRole={activeFeatureRole}
-          onRoleChange={setActiveFeatureRole}
-        />
+        <section style={{ contentVisibility: "auto", containIntrinsicSize: "800px" }}>
+          <FeatureSection
+            activeFeatureRole={activeFeatureRole}
+            onRoleChange={setActiveFeatureRole}
+          />
+        </section>
 
         {/* Demo Dashboard Area */}
-        <section className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10">
+        <section 
+          className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "600px" }}
+        >
           <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
         </section>
       </main>

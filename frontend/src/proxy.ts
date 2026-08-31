@@ -126,6 +126,43 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
+  // Instant edge redirection for authenticated users hitting /dashboard or /sync-role
+  const isDashboardRoute = pathname === "/dashboard" || pathname === "/dashboard/";
+  const isPlainSyncRoleRoute =
+    (pathname === "/sync-role" || pathname === "/sync-role/") &&
+    !url.searchParams.has("intent") &&
+    !url.searchParams.has("landlord_email") &&
+    !url.searchParams.has("token");
+
+  if (isDashboardRoute || isPlainSyncRoleRoute) {
+    try {
+      const authObj = await auth();
+      type SessionClaimsLike = { metadata?: { onboardingComplete?: boolean; role?: string } };
+      const sessionClaims = (authObj?.sessionClaims ?? null) as SessionClaimsLike | null;
+      const metadata = sessionClaims?.metadata as {
+        onboardingComplete?: boolean;
+        role?: "landlord" | "tenant";
+      } | undefined;
+
+      const userRole = metadata?.role;
+      const cookieRole = req.cookies.get("mock_user_role")?.value;
+      const effectiveRole =
+        userRole ||
+        (process.env.MOCK_AUTH === "true" && (cookieRole === "landlord" || cookieRole === "tenant")
+          ? cookieRole
+          : null);
+
+      if (effectiveRole === "landlord") {
+        return NextResponse.redirect(new URL("/landlord/dashboard", req.url));
+      }
+      if (effectiveRole === "tenant") {
+        return NextResponse.redirect(new URL("/tenant/dashboard", req.url));
+      }
+    } catch {
+      // If auth check fails, fall through to public route handling
+    }
+  }
+
   // Allow public routes through without edge authentication locks
   if (isPublicRoute(req)) {
     return expireMockCookies(NextResponse.next());

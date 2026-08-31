@@ -155,7 +155,7 @@ async def fetch_dashboard_recent_activity(
             (MaintenanceEvent.actor_id == user_id) | (MaintenanceEvent.event_type.in_(["reopened", "status_changed"]))
         )
         .order_by(MaintenanceEvent.created_at.desc())
-        .limit(10)
+        .limit(5)
     )
 
     for event, r in maint_events_result.all():
@@ -183,7 +183,7 @@ async def fetch_dashboard_recent_activity(
         select(Document)
         .where(Document.property_id.in_(prop_ids))
         .order_by(Document.created_at.desc())
-        .limit(10)
+        .limit(5)
     )
 
     for d in recent_docs_result.scalars().all():
@@ -203,7 +203,7 @@ async def fetch_dashboard_recent_activity(
         select(Announcement)
         .where(Announcement.property_id.in_(prop_ids))
         .order_by(Announcement.created_at.desc())
-        .limit(10)
+        .limit(5)
     )
 
     for a in recent_anns_result.scalars().all():
@@ -232,8 +232,23 @@ async def get_landlord_dashboard_data(session: AsyncSession, user_id: uuid.UUID)
         unit_tenant_map, occupied_unit_ids, pending_unit_ids
     ) = await fetch_dashboard_properties_and_units(session, user_id)
 
-    urgent_requests, units_with_pending_maint = await fetch_dashboard_maintenance(session, unit_ids)
     pending_list = await fetch_dashboard_pending_tenants(session, user_id)
+
+    if not properties:
+        return {
+            "property_stats": {
+                "total_properties": 0,
+                "total_units": 0,
+                "occupied_units": 0,
+                "vacant_units": 0,
+            },
+            "units": [],
+            "urgent_maintenance": [],
+            "pending_approvals": pending_list,
+            "recent_activity": [],
+        }
+
+    urgent_requests, units_with_pending_maint = await fetch_dashboard_maintenance(session, unit_ids)
 
     unit_label_map = {str(u.id): u.unit_label for u in all_units}
     unit_property_id_map = {str(u.id): u.property_id for u in all_units}

@@ -20,36 +20,43 @@ export function Hero() {
   const { contextSafe } = useGSAP({ scope: container });
 
   useGSAP(() => {
+    const isDesktop = typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches;
+    const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) return;
+
     // 1. Entrance Animation (snappy & non-blocking)
     const enterTl = gsap.timeline();
 
     enterTl.fromTo(titleRef.current,
-      { y: 30, opacity: 0.7, scale: 0.96 },
-      { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }
+      { y: 20, opacity: 0.85, scale: 0.98 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.45, ease: "power2.out" }
     );
 
     enterTl.fromTo(dividerRef.current,
-      { scaleX: 0, opacity: 0.7 },
-      { scaleX: 1, opacity: 1, duration: 0.4, ease: "power2.out" },
-      "-=0.3"
+      { scaleX: 0, opacity: 0.8 },
+      { scaleX: 1, opacity: 1, duration: 0.35, ease: "power2.out" },
+      "-=0.2"
     );
 
     enterTl.fromTo(subtitleRef.current,
-      { y: 15, opacity: 0.7 },
-      { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" },
-      "-=0.3"
+      { y: 10, opacity: 0.85 },
+      { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" },
+      "-=0.2"
     );
 
-    // 2. Continuous 3D Floating Animation
-    gsap.to(titleTiltRef.current, {
-      y: -15,
-      rotateX: 5,
-      rotateY: -2,
-      duration: 4,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut"
-    });
+    // 2. Continuous 3D Floating Animation - Desktop only for mobile battery & GPU performance
+    if (isDesktop && titleTiltRef.current) {
+      gsap.to(titleTiltRef.current, {
+        y: -12,
+        rotateX: 4,
+        rotateY: -2,
+        duration: 4,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+    }
 
     // 4. Scroll Reveal Animation - Master Timeline
     const scrollTl = gsap.timeline({

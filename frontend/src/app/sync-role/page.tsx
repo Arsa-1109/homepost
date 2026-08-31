@@ -43,6 +43,7 @@ function SyncRoleContent() {
         }
 
         const metadataRole = (clerkUser?.publicMetadata as ClerkPublicMetadata | undefined)?.role;
+        const metadataComplete = (clerkUser?.publicMetadata as ClerkPublicMetadata | undefined)?.onboardingComplete;
         const effectiveRole = (user && user.role && user.role !== "none" && user.role !== "unassigned")
           ? user.role
           : (metadataRole === "landlord" || metadataRole === "tenant" ? metadataRole : null);
@@ -54,22 +55,26 @@ function SyncRoleContent() {
             document.cookie = `mock_user_role=${effectiveRole}; path=/; max-age=604800; SameSite=Lax`;
           }
           if (effectiveRole === "landlord") {
-            try {
-              await completeOnboarding("landlord");
-              if (session) await session.reload();
-            } catch (e) {
-              console.warn("Non-fatal onboarding sync notice:", e);
+            if (metadataRole !== "landlord" || !metadataComplete) {
+              try {
+                await completeOnboarding("landlord");
+                if (session) await session.reload();
+              } catch (e) {
+                console.warn("Non-fatal onboarding sync notice:", e);
+              }
             }
-            window.location.href = "/landlord/dashboard";
+            router.replace("/landlord/dashboard");
             return;
           } else if (effectiveRole === "tenant") {
-            try {
-              await completeOnboarding("tenant");
-              if (session) await session.reload();
-            } catch (e) {
-              console.warn("Non-fatal onboarding sync notice:", e);
+            if (metadataRole !== "tenant" || !metadataComplete) {
+              try {
+                await completeOnboarding("tenant");
+                if (session) await session.reload();
+              } catch (e) {
+                console.warn("Non-fatal onboarding sync notice:", e);
+              }
             }
-            window.location.href = "/tenant/dashboard";
+            router.replace("/tenant/dashboard");
             return;
           } else if (effectiveRole === "tenant_pending") {
             setIsPending(true);
@@ -97,13 +102,13 @@ function SyncRoleContent() {
           } catch (e) {
             console.warn("Non-fatal onboarding sync notice:", e);
           }
-          window.location.href = "/landlord/dashboard";
+          router.replace("/landlord/dashboard");
         } else if (intent === "tenant" && landlordEmail) {
           setStatus("Sending access request to landlord...");
           await api.post("/api/v1/onboarding/request-access", { landlord_email: landlordEmail }, token);
           setIsPending(true);
         } else {
-          window.location.href = "/";
+          router.replace("/");
         }
       } catch (err) {
         console.error("Sync role failed:", err);

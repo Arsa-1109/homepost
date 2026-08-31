@@ -25,18 +25,23 @@ export default function DashboardRedirect() {
         ? document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2]
         : null;
 
-      let dbRole: string | null = null;
-      try {
-        const token = await getToken();
-        const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
-        if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
-          dbRole = user.role;
-        }
-      } catch (fetchErr) {
-        console.warn("Could not fetch user from backend /me in dashboard redirect:", fetchErr);
-      }
+      const knownRole = (metadataRole === "landlord" || metadataRole === "tenant")
+        ? metadataRole
+        : (cookieRole === "landlord" || cookieRole === "tenant" ? cookieRole : null);
 
-      const effectiveRole = dbRole || (metadataRole === "landlord" || metadataRole === "tenant" ? metadataRole : null) || cookieRole;
+      let effectiveRole = knownRole;
+
+      if (!effectiveRole) {
+        try {
+          const token = await getToken();
+          const user = await api.get<UserRoleResponse>("/api/v1/onboarding/me", token);
+          if (user && user.role && user.role !== "none" && user.role !== "unassigned") {
+            effectiveRole = user.role;
+          }
+        } catch (fetchErr) {
+          console.warn("Could not fetch user from backend /me in dashboard redirect:", fetchErr);
+        }
+      }
 
       if (effectiveRole && effectiveRole !== "none" && effectiveRole !== "unassigned") {
         redirectedRef.current = true;
@@ -45,29 +50,29 @@ export default function DashboardRedirect() {
           document.cookie = `mock_user_onboarding_complete=true; path=/; max-age=604800; SameSite=Lax`;
         }
         if (effectiveRole === "landlord") {
-          window.location.replace("/landlord/dashboard");
+          router.replace("/landlord/dashboard");
         } else if (effectiveRole === "tenant") {
-          window.location.replace("/tenant/dashboard");
+          router.replace("/tenant/dashboard");
         } else if (effectiveRole === "tenant_pending") {
-          window.location.replace("/sync-role");
+          router.replace("/sync-role");
         } else {
-          window.location.replace("/");
+          router.replace("/");
         }
       } else {
         // User has no role set anywhere -> send to home page to pick a role
         redirectedRef.current = true;
-        window.location.replace("/");
+        router.replace("/");
       }
     } catch (err) {
       console.error("Dashboard redirect failed:", err);
       setError(errorMessage(err) || "Unable to connect to backend server.");
     }
-  }, [getToken, clerkUser]);
+  }, [getToken, clerkUser, router]);
 
   useEffect(() => {
     if (!isLoaded) return;
     if (!userId) {
-      window.location.replace("/sign-in");
+      router.replace("/sign-in");
       return;
     }
 
@@ -94,7 +99,7 @@ export default function DashboardRedirect() {
             <Button onClick={checkRole} className="w-full">
               Try Again
             </Button>
-            <Button variant="outline" onClick={() => (window.location.href = "/")} className="w-full">
+            <Button variant="outline" onClick={() => router.push("/")} className="w-full">
               Back to Home
             </Button>
           </div>
