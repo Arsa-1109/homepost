@@ -18,10 +18,11 @@ jobs:
     steps:
       - name: Ping Homepost Health Endpoint
         env:
-          BACKEND_URL: ${{ inputs.target_url || secrets.RENDER_BACKEND_URL || secrets.BACKEND_URL }}
+          BACKEND_URL: ${{ inputs.target_url || secrets.RENDER_BACKEND_URL || secrets.BACKEND_URL || vars.RENDER_BACKEND_URL || vars.BACKEND_URL }}
         run: |
           if [ -z "$BACKEND_URL" ]; then
-            echo "::warning ::No RENDER_BACKEND_URL or BACKEND_URL secret configured in GitHub repo secrets."
+            echo "::warning ::No RENDER_BACKEND_URL or BACKEND_URL configured in GitHub repo Secrets or Variables."
+            echo "Please add your backend URL in GitHub Repo Settings -> Secrets and variables -> Actions."
             exit 0
           fi
           
@@ -34,7 +35,7 @@ jobs:
           
           echo "HTTP Response Status: $HTTP_STATUS"
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
-            echo "Render instance is active and warm! (Status: $HTTP_STATUS)"
+            echo "Render backend instance is active and warm! (Status: $HTTP_STATUS)"
           else
             echo "::warning ::Ping returned status $HTTP_STATUS (instance may be waking up or warming up)."
           fi

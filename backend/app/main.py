@@ -153,13 +153,13 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # ---------------------------------------------------------------------------
 # Health Checks — used by container orchestrators, Railway, and CI smoke tests
 # ---------------------------------------------------------------------------
-@app.get("/health", tags=["System"])
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["System"])
 async def health_check():
     """Simple liveness probe. Returns 200 if the server is running."""
     return {"status": "ok", "service": "homepost-api"}
 
 
-@app.get("/healthz", tags=["System"])
+@app.api_route("/healthz", methods=["GET", "HEAD"], tags=["System"])
 async def healthz_check():
     """Kubernetes/Docker standard liveness endpoint."""
     return {"status": "ok", "service": "homepost-api"}
