@@ -61,9 +61,15 @@ export const clerkUserProfileAppearance = {
   },
   elements: {
     rootBox: "w-full max-w-4xl mx-auto font-sans",
-    cardBox: "w-full shadow-none",
-    card: "border border-border/60 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl sm:rounded-3xl shadow-sm font-sans overflow-hidden",
-    navbar: "border-border/40 font-sans",
+    cardBox: "!bg-transparent !shadow-none !border-none",
+    card: "w-full border border-border/60 bg-[rgb(var(--ml-bg-secondary))] rounded-2xl sm:rounded-3xl shadow-sm font-sans overflow-hidden",
+    scrollBox: "!bg-transparent !border-none !shadow-none",
+    pageScrollable: "!bg-transparent",
+    page: "!bg-transparent",
+    profilePage: "!bg-transparent",
+    navbar: "bg-[rgb(var(--ml-bg-secondary))] border-border/40 font-sans",
+    navbarMobileMenuRow:
+      "bg-[rgb(var(--ml-bg-secondary))] border-b border-border/40 font-sans px-4 py-3 min-h-[48px]",
     navbarButton:
       "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-primary))]/80 rounded-xl transition-all font-semibold text-xs sm:text-sm py-2.5 px-3.5 font-sans cursor-pointer",
     navbarButtonActive:

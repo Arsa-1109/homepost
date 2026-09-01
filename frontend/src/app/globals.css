@@ -495,8 +495,83 @@ html.theme-switching *::after {
    Clerk Authentication & UserProfile Component Harmony
    ============================================================ */
 .cl-cardBox {
-  background-color: rgb(var(--ml-bg-secondary));
-  border-radius: 1rem;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.cl-userProfile-root {
+  width: 100%;
+}
+
+.cl-userProfile-root .cl-card {
+  border: 1px solid rgba(var(--ml-border), 0.6) !important;
+  background-color: rgb(var(--ml-bg-secondary)) !important;
+  border-radius: 1.5rem !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden !important;
+}
+
+.cl-userProfile-root .cl-scrollBox,
+.cl-userProfile-root .cl-pageScrollable,
+.cl-userProfile-root .cl-page,
+.cl-userProfile-root .cl-profilePage {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Mobile Navbar & Menu Shell */
+.cl-userProfile-root .cl-navbarMobileMenuRow {
+  background-color: rgb(var(--ml-bg-secondary)) !important;
+  border-bottom: 1px solid rgba(var(--ml-border), 0.35) !important;
+  color: rgb(var(--ml-text-primary)) !important;
+  padding: 0.75rem 1rem !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.cl-userProfile-root .cl-navbarMobileMenuRowTitle {
+  color: rgb(var(--ml-text-primary)) !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+}
+
+.cl-userProfile-root .cl-navbarMobileMenuButton {
+  color: rgb(var(--ml-text-primary)) !important;
+  border: 1px solid rgba(var(--ml-border), 0.5) !important;
+  background-color: transparent !important;
+  border-radius: 0.5rem !important;
+}
+
+.cl-userProfile-root .cl-navbar {
+  background-color: rgb(var(--ml-bg-secondary)) !important;
+}
+
+@media (min-width: 640px) {
+  .cl-userProfile-root .cl-navbar {
+    border-right: 1px solid rgba(var(--ml-border), 0.35) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .cl-userProfile-root .cl-navbar {
+    border-right: none !important;
+    border-bottom: 1px solid rgba(var(--ml-border), 0.35) !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+.cl-userProfile-root .cl-navbarButton {
+  color: rgb(var(--ml-text-secondary)) !important;
+  border-radius: 0.75rem !important;
+}
+
+.cl-userProfile-root .cl-navbarButton:hover {
+  color: rgb(var(--ml-text-primary)) !important;
+  background-color: rgba(var(--ml-bg-primary), 0.8) !important;
 }
 
 .cl-userProfile-root .cl-navbarButton[data-active="true"],
@@ -507,11 +582,13 @@ html.theme-switching *::after {
 }
 
 .cl-userProfile-root .cl-profileSection {
-  border-bottom: 1px solid rgba(var(--ml-border), 0.25);
+  border-bottom: 1px solid rgba(var(--ml-border), 0.25) !important;
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
 }
 
 .cl-userProfile-root .cl-profileSection:last-child {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 
 .cl-userProfile-root .cl-profileSectionTitleText,
