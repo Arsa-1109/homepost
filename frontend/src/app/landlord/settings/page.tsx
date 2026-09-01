@@ -37,10 +37,8 @@ export default function LandlordSettingsPage() {
         </p>
       </div>
 
-      <div className="border border-border/60 hover:border-border/80 transition-all rounded-2xl sm:rounded-3xl bg-[rgb(var(--ml-bg-secondary))] p-0 sm:p-4 md:p-6 shadow-sm overflow-hidden flex justify-center w-full max-w-full overflow-x-hidden">
-        <div className="w-full max-w-full overflow-x-hidden flex justify-center">
-          <UserProfile routing="hash" appearance={clerkUserProfileAppearance} />
-        </div>
+      <div className="w-full max-w-4xl mx-auto flex justify-center">
+        <UserProfile routing="hash" appearance={clerkUserProfileAppearance} />
       </div>
     </div>
   );

@@ -492,153 +492,44 @@ html.theme-switching *::after {
 }
 
 /* ============================================================
-   Clerk Authentication Component Overrides
+   Clerk Authentication & UserProfile Component Harmony
    ============================================================ */
 .cl-cardBox {
-  background-color: rgb(var(--ml-bg-secondary)) !important;
-  border-radius: 1rem !important;
-}
-
-.cl-cardBox .cl-card,
-.cl-cardBox .cl-footer,
-.cl-cardBox .cl-footerAction,
-.cl-cardBox .cl-footerPages,
-.cl-cardBox .cl-footerPagesLink,
-.cl-cardBox .cl-internal-b3fm6y,
-.cl-cardBox .cl-internal-phfx62 {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-/* UserProfile Container & Mobile Shell Overrides for Light/Dark harmony */
-.cl-userProfile-root {
-  background: transparent !important;
-  background-color: transparent !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.cl-userProfile-root * {
-  box-sizing: border-box !important;
-}
-
-.cl-userProfile-root .cl-cardBox,
-.cl-userProfile-root .cl-card,
-.cl-userProfile-root .cl-navbar,
-.cl-userProfile-root .cl-scrollBox,
-.cl-userProfile-root .cl-pageScrollable,
-.cl-userProfile-root .cl-page,
-.cl-userProfile-root .cl-profilePage {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border-color: transparent !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* Mobile Navbar Shell Overrides — Ensure zero dark bars in light mode */
-.cl-userProfile-root .cl-navbarMobileMenuRow {
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border-bottom: 1px solid rgba(var(--ml-border), 0.4) !important;
-  color: rgb(var(--ml-text-primary)) !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.cl-userProfile-root .cl-navbarMobileMenuRowTitle {
-  color: rgb(var(--ml-text-primary)) !important;
-  font-weight: 700 !important;
-}
-
-.cl-userProfile-root .cl-navbarMobileMenuButton {
-  color: rgb(var(--ml-text-primary)) !important;
-  background: transparent !important;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: 1px solid rgba(var(--ml-border), 0.5) !important;
-  border-radius: 0.75rem !important;
-}
-
-.cl-userProfile-root .cl-navbarMobileMenuButton:hover {
-  background-color: rgba(var(--ml-bg-primary), 0.8) !important;
-  color: rgb(var(--ml-accent)) !important;
-}
-
-/* Responsive Navbar Border (Desktop vs Mobile) */
-@media (min-width: 640px) {
-  .cl-userProfile-root .cl-navbar {
-    border-right: 1px solid rgba(var(--ml-border), 0.35) !important;
-  }
-}
-
-@media (max-width: 639px) {
-  .cl-userProfile-root .cl-navbar {
-    border-right: none !important;
-  }
-}
-
-.cl-userProfile-root .cl-navbarButton {
-  color: rgb(var(--ml-text-secondary)) !important;
-  border-radius: 0.75rem !important;
-}
-
-.cl-userProfile-root .cl-navbarButton:hover {
-  color: rgb(var(--ml-text-primary)) !important;
-  background-color: rgba(var(--ml-bg-primary), 0.8) !important;
+  background-color: rgb(var(--ml-bg-secondary));
+  border-radius: 1rem;
 }
 
 .cl-userProfile-root .cl-navbarButton[data-active="true"],
 .cl-userProfile-root .cl-navbarButton.cl-active {
   color: rgb(var(--ml-accent)) !important;
   background-color: rgba(var(--ml-accent), 0.1) !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
 }
 
 .cl-userProfile-root .cl-profileSection {
-  border-bottom: 1px solid rgba(var(--ml-border), 0.25) !important;
-  padding-top: 1.25rem !important;
-  padding-bottom: 1.25rem !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  border-bottom: 1px solid rgba(var(--ml-border), 0.25);
 }
 
 .cl-userProfile-root .cl-profileSection:last-child {
-  border-bottom: none !important;
-}
-
-.cl-userProfile-root .cl-profileSectionContent {
-  max-width: 100% !important;
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
+  border-bottom: none;
 }
 
 .cl-userProfile-root .cl-profileSectionTitleText,
 .cl-userProfile-root .cl-headerTitle,
 .cl-userProfile-root .cl-userPreviewMainIdentifier {
   color: rgb(var(--ml-text-primary)) !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.02em !important;
+  font-weight: 700 !important;
 }
 
 .cl-userProfile-root .cl-profileSectionSubtitleText,
 .cl-userProfile-root .cl-headerSubtitle,
 .cl-userProfile-root .cl-userPreviewSecondaryIdentifier {
   color: rgb(var(--ml-text-secondary)) !important;
-  font-weight: 500 !important;
-  word-break: break-word !important;
 }
 
 .cl-userProfile-root .cl-profileSectionPrimaryButton {
   color: rgb(var(--ml-accent-dark)) !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 .dark .cl-userProfile-root .cl-profileSectionPrimaryButton {
   color: rgb(var(--ml-accent)) !important;
@@ -646,7 +537,7 @@ html.theme-switching *::after {
 
 .cl-userProfile-root .cl-menuList {
   background-color: rgb(var(--ml-bg-secondary)) !important;
-  border-color: rgba(var(--ml-border), 0.6) !important;
+  border: 1px solid rgba(var(--ml-border), 0.6) !important;
   border-radius: 1rem !important;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2) !important;
 }
@@ -664,8 +555,8 @@ html.theme-switching *::after {
 .cl-userProfile-root hr,
 .cl-userProfile-root .cl-separator {
   border-color: rgba(var(--ml-border), 0.25) !important;
-  background-color: rgba(var(--ml-border), 0.25) !important;
 }
+
 
 
 
