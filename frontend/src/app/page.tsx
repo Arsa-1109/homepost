@@ -66,15 +66,6 @@ function ThemeToggle() {
   );
 }
 
-const getInitialRoleState = (): boolean => {
-  if (typeof document !== "undefined") {
-    const cookieRole = document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2];
-    const cookieComplete = document.cookie.includes("mock_user_onboarding_complete=true");
-    return cookieRole === "landlord" || cookieRole === "tenant" || cookieComplete;
-  }
-  return false;
-};
-
 export default function LandingPage() {
   const router = useRouter();
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -87,7 +78,7 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [launchingDemo, setLaunchingDemo] = useState<"owner" | "tenant" | null>(null);
   const [error, setError] = useState("");
-  const [hasRole, setHasRole] = useState<boolean>(getInitialRoleState);
+  const [hasRole, setHasRole] = useState<boolean>(false);
 
   const handleLaunchDemo = (role: "owner" | "tenant", targetRoute?: string) => {
     setLaunchingDemo(role);
@@ -119,13 +110,17 @@ export default function LandingPage() {
       typeof document !== "undefined"
         ? document.cookie.match(/(^|;\s*)mock_user_role=([^;]*)/)?.[2]
         : null;
+    const cookieComplete =
+      typeof document !== "undefined" &&
+      document.cookie.includes("mock_user_onboarding_complete=true");
 
     if (
       metadataRole === "landlord" ||
       metadataRole === "tenant" ||
       metadataComplete ||
       cookieRole === "landlord" ||
-      cookieRole === "tenant"
+      cookieRole === "tenant" ||
+      cookieComplete
     ) {
       setHasRole(true);
     }
@@ -428,7 +423,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section style={{ contentVisibility: "auto", containIntrinsicSize: "800px" }}>
+        <section>
           <FeatureSection
             activeFeatureRole={activeFeatureRole}
             onRoleChange={setActiveFeatureRole}
@@ -436,10 +431,7 @@ export default function LandingPage() {
         </section>
 
         {/* Demo Dashboard Area */}
-        <section 
-          className="w-full max-w-6xl mx-auto px-4 md:px-10 mb-32 relative z-10"
-          style={{ contentVisibility: "auto", containIntrinsicSize: "600px" }}
-        >
+        <section className="w-full max-w-6xl mx-auto px-3 sm:px-6 lg:px-10 mb-16 sm:mb-24 md:mb-32 relative z-10">
           <DemoDashboard role={activeFeatureRole} onLaunchDemo={handleLaunchDemo} />
         </section>
       </main>

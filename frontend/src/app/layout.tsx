@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import dynamic from "next/dynamic";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/providers";
+import { ThemeScript } from "@/components/ThemeScript";
 import { UserSync } from "@/components/UserSync";
 import { Outfit } from "next/font/google";
 import { RootHeader } from "@/components/RootHeader";
@@ -21,22 +22,9 @@ export const metadata: Metadata = {
     "A radically simple property management portal for individual owners managing 1–5 properties.",
 };
 
-const themeScript = `(function() {
-  try {
-    var stored = localStorage.getItem('theme') || 'system';
-    var isDark = stored === 'dark' || (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    var root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-      root.classList.remove('light');
-      root.style.colorScheme = 'dark';
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-      root.style.colorScheme = 'light';
-    }
-  } catch (e) {}
-})();`;
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+};
 
 export default function RootLayout({
   children,
@@ -52,11 +40,8 @@ export default function RootLayout({
         outfit.variable
       )}
     >
-      <head>
-        <meta name="color-scheme" content="light dark" />
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body suppressHydrationWarning>
+        <ThemeScript />
         <ClerkProvider>
           <UserSync />
           <ThemeProvider

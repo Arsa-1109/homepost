@@ -30,10 +30,11 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
   const [activeTenantTab, setActiveTenantTab] = useState("home");
 
   return (
-    <div className="w-full max-w-6xl mx-auto rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-border solid-panel relative bg-card transition-all duration-300">
+    <div className="w-full max-w-6xl mx-auto rounded-2xl md:rounded-3xl shadow-2xl transition-all duration-300">
+      <div className="w-full rounded-2xl md:rounded-3xl overflow-hidden flex flex-col border border-border solid-panel relative bg-card">
 
       {/* Top Interactive Browser Chrome Bar */}
-      <div className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-3 sm:px-6 bg-[rgb(var(--ml-bg-secondary))] z-20 gap-2 sm:gap-4">
+      <div className="h-14 md:h-16 border-b border-border/70 flex items-center justify-between px-2.5 sm:px-6 bg-[rgb(var(--ml-bg-secondary))] z-20 gap-1.5 sm:gap-4">
 
         {/* Left: Window Controls + Live Breadcrumb (Desktop Only) */}
         <div className="hidden sm:flex items-center gap-2.5 sm:gap-3.5 min-w-0">
@@ -45,8 +46,8 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
 
           <div className="h-4 w-px bg-border/80 hidden sm:block shrink-0" />
 
-          {/* URL Pill / Title */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background/50 border border-border/60 text-xs font-mono text-[rgb(var(--ml-text-secondary))] truncate">
+          {/* URL Pill / Title (1024px+ only to prevent crowding on 768px tablets) */}
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background/50 border border-border/60 text-xs font-mono text-[rgb(var(--ml-text-secondary))] truncate">
             <Lock className="w-3 h-3 text-emerald-500 shrink-0" />
             <span className="truncate">
               homepost.app/<span className="text-[rgb(var(--ml-text-primary))] font-semibold">{selectedRole === "owner" ? "landlord/dashboard" : "tenant/dashboard"}</span>
@@ -55,11 +56,11 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
         </div>
 
         {/* Center: Interactive Role Switcher */}
-        <div className="flex items-center p-1 rounded-xl bg-background/60 border border-border/60 shrink-0">
+        <div className="flex items-center p-0.5 sm:p-1 rounded-xl bg-background/60 border border-border/60 shrink-0">
           <button
             onClick={() => setSelectedRole("owner")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
+              "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
               selectedRole === "owner"
                 ? "bg-[rgb(var(--ml-accent))] text-black shadow-xs"
                 : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
@@ -72,7 +73,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
           <button
             onClick={() => setSelectedRole("tenant")}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
+              "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
               selectedRole === "tenant"
                 ? "bg-[rgb(var(--ml-accent))] text-black shadow-xs"
                 : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
@@ -80,7 +81,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
           >
             <Home className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Resident</span>
-            <span className="sm:hidden">Tenant</span>
+            <span className="sm:hidden">Resident</span>
           </button>
         </div>
 
@@ -89,13 +90,16 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
           <Button
             size="sm"
             onClick={() => onLaunchDemo?.(selectedRole)}
-            className="font-bold rounded-xl px-3.5 py-1.5 h-8 sm:h-9 text-xs bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-black hover:opacity-95 transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+            className="font-bold rounded-xl px-2.5 sm:px-3.5 py-1.5 h-8 sm:h-9 text-xs bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-black hover:opacity-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm cursor-pointer shrink-0"
           >
-            <span className="hidden sm:inline">
+            <span className="hidden lg:inline">
               {selectedRole === "owner" ? "Explore Live Owner Dashboard" : "Explore Live Resident Portal"}
             </span>
+            <span className="hidden sm:inline lg:hidden">
+              {selectedRole === "owner" ? "Explore Owner" : "Explore Resident"}
+            </span>
             <span className="sm:hidden">
-              {selectedRole === "owner" ? "Live Owner Demo" : "Live Resident Demo"}
+              Try Live
             </span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </Button>
@@ -135,7 +139,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -12 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-1 items-center justify-center p-4 sm:p-8 lg:p-10 relative"
+              className="flex flex-1 items-center justify-center p-0 sm:p-8 lg:p-10 relative w-full"
             >
               <DemoTenantPhone
                 activeTab={activeTenantTab}
@@ -148,5 +152,6 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
       </div>
 
     </div>
+  </div>
   );
 }

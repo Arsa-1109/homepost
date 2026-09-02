@@ -46,15 +46,15 @@ export function DemoLandlordView({
 
   return (
     <div className="relative w-full flex flex-1 overflow-hidden">
-      {/* Collapsible Sidebar (reproduced from landlord/layout.tsx) */}
+      {/* Collapsible Sidebar (reproduced from landlord/layout.tsx - icon rail on md, full on lg+) */}
       <aside className={cn(
         "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 shrink-0 relative select-none",
-        isSidebarCollapsed ? "w-16" : "w-56 lg:w-60"
+        isSidebarCollapsed ? "w-16" : "w-16 lg:w-56 xl:w-60"
       )}>
-        {/* Sidebar Collapse Toggle Button */}
+        {/* Sidebar Collapse Toggle Button (visible on lg+) */}
         <button
           onClick={onToggleSidebar}
-          className="absolute top-6 right-[-12px] bg-[rgb(var(--ml-bg-secondary))] border border-border p-1 rounded-full text-[rgb(var(--ml-text-secondary))] shadow-sm z-30 cursor-pointer transition-all duration-200 hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
+          className="hidden lg:flex absolute top-6 right-[-12px] bg-[rgb(var(--ml-bg-secondary))] border border-border p-1 rounded-full text-[rgb(var(--ml-text-secondary))] shadow-sm z-30 cursor-pointer transition-all duration-200 hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
           aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isSidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
@@ -64,15 +64,14 @@ export function DemoLandlordView({
         <div className="flex flex-col h-full py-5">
           {/* Homepost Logo */}
           {!isSidebarCollapsed ? (
-            <div className="flex items-center gap-2 text-lg font-bold mb-6 text-[rgb(var(--ml-text-primary))] px-5 tracking-tight">
+            <div className="hidden lg:flex items-center gap-2 text-lg font-bold mb-6 text-[rgb(var(--ml-text-primary))] px-5 tracking-tight">
               <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
               <span>Homepost</span>
             </div>
-          ) : (
-            <div className="flex justify-center mb-6">
-              <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
-            </div>
-          )}
+          ) : null}
+          <div className={cn("flex justify-center mb-6", !isSidebarCollapsed && "lg:hidden")}>
+            <Building2 className="size-5 text-[rgb(var(--ml-accent))]" />
+          </div>
 
           {/* Nav Links */}
           <nav className="flex-1 space-y-1 px-2.5">
@@ -88,16 +87,16 @@ export function DemoLandlordView({
                   }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer text-left group",
-                    isSidebarCollapsed && "justify-center px-0",
+                    isSidebarCollapsed ? "justify-center px-0" : "justify-center lg:justify-start px-0 lg:px-3",
                     isActive
                       ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-bold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
                       : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))]"
                   )}
-                  title={isSidebarCollapsed ? item.label : undefined}
+                  title={item.label}
                 >
                   <Icon className={cn("size-4 shrink-0 transition-transform group-hover:scale-105", isActive && "text-[rgb(var(--ml-accent))]")} />
                   {!isSidebarCollapsed && (
-                    <span className="truncate flex-1 font-semibold">{item.label}</span>
+                    <span className="hidden lg:inline truncate flex-1 font-semibold">{item.label}</span>
                   )}
                 </button>
               );
@@ -108,7 +107,7 @@ export function DemoLandlordView({
       </aside>
 
       {/* Main Landlord Content View */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[rgb(var(--ml-bg-primary))]">
+      <div className="flex-1 flex flex-col min-w-0 bg-[rgb(var(--ml-bg-primary))] max-h-[560px] sm:max-h-none overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Desktop Top Header Bar (from landlord/layout.tsx header) */}
         <header className="h-14 items-center justify-between px-6 border-b border-border bg-[rgb(var(--ml-bg-secondary))] hidden md:flex sticky top-0 z-10 shrink-0">
           <div className="font-bold text-base text-[rgb(var(--ml-text-primary))] capitalize">
@@ -125,13 +124,13 @@ export function DemoLandlordView({
         </header>
 
         {/* Mobile Top Header Bar (from landlord/layout.tsx mobile header) */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-10">
+        <header className="md:hidden flex items-center justify-between px-3.5 py-2.5 border-b border-border bg-[rgb(var(--ml-bg-secondary))] sticky top-0 z-10 shrink-0">
           <div className="flex items-center gap-2 text-sm font-bold text-[rgb(var(--ml-text-primary))]">
-            <Building2 className="size-4.5 text-[rgb(var(--ml-accent))]" />
+            <Building2 className="size-4 text-[rgb(var(--ml-accent))]" />
             <span>Homepost</span>
           </div>
           <div className="flex gap-2 items-center">
-            <div className="w-6.5 h-6.5 rounded-full bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/40 flex items-center justify-center text-[11px] font-bold">
+            <div className="w-6 h-6 rounded-full bg-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/40 flex items-center justify-center text-[10px] font-bold">
               MV
             </div>
             <div className="p-1 rounded-lg border border-border bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))]">
@@ -141,16 +140,16 @@ export function DemoLandlordView({
         </header>
 
         {/* Dashboard Inner Body (DashboardHeader + Action Banner + Bento Grid) */}
-        <div className="p-4 sm:p-5 lg:p-6 flex flex-col gap-4 max-w-7xl mx-auto w-full pb-6">
+        <div className="p-3 sm:p-5 lg:p-6 flex flex-col gap-3.5 sm:gap-4 max-w-7xl mx-auto w-full pb-8">
 
           {/* Dashboard Header (from DashboardHeader.tsx) */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-1 border-b border-border/40">
-            <div className="space-y-1.5 max-w-xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4 pb-1 border-b border-border/40">
+            <div className="space-y-1 max-w-xl">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
                 <LayoutDashboard className="w-3 h-3 text-[rgb(var(--ml-accent))]" />
                 Control Center
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
                 Landlord Dashboard
               </h1>
               <p className="text-xs font-medium text-[rgb(var(--ml-text-secondary))] leading-relaxed">
@@ -158,17 +157,17 @@ export function DemoLandlordView({
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => onLaunchDemo("/landlord/units")}
-                className="text-xs font-bold border border-border/60 text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="text-xs font-bold border border-border/60 text-[rgb(var(--ml-text-primary))] bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] px-3 py-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <UserPlus className="h-3.5 w-3.5 text-[rgb(var(--ml-text-secondary))]" />
                 Invite Tenant
               </button>
               <button
                 onClick={() => onLaunchDemo("/landlord/announcements")}
-                className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3.5 py-2 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all duration-200 flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3 py-2 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <Megaphone className="h-3.5 w-3.5" />
                 New Announcement
@@ -177,7 +176,7 @@ export function DemoLandlordView({
           </div>
 
           {/* Action Required Banner (from landlord/dashboard/page.tsx) */}
-          <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs hover:border-border transition-all">
+          <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 shadow-xs hover:border-border transition-all">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl shrink-0">
                 <Users className="w-4 h-4" />
@@ -203,10 +202,10 @@ export function DemoLandlordView({
           </div>
 
           {/* 4 Bento Grid Cards (exact replica of DashboardBentoGrid.tsx) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-5 items-start">
 
             {/* LEFT COLUMN: Active Maintenance & Recent Activity */}
-            <div className="lg:col-span-7 flex flex-col gap-5">
+            <div className="md:col-span-7 flex flex-col gap-4 lg:gap-5">
 
               {/* Card 1: Active Maintenance */}
               <div className="flex flex-col bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl py-5 shadow-xs">
@@ -308,7 +307,7 @@ export function DemoLandlordView({
             </div>
 
             {/* RIGHT COLUMN: Overview & Occupied Units */}
-            <div className="lg:col-span-5 flex flex-col gap-5">
+            <div className="md:col-span-5 flex flex-col gap-4 lg:gap-5">
 
               {/* Card 3: Property Overview */}
               <div className="bg-[rgb(var(--ml-bg-secondary))] border border-border/60 hover:border-border/80 transition-all rounded-3xl p-5 shadow-xs">

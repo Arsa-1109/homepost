@@ -31,17 +31,17 @@ interface DemoTenantPhoneProps {
 export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTenantPhoneProps) {
   return (
     <>
-      {/* Soft Ambient Glow behind phone */}
-      <div className="absolute w-72 h-72 bg-[rgb(var(--ml-accent))]/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Soft Ambient Glow behind phone (desktop only) */}
+      <div className="hidden sm:block absolute w-72 h-72 bg-[rgb(var(--ml-accent))]/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Realistic Smartphone Chassis */}
-      <div className="w-full max-w-[390px] rounded-[48px] p-3 bg-gradient-to-b from-zinc-800 via-zinc-900 to-black border-[3px] border-zinc-700/60 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] relative z-10 transition-all duration-300">
+      {/* Smartphone Chassis on desktop, clean full-width preview on mobile */}
+      <div className="w-full sm:max-w-[390px] sm:rounded-[48px] p-0 sm:p-3 sm:bg-gradient-to-b sm:from-zinc-800 sm:via-zinc-900 sm:to-black sm:border-[3px] sm:border-zinc-700/60 sm:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] relative z-10 transition-all duration-300">
 
         {/* Device Screen Viewport */}
-        <div className="rounded-[38px] overflow-hidden bg-background border border-border/50 relative flex flex-col h-[620px] sm:h-[650px] lg:h-[680px] isolate transform-gpu">
+        <div className="rounded-none sm:rounded-[38px] overflow-hidden bg-[rgb(var(--ml-bg-secondary))] relative flex flex-col h-[540px] sm:h-[650px] lg:h-[680px] w-full">
 
-          {/* Top iOS/Android Status Bar */}
-          <div className="h-10 bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-between px-6 pt-1 text-[11px] font-bold text-[rgb(var(--ml-text-primary))] z-30 select-none rounded-t-[37px]">
+          {/* Top iOS/Android Status Bar (desktop mockup only to avoid double status bar on real mobile phones) */}
+          <div className="hidden sm:flex h-10 bg-[rgb(var(--ml-bg-secondary))] items-center justify-between px-6 pt-1 text-[11px] font-bold text-[rgb(var(--ml-text-primary))] z-30 select-none rounded-t-[37px]">
             <span>9:41</span>
             {/* Dynamic Island / Camera Pill */}
             <div className="w-24 h-4 bg-black rounded-full mx-auto" />
@@ -69,7 +69,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
           </header>
 
           {/* Scrollable Tenant Dashboard Content (from tenant/dashboard/page.tsx) */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 pb-20">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 pb-20 bg-[rgb(var(--ml-bg-primary))]">
 
             {/* 1. Header Section */}
             <div className="space-y-0.5 pb-0.5">
@@ -196,7 +196,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
           </div>
 
           {/* 6. Mobile Bottom Navigation Bar (from tenant/layout.tsx) */}
-          <nav className="absolute bottom-0 left-0 right-0 h-16 pb-2.5 pt-1.5 border-t border-border bg-[rgb(var(--ml-bg-secondary))]/95 backdrop-blur-md flex items-center justify-around z-30 px-2 rounded-b-[37px] overflow-hidden">
+          <nav className="absolute -bottom-0.5 -left-0.5 -right-0.5 h-16 pb-2.5 pt-1.5 border-t border-border bg-[rgb(var(--ml-bg-secondary))] flex items-center justify-around z-30 px-2">
             {TENANT_TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

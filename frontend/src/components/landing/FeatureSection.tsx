@@ -3,6 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Building2, Wrench, Users, Megaphone, FileText } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const FEATURE_CONTENT = {
   owner: [
@@ -62,13 +63,15 @@ export function FeatureSection({
   activeFeatureRole,
   onRoleChange,
 }: FeatureSectionProps) {
+  const isMobile = useIsMobile();
+
   return (
     <>
       {/* Role Tabs */}
       <div
         role="tablist"
         aria-label="Feature Roles"
-        className="flex flex-row justify-center items-center gap-4 md:gap-12 w-full relative z-20 mt-12 mb-20"
+        className="flex flex-row justify-center items-center gap-4 md:gap-12 w-full relative z-20 mt-8 sm:mt-12 mb-8 md:mb-20"
       >
         <button
           type="button"
@@ -126,19 +129,19 @@ export function FeatureSection({
       </div>
 
       {/* Floating Bento Grid */}
-      <section className="max-w-6xl w-full mx-auto mb-32 px-4 relative z-10 perspective-[1200px]">
+      <section className="max-w-6xl w-full mx-auto mb-16 md:mb-32 px-4 relative z-10 perspective-[1200px]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgb(var(--ml-accent)/0.05)] to-transparent blur-[120px] -z-10 pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-6 items-center">
           {/* Card 1 */}
           <motion.div
-            animate={{ y: [0, -25, 0], x: [0, 5, 0] }}
+            animate={isMobile ? undefined : { y: [0, -25, 0], x: [0, 5, 0] }}
             transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
             className="relative z-10 w-full will-change-transform"
           >
             <motion.div
-              initial={{ opacity: 0, y: 50, rotateZ: -2 }}
-              whileInView={{ opacity: 1, y: 0, rotateZ: -2 }}
+              initial={{ opacity: 0, y: 30, rotateZ: isMobile ? 0 : -2 }}
+              whileInView={{ opacity: 1, y: 0, rotateZ: isMobile ? 0 : -2 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{
                 type: "spring",
@@ -147,8 +150,8 @@ export function FeatureSection({
                 mass: 1.2,
                 opacity: { duration: 0.8 },
               }}
-              whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
-              className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
+              whileHover={isMobile ? undefined : { scale: 1.03, rotateZ: 0, zIndex: 30, y: -6 }}
+              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -159,16 +162,16 @@ export function FeatureSection({
                   transition={{ duration: 0.3 }}
                   className="flex flex-col items-start"
                 >
-                  <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-500">
                     {(() => {
                       const Icon = FEATURE_CONTENT[activeFeatureRole][0].icon;
-                      return <Icon className="text-accent w-8 h-8" />;
+                      return <Icon className="text-accent w-6 h-6 md:w-8 md:h-8" />;
                     })()}
                   </div>
-                  <h3 className="text-2xl font-semibold mb-3 tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-2 md:mb-3 tracking-tight">
                     {FEATURE_CONTENT[activeFeatureRole][0].title}
                   </h3>
-                  <p className="text-base text-muted-foreground font-medium">
+                  <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed">
                     {FEATURE_CONTENT[activeFeatureRole][0].description}
                   </p>
                 </motion.div>
@@ -178,12 +181,12 @@ export function FeatureSection({
 
           {/* Card 2 */}
           <motion.div
-            animate={{ y: [0, -35, 0], x: [0, -6, 0] }}
+            animate={isMobile ? undefined : { y: [0, -35, 0], x: [0, -6, 0] }}
             transition={{ repeat: Infinity, duration: 9, ease: "easeInOut", delay: 0.5 }}
             className="relative z-20 w-full md:-mt-16 will-change-transform"
           >
             <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              initial={{ opacity: 0, y: 30, scale: isMobile ? 1 : 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{
@@ -193,8 +196,8 @@ export function FeatureSection({
                 mass: 1,
                 opacity: { duration: 0.8 },
               }}
-              whileHover={{ scale: 1.05, zIndex: 30, y: -10 }}
-              className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-xl relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
+              whileHover={isMobile ? undefined : { scale: 1.03, zIndex: 30, y: -6 }}
+              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-xl relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -205,16 +208,16 @@ export function FeatureSection({
                   transition={{ duration: 0.3, delay: 0.05 }}
                   className="flex flex-col items-start"
                 >
-                  <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-500">
                     {(() => {
                       const Icon = FEATURE_CONTENT[activeFeatureRole][1].icon;
-                      return <Icon className="text-accent w-8 h-8" />;
+                      return <Icon className="text-accent w-6 h-6 md:w-8 md:h-8" />;
                     })()}
                   </div>
-                  <h3 className="text-2xl font-semibold mb-3 tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-2 md:mb-3 tracking-tight">
                     {FEATURE_CONTENT[activeFeatureRole][1].title}
                   </h3>
-                  <p className="text-base text-muted-foreground font-medium">
+                  <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed">
                     {FEATURE_CONTENT[activeFeatureRole][1].description}
                   </p>
                 </motion.div>
@@ -224,13 +227,13 @@ export function FeatureSection({
 
           {/* Card 3 */}
           <motion.div
-            animate={{ y: [0, -20, 0], x: [0, 4, 0] }}
+            animate={isMobile ? undefined : { y: [0, -20, 0], x: [0, 4, 0] }}
             transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
             className="relative z-10 w-full md:mt-24 will-change-transform"
           >
             <motion.div
-              initial={{ opacity: 0, y: 50, rotateZ: 2 }}
-              whileInView={{ opacity: 1, y: 0, rotateZ: 2 }}
+              initial={{ opacity: 0, y: 30, rotateZ: isMobile ? 0 : 2 }}
+              whileInView={{ opacity: 1, y: 0, rotateZ: isMobile ? 0 : 2 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{
                 type: "spring",
@@ -239,8 +242,8 @@ export function FeatureSection({
                 mass: 1,
                 opacity: { duration: 0.8 },
               }}
-              whileHover={{ scale: 1.05, rotateZ: 0, zIndex: 30, y: -10 }}
-              className="solid-panel rounded-xl p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
+              whileHover={isMobile ? undefined : { scale: 1.03, rotateZ: 0, zIndex: 30, y: -6 }}
+              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -251,16 +254,16 @@ export function FeatureSection({
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="flex flex-col items-start"
                 >
-                  <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 border border-accent/20 group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-500">
                     {(() => {
                       const Icon = FEATURE_CONTENT[activeFeatureRole][2].icon;
-                      return <Icon className="text-accent w-8 h-8" />;
+                      return <Icon className="text-accent w-6 h-6 md:w-8 md:h-8" />;
                     })()}
                   </div>
-                  <h3 className="text-2xl font-semibold mb-3 tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-semibold mb-2 md:mb-3 tracking-tight">
                     {FEATURE_CONTENT[activeFeatureRole][2].title}
                   </h3>
-                  <p className="text-base text-muted-foreground font-medium">
+                  <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed">
                     {FEATURE_CONTENT[activeFeatureRole][2].description}
                   </p>
                 </motion.div>

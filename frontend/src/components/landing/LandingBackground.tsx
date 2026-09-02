@@ -245,7 +245,7 @@ const PRECOMPUTED_DUNES = RANDOMIZED_DUNES.map((dune) => {
 
 export function LandingBackground() {
   return (
-    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none" style={{ contain: "paint" }}>
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden select-none">
       {/* Subtle ambient radial light pools - ultra fast on mobile GPU */}
       <div className="absolute top-[-10%] left-[10%] sm:left-[20%] w-[80vw] sm:w-[50vw] h-[40vh] sm:h-[50vh] bg-accent/10 dark:bg-accent/5 rounded-full blur-[70px] sm:blur-[120px] pointer-events-none" />
       <div className="absolute top-[40%] right-[-15%] sm:right-[-10%] w-[80vw] sm:w-[60vw] h-[50vh] sm:h-[60vh] bg-accent/8 dark:bg-accent/4 rounded-full blur-[80px] sm:blur-[140px] pointer-events-none" />
