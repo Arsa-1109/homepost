@@ -24,7 +24,7 @@ import { isDemoSession, exitDemoSession, startDemoSession, sanitizeSession } fro
 import { DemoHeaderMenu } from "@/components/demo/DemoHeaderMenu";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+const CORE_NAV_ITEMS = [
   { label: "Dashboard",       icon: LayoutDashboard, href: "/landlord/dashboard", description: "Overview of properties, units & cashflow" },
   { label: "Properties",      icon: Building2,       href: "/landlord/properties", description: "Manage property listings & addresses" },
   { label: "Units",           icon: Home,            href: "/landlord/units", description: "Occupancy, leases & unit details" },
@@ -32,8 +32,14 @@ const NAV_ITEMS = [
   { label: "Announcements",   icon: Megaphone,       href: "/landlord/announcements", description: "Broadcast updates to your residents" },
   { label: "Documents",       icon: FileText,        href: "/landlord/documents", description: "Upload and view leases & property files" },
   { label: "Access Requests", icon: UserCheck,       href: "/landlord/access-requests", description: "Review and approve applicant join requests" },
-  { label: "Settings",        icon: Settings2,       href: "/landlord/settings", description: "Account preferences & profile setup" },
 ];
+
+const SETTINGS_NAV_ITEM = {
+  label: "Settings",
+  icon: Settings2,
+  href: "/landlord/settings",
+  description: "Account preferences & profile setup",
+};
 
 export default function LandlordLayout({
   children,
@@ -70,12 +76,11 @@ export default function LandlordLayout({
   };
 
   const isDemoActive = mounted && (isDemo || (isLoaded && !isSignedIn && isDemoSession()));
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
-    if (item.href === "/landlord/settings" && isDemoActive) {
-      return false;
-    }
-    return true;
-  });
+  const showSettings = mounted && isSignedIn && !isDemo;
+
+  const visibleNavItems = showSettings
+    ? [...CORE_NAV_ITEMS, SETTINGS_NAV_ITEM]
+    : CORE_NAV_ITEMS;
 
   return (
     <div className="flex h-dvh overflow-hidden">

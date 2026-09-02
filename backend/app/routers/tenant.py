@@ -1,7 +1,8 @@
+import asyncio
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-import uuid
 
 from app.core.database import get_session
 from app.dependencies.auth import get_current_user, get_current_tenant_profile, get_active_tenant_profile
@@ -17,6 +18,7 @@ from app.schemas.maintenance import MaintenanceRequestCreate, MaintenanceRequest
 from app.schemas.announcement import AnnouncementResponse
 from app.schemas.document import DocumentResponse
 from app.services.email import send_maintenance_notification
+from app.services.maintenance import fetch_maintenance_events_with_urls
 from app.services.storage import (
     hydrate_maintenance_request,
     hydrate_announcement,
@@ -158,24 +160,7 @@ async def list_maintenance_events(
     if not db_req or db_req.tenant_id != profile.id:
         raise HTTPException(status_code=404, detail="Maintenance request not found.")
         
-    result = await session.execute(
-        select(MaintenanceEvent, User.full_name)
-        .join(User, MaintenanceEvent.actor_id == User.id)
-        .where(MaintenanceEvent.maintenance_request_id == request_id)
-        .order_by(MaintenanceEvent.created_at.asc())
-    )
-    
-    events = []
-    for event, user_name in result.all():
-        data = event.model_dump()
-        data["actor_name"] = user_name or "Unknown User"
-        if data.get("payload") and "image_keys" in data["payload"]:
-            data["payload"]["image_urls"] = await generate_presigned_urls_batch(
-                data["payload"]["image_keys"]
-            )
-        events.append(data)
-        
-    return events
+    return await fetch_maintenance_events_with_urls(session, request_id)
 
 @router.get("/maintenance", response_model=Page[MaintenanceRequestResponse])
 async def list_my_maintenance_requests(
@@ -198,10 +183,16 @@ async def list_my_maintenance_requests(
     requests = result.scalars().all()
 
     response_data = []
+    items_to_hydrate = []
     for r in requests:
         resp = MaintenanceRequestResponse.model_validate(r)
-        await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
+        items_to_hydrate.append((r, resp))
+
+    if items_to_hydrate:
+        await asyncio.gather(
+            *(hydrate_maintenance_request(r, resp) for r, resp in items_to_hydrate)
+        )
 
     return Page(items=response_data, total=total, limit=pagination.limit,
                 offset=pagination.offset)
@@ -388,14 +379,21 @@ async def list_property_announcements(
     )
     anns = result.scalars().all()
     out = []
+    items_to_hydrate = []
     for ann in anns:
         resp = AnnouncementResponse.model_validate(ann)
         if ann.unit_id:
             resp.unit_label = unit.unit_label
         if prop:
             resp.property_name = prop.name
-        await hydrate_announcement(ann, resp)
         out.append(resp)
+        items_to_hydrate.append((ann, resp))
+
+    if items_to_hydrate:
+        await asyncio.gather(
+            *(hydrate_announcement(ann, resp) for ann, resp in items_to_hydrate)
+        )
+
     return Page(items=out, total=total, limit=pagination.limit,
                 offset=pagination.offset)
 

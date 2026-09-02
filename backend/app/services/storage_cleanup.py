@@ -76,8 +76,20 @@ async def collect_property_storage_keys(session: AsyncSession, property_id) -> l
     unit_ids_result = await session.execute(
         select(Unit.id).where(Unit.property_id == property_id)
     )
-    for unit_id in unit_ids_result.scalars().all():
-        keys.extend(await collect_unit_storage_keys(session, unit_id))
+    unit_ids = unit_ids_result.scalars().all()
+    if unit_ids:
+        unit_doc_result = await session.execute(
+            select(Document.file_key).where(Document.unit_id.in_(unit_ids))
+        )
+        keys.extend(unit_doc_result.scalars().all())
+
+        req_result = await session.execute(
+            select(MaintenanceRequest.image_keys, MaintenanceRequest.landlord_image_keys)
+            .where(MaintenanceRequest.unit_id.in_(unit_ids))
+        )
+        for image_keys, landlord_keys in req_result.all():
+            keys.extend(image_keys or [])
+            keys.extend(landlord_keys or [])
 
     # Unit-scoped documents were already covered by the unit sweep; dedupe.
     return list(dict.fromkeys(k for k in keys if k))

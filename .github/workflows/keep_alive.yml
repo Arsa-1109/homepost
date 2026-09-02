@@ -1,10 +1,14 @@
 name: Render Keep Alive
 
+# NOTE: GitHub Actions cron scheduling is deprecated for keepalive pings due to
+# runner queue delays (which exceed Render's 15-min idle spin-down) and the 60-day repo dormancy limit.
+# Production keepalive is handled by external monitoring (UptimeRobot / Cron-job.org).
+#
+# Manual trigger is preserved below for on-demand smoke tests.
 on:
-  schedule:
-    # Runs every 10 minutes to prevent Render's 15-min inactivity spin-down
-    - cron: '*/10 * * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+  # schedule:
+  #   - cron: '*/10 * * * *'  # Deprecated in favor of UptimeRobot / Cron-job.org
+  workflow_dispatch: # Allows manual healthcheck trigger from GitHub UI
     inputs:
       target_url:
         description: 'Target URL to ping (optional override)'

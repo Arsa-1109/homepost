@@ -212,3 +212,59 @@ async def test_scheduler_uses_async_email_wrappers(db_session, monkeypatch):
     assert ("rent", user.email) in set(calls), (
         "scheduler did not route rent reminders through the async wrapper"
     )
+
+
+async def test_email_sending_exception_resilience_and_lock_release(db_session, monkeypatch, caplog):
+    """
+    When sending an email fails with an exception for one tenant:
+    1. The exception is caught and logged.
+    2. The batch failure counter is incremented.
+    3. Sibling tenants continue processing and receive their reminders.
+    4. The distributed advisory lock is guaranteed to be released.
+    """
+    import logging
+
+    failing_user, _, _ = await _seed_tenant(
+        db_session,
+        email="failing.email@homepost.dev",
+        rent_due_day=_rent_due_day_five_from_today(),
+    )
+    succeeding_user, _, _ = await _seed_tenant(
+        db_session,
+        email="succeeding.email@homepost.dev",
+        rent_due_day=_rent_due_day_five_from_today(),
+    )
+
+    sent_emails = []
+    lock_state = {"acquired": False, "released": False}
+
+    async def flaky_send_rent_async(to, unit_label, days):
+        if to == failing_user.email:
+            raise RuntimeError("Resend API 500 error / SMTP connection failed")
+        sent_emails.append(to)
+
+    async def tracked_acquire_lock(session):
+        lock_state["acquired"] = True
+        return True
+
+    async def tracked_release_lock(session):
+        lock_state["released"] = True
+
+    monkeypatch.setattr(scheduler_mod, "send_rent_reminder_async", flaky_send_rent_async)
+    monkeypatch.setattr(scheduler_mod, "_acquire_reminder_lock", tracked_acquire_lock)
+    monkeypatch.setattr(scheduler_mod, "_release_reminder_lock", tracked_release_lock)
+
+    with caplog.at_level(logging.WARNING):
+        await scheduler_mod._check_reminders(db_session)
+
+    # 1. Remaining/sibling tenant received their reminder email
+    assert succeeding_user.email in sent_emails
+    assert failing_user.email not in sent_emails
+
+    # 2. Failure was logged as a warning summary and exception
+    assert any("failure(s)" in r.message.lower() for r in caplog.records)
+    assert any("failing.email@homepost.dev" in r.message for r in caplog.records)
+
+    # 3. Advisory lock was acquired and cleanly released
+    assert lock_state["acquired"] is True
+    assert lock_state["released"] is True

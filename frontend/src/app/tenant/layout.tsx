@@ -20,13 +20,18 @@ import { isDemoSession, exitDemoSession, startDemoSession } from "@/lib/demo-aut
 import { DemoHeaderMenu } from "@/components/demo/DemoHeaderMenu";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+const CORE_NAV_ITEMS = [
   { label: "Dashboard",     icon: Home,      href: "/tenant/dashboard" },
   { label: "Requests",      icon: Wrench,    href: "/tenant/requests" },
   { label: "Announcements", icon: Megaphone, href: "/tenant/announcements" },
   { label: "Documents",     icon: FileText,  href: "/tenant/documents" },
-  { label: "Settings",      icon: Settings,  href: "/tenant/settings" },
 ];
+
+const SETTINGS_NAV_ITEM = {
+  label: "Settings",
+  icon: Settings,
+  href: "/tenant/settings",
+};
 
 export default function TenantLayout({
   children,
@@ -62,12 +67,9 @@ export default function TenantLayout({
   const isSettingsActive = pathname === "/tenant/settings" || pathname.startsWith("/tenant/settings/");
   const showSettings = mounted && isSignedIn && !isDemo;
 
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
-    if (item.href === "/tenant/settings" && isDemoActive) {
-      return false;
-    }
-    return true;
-  });
+  const visibleNavItems = showSettings
+    ? [...CORE_NAV_ITEMS, SETTINGS_NAV_ITEM]
+    : CORE_NAV_ITEMS;
 
   return (
     <div className="flex h-dvh overflow-hidden">

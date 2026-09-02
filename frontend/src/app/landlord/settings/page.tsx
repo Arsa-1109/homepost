@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, UserProfile } from "@clerk/nextjs";
 import { clerkUserProfileAppearance } from "@/lib/clerk-appearance";
+import { isDemoSession } from "@/lib/demo-auth";
 import { toast } from "sonner";
 
 export default function LandlordSettingsPage() {
@@ -11,13 +12,13 @@ export default function LandlordSettingsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
+    if (isLoaded && (!isSignedIn || isDemoSession())) {
       toast.info("Account settings are only available for registered accounts");
       router.replace("/landlord/dashboard");
     }
   }, [isLoaded, isSignedIn, router]);
 
-  if (!isLoaded || !isSignedIn) {
+  if (!isLoaded || !isSignedIn || isDemoSession()) {
     return null;
   }
 

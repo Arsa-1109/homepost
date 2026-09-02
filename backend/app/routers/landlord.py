@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from datetime import date
@@ -383,13 +384,19 @@ async def list_maintenance_requests(
     requests = req_result.all()
 
     response_data = []
+    items_to_hydrate = []
     for r, prop_id, prop_name, unit_label in requests:
         resp = MaintenanceRequestResponse.model_validate(r)
         resp.property_id = prop_id
         resp.property_name = prop_name
         resp.unit_label = unit_label
-        await hydrate_maintenance_request(r, resp)
         response_data.append(resp)
+        items_to_hydrate.append((r, resp))
+
+    if items_to_hydrate:
+        await asyncio.gather(
+            *(hydrate_maintenance_request(r, resp) for r, resp in items_to_hydrate)
+        )
 
     return Page(items=response_data, total=total, limit=pagination.limit, offset=pagination.offset)
 
@@ -517,14 +524,21 @@ async def list_announcements(
         props_map = {row[0]: row[1] for row in prop_res.all()}
 
     out = []
+    items_to_hydrate = []
     for ann in anns:
         resp = AnnouncementResponse.model_validate(ann)
         if ann.unit_id and ann.unit_id in units_map:
             resp.unit_label = units_map[ann.unit_id]
         if ann.property_id and ann.property_id in props_map:
             resp.property_name = props_map[ann.property_id]
-        await hydrate_announcement(ann, resp)
         out.append(resp)
+        items_to_hydrate.append((ann, resp))
+
+    if items_to_hydrate:
+        await asyncio.gather(
+            *(hydrate_announcement(ann, resp) for ann, resp in items_to_hydrate)
+        )
+
     return Page(items=out, total=total, limit=pagination.limit, offset=pagination.offset)
 
 

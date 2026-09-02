@@ -217,3 +217,50 @@ async def test_quota_only_counts_today_utc(client: AsyncClient, seed_data, mock_
         assert resp.status_code == 200, "yesterday's usage must not block today's uploads"
     finally:
         _clear_override()
+
+
+async def test_consume_daily_upload_quota_handles_integrity_error_race(db_session, seed_data, monkeypatch):
+    """
+    Simulate race condition where two requests attempt to insert the first row.
+    The first commit raises IntegrityError; the service catches it, rolls back,
+    and successfully retries against the newly-present row.
+    """
+    from sqlalchemy.exc import IntegrityError
+    from app.services.upload_quota import consume_daily_upload_quota, _utc_today
+    from app.models.upload_quota import UploadQuota
+
+    user = seed_data["landlord"]
+    user_id = user.id
+    today = _utc_today()
+
+    first_attempt = True
+    original_commit = db_session.commit
+
+    async def racing_commit():
+        nonlocal first_attempt
+        if first_attempt:
+            first_attempt = False
+            raise IntegrityError("duplicate key", params={}, orig=Exception("unique constraint"))
+        return await original_commit()
+
+    original_rollback = db_session.rollback
+
+    async def racing_rollback():
+        await original_rollback()
+        # After rollback, simulate the concurrent transaction having committed its row
+        winner_row = UploadQuota(user_id=user_id, day_utc=today, count=1)
+        db_session.add(winner_row)
+        await original_commit()
+
+    monkeypatch.setattr(db_session, "commit", racing_commit)
+    monkeypatch.setattr(db_session, "rollback", racing_rollback)
+
+    allowed = await consume_daily_upload_quota(db_session, user_id)
+
+    assert allowed is True
+    assert first_attempt is False
+
+    # Verify the row count was incremented on retry to 2
+    final_row = await db_session.get(UploadQuota, (user_id, today))
+    assert final_row is not None
+    assert final_row.count == 2

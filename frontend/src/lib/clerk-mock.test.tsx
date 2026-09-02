@@ -237,4 +237,91 @@ describe("mock SignIn and SignUp with Custom Account Maker", () => {
       expect(window.location.href).toBe("/landlord/dashboard");
     });
   });
+
+  it("sanitizes open redirect attempts to malicious external sites", async () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: {
+        href: "http://localhost/sign-in?redirect_url=https://evil.com",
+        search: "?redirect_url=https://evil.com",
+        protocol: "http:",
+        hostname: "localhost",
+        origin: "http://localhost",
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<SignIn />);
+
+    const personaBtn = screen.getByRole("button", { name: /continue as landlord demo/i });
+    await user.click(personaBtn);
+
+    await waitFor(() => {
+      expect(window.location.href).toBe("/landlord/dashboard");
+    });
+  });
+
+  it("allows safe relative redirect paths", async () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: {
+        href: "http://localhost/sign-in?redirect_url=/landlord/properties",
+        search: "?redirect_url=/landlord/properties",
+        protocol: "http:",
+        hostname: "localhost",
+        origin: "http://localhost",
+      },
+    });
+
+    const user = userEvent.setup();
+    render(<SignIn />);
+
+    const personaBtn = screen.getByRole("button", { name: /continue as landlord demo/i });
+    await user.click(personaBtn);
+
+    await waitFor(() => {
+      expect(window.location.href).toBe("/landlord/properties");
+    });
+  });
+});
+
+import { getSafeRedirectUrl } from "./clerk-mock";
+
+describe("getSafeRedirectUrl", () => {
+  const fallback = "/landlord/dashboard";
+
+  it("returns fallback for null, undefined, empty, or whitespace target", () => {
+    expect(getSafeRedirectUrl(null, fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl(undefined, fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("   ", fallback)).toBe(fallback);
+  });
+
+  it("allows valid relative paths", () => {
+    expect(getSafeRedirectUrl("/landlord/properties", fallback)).toBe("/landlord/properties");
+    expect(getSafeRedirectUrl("/tenant/requests?id=123", fallback)).toBe("/tenant/requests?id=123");
+    expect(getSafeRedirectUrl("/join/token_abc#section", fallback)).toBe("/join/token_abc#section");
+  });
+
+  it("rejects protocol-relative and backslash injection bypasses", () => {
+    expect(getSafeRedirectUrl("//evil.com", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("/\\evil.com", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("\\evil.com", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("/\\/evil.com", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("/path\\with\\backslash", fallback)).toBe(fallback);
+  });
+
+  it("rejects cross-origin absolute URLs", () => {
+    expect(getSafeRedirectUrl("https://evil.com", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("http://attacker.com/dashboard", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("https://homepost.fake.com", fallback)).toBe(fallback);
+  });
+
+  it("rejects pseudo-protocols like javascript: or data:", () => {
+    expect(getSafeRedirectUrl("javascript:alert(1)", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("data:text/html,payload", fallback)).toBe(fallback);
+    expect(getSafeRedirectUrl("vbscript:msgbox", fallback)).toBe(fallback);
+  });
 });

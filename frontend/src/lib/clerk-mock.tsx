@@ -379,22 +379,90 @@ const DEMO_PERSONAS: Array<MockPersona & { role: MockRole; label: string; badgeC
   },
 ];
 
+export function getSafeRedirectUrl(target: string | null | undefined, fallbackUrl: string): string {
+  if (!target || typeof target !== "string") {
+    return fallbackUrl;
+  }
+
+  const trimmed = target.trim();
+  if (!trimmed) {
+    return fallbackUrl;
+  }
+
+  // Reject control characters or whitespace within the path
+  if (/[\x00-\x1F\x7F\s]/.test(trimmed)) {
+    return fallbackUrl;
+  }
+
+  // Reject protocol-relative, backslash bypasses, or leading backslashes
+  if (
+    trimmed.startsWith("//") ||
+    trimmed.startsWith("/\\") ||
+    trimmed.startsWith("\\") ||
+    trimmed.includes("/\\") ||
+    trimmed.includes("\\")
+  ) {
+    return fallbackUrl;
+  }
+
+  // Check if it is a safe relative URL starting with a single '/'
+  if (trimmed.startsWith("/")) {
+    try {
+      const origin =
+        typeof window !== "undefined" && window.location?.origin
+          ? window.location.origin
+          : "http://localhost";
+      const parsed = new URL(trimmed, origin);
+      if (
+        parsed.origin === origin &&
+        (parsed.protocol === "http:" || parsed.protocol === "https:")
+      ) {
+        return parsed.pathname + parsed.search + parsed.hash;
+      }
+    } catch {
+      return fallbackUrl;
+    }
+    return fallbackUrl;
+  }
+
+  // If it's an absolute URL, verify same origin
+  try {
+    const origin =
+      typeof window !== "undefined" && window.location?.origin
+        ? window.location.origin
+        : "http://localhost";
+    const parsed = new URL(trimmed);
+    if (
+      parsed.origin === origin &&
+      (parsed.protocol === "http:" || parsed.protocol === "https:")
+    ) {
+      return parsed.pathname + parsed.search + parsed.hash;
+    }
+  } catch {
+    return fallbackUrl;
+  }
+
+  return fallbackUrl;
+}
+
 async function choosePersona(
   role: MockRole,
   customPersona?: MockPersona
 ) {
   const params = new URLSearchParams(window.location.search);
-  const redirect = params.get("redirect_url") || params.get("fallbackRedirectUrl");
+  const rawRedirect = params.get("redirect_url") || params.get("fallbackRedirectUrl");
+  const fallback = role === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard";
+  const redirect = getSafeRedirectUrl(rawRedirect, fallback);
 
   if (customPersona) {
     const targetUrl = await provisionCustomAccount(customPersona, role);
-    window.location.href = redirect || targetUrl;
+    window.location.href = rawRedirect ? redirect : targetUrl;
     return;
   }
 
   const persona = DEMO_PERSONAS.find((p) => p.id === defaultDemoId(role))!;
   persistMockSession(persona, role);
-  window.location.href = redirect || (role === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard");
+  window.location.href = redirect;
 }
 
 function defaultDemoId(role: MockRole): string {

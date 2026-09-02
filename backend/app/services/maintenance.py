@@ -264,13 +264,30 @@ async def fetch_maintenance_events_with_urls(
     )
 
     events = []
+    all_keys = []
     for event, user_name in result.all():
         data = event.model_dump()
         data["actor_name"] = user_name or "Unknown User"
         if data.get("payload") and "image_keys" in data["payload"]:
-            data["payload"]["image_urls"] = await generate_presigned_urls_batch(
-                data["payload"]["image_keys"]
-            )
+            keys = data["payload"]["image_keys"] or []
+            for k in keys:
+                if k:
+                    all_keys.append(k)
         events.append(data)
+
+    if all_keys:
+        unique_keys = list(dict.fromkeys(all_keys))
+        presigned_urls = await generate_presigned_urls_batch(unique_keys)
+        key_to_url = dict(zip(unique_keys, presigned_urls))
+        for data in events:
+            if data.get("payload") and "image_keys" in data["payload"]:
+                keys = data["payload"]["image_keys"] or []
+                data["payload"]["image_urls"] = [
+                    key_to_url[k] for k in keys if k in key_to_url
+                ]
+    else:
+        for data in events:
+            if data.get("payload") and "image_keys" in data["payload"]:
+                data["payload"]["image_urls"] = []
 
     return events
