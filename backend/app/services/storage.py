@@ -30,7 +30,7 @@ settings = get_settings()
 # ---------------------------------------------------------------------------
 _s3_client = boto3.client(
     "s3",
-    endpoint_url=settings.r2_endpoint_url,
+    endpoint_url=settings.r2_endpoint_url or None,
     aws_access_key_id=settings.r2_access_key_id,
     aws_secret_access_key=settings.r2_secret_access_key,
     config=BotoConfig(

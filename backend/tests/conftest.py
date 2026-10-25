@@ -1,6 +1,10 @@
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator
+
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+
 import pytest
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine

@@ -194,3 +194,16 @@ async def test_direct_upload_unsupported_type(client: AsyncClient, seed_data, mo
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
+
+def test_storage_module_imports_with_empty_r2_endpoint(monkeypatch):
+    """storage._s3_client initializes cleanly when r2_endpoint_url is empty string."""
+    import importlib
+    from app.core import config
+    from app.services import storage
+
+    settings = config.get_settings()
+    monkeypatch.setattr(settings, "r2_endpoint_url", "")
+    reloaded = importlib.reload(storage)
+    assert reloaded._s3_client is not None
+
+
