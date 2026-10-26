@@ -10,7 +10,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[rgb(var(--ml-accent))] text-black font-semibold transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]",
+        default: "bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold transition-all duration-150 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]",
         outline:
           "bg-background text-foreground transition-all duration-200 ease-out active:scale-[0.98] border border-border/60 hover:border-[rgb(var(--ml-text-primary))]/40 hover:bg-[rgb(var(--ml-bg-tertiary))]",
         secondary:

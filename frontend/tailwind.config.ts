@@ -12,41 +12,41 @@ const config: Config = {
       colors: {
         border: "rgb(var(--ml-border) / <alpha-value>)",
         input: "rgb(var(--ml-border) / <alpha-value>)",
-        ring: "var(--ring)",
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        ring: "rgb(var(--ml-accent) / <alpha-value>)",
+        background: "rgb(var(--ml-bg-primary) / <alpha-value>)",
+        foreground: "rgb(var(--ml-text-primary) / <alpha-value>)",
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
+          DEFAULT: "rgb(var(--ml-text-primary) / <alpha-value>)",
+          foreground: "rgb(var(--ml-bg-primary) / <alpha-value>)",
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
+          DEFAULT: "rgb(var(--ml-bg-tertiary) / <alpha-value>)",
+          foreground: "rgb(var(--ml-text-primary) / <alpha-value>)",
         },
         destructive: {
-          DEFAULT: "var(--destructive)",
+          DEFAULT: "rgb(var(--destructive-rgb, 239 68 68) / <alpha-value>)",
           foreground: "var(--destructive-foreground)",
         },
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: "rgb(var(--ml-bg-tertiary) / <alpha-value>)",
+          foreground: "rgb(var(--ml-text-secondary) / <alpha-value>)",
         },
         popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
+          DEFAULT: "rgb(var(--ml-bg-secondary) / <alpha-value>)",
+          foreground: "rgb(var(--ml-text-primary) / <alpha-value>)",
         },
         card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
+          DEFAULT: "rgb(var(--ml-bg-secondary) / <alpha-value>)",
+          foreground: "rgb(var(--ml-text-primary) / <alpha-value>)",
         },
         // Stepped dark slate palette
         slate: {
           850: "#1a1f2e",
           950: "#0f1219",
         },
-        // Warm amber/gold accent
+        // Calibrated lime/emerald accent
         accent: {
-          DEFAULT: "var(--accent)",
+          DEFAULT: "rgb(var(--ml-accent) / <alpha-value>)",
           foreground: "var(--accent-foreground)",
           light: "#a3e635",
           dark: "#65a30d",

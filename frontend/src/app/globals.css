@@ -18,16 +18,19 @@
 @layer base {
   :root {
     color-scheme: light;
-    /* Light Mode (default) */
-    --ml-bg-primary: 240 242 245;     /* slightly darker off-white for better card contrast */
-    --ml-bg-secondary: 255 255 255;   /* pure white cards */
-    --ml-bg-tertiary: 241 243 245;    /* subtle elevation */
-    --ml-text-primary: 15 18 25;      /* near-black */
-    --ml-text-secondary: 107 114 128; /* muted gray */
-    --ml-accent: 132 204 22;          /* lime-500 (#84cc16) */
-    --ml-accent-light: 163 230 53;    /* lime-400 (#a3e635) */
-    --ml-accent-dark: 101 163 13;      /* lime-600 (#65a30d) */
-    --ml-border: 229 231 235;         /* gray-200 */
+    /* Light Mode (default) — Warm Alabaster & Accessible Deep Lime */
+    --ml-bg-primary: 248 248 246;     /* warm architectural alabaster (#F8F8F6) */
+    --ml-bg-secondary: 255 255 255;   /* crisp elevated card surface (#FFFFFF) */
+    --ml-bg-tertiary: 238 238 234;    /* warm stone muted surface (#EEEEEA) */
+    --ml-surface: 255 255 255;        /* surface alias */
+    --ml-text-primary: 20 20 22;      /* deep architectural ink (#141416) */
+    --ml-text-secondary: 82 82 91;    /* muted zinc (#52525B) */
+    --ml-text-tertiary: 113 113 122;  /* subtle caption zinc (#71717A) */
+    --ml-accent: 77 124 15;           /* lime-700 (#4D7C0F) — WCAG AA >=4.6:1 on light bg & white text */
+    --ml-accent-light: 101 163 13;    /* lime-600 (#65A30D) */
+    --ml-accent-dark: 63 98 18;       /* lime-800 (#3F6212) */
+    --ml-border: 228 228 231;         /* zinc-200 (#E4E4E7) */
+    --destructive-rgb: 220 38 38;     /* red-600 */
 
     /* Shadcn UI Variables */
     --background: rgb(var(--ml-bg-primary));
@@ -66,16 +69,19 @@
 
   .dark {
     color-scheme: dark;
-    /* Dark Mode — Near Black & Lime */
-    --ml-bg-primary: 5 5 5;          /* near black */
-    --ml-bg-secondary: 15 15 15;     /* very dark grey */
-    --ml-bg-tertiary: 25 25 25;
-    --ml-text-primary: 255 255 255;
+    /* Dark Mode — Obsidian Slate & Electric Lime */
+    --ml-bg-primary: 10 11 13;       /* obsidian slate (#0A0B0D) */
+    --ml-bg-secondary: 17 19 23;     /* elevated slate surface (#111317) */
+    --ml-bg-tertiary: 26 29 35;      /* secondary surface (#1A1D23) */
+    --ml-surface: 17 19 23;          /* surface alias */
+    --ml-text-primary: 244 244 246;  /* warm off-white (#F4F4F6) */
     --ml-text-secondary: 161 161 170;
+    --ml-text-tertiary: 113 113 122;
     --ml-accent: 132 204 22;         /* lime-500 (#84cc16) */
     --ml-accent-light: 163 230 53;
     --ml-accent-dark: 101 163 13;
-    --ml-border: 39 39 42;
+    --ml-border: 39 39 45;
+    --destructive-rgb: 239 68 68;
 
     /* Shadcn UI Variables */
     --background: rgb(var(--ml-bg-primary));
@@ -186,7 +192,13 @@
   body {
     @apply bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-primary))];
     @apply antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-outfit), system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
 }
 
@@ -198,24 +210,7 @@
    theme classes (initial load, reduced motion, or during a view
    transition) so these transitions never fight or double-animate.
    ============================================================ */
-*, *::before, *::after, ::backdrop {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, box-shadow, outline-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
-}
 
-/* Ensure interactive hover/focus states remain smooth & responsive (300ms) */
-a:hover, 
-button:hover, 
-button:focus,
-input:focus, 
-select:focus, 
-textarea:focus, 
-[role="button"]:hover,
-[role="menuitem"]:hover,
-[role="option"]:hover {
-  transition-duration: 300ms;
-}
 
 /* Suppress all color transitions while the theme class is being swapped */
 html.theme-switching *,
@@ -416,7 +411,7 @@ html.theme-switching *::after {
 
 /* Hover-lift card utility */
 .hover-lift {
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out, border-color 150ms ease-out;
 }
 .hover-lift:hover {
   transform: translateY(-2px);
@@ -485,6 +480,14 @@ html.theme-switching *::after {
 }
 .animate-dune-drift-4 {
   animation: dune-drift-4 135s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-dune-drift-1,
+  .animate-dune-drift-2,
+  .animate-dune-drift-3,
+  .animate-dune-drift-4 {
+    animation: none !important;
+  }
 }
 .pin-spacer {
   z-index: 30 !important;

@@ -133,7 +133,11 @@ export function ThemeProvider({
           applyDom(targetTheme);
         });
         transition?.ready?.catch?.(() => {});
-        transition?.finished?.catch?.(() => {});
+        transition?.finished
+          ?.finally?.(() => {
+            root.classList.remove("theme-switching");
+          })
+          ?.catch?.(() => {});
       } catch {
         root.classList.add("theme-switching");
         applyDom(targetTheme);
