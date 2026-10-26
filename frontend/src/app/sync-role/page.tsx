@@ -128,17 +128,17 @@ function SyncRoleContent() {
 
   if (errorStatus) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-4 text-center">
           <h1 className="text-3xl font-bold text-destructive">Oops!</h1>
-          <p className="text-[rgb(var(--ml-text-secondary))]">{errorMessage}</p>
+          <p className="text-[rgb(var(--ml-text-secondary))] text-pretty">{errorMessage}</p>
           <div className="mt-6 flex justify-center gap-4">
             {errorStatus === 400 ? (
-              <button onClick={() => router.push("/dashboard")} className="px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white font-medium">
+              <button onClick={() => router.push("/dashboard")} className="px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold hover:opacity-90 transition-opacity duration-150">
                 Go to Dashboard
               </button>
             ) : (
-              <button onClick={() => { syncInProgress.current = false; window.location.reload(); }} className="px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white font-medium">
+              <button onClick={() => { syncInProgress.current = false; window.location.reload(); }} className="px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold hover:opacity-90 transition-opacity duration-150">
                 Retry
               </button>
             )}
@@ -150,15 +150,15 @@ function SyncRoleContent() {
 
   if (isPending) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="max-w-md w-full space-y-4 text-center">
-          <h1 className="text-3xl font-bold">🎉 Request Sent!</h1>
+          <h1 className="text-3xl font-bold text-balance">🎉 Request Sent!</h1>
           <p className="text-[rgb(var(--ml-text-secondary))]">
             We&apos;ve notified your landlord. You&apos;ll be able to access your dashboard once they approve your request.
           </p>
           <button 
             onClick={() => router.push("/")}
-            className="mt-6 px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white font-medium"
+            className="mt-6 px-6 py-2 rounded-lg bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold hover:opacity-90 transition-opacity duration-150"
           >
             Go to Home
           </button>
@@ -168,9 +168,9 @@ function SyncRoleContent() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
+    <main className="min-h-dvh flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
       <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
+        <div className="animate-spin rounded-full size-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
         <p className="text-[rgb(var(--ml-text-secondary))] font-medium">{status}</p>
       </div>
     </main>
@@ -180,8 +180,8 @@ function SyncRoleContent() {
 export default function SyncRolePage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
+      <main className="min-h-dvh flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
+        <div className="animate-spin rounded-full size-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
       </main>
     }>
       <SyncRoleContent />

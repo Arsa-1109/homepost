@@ -88,13 +88,13 @@ export default function DashboardRedirect() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4">
         <div className="max-w-md w-full p-8 rounded-2xl bg-card border border-border shadow-xl text-center space-y-6">
-          <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto text-xl font-bold">
+          <div className="size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto text-xl font-bold">
             ⚠️
           </div>
-          <h2 className="text-xl font-bold tracking-tight">Connection Issue</h2>
-          <p className="text-sm text-muted-foreground">{error}</p>
+          <h2 className="text-xl font-bold tracking-tight text-balance">Connection Issue</h2>
+          <p className="text-sm text-pretty text-muted-foreground">{error}</p>
           <div className="flex flex-col gap-3 pt-2">
             <Button onClick={checkRole} className="w-full">
               Try Again
@@ -109,8 +109,8 @@ export default function DashboardRedirect() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
+    <div className="min-h-dvh flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full size-12 border-t-2 border-b-2 border-accent"></div>
     </div>
   );
 }

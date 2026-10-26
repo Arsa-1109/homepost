@@ -19,11 +19,11 @@ export function UnitsCompactTable({ units }: UnitsCompactTableProps) {
       <table className="w-full text-left text-xs">
         <caption className="sr-only">Units in this property</caption>
         <thead>
-          <tr className="border-b border-border/60 text-[10px] uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
-            <th scope="col" className="px-4 py-3 font-extrabold">Unit</th>
-            <th scope="col" className="px-4 py-3 font-extrabold">Status</th>
-            <th scope="col" className="px-4 py-3 font-extrabold">Rent Due Day</th>
-            <th scope="col" className="px-4 py-3 font-extrabold hidden sm:table-cell">Lease Period</th>
+          <tr className="border-b border-border/60 text-xs uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
+            <th scope="col" className="px-4 py-3 font-semibold">Unit</th>
+            <th scope="col" className="px-4 py-3 font-semibold">Status</th>
+            <th scope="col" className="px-4 py-3 font-semibold">Rent Due Day</th>
+            <th scope="col" className="px-4 py-3 font-semibold hidden sm:table-cell">Lease Period</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +39,13 @@ export function UnitsCompactTable({ units }: UnitsCompactTableProps) {
                     title="Pending tenant request"
                   />
                 )}
-                <span title={u.unit_label}>{u.unit_label}</span>
+                <Link
+                  href={`/landlord/units/${u.id}`}
+                  title={u.unit_label}
+                  className="hover:text-[rgb(var(--ml-accent))] transition-colors duration-150 focus-visible:underline"
+                >
+                  {u.unit_label}
+                </Link>
               </td>
               <td className="px-4 py-2.5">
                 <span
@@ -50,9 +56,9 @@ export function UnitsCompactTable({ units }: UnitsCompactTableProps) {
                   }`}
                 >
                   {u.is_occupied ? (
-                    <UserCheck className="w-3 h-3" aria-hidden="true" />
+                    <UserCheck className="size-3" aria-hidden="true" />
                   ) : (
-                    <UserX className="w-3 h-3" aria-hidden="true" />
+                    <UserX className="size-3" aria-hidden="true" />
                   )}
                   {u.is_occupied ? "Occupied" : "Vacant"}
                 </span>
@@ -74,15 +80,7 @@ export function UnitsCompactTable({ units }: UnitsCompactTableProps) {
           ))}
         </tbody>
       </table>
-      <div className="px-4 py-2 border-t border-border/40">
-        <Link
-          href="#"
-          onClick={(e) => e.preventDefault()}
-          className="hidden"
-          aria-hidden="true"
-          tabIndex={-1}
-        />
-      </div>
+
     </div>
   );
 }

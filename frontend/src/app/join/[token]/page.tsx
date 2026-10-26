@@ -106,7 +106,7 @@ export default function JoinPage({
 
   if (!isLoaded || checking) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
+      <main className="min-h-dvh flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-10 w-10 animate-spin text-[rgb(var(--ml-accent))]" />
           <p className="text-[rgb(var(--ml-text-secondary))] font-medium text-sm">
@@ -127,10 +127,10 @@ export default function JoinPage({
   const isOwnerOrLandlord = isLandlordUser || isPropertyOwner;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-12 bg-[rgb(var(--ml-bg-primary))] relative overflow-hidden">
+    <main className="min-h-dvh flex items-center justify-center px-4 py-12 bg-[rgb(var(--ml-bg-primary))] relative overflow-hidden">
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none -z-10" aria-hidden="true">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[rgb(var(--ml-accent))]/10 dark:bg-[rgb(var(--ml-accent))]/15 blur-[120px]" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[rgb(var(--ml-accent))]/10 dark:bg-[rgb(var(--ml-accent))]/15 blur-[80px]" />
       </div>
 
       <div className="max-w-md w-full">
@@ -196,7 +196,7 @@ export default function JoinPage({
             <div className="space-y-3 pt-2">
               <Button
                 onClick={() => router.push("/landlord/dashboard")}
-                className="w-full h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-accent-foreground))] font-semibold shadow-sm flex items-center justify-center gap-2 hover:opacity-95"
+                className="w-full h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold shadow-sm flex items-center justify-center gap-2 hover:opacity-95 transition-opacity duration-150"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 Go to Landlord Dashboard
@@ -286,7 +286,7 @@ export default function JoinPage({
               <Button
                 onClick={handleAccept}
                 disabled={accepting}
-                className="w-full h-12 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-accent-foreground))] font-semibold shadow-md flex items-center justify-center gap-2 hover:opacity-95 transition-all text-base"
+                className="w-full h-12 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold shadow-sm flex items-center justify-center gap-2 hover:opacity-95 transition-opacity duration-150 text-base"
               >
                 {accepting ? (
                   <>

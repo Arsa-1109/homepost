@@ -58,6 +58,7 @@ export default function LandlordUnitsPage() {
 function LandlordUnitsContent() {
   const searchParams = useSearchParams();
   const initialPropertyId = searchParams.get("property_id");
+  const shouldOpenAdd = searchParams.get("add") === "1";
   const { isLoaded, getToken } = useAuth();
 
   const [selectedProperty, setSelectedProperty] = useState<string>("");
@@ -104,6 +105,12 @@ function LandlordUnitsContent() {
       setUnits([]);
     }
   }, [properties, initialPropertyId]);
+
+  useEffect(() => {
+    if (shouldOpenAdd && selectedProperty) {
+      setIsCreateModalOpen(true);
+    }
+  }, [shouldOpenAdd, selectedProperty]);
 
   // Load units for selected property
   const loadUnits = useCallback(async () => {
