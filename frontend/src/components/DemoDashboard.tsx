@@ -60,9 +60,9 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
           <button
             onClick={() => setSelectedRole("owner")}
             className={cn(
-              "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
+              "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-colors duration-150 cursor-pointer",
               selectedRole === "owner"
-                ? "bg-[rgb(var(--ml-accent))] text-black shadow-xs"
+                ? "bg-[rgb(var(--ml-accent))] text-white dark:text-black shadow-xs"
                 : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
             )}
           >
@@ -73,9 +73,9 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
           <button
             onClick={() => setSelectedRole("tenant")}
             className={cn(
-              "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer",
+              "flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-bold transition-colors duration-150 cursor-pointer",
               selectedRole === "tenant"
-                ? "bg-[rgb(var(--ml-accent))] text-black shadow-xs"
+                ? "bg-[rgb(var(--ml-accent))] text-white dark:text-black shadow-xs"
                 : "text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))]"
             )}
           >
@@ -90,7 +90,7 @@ export function DemoDashboard({ role = "owner", onLaunchDemo }: DemoDashboardPro
           <Button
             size="sm"
             onClick={() => onLaunchDemo?.(selectedRole)}
-            className="font-bold rounded-xl px-2.5 sm:px-3.5 py-1.5 h-8 sm:h-9 text-xs bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-black hover:opacity-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm cursor-pointer shrink-0"
+            className="font-bold rounded-xl px-2.5 sm:px-3.5 py-1.5 h-8 sm:h-9 text-xs bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold hover:opacity-95 transition-all flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm cursor-pointer shrink-0"
           >
             <span className="hidden lg:inline">
               {selectedRole === "owner" ? "Explore Live Owner Dashboard" : "Explore Live Resident Portal"}

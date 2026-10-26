@@ -13,7 +13,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import {
   LANDLORD_ACTIVE_REQUESTS,
@@ -89,7 +89,7 @@ export function DemoLandlordView({
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs transition-all duration-200 cursor-pointer text-left group",
                     isSidebarCollapsed ? "justify-center px-0" : "justify-center lg:justify-start px-0 lg:px-3",
                     isActive
-                      ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-bold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
+                      ? "bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] font-bold "
                       : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))]"
                   )}
                   title={item.label}
@@ -184,7 +184,7 @@ export function DemoLandlordView({
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-sm text-[rgb(var(--ml-text-primary))]">Action Required</h4>
-                  <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
                     1 Pending
                   </span>
                 </div>
@@ -241,7 +241,7 @@ export function DemoLandlordView({
                         </div>
                         <div className="flex items-center gap-3 shrink-0 pl-2">
                           <div className="flex flex-col items-end justify-center">
-                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full capitalize uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:bg-[rgba(251,146,60,0.12)] dark:text-[#FB923C]">
+                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:bg-[rgba(251,146,60,0.12)] dark:text-[#FB923C]">
                               {req.priority}
                             </span>
                             <span className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-medium mt-0.5">
@@ -398,11 +398,11 @@ export function DemoLandlordView({
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {unit.has_maintenance && (
-                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             Maint.
                           </span>
                         )}
-                        <span className="text-[9px] font-extrabold px-2 py-0.2 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                           Occupied
                         </span>
                         <span className="text-[rgb(var(--ml-text-secondary))] group-hover:translate-x-1 group-hover:text-[rgb(var(--ml-text-primary))] transition-all text-base leading-none select-none ml-1">&rsaquo;</span>
@@ -496,9 +496,10 @@ export function DemoLandlordView({
                   </div>
                   <button
                     onClick={() => setIsMoreOpen(false)}
+                    aria-label="Close more options"
                     className="p-1.5 rounded-lg border border-border text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] cursor-pointer transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="size-4" />
                   </button>
                 </div>
 

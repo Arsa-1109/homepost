@@ -76,14 +76,16 @@ export function FeatureSection({
         <button
           type="button"
           role="tab"
+          id="tab-owner"
+          aria-controls="feature-tabpanel"
           aria-selected={activeFeatureRole === "owner"}
           onClick={() => onRoleChange("owner")}
-          className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
+          className="relative flex flex-col items-center justify-center group transition-all duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] rounded-lg"
         >
           <h2
-            className={`text-lg sm:text-xl md:text-4xl lg:text-5xl font-extrabold tracking-tight transition-all duration-500 ${
+            className={`text-lg sm:text-xl md:text-4xl lg:text-5xl font-extrabold tracking-tight transition-all duration-150 ${
               activeFeatureRole === "owner"
-                ? "text-foreground drop-shadow-[0_0_30px_rgb(var(--ml-accent)/0.6)] scale-105"
+                ? "text-foreground scale-105"
                 : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"
             }`}
           >
@@ -105,14 +107,16 @@ export function FeatureSection({
         <button
           type="button"
           role="tab"
+          id="tab-tenant"
+          aria-controls="feature-tabpanel"
           aria-selected={activeFeatureRole === "tenant"}
           onClick={() => onRoleChange("tenant")}
-          className="relative flex flex-col items-center justify-center group transition-all duration-500 ease-out outline-none"
+          className="relative flex flex-col items-center justify-center group transition-all duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] rounded-lg"
         >
           <h2
-            className={`text-lg sm:text-xl md:text-4xl lg:text-5xl font-extrabold tracking-tight transition-all duration-500 ${
+            className={`text-lg sm:text-xl md:text-4xl lg:text-5xl font-extrabold tracking-tight transition-all duration-150 ${
               activeFeatureRole === "tenant"
-                ? "text-foreground drop-shadow-[0_0_30px_rgb(var(--ml-accent)/0.6)] scale-105"
+                ? "text-foreground scale-105"
                 : "text-muted-foreground/40 hover:text-muted-foreground/80 scale-100"
             }`}
           >
@@ -129,29 +133,19 @@ export function FeatureSection({
       </div>
 
       {/* Floating Bento Grid */}
-      <section className="max-w-6xl w-full mx-auto mb-16 md:mb-32 px-4 relative z-10 perspective-[1200px]">
+      <section id="feature-tabpanel" role="tabpanel" aria-labelledby={activeFeatureRole === "owner" ? "tab-owner" : "tab-tenant"} className="max-w-6xl w-full mx-auto mb-16 md:mb-32 px-4 relative z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgb(var(--ml-accent)/0.05)] to-transparent blur-[120px] -z-10 pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-6 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-6 items-stretch">
           {/* Card 1 */}
-          <motion.div
-            animate={isMobile ? undefined : { y: [0, -25, 0], x: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-            className="relative z-10 w-full will-change-transform"
-          >
+          <div className="relative z-10 w-full">
             <motion.div
-              initial={{ opacity: 0, y: 30, rotateZ: isMobile ? 0 : -2 }}
-              whileInView={{ opacity: 1, y: 0, rotateZ: isMobile ? 0 : -2 }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                type: "spring",
-                stiffness: 100,
-                damping: 20,
-                mass: 1.2,
-                opacity: { duration: 0.8 },
-              }}
-              whileHover={isMobile ? undefined : { scale: 1.03, rotateZ: 0, zIndex: 30, y: -6 }}
-              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer md:mt-12 w-full transform-gpu backface-hidden antialiased"
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              whileHover={isMobile ? undefined : { scale: 1.02, y: -4 }}
+              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-sm border border-border/70 relative overflow-hidden group cursor-pointer w-full h-full antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -177,27 +171,17 @@ export function FeatureSection({
                 </motion.div>
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Card 2 */}
-          <motion.div
-            animate={isMobile ? undefined : { y: [0, -35, 0], x: [0, -6, 0] }}
-            transition={{ repeat: Infinity, duration: 9, ease: "easeInOut", delay: 0.5 }}
-            className="relative z-20 w-full md:-mt-16 will-change-transform"
-          >
+          <div className="relative z-10 w-full">
             <motion.div
-              initial={{ opacity: 0, y: 30, scale: isMobile ? 1 : 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                type: "spring",
-                stiffness: 100,
-                damping: 20,
-                mass: 1,
-                opacity: { duration: 0.8 },
-              }}
-              whileHover={isMobile ? undefined : { scale: 1.03, zIndex: 30, y: -6 }}
-              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-xl relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
+              transition={{ duration: 0.2, ease: "easeOut", delay: 0.05 }}
+              whileHover={isMobile ? undefined : { scale: 1.02, y: -4 }}
+              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-sm border border-border/70 relative overflow-hidden group cursor-pointer w-full h-full antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -223,27 +207,17 @@ export function FeatureSection({
                 </motion.div>
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Card 3 */}
-          <motion.div
-            animate={isMobile ? undefined : { y: [0, -20, 0], x: [0, 4, 0] }}
-            transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
-            className="relative z-10 w-full md:mt-24 will-change-transform"
-          >
+          <div className="relative z-10 w-full">
             <motion.div
-              initial={{ opacity: 0, y: 30, rotateZ: isMobile ? 0 : 2 }}
-              whileInView={{ opacity: 1, y: 0, rotateZ: isMobile ? 0 : 2 }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                type: "spring",
-                stiffness: 100,
-                damping: 20,
-                mass: 1,
-                opacity: { duration: 0.8 },
-              }}
-              whileHover={isMobile ? undefined : { scale: 1.03, rotateZ: 0, zIndex: 30, y: -6 }}
-              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-lg relative overflow-hidden group cursor-pointer w-full transform-gpu backface-hidden antialiased"
+              transition={{ duration: 0.2, ease: "easeOut", delay: 0.1 }}
+              whileHover={isMobile ? undefined : { scale: 1.02, y: -4 }}
+              className="solid-panel rounded-2xl p-6 sm:p-8 md:p-10 flex flex-col items-start shadow-sm border border-border/70 relative overflow-hidden group cursor-pointer w-full h-full antialiased"
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -269,7 +243,7 @@ export function FeatureSection({
                 </motion.div>
               </AnimatePresence>
             </motion.div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </>

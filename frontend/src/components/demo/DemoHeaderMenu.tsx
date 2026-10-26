@@ -81,7 +81,7 @@ export function DemoHeaderMenu({
         aria-label="Demo mode options"
         className={cn(
           "flex items-center gap-2 rounded-full border transition-all duration-200 cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[rgb(var(--ml-accent))] active:scale-[0.98]",
-          "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800",
+          "bg-[rgb(var(--ml-bg-secondary))] border-border hover:bg-[rgb(var(--ml-bg-tertiary))],"
           isMobile ? "pl-1 pr-2 py-0.5" : "pl-1.5 pr-2.5 py-1"
         )}
       >
@@ -90,7 +90,7 @@ export function DemoHeaderMenu({
           className={cn(
             "rounded-full text-white font-bold flex items-center justify-center bg-gradient-to-tr shadow-inner shrink-0",
             isMobile ? "w-6 h-6 text-[10px]" : "w-6 h-6 text-[10px]",
-            isLandlord ? "from-amber-500 to-orange-500" : "from-purple-500 to-indigo-500"
+            isLandlord ? "from-amber-500 to-orange-500" : "from-emerald-600 to-teal-600"
           )}
         >
           {initials}
@@ -109,7 +109,7 @@ export function DemoHeaderMenu({
             "inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider border leading-none shrink-0",
             isLandlord
               ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
-              : "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30"
+              : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
           )}
         >
           DEMO
@@ -129,21 +129,21 @@ export function DemoHeaderMenu({
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl z-[100] py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top-right"
+          className="absolute right-0 mt-2 w-64 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border shadow-2xl z-50 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top-right"
         >
           {/* Persona Details Header */}
-          <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/80 dark:bg-zinc-900">
+          <div className="px-4 py-3 border-b border-border/60 bg-[rgb(var(--ml-bg-tertiary))]/50">
             <div className="flex items-center gap-2 mb-1">
               <span className="flex h-2 w-2 relative">
-                <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isLandlord ? "bg-amber-400" : "bg-purple-400")} />
-                <span className={cn("relative inline-flex rounded-full h-2 w-2", isLandlord ? "bg-amber-500" : "bg-purple-500")} />
+                <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", isLandlord ? "bg-amber-400" : "bg-emerald-400")} />
+                <span className={cn("relative inline-flex rounded-full h-2 w-2", isLandlord ? "bg-amber-500" : "bg-emerald-500")} />
               </span>
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 Demo Session Active
               </span>
             </div>
             <div className="font-bold text-sm text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <RoleIcon className={cn("w-3.5 h-3.5", isLandlord ? "text-amber-500" : "text-purple-400")} />
+              <RoleIcon className={cn("w-3.5 h-3.5", isLandlord ? "text-amber-500" : "text-emerald-500")} />
               <span>{name}</span>
             </div>
             <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
@@ -157,7 +157,7 @@ export function DemoHeaderMenu({
           </div>
 
           {/* Menu Actions */}
-          <div className="p-1.5 space-y-1 bg-white dark:bg-zinc-900">
+          <div className="p-1.5 space-y-1 bg-[rgb(var(--ml-bg-secondary))]">
             <button
               type="button"
               role="menuitem"

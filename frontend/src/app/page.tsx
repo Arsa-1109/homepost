@@ -242,7 +242,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Main Content Area */}
-      <main className="relative pt-20 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-6 md:px-16 min-h-screen z-10 block">
+      <main className="relative pt-20 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-6 md:px-16 min-h-dvh z-10 block">
         <Hero />
 
         {/* Role Selection Area */}
@@ -260,10 +260,10 @@ export default function LandingPage() {
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                 className="p-8 sm:p-10 rounded-2xl bg-card border border-border shadow-xl flex flex-col items-center space-y-6 self-center z-30 w-full max-w-lg text-center"
               >
-                <h2 className="text-2xl sm:text-3xl font-bold">Welcome back!</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-balance">Welcome back!</h2>
                 <Button
                   asChild
-                  className="px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.8)] text-white font-bold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent hover:text-white hover:shadow-none hover:translate-y-0"
+                  className="px-8 sm:px-10 py-4 sm:py-5 rounded-lg bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold text-base sm:text-lg hover:opacity-90 transition-opacity flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   <Link href="/dashboard" className="flex items-center gap-3">
                     Go to Dashboard <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -297,8 +297,8 @@ export default function LandingPage() {
                     >
                       {/* Owner Card */}
                       <motion.article
-                        initial={{ rotateZ: -1, y: 0, scale: 1 }}
-                        animate={{ rotateZ: -1, y: 0, scale: 1 }}
+                        initial={{ y: 0, scale: 1 }}
+                        animate={{ y: 0, scale: 1 }}
                         whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
                         transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-accent/40 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
@@ -307,10 +307,10 @@ export default function LandingPage() {
                           <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4 border border-accent/20">
                             <Building2 className="text-accent w-6 h-6" />
                           </div>
-                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
+                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance mb-2 text-foreground">
                             I am a Property Owner
                           </h2>
-                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
+                          <p className="text-sm text-muted-foreground text-pretty mb-6 leading-relaxed font-normal">
                             Manage your properties, review tenant requests, and oversee maintenance with absolute clarity.
                           </p>
                         </div>
@@ -319,7 +319,7 @@ export default function LandingPage() {
                             type="button"
                             onClick={handleLandlordSelect}
                             isLoading={isSubmitting && roleSelection === "none"}
-                            className="w-full py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold text-sm sm:text-base hover:opacity-90 transition-opacity hover:text-white hover:shadow-none hover:translate-y-0"
+                            className="w-full py-3 h-auto rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold text-sm sm:text-base hover:opacity-90 transition-opacity"
                           >
                             Enter Owner Portal
                           </Button>
@@ -328,8 +328,8 @@ export default function LandingPage() {
 
                       {/* Tenant Card */}
                       <motion.article
-                        initial={{ rotateZ: 1, y: 0, scale: 1 }}
-                        animate={{ rotateZ: 1, y: 0, scale: 1 }}
+                        initial={{ y: 0, scale: 1 }}
+                        animate={{ y: 0, scale: 1 }}
                         whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
                         transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-border/80 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
@@ -409,7 +409,7 @@ export default function LandingPage() {
                         <Button
                           type="submit"
                           isLoading={isSubmitting}
-                          className="flex-1 w-full px-6 py-3 h-auto rounded-xl bg-gradient-to-r from-[rgb(var(--ml-accent))] to-[rgb(var(--ml-accent)/0.85)] text-white font-semibold hover:opacity-90 hover:text-white"
+                          className="flex-1 w-full px-6 py-3 h-auto rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold hover:opacity-90 transition-opacity"
                         >
                           Request Access
                         </Button>

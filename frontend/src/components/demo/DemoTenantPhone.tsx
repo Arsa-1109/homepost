@@ -84,15 +84,15 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
             {/* 2. Latest Announcement Banner */}
             <div 
               onClick={() => onLaunchDemo("/tenant/announcements")}
-              className="p-3.5 rounded-2xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-200 cursor-pointer"
+              className="p-3.5 rounded-2xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/40 transition-colors duration-150 cursor-pointer"
             >
               <div className="flex items-start gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 shrink-0 mt-0.5">
+                <div className="p-2 rounded-xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] shrink-0 mt-0.5">
                   <Megaphone className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-purple-400">
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-accent))]">
                       Latest Notice
                     </span>
                     <span className="text-[10px] text-[rgb(var(--ml-text-secondary))] font-medium">
@@ -119,7 +119,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
                   Rent Due
                 </span>
                 <div className="my-1.5">
-                  <span className="text-2xl font-black text-[rgb(var(--ml-accent))]">16d</span>
+                  <span className="text-2xl font-black tabular-nums text-[rgb(var(--ml-accent))]">16d</span>
                 </div>
                 <p className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))] leading-tight">
                   Due 1st of month
@@ -133,7 +133,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
                   Lease Left
                 </span>
                 <div className="my-1.5">
-                  <span className="text-2xl font-black text-[rgb(var(--ml-text-primary))]">138d</span>
+                  <span className="text-2xl font-black tabular-nums text-[rgb(var(--ml-text-primary))]">138d</span>
                 </div>
                 <p className="text-[10px] font-medium text-[rgb(var(--ml-text-secondary))] leading-tight">
                   Ends Jan 1, 2027
@@ -144,7 +144,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
             {/* 4. Primary Full-Width CTA: New Maintenance Request */}
             <Button
               onClick={() => onLaunchDemo("/tenant/requests/new")}
-              className="w-full h-11 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs shadow-sm cursor-pointer transition-all duration-200 hover:bg-[rgb(var(--ml-accent))] hover:text-black flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs shadow-sm cursor-pointer transition-all duration-200 hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black flex items-center justify-center gap-2"
             >
               <Wrench className="w-3.5 h-3.5" />
               <span>+ New Maintenance Request</span>
@@ -169,7 +169,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="flex items-center gap-1.5">
                         <span className={cn(
-                          "text-[8px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider border",
+                          "text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border",
                           req.status === "open"
                             ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
                             : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
