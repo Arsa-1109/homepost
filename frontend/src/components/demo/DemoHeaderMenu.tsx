@@ -81,7 +81,7 @@ export function DemoHeaderMenu({
         aria-label="Demo mode options"
         className={cn(
           "flex items-center gap-2 rounded-full border transition-all duration-200 cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-[rgb(var(--ml-accent))] active:scale-[0.98]",
-          "bg-[rgb(var(--ml-bg-secondary))] border-border hover:bg-[rgb(var(--ml-bg-tertiary))],"
+          "bg-[rgb(var(--ml-bg-secondary))] border-border hover:bg-[rgb(var(--ml-bg-tertiary))]",
           isMobile ? "pl-1 pr-2 py-0.5" : "pl-1.5 pr-2.5 py-1"
         )}
       >
