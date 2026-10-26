@@ -159,7 +159,7 @@ export function EditAnnouncementDialog({
             <Button
               isLoading={isEditSubmitting}
               type="submit"
-              className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-5 cursor-pointer shadow-sm hover:bg-[rgb(var(--ml-accent))] hover:text-black"
+              className="rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-xs px-5 cursor-pointer shadow-sm hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black"
             >
               Save Changes
             </Button>

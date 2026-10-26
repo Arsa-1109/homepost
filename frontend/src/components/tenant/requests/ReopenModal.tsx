@@ -177,7 +177,7 @@ export function ReopenModal({ open, requestId, onClose, onSuccess }: ReopenModal
             <Button
               type="submit"
               disabled={submitting || !notes.trim()}
-              className="text-xs font-bold bg-[rgb(var(--ml-accent))] text-black hover:bg-[rgb(var(--ml-accent-light))]"
+              className="text-xs font-bold bg-[rgb(var(--ml-accent))] text-white dark:text-black hover:bg-[rgb(var(--ml-accent-light))]"
             >
               {submitting ? "Reopening..." : "Submit & Reopen"}
             </Button>

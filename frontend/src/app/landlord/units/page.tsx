@@ -242,7 +242,7 @@ function LandlordUnitsContent() {
               <Button
                 type="button"
                 onClick={() => setIsCreateModalOpen(true)}
-                className="h-11 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-black font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 whitespace-nowrap cursor-pointer shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 transition-all duration-200 active:scale-[0.98]"
+                className="h-11 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 whitespace-nowrap cursor-pointer shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 transition-all duration-200 active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>Add Unit</span>
@@ -424,7 +424,7 @@ function LandlordUnitsContent() {
                     <Button
                       type="button"
                       onClick={() => setIsCreateModalOpen(true)}
-                      className="h-10 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-black font-extrabold text-xs inline-flex items-center gap-2 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer transition-all active:scale-[0.98]"
+                      className="h-10 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold text-xs inline-flex items-center gap-2 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer transition-all active:scale-[0.98]"
                     >
                       <Plus className="w-4 h-4 stroke-[2.5]" />
                       <span>Add Your First Unit</span>

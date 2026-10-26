@@ -165,7 +165,7 @@ export default function TenantDocumentsPage() {
             fill
             unoptimized
             sizes="96px"
-            className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+            className="object-cover group-hover:scale-110 transition-transform duration-150 ease-out"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
@@ -366,7 +366,7 @@ export default function TenantDocumentsPage() {
                       variant="default"
                       size="sm"
                       onClick={() => handleDownload(doc.file_key, doc.title)}
-                      className={`h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] shadow-sm cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] ${
+                      className={`h-9 gap-1.5 px-3 text-xs font-semibold rounded-xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] shadow-sm cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] ${
                         !doc.file_url ? "w-full" : "flex-1"
                       }`}
                     >

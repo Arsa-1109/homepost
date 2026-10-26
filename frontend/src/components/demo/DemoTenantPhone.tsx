@@ -62,7 +62,7 @@ export function DemoTenantPhone({ activeTab, onSelectTab, onLaunchDemo }: DemoTe
               <div className="size-7 rounded-lg flex items-center justify-center bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border">
                 <Sun className="size-3.5" />
               </div>
-              <div className="size-7 rounded-full bg-[rgb(var(--ml-accent))] text-black font-extrabold text-[10px] flex items-center justify-center">
+              <div className="size-7 rounded-full bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold text-[10px] flex items-center justify-center">
                 SJ
               </div>
             </div>

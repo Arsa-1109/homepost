@@ -326,7 +326,7 @@ function AccessRequestCard({
             onClick={handleApprove}
             isLoading={isSubmitting}
             disabled={!unitId}
-            className="flex-1 sm:flex-initial h-10 px-5 rounded-xl text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] dark:text-black hover:bg-[rgb(var(--ml-accent))] hover:brightness-105 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] disabled:opacity-40 transition-all duration-200 cursor-pointer active:scale-[0.98]"
+            className="flex-1 sm:flex-initial h-10 px-5 rounded-xl text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-white dark:text-black dark:text-black hover:bg-[rgb(var(--ml-accent))] hover:brightness-105 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] disabled:opacity-40 transition-all duration-200 cursor-pointer active:scale-[0.98]"
           >
             <Check className="w-4 h-4" /> Approve
           </Button>

@@ -680,7 +680,7 @@ export function LightboxModal({
                     e.stopPropagation();
                     onDownload();
                   }}
-                  className="w-full rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs gap-2 h-10 hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer shadow-md"
+                  className="w-full rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold text-xs gap-2 h-10 hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer shadow-md"
                 >
                   <Download className="w-4 h-4" />
                   Download File
@@ -688,7 +688,7 @@ export function LightboxModal({
               ) : (
                 <Button
                   asChild
-                  className="w-full rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs gap-2 h-10 hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer shadow-md"
+                  className="w-full rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold text-xs gap-2 h-10 hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer shadow-md"
                 >
                   <a
                     href={url}

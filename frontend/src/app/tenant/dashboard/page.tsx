@@ -239,7 +239,7 @@ export default function TenantDashboard() {
           </div>
           <Button
             onClick={() => void loadAll()}
-            className="rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer mt-2"
+            className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer mt-2"
           >
             <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Retry
@@ -337,7 +337,7 @@ export default function TenantDashboard() {
                   <Button
                     type="submit"
                     disabled={!landlordEmail.trim() || isRequesting}
-                    className="w-full h-10 rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer shadow-xs disabled:opacity-50"
+                    className="w-full h-10 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     {isRequesting ? (
                       <span className="flex items-center gap-2">
@@ -566,7 +566,7 @@ export default function TenantDashboard() {
               <Link
                 key={req.id}
                 href={`/tenant/requests?id=${req.id}`}
-                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-3xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] gap-3 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20"
+                className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-3xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] gap-3 transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-sm hover:border-[rgb(var(--ml-text-primary))]/20"
               >
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-2">

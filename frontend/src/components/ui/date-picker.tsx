@@ -189,7 +189,7 @@ export function DatePicker({
                   className={cn(
                     "w-9 h-9 rounded-xl text-xs font-semibold flex items-center justify-center transition-all duration-200 cursor-pointer",
                     isSelected
-                      ? "bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold shadow-md shadow-[rgba(var(--ml-accent),0.35)] scale-105"
+                      ? "bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold shadow-md shadow-[rgba(var(--ml-accent),0.35)] scale-105"
                       : isCurrentDay
                       ? "border border-[rgb(var(--ml-accent))]/60 text-[rgb(var(--ml-accent))] font-bold hover:bg-[rgb(var(--ml-accent))]/15"
                       : "text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"

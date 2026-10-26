@@ -610,7 +610,7 @@ function OwnAccountForm() {
         data-testid="own-account-submit"
         className={`w-full rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-sm flex items-center justify-center gap-2 font-sans mt-1 ${
           canSubmit
-            ? "bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+            ? "bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-white dark:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.3)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
             : "bg-neutral-800 text-neutral-400 border border-neutral-700/50 cursor-not-allowed opacity-80"
         }`}
       >
@@ -670,7 +670,7 @@ export function MockAuthHub({
       {/* Header */}
       <div className="flex flex-col items-center text-center space-y-1.5 mb-5 relative z-10">
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-7 h-7 rounded-xl bg-[rgb(var(--ml-accent))] text-black flex items-center justify-center font-black text-xs shadow-sm shadow-[rgb(var(--ml-accent))]/30">
+          <div className="w-7 h-7 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black flex items-center justify-center font-black text-xs shadow-sm shadow-[rgb(var(--ml-accent))]/30">
             HP
           </div>
           <span className="font-extrabold text-sm tracking-tight text-[rgb(var(--ml-text-primary))]">

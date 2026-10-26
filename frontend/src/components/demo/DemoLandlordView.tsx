@@ -167,7 +167,7 @@ export function DemoLandlordView({
               </button>
               <button
                 onClick={() => onLaunchDemo("/landlord/announcements")}
-                className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3 py-2 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3 py-2 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <Megaphone className="h-3.5 w-3.5" />
                 New Announcement
@@ -195,7 +195,7 @@ export function DemoLandlordView({
             </div>
             <button
               onClick={() => onLaunchDemo("/landlord/access-requests")}
-              className="px-3 py-1.5 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all"
+              className="px-3 py-1.5 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black transition-all"
             >
               Review Requests
             </button>

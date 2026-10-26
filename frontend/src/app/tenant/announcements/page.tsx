@@ -147,7 +147,7 @@ export function AttachmentThumbnail({
           {renderFileIcon()}
         </div>
         <span
-          className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.2 rounded-md ${fileInfo.badgeClass}`}
+          className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md ${fileInfo.badgeClass}`}
         >
           {fileInfo.label}
         </span>
@@ -420,8 +420,18 @@ function TenantAnnouncementsContent() {
                 placeholder="Search announcements..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
+                className="w-full pl-10 pr-8 py-2 text-xs font-medium bg-[rgb(var(--ml-bg-secondary))] border border-border/60 rounded-xl text-[rgb(var(--ml-text-primary))] placeholder:text-[rgb(var(--ml-text-secondary))]/60 focus:outline-none focus:border-[rgb(var(--ml-text-primary))] focus:ring-1 focus:ring-[rgb(var(--ml-text-primary))] transition-all"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] transition-colors duration-150 cursor-pointer"
+                >
+                  <RotateCcw className="size-3.5" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -532,7 +542,7 @@ function TenantAnnouncementsContent() {
                       <div
                         id={`announcement-${ann.id}`}
                         key={ann.id}
-                        className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] space-y-3 relative group ${
+                        className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-text-primary))]/20 hover:bg-[rgb(var(--ml-bg-secondary))]/90 transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-sm space-y-3 relative group ${
                           isHighlighted
                             ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-sm scale-[1.01]"
                             : "border-border/60"

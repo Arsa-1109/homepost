@@ -136,7 +136,7 @@ export function FeatureSection({
       <section id="feature-tabpanel" role="tabpanel" aria-labelledby={activeFeatureRole === "owner" ? "tab-owner" : "tab-tenant"} className="max-w-6xl w-full mx-auto mb-16 md:mb-32 px-4 relative z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgb(var(--ml-accent)/0.05)] to-transparent blur-[120px] -z-10 pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 md:gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {/* Card 1 */}
           <div className="relative z-10 w-full">
             <motion.div
@@ -156,7 +156,7 @@ export function FeatureSection({
                   transition={{ duration: 0.3 }}
                   className="flex flex-col items-start"
                 >
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-500">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-150">
                     {(() => {
                       const Icon = FEATURE_CONTENT[activeFeatureRole][0].icon;
                       return <Icon className="text-accent w-6 h-6 md:w-8 md:h-8" />;
@@ -192,7 +192,7 @@ export function FeatureSection({
                   transition={{ duration: 0.3, delay: 0.05 }}
                   className="flex flex-col items-start"
                 >
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-500">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-150">
                     {(() => {
                       const Icon = FEATURE_CONTENT[activeFeatureRole][1].icon;
                       return <Icon className="text-accent w-6 h-6 md:w-8 md:h-8" />;
@@ -228,7 +228,7 @@ export function FeatureSection({
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="flex flex-col items-start"
                 >
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-500">
+                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-full bg-accent/10 flex items-center justify-center mb-4 md:mb-6 border border-accent/20 group-hover:scale-105 transition-transform duration-150">
                     {(() => {
                       const Icon = FEATURE_CONTENT[activeFeatureRole][2].icon;
                       return <Icon className="text-accent w-6 h-6 md:w-8 md:h-8" />;

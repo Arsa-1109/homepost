@@ -194,7 +194,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-accent/20 selection:text-foreground relative font-sans transition-colors duration-300">
+    <div className="min-h-dvh bg-background text-foreground overflow-x-hidden selection:bg-accent/20 selection:text-foreground relative font-sans transition-colors duration-300">
       <LandingBackground />
 
       {/* TopNavBar */}
@@ -338,10 +338,10 @@ export default function LandingPage() {
                           <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border">
                             <Key className="text-muted-foreground w-6 h-6" />
                           </div>
-                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 text-foreground">
+                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance mb-2 text-foreground">
                             I am a Tenant
                           </h2>
-                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-normal">
+                          <p className="text-sm text-muted-foreground text-pretty mb-6 leading-relaxed font-normal">
                             Submit requests, view announcements, and access important documents securely.
                           </p>
                         </div>
@@ -371,10 +371,10 @@ export default function LandingPage() {
                       <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4 border border-border mx-auto">
                         <Key className="text-muted-foreground w-6 h-6" />
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-2 w-full text-center">
+                      <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-balance mb-2 w-full text-center">
                         Tenant Access
                       </h2>
-                      <p className="text-center w-full text-sm text-muted-foreground mb-6">
+                      <p className="text-center w-full text-sm text-muted-foreground text-pretty mb-6">
                         Enter your landlord&apos;s email address to connect with their portal.
                       </p>
 

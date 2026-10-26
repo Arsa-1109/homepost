@@ -586,7 +586,7 @@ export function RequestCard({
                     type="button"
                     onClick={handleUpdate}
                     disabled={!hasChanges || isUpdating || req.status === "closed"}
-                    className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold h-11 rounded-xl shadow-sm disabled:opacity-40 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+                    className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-bold h-11 rounded-xl shadow-sm disabled:opacity-40 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-auto transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                   >
                     {isUpdating && (
                       <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

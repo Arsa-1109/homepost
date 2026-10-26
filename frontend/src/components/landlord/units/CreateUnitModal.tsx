@@ -545,7 +545,7 @@ export function CreateUnitModal({
                               }}
                               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                                 isSelected
-                                  ? "bg-[rgb(var(--ml-accent))] text-black border-[rgb(var(--ml-accent))] shadow-xs"
+                                  ? "bg-[rgb(var(--ml-accent))] text-white dark:text-black border-[rgb(var(--ml-accent))] shadow-xs"
                                   : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/70 hover:border-border hover:text-[rgb(var(--ml-text-primary))]"
                               }`}
                             >
@@ -561,7 +561,7 @@ export function CreateUnitModal({
                           }}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             isCustomPrefix
-                              ? "bg-[rgb(var(--ml-accent))] text-black border-[rgb(var(--ml-accent))] shadow-xs"
+                              ? "bg-[rgb(var(--ml-accent))] text-white dark:text-black border-[rgb(var(--ml-accent))] shadow-xs"
                               : "bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border-border/70 hover:border-border hover:text-[rgb(var(--ml-text-primary))]"
                           }`}
                         >
@@ -743,7 +743,7 @@ export function CreateUnitModal({
                   type="submit"
                   form="single-unit-form"
                   disabled={!singleLabel.trim() || isSingleDuplicate || isSingleSubmitting}
-                  className="rounded-xl bg-[rgb(var(--ml-accent))] text-black font-black text-xs h-10 px-5 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer disabled:opacity-50"
+                  className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-black text-xs h-10 px-5 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4 mr-1.5" />
                   <span>{isSingleSubmitting ? "Creating Unit..." : "Create 1 Unit"}</span>
@@ -753,7 +753,7 @@ export function CreateUnitModal({
                   type="submit"
                   form="bulk-unit-form"
                   disabled={activeBulkUnits.length === 0 || isBulkSubmitting}
-                  className="rounded-xl bg-[rgb(var(--ml-accent))] text-black font-black text-xs h-10 px-5 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer disabled:opacity-50"
+                  className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-black text-xs h-10 px-5 shadow-sm hover:bg-[rgb(var(--ml-accent))]/90 cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4 mr-1.5" />
                   <span>

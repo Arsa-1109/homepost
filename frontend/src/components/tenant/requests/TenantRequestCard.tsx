@@ -218,7 +218,7 @@ export function TenantRequestCard({
                       <button
                         type="button"
                         onClick={(e) => onReopen(req.id, e)}
-                        className="px-3.5 py-2 text-xs font-bold text-black bg-[rgb(var(--ml-accent))] rounded-xl shrink-0 cursor-pointer shadow-sm flex items-center gap-1.5 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+                        className="px-3.5 py-2 text-xs font-bold text-white dark:text-black bg-[rgb(var(--ml-accent))] rounded-xl shrink-0 cursor-pointer shadow-sm flex items-center gap-1.5 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
                       >
                         <RefreshCcw className="w-3 h-3" />
                         Reopen Request

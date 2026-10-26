@@ -228,7 +228,7 @@ export default function NewRequestPage() {
           <p className="text-xs text-[rgb(var(--ml-text-secondary))] leading-relaxed">
             You must be linked to an active unit before submitting repair requests. Please connect to your home from the dashboard first.
           </p>
-          <Button asChild size="sm" className="rounded-xl bg-[rgb(var(--ml-accent))] text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer">
+          <Button asChild size="sm" className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-bold text-xs hover:bg-[rgb(var(--ml-accent-light))] cursor-pointer">
             <Link href="/tenant/dashboard">
               Go to Dashboard &rarr;
             </Link>
@@ -340,7 +340,7 @@ export default function NewRequestPage() {
                       onClick={() => removeImage(index)}
                       className="size-9 rounded-xl flex items-center justify-center text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 touch-manipulation active:scale-95"
                       title="Remove image"
-                      aria-label="Remove image"
+                      aria-label={`Remove ${img.name}`}
                     >
                       <X className="w-4 h-4" />
                     </button>

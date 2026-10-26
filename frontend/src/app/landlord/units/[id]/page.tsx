@@ -342,7 +342,7 @@ export default function UnitDetailsPage() {
             </button>
             <Link
               href="/landlord/requests"
-              className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"
+              className="px-3.5 py-2 bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold rounded-xl shadow-sm flex items-center gap-1.5 cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)]"
             >
               View All Maintenance
             </Link>
@@ -463,7 +463,7 @@ export default function UnitDetailsPage() {
                   </p>
                   <Link
                     href={`/landlord/units?property_id=${unit.property_id}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-accent))] hover:text-black transition-all shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-white dark:text-black hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black transition-all shadow-sm"
                   >
                     Generate Invite Link
                   </Link>
@@ -600,7 +600,7 @@ export default function UnitDetailsPage() {
                       </div>
                       <div className="flex-1 min-w-0 space-y-1.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.2 rounded-md ${fileInfo.badgeClass}`}>
+                          <span className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md ${fileInfo.badgeClass}`}>
                             {fileInfo.label}
                           </span>
                         </div>

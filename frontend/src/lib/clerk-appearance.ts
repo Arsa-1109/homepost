@@ -19,7 +19,7 @@ export const clerkAuthAppearance = {
     headerTitle: "text-2xl font-bold tracking-tight text-[rgb(var(--ml-text-primary))] font-sans",
     headerSubtitle: "text-sm text-[rgb(var(--ml-text-secondary))] mt-1 font-sans",
     formButtonPrimary:
-      "w-full bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black font-semibold shadow-lg shadow-[rgb(var(--ml-accent))]/25 hover:shadow-[rgb(var(--ml-accent))]/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 py-2.5 rounded-xl border border-transparent font-sans",
+      "w-full bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-white dark:text-black font-semibold shadow-lg shadow-[rgb(var(--ml-accent))]/25 hover:shadow-[rgb(var(--ml-accent))]/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 py-2.5 rounded-xl border border-transparent font-sans",
     socialButtonsBlockButton:
       "w-full border border-[rgb(var(--ml-border))] bg-[rgb(var(--ml-bg-primary))]/80 hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-primary))] rounded-xl transition-all duration-200 hover:border-[rgb(var(--ml-border))] hover:shadow-sm font-sans",
     socialButtonsBlockButtonText: "font-medium text-[rgb(var(--ml-text-primary))] font-sans",
@@ -75,7 +75,7 @@ export const clerkUserProfileAppearance = {
     headerTitle: "text-lg sm:text-xl font-bold text-[rgb(var(--ml-text-primary))] font-sans",
     headerSubtitle: "text-xs font-medium text-[rgb(var(--ml-text-secondary))] font-sans",
     formButtonPrimary:
-      "bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-black font-bold shadow-sm py-2.5 px-4 rounded-xl transition-all font-sans text-xs sm:text-sm cursor-pointer",
+      "bg-[rgb(var(--ml-accent))] hover:bg-[rgb(var(--ml-accent-light))] text-white dark:text-black font-bold shadow-sm py-2.5 px-4 rounded-xl transition-all font-sans text-xs sm:text-sm cursor-pointer",
     formButtonReset:
       "bg-[rgb(var(--ml-bg-primary))] border border-border/60 text-[rgb(var(--ml-text-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] py-2.5 px-4 rounded-xl transition-all font-sans text-xs sm:text-sm font-semibold cursor-pointer",
     formFieldInput:

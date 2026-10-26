@@ -101,7 +101,7 @@ export function StagedAttachmentThumbnail({
               {renderFileIcon()}
             </div>
             <span
-              className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.2 rounded-md ${fileInfo.badgeClass}`}
+              className={`text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md ${fileInfo.badgeClass}`}
             >
               {fileInfo.label}
             </span>
