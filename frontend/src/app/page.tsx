@@ -297,8 +297,8 @@ export default function LandingPage() {
                     >
                       {/* Owner Card */}
                       <motion.article
-                        initial={{ y: 0, scale: 1 }}
-                        animate={{ y: 0, scale: 1 }}
+                        initial={{ rotateZ: -1, y: 0, scale: 1 }}
+                        animate={{ rotateZ: -1, y: 0, scale: 1 }}
                         whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
                         transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-accent/40 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
@@ -328,8 +328,8 @@ export default function LandingPage() {
 
                       {/* Tenant Card */}
                       <motion.article
-                        initial={{ y: 0, scale: 1 }}
-                        animate={{ y: 0, scale: 1 }}
+                        initial={{ rotateZ: 1, y: 0, scale: 1 }}
+                        animate={{ rotateZ: 1, y: 0, scale: 1 }}
                         whileHover={{ scale: 1.02, y: -6, zIndex: 30 }}
                         transition={{ type: "spring", stiffness: 200, damping: 25 }}
                         className="w-full md:flex-1 bg-card border border-border rounded-2xl p-6 sm:p-7 flex flex-col items-start justify-between shadow-lg hover:shadow-xl hover:border-border/80 min-h-[290px] z-20 focus-within:ring-2 focus-within:ring-accent transition-colors group"
