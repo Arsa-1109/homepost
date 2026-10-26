@@ -112,7 +112,7 @@ export function ActiveMaintenanceCard({ requests }: ActiveMaintenanceCardProps) 
           <span className="w-2 h-2 rounded-full bg-[rgb(var(--ml-accent))]" />
           Active maintenance
         </span>
-        <span className="text-[11px] font-extrabold text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-tertiary))] px-2.5 py-0.5 rounded-full border border-border/40">
+        <span className="text-[11px] font-extrabold tabular-nums text-[rgb(var(--ml-text-secondary))] bg-[rgb(var(--ml-bg-tertiary))] px-2.5 py-0.5 rounded-full border border-border/40">
           {activeRequests.length} active
         </span>
       </div>
@@ -171,7 +171,7 @@ export function ActiveMaintenanceCard({ requests }: ActiveMaintenanceCardProps) 
                           <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2 sm:gap-1">
                             <span
                               className={cn(
-                                "hidden sm:inline-flex text-[10px] font-extrabold px-2.5 py-0.5 rounded-full capitalize uppercase tracking-wider",
+                                "hidden sm:inline-flex text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider",
                                 getPriorityClass(req.priority)
                               )}
                             >

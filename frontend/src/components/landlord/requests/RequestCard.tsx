@@ -279,9 +279,9 @@ export function RequestCard({
   return (
     <div
       id={`request-${req.id}`}
-      className={`rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border flex flex-col overflow-hidden group/card transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+      className={`rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border flex flex-col overflow-hidden group/card transition-[border-color,box-shadow] duration-150 ease-out hover:border-border hover:shadow-sm ${
         isHighlighted
-          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-sm scale-[1.01]"
           : "border-border/60"
       }`}
     >
@@ -361,6 +361,8 @@ export function RequestCard({
             )}
             <button
               type="button"
+              aria-label={isExpanded ? "Collapse request details" : "Expand request details"}
+              aria-expanded={isExpanded}
               className="p-2 rounded-xl group/btn border border-border/30 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
             >
             <ChevronDown

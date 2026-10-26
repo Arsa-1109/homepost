@@ -270,6 +270,7 @@ export function CreateAnnouncementForm({
                   <button
                     type="button"
                     onClick={() => removeAttachment(idx)}
+                    aria-label={`Remove ${file.name}`}
                     className="p-1 rounded-lg text-[rgb(var(--ml-text-secondary))] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />

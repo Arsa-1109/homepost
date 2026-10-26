@@ -122,7 +122,7 @@ export function EditLeaseModal({
             <button
               type="submit"
               disabled={isUpdating}
-              className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)] disabled:opacity-50"
+              className="flex-1 h-11 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black disabled:opacity-50"
             >
               {isUpdating ? "Saving..." : "Save Dates"}
             </button>
@@ -248,7 +248,7 @@ export function EditUnitModal({
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.15)] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+                className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-white dark:text-black rounded-xl flex-1 sm:flex-initial shadow-sm cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black"
               >
                 {isUpdating ? "Saving..." : "Save Changes"}
               </button>

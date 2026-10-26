@@ -170,7 +170,7 @@ function SyncRoleContent() {
   return (
     <main className="min-h-dvh flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
       <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full size-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
+        <div className="size-10 rounded-full border-2 border-[rgb(var(--ml-accent))] border-t-transparent animate-spin" />
         <p className="text-[rgb(var(--ml-text-secondary))] font-medium">{status}</p>
       </div>
     </main>
@@ -181,7 +181,7 @@ export default function SyncRolePage() {
   return (
     <Suspense fallback={
       <main className="min-h-dvh flex items-center justify-center px-4 bg-[rgb(var(--ml-bg-primary))]">
-        <div className="animate-spin rounded-full size-12 border-t-2 border-b-2 border-[rgb(var(--ml-accent))]"></div>
+        <div className="size-10 rounded-full border-2 border-[rgb(var(--ml-accent))] border-t-transparent animate-spin" />
       </main>
     }>
       <SyncRoleContent />

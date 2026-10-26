@@ -73,7 +73,7 @@ export function PropertyOverviewCard({ stats }: PropertyOverviewCardProps) {
             />
           </svg>
           <div className="text-[13px] text-[rgb(var(--ml-text-secondary))] font-semibold leading-tight select-none">
-            <span className="text-[rgb(var(--ml-text-primary))] text-base font-black">
+            <span className="text-[rgb(var(--ml-text-primary))] text-base font-black tabular-nums">
               {occupancyPercent}%
             </span>{" "}
             occupancy<br />across your portfolio

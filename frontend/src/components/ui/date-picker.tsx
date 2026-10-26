@@ -111,8 +111,12 @@ export function DatePicker({
         <div className="flex items-center gap-1.5 shrink-0 text-[rgb(var(--ml-text-secondary))]">
           {selectedDate && (
             <span
+              role="button"
+              tabIndex={0}
+              aria-label="Clear date"
               onClick={handleClear}
-              className="p-1 rounded-md hover:bg-white/10 hover:text-[rgb(var(--ml-text-primary))] transition-colors"
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClear(e as any); }}
+              className="p-1 rounded-md hover:bg-white/10 hover:text-[rgb(var(--ml-text-primary))] transition-colors cursor-pointer"
               title="Clear date"
             >
               <X className="w-3.5 h-3.5" />
@@ -127,7 +131,7 @@ export function DatePicker({
         <div 
           ref={popoverRef}
           className={cn(
-            "absolute left-0 z-[150] w-[300px] max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/80 shadow-2xl shadow-black/90 backdrop-blur-2xl animate-scaleIn select-none",
+            "absolute left-0 z-50 w-[300px] max-w-[calc(100vw-2rem)] p-4 rounded-2xl bg-[rgb(var(--ml-bg-secondary))] border border-border/80 shadow-2xl shadow-black/90 backdrop-blur-2xl animate-scaleIn select-none",
             position === "top" ? "bottom-[calc(100%+8px)]" : "top-[calc(100%+8px)]"
           )}
         >
@@ -139,6 +143,7 @@ export function DatePicker({
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                aria-label="Previous month"
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
                 className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
               >
@@ -146,6 +151,7 @@ export function DatePicker({
               </button>
               <button
                 type="button"
+                aria-label="Next month"
                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
                 className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
               >

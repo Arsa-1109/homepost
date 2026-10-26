@@ -87,7 +87,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
   };
 
   return (
-    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card h-full min-h-[240px] shadow-sm relative overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
+    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card h-full min-h-[240px] shadow-sm relative overflow-hidden transition-[border-color,box-shadow] duration-150 ease-out hover:border-border hover:shadow-sm">
       <div>
         {/* Header Row */}
         <div className="flex justify-between items-start gap-3">
@@ -197,7 +197,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
           </Dialog>
         ) : (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="text-xs text-center bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-3.5 py-2.5 rounded-xl w-full cursor-pointer flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(var(--ml-accent),0.15)] transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]">
+            <DialogTrigger className="text-xs text-center bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold px-3.5 py-2.5 rounded-xl w-full cursor-pointer flex items-center justify-center gap-2 shadow-sm transition-all duration-150 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black">
               <UserCheck className="w-3.5 h-3.5" />
               <span>Invite Tenant</span>
             </DialogTrigger>
@@ -396,7 +396,7 @@ export function UnitCard({ u, onRefresh }: UnitCardProps) {
                         toast.error("Failed to generate invite.");
                       }
                     }}
-                    className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] rounded-xl flex-1 sm:flex-initial shadow-sm shadow-[rgba(var(--ml-accent),0.2)] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+                    className="px-5 py-2.5 text-xs font-extrabold bg-[rgb(var(--ml-accent))] text-white dark:text-black rounded-xl flex-1 sm:flex-initial shadow-sm cursor-pointer flex items-center justify-center gap-2 transition-all duration-150 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>Generate Link</span>

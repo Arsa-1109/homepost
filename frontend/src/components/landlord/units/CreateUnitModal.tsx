@@ -709,6 +709,7 @@ export function CreateUnitModal({
                             onClick={() => handleRemoveBulkChip(item.label)}
                             className="w-3.5 h-3.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-text-primary))] cursor-pointer"
                             title={`Remove ${item.label}`}
+                            aria-label={`Remove unit ${item.label}`}
                           >
                             <X className="w-2.5 h-2.5" />
                           </button>

@@ -168,7 +168,7 @@ export function OccupiedUnitsCard({
                   href="/landlord/units"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[rgb(var(--ml-accent))] hover:underline cursor-pointer"
                 >
-                  View all units ({totalUnits}) &rarr;
+                  View all units <span className="tabular-nums">({totalUnits})</span> &rarr;
                 </Link>
               </div>
             )}

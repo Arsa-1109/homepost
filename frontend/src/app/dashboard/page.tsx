@@ -110,7 +110,7 @@ export default function DashboardRedirect() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-background">
-      <div className="animate-spin rounded-full size-12 border-t-2 border-b-2 border-accent"></div>
+      <div className="size-10 rounded-full border-2 border-[rgb(var(--ml-accent))] border-t-transparent animate-spin" />
     </div>
   );
 }

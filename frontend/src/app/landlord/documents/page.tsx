@@ -336,7 +336,7 @@ function LandlordDocumentsContent() {
                 <button
                   type="button"
                   onClick={() => setSelectedFilter("ALL")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-400 ease-out cursor-pointer whitespace-nowrap border ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 ease-out cursor-pointer whitespace-nowrap border ${
                     selectedFilter === "ALL"
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
                       : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
@@ -347,7 +347,7 @@ function LandlordDocumentsContent() {
                 <button
                   type="button"
                   onClick={() => setSelectedFilter("PROPERTY_WIDE")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-400 ease-out cursor-pointer whitespace-nowrap border ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 ease-out cursor-pointer whitespace-nowrap border ${
                     selectedFilter === "PROPERTY_WIDE"
                       ? "bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] border-[rgb(var(--ml-text-primary))] shadow-sm"
                       : "bg-[rgb(var(--ml-bg-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border-border/60 hover:text-[rgb(var(--ml-text-primary))]"
@@ -381,6 +381,13 @@ function LandlordDocumentsContent() {
             <p className="text-xs text-[rgb(var(--ml-text-secondary))]">
               Please add a property first before uploading documents.
             </p>
+            <div className="pt-2">
+              <Button asChild className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold shadow-sm">
+                <Link href="/landlord/properties?new=1">
+                  Create First Property
+                </Link>
+              </Button>
+            </div>
           </div>
         ) : (
           <>
@@ -457,6 +464,15 @@ function LandlordDocumentsContent() {
                       </span>{" "}
                       yet. Click &ldquo;Upload Document&rdquo; to add your first file.
                     </p>
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        onClick={() => setShowUploadForm(true)}
+                        className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-semibold shadow-sm"
+                      >
+                        Upload Document
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : shouldShowEmpty(docsLoading, filteredDocuments, Boolean(docsError)) ? (

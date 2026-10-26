@@ -147,7 +147,7 @@ export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSumma
   };
 
   return (
-    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card min-h-[260px] shadow-sm relative overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20">
+    <div className="p-6 border border-border/60 rounded-3xl bg-[rgb(var(--ml-bg-secondary))] flex flex-col justify-between group/card min-h-[260px] shadow-sm relative overflow-hidden transition-[border-color,box-shadow] duration-150 ease-out hover:border-border hover:shadow-sm">
       <div>
         {/* Top Row */}
         <div className="flex justify-between items-start gap-3 mb-4">
@@ -174,6 +174,7 @@ export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSumma
                       setIsEditing(true);
                     }}
                     title="Edit Property"
+                    aria-label="Edit property"
                     className="p-1.5 rounded-xl hover:bg-[rgb(var(--ml-bg-primary))] text-[rgb(var(--ml-text-secondary))] hover:text-[rgb(var(--ml-accent))] transition-colors cursor-pointer border border-transparent hover:border-border/40"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -183,6 +184,7 @@ export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSumma
                     onClick={() => setShowDeleteDialog(true)}
                     disabled={isDeleting}
                     title="Delete Property"
+                    aria-label="Delete property"
                     className="p-1.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-600 transition-all cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -196,6 +198,7 @@ export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSumma
                   onClick={handleSave}
                   disabled={isSaving}
                   title="Save Changes"
+                  aria-label="Save property changes"
                   className="p-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 transition-colors cursor-pointer"
                 >
                   {isSaving ? (
@@ -209,6 +212,7 @@ export function PropertyCard({ p, onUpdate, onDelete, unitSummary: propUnitSumma
                   onClick={() => setIsEditing(false)}
                   disabled={isSaving}
                   title="Cancel Edit"
+                  aria-label="Cancel editing"
                   className="p-1.5 rounded-xl bg-[rgb(var(--ml-bg-primary))] hover:bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-text-secondary))] border border-border/60 transition-colors cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />

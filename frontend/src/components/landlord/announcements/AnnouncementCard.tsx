@@ -46,9 +46,9 @@ export function AnnouncementCard({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.1 }}
-      className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative group transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+      className={`p-6 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] space-y-3 relative group transition-[border-color,box-shadow] duration-150 ease-out hover:border-border hover:shadow-sm ${
         isHighlighted
-          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-sm scale-[1.01]"
           : "border-border/60"
       }`}
     >
@@ -94,6 +94,7 @@ export function AnnouncementCard({
               type="button"
               onClick={() => onEdit(announcement)}
               title="Edit Announcement"
+              aria-label="Edit announcement"
               className="p-1.5 rounded-lg text-[rgb(var(--ml-text-secondary))] cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-accent))]"
             >
               <Pencil className="w-3.5 h-3.5" />
@@ -102,6 +103,7 @@ export function AnnouncementCard({
               type="button"
               onClick={() => onDelete(announcement)}
               title="Delete Announcement"
+              aria-label="Delete announcement"
               className="p-1.5 rounded-lg text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />

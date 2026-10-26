@@ -426,22 +426,22 @@ export default function TenantDashboard() {
       {latestAnnouncement && (
         <Link 
           href={`/tenant/announcements?id=${latestAnnouncement.id}`}
-          className="group block p-5 rounded-3xl border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)]"
+          className="group block p-5 rounded-3xl border border-border/70 bg-[rgb(var(--ml-bg-secondary))] hover:border-[rgb(var(--ml-accent))]/40 transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-sm"
         >
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-400 shrink-0 mt-0.5">
+            <div className="p-2.5 rounded-2xl bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] shrink-0 mt-0.5">
               <Megaphone className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-400">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[rgb(var(--ml-accent))]">
                   Latest Announcement
                 </span>
                 <span className="text-[11px] text-[rgb(var(--ml-text-secondary))] font-medium">
                   {new Date(latestAnnouncement.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
               </div>
-              <h3 className="font-bold text-sm text-[rgb(var(--ml-text-primary))] group-hover:text-purple-400 transition-colors mt-0.5 truncate">
+              <h3 className="font-bold text-sm text-[rgb(var(--ml-text-primary))] group-hover:text-[rgb(var(--ml-accent))] transition-colors mt-0.5 truncate">
                 {latestAnnouncement.title}
               </h3>
               <p className="text-xs text-[rgb(var(--ml-text-secondary))] line-clamp-1 mt-0.5">
@@ -457,7 +457,7 @@ export default function TenantDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Rent Due Card */}
         <div 
-          className={`p-5 sm:p-6 rounded-3xl border transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] ${
+          className={`p-5 sm:p-6 rounded-3xl border transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-sm ${
             rentUrgent
               ? "bg-red-500/10 border-red-500/30 text-red-500"
               : "bg-[rgb(var(--ml-bg-secondary))] border-border/60 hover:border-[rgb(var(--ml-text-primary))]/20"
@@ -489,7 +489,7 @@ export default function TenantDashboard() {
 
         {/* Lease Expiration Card */}
         <div 
-          className={`p-5 sm:p-6 rounded-3xl border transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] ${
+          className={`p-5 sm:p-6 rounded-3xl border transition-[border-color,box-shadow] duration-150 ease-out hover:shadow-sm ${
             isLeaseExpired
               ? "bg-red-500/10 border-red-500/30 text-red-500"
               : leaseUrgent
@@ -526,7 +526,7 @@ export default function TenantDashboard() {
       <Button
         asChild
         size="lg"
-        className="w-full h-14 rounded-2xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-sm shadow-md cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+        className="w-full h-14 rounded-2xl bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold text-sm shadow-md cursor-pointer transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
       >
         <Link href="/tenant/requests/new" className="flex items-center justify-center gap-2">
           <Wrench className="w-5 h-5" />
@@ -544,7 +544,7 @@ export default function TenantDashboard() {
             href="/tenant/requests"
             className="text-xs font-bold text-[rgb(var(--ml-text-primary))] hover:underline flex items-center gap-1"
           >
-            View all ({requests.length}) <ArrowRight className="w-3 h-3" />
+            View all <span className="tabular-nums">({requests.length})</span> <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 

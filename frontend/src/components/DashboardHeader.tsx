@@ -7,7 +7,7 @@ export function DashboardHeader() {
       <div className="space-y-2 max-w-xl">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[rgb(var(--ml-bg-secondary))] text-[rgb(var(--ml-text-secondary))] border border-border/80">
           <LayoutDashboard className="w-3.5 h-3.5" />
-          Control Center
+          Portfolio Overview
         </div>
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[rgb(var(--ml-text-primary))]">
           Landlord Dashboard
@@ -26,7 +26,7 @@ export function DashboardHeader() {
         </Link>
         <Link 
           href="/landlord/announcements" 
-          className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-4 py-2.5 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-black border border-transparent hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] transition-all duration-200 ease-out active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+          className="text-xs bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-extrabold px-4 py-2.5 rounded-xl hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black border border-transparent hover:border-transparent hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] transition-all duration-200 ease-out active:scale-[0.98] shadow-sm flex items-center justify-center gap-2 cursor-pointer"
         >
           <Megaphone className="h-4 w-4" />
           New Announcement

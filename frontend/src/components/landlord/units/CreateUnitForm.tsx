@@ -139,7 +139,7 @@ export function CreateUnitForm({
             <Button
               type="submit"
               disabled={!unitLabel.trim() || isSubmitting}
-              className="h-11 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.25)] disabled:opacity-50"
+              className="h-11 px-5 rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-sm transition-all duration-150 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               <span>{isSubmitting ? "Adding..." : "Add Unit"}</span>
@@ -208,7 +208,7 @@ export function CreateUnitForm({
             <Button
               type="submit"
               disabled={parsedBatchLabels.length === 0 || isSubmitting}
-              className="rounded-xl bg-[rgb(var(--ml-accent))] text-[rgb(var(--ml-bg-primary))] font-extrabold text-xs px-5 shadow-sm hover:bg-[rgb(var(--ml-accent))] hover:text-black"
+              className="rounded-xl bg-[rgb(var(--ml-accent))] text-white dark:text-black font-extrabold text-xs px-5 shadow-sm hover:bg-[rgb(var(--ml-accent-light))] hover:text-white dark:hover:text-black"
             >
               {isSubmitting ? "Creating Units..." : `Create ${parsedBatchLabels.length} Units`}
             </Button>

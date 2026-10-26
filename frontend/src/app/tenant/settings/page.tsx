@@ -26,7 +26,7 @@ export default function TenantSettingsPage() {
     <div className="space-y-6 sm:space-y-8 w-full max-w-4xl mx-auto animate-fade-slide-up pb-16 overflow-x-hidden">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[rgb(var(--ml-accent))]/15 text-[rgb(var(--ml-accent))] border border-[rgb(var(--ml-accent))]/30">
             Resident Portal
           </span>
         </div>

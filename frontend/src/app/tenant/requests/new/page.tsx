@@ -190,7 +190,7 @@ export default function NewRequestPage() {
       </div>
 
       {isDemo && (
-        <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium flex items-center gap-2.5 shadow-xs">
+        <div className="p-3.5 rounded-2xl bg-[rgb(var(--ml-accent))]/10 border border-[rgb(var(--ml-accent))]/20 text-[rgb(var(--ml-accent))] text-xs font-medium flex items-center gap-2.5 shadow-xs">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>
             You are currently in <strong>Resident Demo Mode (Read-Only)</strong>. Ticket submission will be simulated.
@@ -383,7 +383,7 @@ export default function NewRequestPage() {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold py-3.5 px-6 text-xs sm:text-sm rounded-xl shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
+            className="w-full bg-[rgb(var(--ml-text-primary))] text-[rgb(var(--ml-bg-primary))] font-bold py-3.5 px-6 text-xs sm:text-sm rounded-xl shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-[0.98] hover:bg-[rgb(var(--ml-accent))] hover:text-white dark:hover:text-black hover:shadow-[0_4px_16px_rgba(var(--ml-accent),0.2)]"
           >
             {loading ? (
               <>

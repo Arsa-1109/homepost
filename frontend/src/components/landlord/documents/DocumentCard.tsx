@@ -95,9 +95,9 @@ export function DocumentCard({
   return (
     <div
       id={`document-${doc.id}`}
-      className={`group relative flex flex-col justify-between p-4 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-[0_16px_36px_rgba(0,0,0,0.12)] hover:border-[rgb(var(--ml-text-primary))]/20 ${
+      className={`group relative flex flex-col justify-between p-4 border rounded-2xl bg-[rgb(var(--ml-bg-secondary))] overflow-hidden transition-[border-color,box-shadow] duration-150 ease-out hover:border-border hover:shadow-sm ${
         isHighlighted
-          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-[0_0_28px_rgba(var(--ml-accent),0.35)] scale-[1.01]"
+          ? "border-[rgb(var(--ml-accent))] ring-2 ring-[rgb(var(--ml-accent))] shadow-sm scale-[1.01]"
           : "border-border/60"
       }`}
     >

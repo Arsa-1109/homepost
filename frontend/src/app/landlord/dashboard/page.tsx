@@ -106,7 +106,7 @@ export default function LandlordDashboard() {
       {loading ? (
         <DashboardBentoSkeleton />
       ) : error || !data ? (
-        <div className="p-6 border border-red-200 rounded-xl bg-red-50 text-red-700 text-sm">
+        <div className="p-6 border border-red-500/30 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 text-sm">
           {error || "Failed to load dashboard data."}
         </div>
       ) : (

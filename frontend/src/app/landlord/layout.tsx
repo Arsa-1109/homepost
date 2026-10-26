@@ -86,7 +86,7 @@ export default function LandlordLayout({
     <div className="flex h-dvh overflow-hidden">
       {/* Sidebar — Desktop */}
       <aside className={cn(
-        "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-all duration-300 h-dvh sticky top-0 shrink-0 overflow-visible relative",
+        "hidden md:flex flex-col border-r border-border bg-[rgb(var(--ml-bg-secondary))] transition-colors duration-150 h-dvh sticky top-0 shrink-0 overflow-visible relative",
         isCollapsed ? "w-16" : "w-64"
       )}>
         {/* Toggle Button */}
@@ -119,7 +119,7 @@ export default function LandlordLayout({
                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ml-accent))] group relative",
                     isCollapsed && "justify-center px-0",
                     isActive
-                      ? "bg-[rgb(var(--ml-bg-tertiary))] text-[rgb(var(--ml-accent))] font-semibold border-l-2 border-[rgb(var(--ml-accent))] rounded-l-none"
+                      ? "bg-[rgb(var(--ml-accent))]/10 text-[rgb(var(--ml-accent))] font-semibold"
                       : "text-[rgb(var(--ml-text-secondary))] hover:bg-[rgb(var(--ml-bg-tertiary))] hover:text-[rgb(var(--ml-text-primary))]"
                   )}
                   title={isCollapsed ? item.label : undefined}
@@ -316,7 +316,7 @@ export default function LandlordLayout({
       </div>
 
       {isExiting && (
-        <div className="fixed inset-0 z-[9999] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200">
           <div className="size-8 rounded-full border-2 border-[rgb(var(--ml-accent))] border-t-transparent animate-spin" />
           <p className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--ml-text-secondary))]">
             Exiting demo...
