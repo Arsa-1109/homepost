@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";

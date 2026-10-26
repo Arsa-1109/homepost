@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { errorMessage } from "@/lib/errors";
 
 import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
